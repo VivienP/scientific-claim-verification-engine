@@ -27,8 +27,10 @@ htmlcov/
 reports/*
 !reports/.gitkeep
 
-# Eval results (generated at runtime)
+# Eval results (generated at runtime — keep named baselines)
 eval/results/
+!eval/results/baseline_phase0.json
+!eval/results/direct_baseline.json
 
 # OS
 .DS_Store

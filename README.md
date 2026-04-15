@@ -97,6 +97,19 @@ python scripts/eval_scifact.py --split dev
 
 Uses the SciFact dataset in `eval/scifact/`. The `test` split is locked — never use it during development.
 
+### SciFact dev results (Phase 0 baseline)
+
+| Approach | F1 | Macro-F1 | Cost (50 claims) |
+| --- | --- | --- | --- |
+| **This pipeline** (structured system prompt + provenance) | **0.94** | **0.94** | $0.17 |
+| Direct LLM (naive single prompt, same model) | 0.62 | 0.60 | $0.10 |
+
+Full dev set (300 claims): F1 = **0.923**, Macro-F1 = **0.919**, total cost = $0.84.
+
+Per-class F1 (300 claims): supported = 0.905 · unsupported = 0.889 · not\_addressed = 0.961.
+
+Baseline locked at `eval/results/baseline_phase0.json`.
+
 ## Development
 
 ```bash

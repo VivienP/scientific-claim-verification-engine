@@ -1,0 +1,23 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Scientific Claim Verification Engine"
+version: 0.1.0
+date-released: 2026-04-15
+authors:
+  - family-names: Perrelle
+    given-names: Vivien
+    affiliation: Locus Lab
+repository-code: https://github.com/VivienP/scientific-claim-verification-engine
+license: MIT
+abstract: >
+  An auditable pipeline for claim-by-claim verification of scientific text
+  against cited source abstracts. Extracts verifiable claims via LLM,
+  resolves citations via Semantic Scholar, and verifies each claim against
+  its source abstract with structured LLM reasoning and full provenance logging.
+keywords:
+  - scientific verification
+  - claim extraction
+  - citation resolution
+  - provenance
+  - LLM

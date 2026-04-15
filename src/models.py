@@ -8,6 +8,7 @@ from typing import Literal
 ClaimType = Literal["factual_numeric", "factual_qualitative", "methodological", "causal"]
 VerificationStatus = Literal["supported", "unsupported", "not_addressed", "partially_supported"]
 OperationType = Literal["extract", "resolve", "verify", "aggregate"]
+VerifiabilityStatus = Literal["verifiable", "no_citations_found", "low_citation_density"]
 
 
 @dataclass(frozen=True)

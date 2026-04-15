@@ -262,3 +262,55 @@ class TestBuildReport:
             report = json.load(f)
 
         assert report["summary"]["total_cost_usd"] == pytest.approx(0.0018, rel=1e-3)
+
+
+class TestVerifiabilityStatus:
+    """Tests for verifiability_status field in report summary."""
+
+    def test_verifiable_when_majority_citations_found(self, tmp_path: Path) -> None:
+        """citation_found_rate > 0.5 → verifiable."""
+        from src.report import build_report
+
+        claims = [_make_claim(f"c{i}") for i in range(4)]
+        sources = {f"c{i}": _make_source(found=(i < 3)) for i in range(4)}  # 3/4 found
+        results = {f"c{i}": _make_result() for i in range(4)}
+        steps = [_make_step(f"s{i}", f"c{i}") for i in range(4)]
+
+        run_dir = build_report("vs-001", "T.", claims, sources, results, steps, output_dir=tmp_path)
+
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["verifiability_status"] == "verifiable"
+
+    def test_no_citations_found_when_rate_is_zero(self, tmp_path: Path) -> None:
+        """citation_found_rate == 0.0 → no_citations_found."""
+        from src.report import build_report
+
+        claims = [_make_claim("c1"), _make_claim("c2")]
+        sources = {"c1": _make_source(found=False), "c2": _make_source(found=False)}
+        results = {"c1": _make_result("not_addressed"), "c2": _make_result("not_addressed")}
+        steps = [_make_step("s1", "c1"), _make_step("s2", "c2")]
+
+        run_dir = build_report("vs-002", "T.", claims, sources, results, steps, output_dir=tmp_path)
+
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["verifiability_status"] == "no_citations_found"
+
+    def test_low_citation_density_when_rate_between_zero_and_half(self, tmp_path: Path) -> None:
+        """0 < citation_found_rate <= 0.5 → low_citation_density."""
+        from src.report import build_report
+
+        claims = [_make_claim(f"c{i}") for i in range(4)]
+        sources = {f"c{i}": _make_source(found=(i == 0)) for i in range(4)}  # 1/4 found
+        results = {f"c{i}": _make_result() for i in range(4)}
+        steps = [_make_step(f"s{i}", f"c{i}") for i in range(4)]
+
+        run_dir = build_report("vs-003", "T.", claims, sources, results, steps, output_dir=tmp_path)
+
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["verifiability_status"] == "low_citation_density"

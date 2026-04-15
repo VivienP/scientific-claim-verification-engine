@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import sys
 import uuid
@@ -10,7 +11,7 @@ from pathlib import Path
 
 # Check for API key before any imports that might fail obscurely
 if not os.environ.get("ANTHROPIC_API_KEY"):
-    print("Error: ANTHROPIC_API_KEY environment variable not set.")  # noqa: T201 — intentional CLI output
+    print("Error: ANTHROPIC_API_KEY environment variable not set.")
     sys.exit(1)
 
 from src.extract import extract_claims
@@ -27,7 +28,7 @@ def main() -> None:
 
     claims, extract_step = extract_claims(text)
     all_steps.append(extract_step)
-    print(f"Extracted {len(claims)} claims.")  # noqa: T201 — intentional CLI output
+    print(f"Extracted {len(claims)} claims.")
 
     sources, resolve_steps = resolve_citations(claims)
     all_steps.extend(resolve_steps)
@@ -39,7 +40,16 @@ def main() -> None:
         all_steps.append(verify_step)
 
     run_dir = build_report(report_id, text, claims, sources, results, all_steps)
-    print(f"Report written to: {run_dir}")  # noqa: T201 — intentional CLI output
+    print(f"Report written to: {run_dir}")
+
+    report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
+    status = report["summary"]["verifiability_status"]
+    if status != "verifiable":
+        print(
+            "\nWARNING: This text contains few or no resolvable citations. "
+            "The verification engine cannot assess claims that do not point to "
+            "specific sources."
+        )
 
 
 if __name__ == "__main__":

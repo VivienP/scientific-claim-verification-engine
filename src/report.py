@@ -11,7 +11,13 @@ from pathlib import Path
 
 import structlog
 
-from src.models import Claim, ProvenanceStep, ResolvedSource, VerificationResult
+from src.models import (
+    Claim,
+    ProvenanceStep,
+    ResolvedSource,
+    VerifiabilityStatus,
+    VerificationResult,
+)
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -37,11 +43,19 @@ def _compute_cost(steps: list[ProvenanceStep]) -> float:
     return total
 
 
+def _verifiability_status(citation_found_rate: float) -> VerifiabilityStatus:
+    if citation_found_rate == 0.0:
+        return "no_citations_found"
+    if citation_found_rate <= 0.5:
+        return "low_citation_density"
+    return "verifiable"
+
+
 def _compute_summary_stats(
     claims: list[Claim],
     results: dict[str, VerificationResult],
     sources: dict[str, ResolvedSource],
-) -> dict[str, int | float]:
+) -> dict[str, int | float | str]:
     """Pure helper — compute summary statistics. No I/O."""
     total = len(claims)
     supported = sum(
@@ -83,6 +97,7 @@ def _compute_summary_stats(
         "not_addressed": not_addressed,
         "partially_supported": partially_supported,
         "citation_found_rate": citation_found_rate,
+        "verifiability_status": _verifiability_status(citation_found_rate),
     }
 
 

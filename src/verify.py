@@ -161,7 +161,7 @@ def verify_claim(
         cache_hit=cache_hit,
     )
 
-    first_block = response.content[0]
+    first_block = response.content[0] if response.content else None
     response_text = first_block.text if isinstance(first_block, TextBlock) else ""
     result: VerificationResult
 

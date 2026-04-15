@@ -1,0 +1,52 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "scientific-claim-verification-engine"
+version = "0.1.0"
+description = "Pipeline that extracts and verifies scientific claims against their cited sources"
+requires-python = ">=3.12"
+dependencies = [
+    "anthropic>=0.40.0",
+    "httpx>=0.27.0",
+    "structlog>=24.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-httpx>=0.30.0",
+    "mypy>=1.10.0",
+    "ruff>=0.4.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
+
+[tool.ruff.lint.per-file-ignores]
+# System prompt strings and test JSON literals legitimately exceed 100 chars
+"src/extract.py" = ["E501"]
+"src/verify.py" = ["E501"]
+"tests/unit/test_extract.py" = ["E501"]
+"tests/unit/test_verify.py" = ["E501"]
+"tests/unit/test_report.py" = ["E501"]
+"scripts/eval_scifact.py" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"

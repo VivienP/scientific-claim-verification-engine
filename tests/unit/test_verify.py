@@ -193,6 +193,28 @@ class TestVerifyClaimShortCircuit:
         assert result.confidence == 0.0
 
     @patch("src.verify.anthropic.Anthropic")
+    def test_markdown_fenced_json_parsed(self, mock_anthropic_cls: MagicMock) -> None:
+        """LLM response wrapped in ```json fences is parsed correctly."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        fenced = (
+            '```json\n{"status": "supported", "explanation": "Matches.", "confidence": 0.9}\n```'
+        )
+        mock_response.content = [_text_block(fenced)]
+        mock_response.usage.input_tokens = 100
+        mock_response.usage.output_tokens = 20
+        mock_response.usage.cache_read_input_tokens = 100
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, _step = verify_claim(_make_claim(), _make_source())
+        assert result.status == "supported"
+        assert result.confidence == 0.9
+
+    @patch("src.verify.anthropic.Anthropic")
     def test_cache_hit_none_when_no_cache_tokens(self, mock_anthropic_cls: MagicMock) -> None:
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client

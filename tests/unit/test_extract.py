@@ -195,6 +195,26 @@ class TestExtractClaimsEdgeCases:
         assert step.operation == "extract"
 
     @patch("src.extract.anthropic.Anthropic")
+    def test_markdown_fenced_json_parsed(self, mock_anthropic_cls: MagicMock) -> None:
+        """LLM response wrapped in ```json fences is parsed correctly."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        fenced = '```json\n{"claims": [{"claim_text": "X causes Y", "cited_authors": ["Smith"], "cited_year": 2020, "claim_type": "causal"}]}\n```'
+        mock_response.content = [_text_block(fenced)]
+        mock_response.usage.input_tokens = 100
+        mock_response.usage.output_tokens = 50
+        mock_response.usage.cache_read_input_tokens = 100
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.extract import extract_claims
+
+        claims, _step = extract_claims("Some scientific text.")
+        assert len(claims) == 1
+        assert claims[0].claim_text == "X causes Y"
+
+    @patch("src.extract.anthropic.Anthropic")
     def test_cache_hit_none_when_no_cache_tokens(self, mock_anthropic_cls: MagicMock) -> None:
         """cache_hit=None when both cache_read and cache_creation are 0."""
         mock_client = MagicMock()

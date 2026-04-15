@@ -33,3 +33,8 @@ eval/results/
 # OS
 .DS_Store
 Thumbs.db
+
+eval/scifact/corpus.jsonl
+eval/scifact/claims_train.jsonl
+eval/scifact/claims_test.jsonl
+.env

@@ -72,6 +72,20 @@ def _hash(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
+def _strip_fences(text: str) -> str:
+    """Strip markdown code fences (```json ... ``` or ``` ... ```) from LLM output."""
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        # Remove opening fence line
+        first_newline = stripped.find("\n")
+        if first_newline != -1:
+            stripped = stripped[first_newline + 1 :]
+        # Remove closing fence
+        if stripped.endswith("```"):
+            stripped = stripped[: stripped.rfind("```")].rstrip()
+    return stripped
+
+
 def _parse_cache_hit(usage: Usage) -> bool | None:
     cache_read: int = usage.cache_read_input_tokens or 0
     cache_creation: int = usage.cache_creation_input_tokens or 0
@@ -133,7 +147,7 @@ def extract_claims(
     claims: list[Claim] = []
 
     try:
-        parsed: dict[str, Any] = json.loads(response_text)
+        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
         raw_claims: list[dict[str, Any]] = parsed["claims"]
         for raw in raw_claims:
             claims.append(

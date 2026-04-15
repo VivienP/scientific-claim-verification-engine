@@ -29,7 +29,7 @@ _LABEL_MAP: dict[str, str] = {
 
 
 def _load_corpus(corpus_path: Path) -> dict[str, dict[str, object]]:
-    """Load SciFact corpus.jsonl as a dict keyed by paper_id (str)."""
+    """Load SciFact corpus.jsonl as a dict keyed by doc_id (str)."""
     corpus: dict[str, dict[str, object]] = {}
     with open(corpus_path, encoding="utf-8") as f:
         for line in f:
@@ -37,7 +37,7 @@ def _load_corpus(corpus_path: Path) -> dict[str, dict[str, object]]:
             # abstract is list[str] — join into single string
             abstract_parts: list[str] = paper.get("abstract", []) or []
             paper["abstract_text"] = " ".join(abstract_parts)
-            corpus[str(paper["paper_id"])] = paper
+            corpus[str(paper["doc_id"])] = paper
     return corpus
 
 
@@ -124,10 +124,16 @@ def run_eval(
         evidence: dict[str, object] = raw_claim.get("evidence", {}) or {}  # type: ignore[assignment]
 
         if evidence:
-            # Use first evidence entry
+            # Use first evidence entry.
+            # evidence format: {"doc_id": [{"sentences": [...], "label": "SUPPORT|CONTRADICT"}, ...]}
             paper_id = next(iter(evidence))
             evidence_entry = evidence[paper_id]
-            label_raw = evidence_entry.get("label", "") if isinstance(evidence_entry, dict) else ""
+            # evidence_entry is a list of sentence-group dicts; take label from first group
+            label_raw = (
+                evidence_entry[0].get("label", "")
+                if isinstance(evidence_entry, list) and evidence_entry
+                else ""
+            )
             gt_status = _LABEL_MAP.get(str(label_raw), "not_addressed")
             paper = corpus.get(str(paper_id), {})
             abstract_text = str(paper.get("abstract_text", "")) if paper else ""
@@ -227,8 +233,8 @@ def main() -> None:
     parser.add_argument(
         "--claims",
         type=Path,
-        default=Path("eval/scifact/claims.jsonl"),
-        help="Path to SciFact claims.jsonl",
+        default=Path("eval/scifact/claims_dev.jsonl"),
+        help="Path to SciFact claims JSONL (default: dev split).",
     )
     parser.add_argument(
         "--limit",

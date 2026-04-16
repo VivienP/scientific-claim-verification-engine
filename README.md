@@ -2,7 +2,7 @@
 
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
-![Tests](https://img.shields.io/badge/tests-82%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)
 
 Auditable, claim-by-claim verification of scientific text against cited sources.
 
@@ -12,6 +12,20 @@ Takes free-form scientific text (paper excerpt, literature review, etc.) and out
 
 - A `report.json` with a verdict for each extracted claim (`supported` / `unsupported` / `partially_supported` / `not_addressed`)
 - A `provenance.jsonl` with a full audit trail of every LLM call, token count, and cache hit
+
+## Demo
+
+Pipeline running on a real [Edison Scientific](https://edisonscientific.com) Literature agent output (TREM2 / Alzheimer's microglia):
+
+![CLI run](docs/assets/demo_run.gif)
+
+Claim-by-claim verification report:
+
+![Verification report](docs/assets/demo_report.png)
+
+SciFact benchmark — pipeline vs. direct Claude (same model, no pipeline):
+
+![Metrics](docs/assets/demo_metrics.png)
 
 ## Quick start
 
@@ -23,12 +37,22 @@ python examples/sample_run.py
 
 Report files are written to `reports/runs/{report_id}/`.
 
+### Run on Edison Scientific output
+
+```bash
+pip install -e ".[edison]"
+export EDISON_API_KEY=...
+python scripts/fetch_edison_sample.py "What is the role of TREM2 in Alzheimer's microglia?" --slug trem2
+python examples/sample_run.py examples/inputs/edison_trem2.txt
+python scripts/show_report.py
+```
+
 ## Pipeline
 
 ```text
 input text
     → extract_claims()     # LLM: extract verifiable claims with citations
-    → resolve_citations()  # Semantic Scholar: find abstracts for each cited source
+    → resolve_citations()  # OpenAlex: find abstracts for each cited source
     → verify_claim()       # LLM: compare claim against abstract
     → build_report()       # Aggregate: write report.json + provenance.jsonl
 ```
@@ -90,7 +114,7 @@ Returns the path to the run directory (`reports/runs/{report_id}/`).
 All models are frozen dataclasses defined in `src/models.py`:
 
 - `Claim` — a single extracted claim with citation metadata
-- `ResolvedSource` — result of a Semantic Scholar lookup (abstract, DOI, similarity score)
+- `ResolvedSource` — result of an OpenAlex lookup (abstract, DOI, similarity score)
 - `VerificationResult` — LLM verdict with confidence and explanation
 - `ProvenanceStep` — audit record for one pipeline step (tokens, cache hit, model ID)
 
@@ -150,7 +174,7 @@ Quantitative and methodological claims are located in figures, tables, and metho
 
 ### Resolver quality
 
-Semantic Scholar fuzzy matching occasionally returns an incorrect paper (high similarity score, wrong study). This produces `not_addressed` verdicts that look like missing coverage rather than retrieval errors. The `similarity_score` field in the report is the primary diagnostic signal.
+OpenAlex fuzzy matching occasionally returns an incorrect paper (high similarity score, wrong study). This produces `not_addressed` verdicts that look like missing coverage rather than retrieval errors. The `similarity_score` field in the report is the primary diagnostic signal.
 
 ### Single-source verification
 

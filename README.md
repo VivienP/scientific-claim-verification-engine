@@ -102,7 +102,7 @@ python scripts/eval_scifact.py --split dev
 
 Uses the SciFact dataset in `eval/scifact/`. The `test` split is locked — never use it during development.
 
-### SciFact dev results (Phase 0 baseline)
+### SciFact dev results (PoC baseline)
 
 | Approach | F1 | Macro-F1 | Cost (50 claims) |
 | --- | --- | --- | --- |
@@ -133,6 +133,53 @@ Targeting < $0.10 per 2-page document.
 - Output: $15.00 / M tokens
 
 Token costs are logged per call and summed in `report.json` under `summary.total_cost_usd`.
+
+## Known limitations
+
+The current pipeline (PoC) verifies claims against **paper abstracts only**. This has two structural consequences:
+
+### Coverage by claim type
+
+| Claim type | Verifiable with abstracts | Example |
+| --- | --- | --- |
+| Qualitative high-level | Partially | "TREM2 is implicated in microglial activation" |
+| Specific quantitative | No | "KD = 86.50 nM", "p < 0.0001", "39% vs 11.5%" |
+| Methodological | No | Exact experimental conditions, concentrations |
+
+Quantitative and methodological claims are located in figures, tables, and methods sections — never in abstracts. This is a structural limitation of the data source, not the pipeline. Expect 60–70% `not_addressed` on dense scientific reports containing precise numerical findings.
+
+### Resolver quality
+
+Semantic Scholar fuzzy matching occasionally returns an incorrect paper (high similarity score, wrong study). This produces `not_addressed` verdicts that look like missing coverage rather than retrieval errors. The `similarity_score` field in the report is the primary diagnostic signal.
+
+### Single-source verification
+
+Each claim is verified against its cited source only. No cross-referencing against corroborating or contradicting literature.
+
+---
+
+## Future work
+
+### Phase 1 — Full-text verification
+
+Move from abstract-level to full-text verification, closing the coverage gap on quantitative and methodological claims.
+
+- **CrossRef as fallback resolver** — reduces citation miss rate when Semantic Scholar fails
+- **Full-text retrieval chain** — PubMed Central OA → Unpaywall → PDF → abstract fallback (with `fulltext_unavailable` flag)
+- **Section-aware chunking** — IMRAD structure (Introduction / Methods / Results / Discussion) maps each claim to the relevant section; never sliding window
+- **Passage selection** — BM25 top-3 chunks for focused verification
+- **Source quotes in output** — exact sentences from the source paper supporting or contradicting the claim
+
+### Phase 2 — Deterministic numerical engine
+
+Catch quantitative errors that LLMs are structurally unreliable at detecting. The comparison step is 100% deterministic Python — no LLM calls.
+
+- **Statistical consistency checker** — verifies that reported p-values are plausible given effect size and sample size (`scipy.stats`, `statsmodels`)
+- **Unit and magnitude checker** — flags order-of-magnitude mismatches and unit errors (e.g. μM vs mM)
+- **Percentage and ratio verification** — detects inverted ratios, incorrect percentages, multi-arm trial inconsistencies
+- **Property-based testing** (`hypothesis`) — comparison engine is symmetric and deterministic on all inputs
+
+---
 
 ## Contributing
 

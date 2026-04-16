@@ -188,7 +188,6 @@ Each claim is verified against its cited source only. No cross-referencing again
 
 Move from abstract-level to full-text verification, closing the coverage gap on quantitative and methodological claims.
 
-- **CrossRef as fallback resolver** — reduces citation miss rate when OpenAlex returns no results
 - **Full-text retrieval chain** — PubMed Central OA → Unpaywall → PDF → abstract fallback (with `fulltext_unavailable` flag)
 - **Section-aware chunking** — IMRAD structure (Introduction / Methods / Results / Discussion) maps each claim to the relevant section; never sliding window
 - **Passage selection** — BM25 top-3 chunks for focused verification

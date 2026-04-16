@@ -1,10 +1,15 @@
 # Scientific Claim Verification Engine
 
-Phase 0 MVP — auditable, claim-by-claim verification of scientific text against cited sources.
+![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
+![License](https://img.shields.io/badge/license-Apache%202.0-green)
+![Tests](https://img.shields.io/badge/tests-82%20passing-brightgreen)
+
+Auditable, claim-by-claim verification of scientific text against cited sources.
 
 ## What it does
 
 Takes free-form scientific text (paper excerpt, literature review, etc.) and outputs:
+
 - A `report.json` with a verdict for each extracted claim (`supported` / `unsupported` / `partially_supported` / `not_addressed`)
 - A `provenance.jsonl` with a full audit trail of every LLM call, token count, and cache hit
 
@@ -20,7 +25,7 @@ Report files are written to `reports/runs/{report_id}/`.
 
 ## Pipeline
 
-```
+```text
 input text
     → extract_claims()     # LLM: extract verifiable claims with citations
     → resolve_citations()  # Semantic Scholar: find abstracts for each cited source
@@ -113,7 +118,7 @@ Baseline locked at `eval/results/baseline_phase0.json`.
 ## Development
 
 ```bash
-python -m pytest tests/unit/ -v          # 73 tests, all offline
+python -m pytest tests/unit/ -v          # 82 tests, all offline
 python -m mypy --strict src/             # zero errors
 python -m ruff check src/ tests/ scripts/
 python -m ruff format src/ tests/ scripts/
@@ -121,9 +126,18 @@ python -m ruff format src/ tests/ scripts/
 
 ## Cost estimate
 
-At Phase 0, targeting < $0.10 per 2-page document.
+Targeting < $0.10 per 2-page document.
+
 - Input: $3.00 / M tokens
 - Cached input: $0.30 / M tokens (prompt caching on all system prompts)
 - Output: $15.00 / M tokens
 
 Token costs are logged per call and summed in `report.json` under `summary.total_cost_usd`.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code style, and PR guidelines.
+
+## License
+
+Apache 2.0 — see [LICENSE](LICENSE).

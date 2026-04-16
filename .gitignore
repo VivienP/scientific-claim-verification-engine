@@ -40,3 +40,9 @@ eval/scifact/corpus.jsonl
 eval/scifact/claims_train.jsonl
 eval/scifact/claims_test.jsonl
 .env
+
+# Internal project management — not for public distribution
+development-roadmap.md
+CLAUDE.md
+.claude/
+decisions/

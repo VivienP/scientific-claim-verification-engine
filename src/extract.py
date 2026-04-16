@@ -119,7 +119,7 @@ def extract_claims(
 
     response = client.messages.create(
         model=model_id,
-        max_tokens=2048,
+        max_tokens=4096,
         system=[
             {
                 "type": "text",

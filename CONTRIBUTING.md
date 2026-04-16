@@ -56,3 +56,5 @@ Open a [GitHub Issue](https://github.com/VivienP/scientific-claim-verification-e
 - A minimal reproducible example (input text + command)
 - The full error output or unexpected `report.json` content
 - Your Python version and OS
+
+Thank you for helping.

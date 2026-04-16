@@ -1,4 +1,4 @@
-"""Batch citation resolution via Semantic Scholar."""
+"""Batch citation resolution via OpenAlex."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pathlib import Path
 
 import structlog
 
-from src.clients.semantic_scholar import search_paper
+from src.clients.openalex import search_paper
 from src.models import Claim, ProvenanceStep, ResolvedSource
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
@@ -36,7 +36,7 @@ def resolve_citations(
     api_key: str | None = None,
     db_path: Path | None = None,
 ) -> tuple[dict[str, ResolvedSource], list[ProvenanceStep]]:
-    """Resolve each claim's cited source via Semantic Scholar.
+    """Resolve each claim's cited source via OpenAlex.
 
     Returns a dict keyed by claim_id (entry present for EVERY claim, even unresolved).
     Returns one ProvenanceStep per claim (operation="resolve", model_id=None).

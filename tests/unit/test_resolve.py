@@ -129,19 +129,20 @@ class TestResolveCitations:
         httpx_mock.add_response(
             status_code=200,
             json={
-                "data": [
+                "results": [
                     {
-                        "paperId": "p1",
+                        "id": "https://openalex.org/W1",
                         "title": "Some Paper",
-                        "abstract": "An abstract.",
-                        "year": 2020,
-                        "authors": [],
+                        "abstract_inverted_index": {"An": [0], "abstract.": [1]},
+                        "publication_year": 2020,
+                        "doi": None,
+                        "authorships": [],
                     }
                 ]
             },
         )
 
-        with patch("src.clients.semantic_scholar.time.sleep"):
+        with patch("src.clients.openalex.time.sleep"):
             claims = [_make_claim("c0"), _make_claim("c1")]
             sources, steps = resolve_citations(claims, db_path=tmp_path / "cache.db")
 

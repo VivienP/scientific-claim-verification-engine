@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""End-to-end pipeline demo using a real Crow/Falcon agent output."""
+"""End-to-end pipeline demo using a real Edison Scientific Literature agent output."""
 
 from __future__ import annotations
 
@@ -9,10 +9,7 @@ import sys
 import uuid
 from pathlib import Path
 
-# Check for API key before any imports that might fail obscurely
-if not os.environ.get("ANTHROPIC_API_KEY"):
-    print("Error: ANTHROPIC_API_KEY environment variable not set.")
-    sys.exit(1)
+from dotenv import load_dotenv
 
 from src.extract import extract_claims
 from src.report import build_report
@@ -21,7 +18,15 @@ from src.verify import verify_claim
 
 
 def main() -> None:
-    sample_path = Path(__file__).parent / "inputs" / "crow_sample.txt"
+    load_dotenv()
+    if not os.environ.get("ANTHROPIC_API_KEY"):
+        print("Error: ANTHROPIC_API_KEY environment variable not set.")
+        sys.exit(1)
+
+    sample_path = (
+        Path(sys.argv[1]) if len(sys.argv) > 1
+        else Path(__file__).parent / "inputs" / "crow_sample.txt"
+    )
     text = sample_path.read_text(encoding="utf-8")
     report_id = str(uuid.uuid4())
     all_steps = []

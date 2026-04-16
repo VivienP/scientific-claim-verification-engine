@@ -17,15 +17,15 @@ Takes free-form scientific text (paper excerpt, literature review, etc.) and out
 
 Pipeline running on a real [Edison Scientific](https://edisonscientific.com) Literature agent output (TREM2 / Alzheimer's microglia):
 
-![CLI run](docs/assets/demo_run.gif)
+<img src="docs/assets/demo_run.gif" width="375" alt="CLI run">
 
 Claim-by-claim verification report:
 
-![Verification report](docs/assets/demo_report.png)
+<img src="docs/assets/demo_report.png" width="375" alt="Verification report">
 
 SciFact benchmark — pipeline vs. direct Claude (same model, no pipeline):
 
-![Metrics](docs/assets/demo_metrics.png)
+<img src="docs/assets/demo_metrics.png" width="375" alt="Metrics">
 
 ## Quick start
 

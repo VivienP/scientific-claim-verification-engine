@@ -86,7 +86,8 @@ def _compute_summary_stats(
     found_count = sum(
         1
         for c in claims
-        if sources.get(c.claim_id, ResolvedSource(False, None, None, None, None)).found
+        if sources.get(c.claim_id, ResolvedSource(False, None, None, None, None)).abstract
+        is not None
     )
     citation_found_rate = found_count / total if total > 0 else 0.0
 
@@ -163,13 +164,14 @@ def build_report(
 
     # Build aggregate provenance step.
     # claim_id=report_id by convention: aggregate step belongs to the run, not a single claim.
-    claim_ids = [c.claim_id for c in claims]
+    # input_hash: full claim_records payload so any change in verdicts, sources, or explanations
+    # is detectable. output_hash: stats + claim_records captures both summary and per-claim output.
     aggregate_step = ProvenanceStep(
         step_id=str(uuid.uuid4()),
         claim_id=report_id,
         operation="aggregate",
-        input_hash=_hash(repr(claim_ids)),
-        output_hash=_hash(repr(stats)),
+        input_hash=_hash(repr(claim_records)),
+        output_hash=_hash(repr((stats, claim_records))),
         model_id=None,
         timestamp=time.time(),
         tokens_in=None,

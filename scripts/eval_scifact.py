@@ -93,7 +93,13 @@ def run_eval(
     max_cost_usd: float = 5.0,
     model_id: str = MODEL_ID,
 ) -> dict[str, float]:
-    """Run pipeline on a SciFact split and return metrics dict.
+    """Run the verifier module on SciFact with oracle inputs and return metrics dict.
+
+    ORACLE EVAL: Claims and source abstracts are taken directly from the SciFact corpus.
+    extract_claims() and resolve_citations() are NOT called — this measures verifier
+    accuracy given perfect inputs, not end-to-end pipeline accuracy. SciFact claims are
+    isolated sentences without resolvable bibliographic citations, making oracle access
+    the only valid evaluation strategy for Phase 1.
 
     Refuses split="test" with structlog.error + sys.exit(1).
     Tracks cumulative cost via ProvenanceStep tokens; aborts with sys.exit(1) if exceeded.
@@ -188,6 +194,8 @@ def run_eval(
 
     output_data = {
         "split": split,
+        "oracle_eval": True,  # claims and abstracts sourced directly from SciFact corpus
+        "eval_scope": "verifier_only",  # extract_claims and resolve_citations not called
         "limit": limit,
         "model_id": model_id,
         "timestamp": time.time(),

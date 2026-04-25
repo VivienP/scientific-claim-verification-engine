@@ -25,8 +25,8 @@ def _make_source(found: bool = True) -> ResolvedSource:
     return ResolvedSource(
         found=found,
         doi=None,
-        title="Test Paper",
-        abstract="Abstract text.",
+        title="Test Paper" if found else None,
+        abstract="Abstract text." if found else None,
         similarity_score=0.9 if found else None,
     )
 

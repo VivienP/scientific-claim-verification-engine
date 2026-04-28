@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import dataclasses
+
 import pytest
 
 from src.models import Claim, ProvenanceStep, ResolvedSource, VerificationResult
+from src.numeric.checks import NumericAssertion, NumericCheckResult
 
 
 class TestClaim:
@@ -184,3 +187,73 @@ class TestProvenanceStep:
                 confidence=None,
             )
             assert step.operation == op
+
+
+class TestVerificationResultNumericCheck:
+    def test_default_numeric_check_is_none(self) -> None:
+        v = VerificationResult(status="supported", explanation="ok", confidence=0.9)
+        assert v.numeric_check is None
+
+    def test_numeric_check_round_trip_through_asdict(self) -> None:
+        nc = NumericCheckResult(
+            check_type="or_ci_consistency",
+            consistent=True,
+            extracted=[
+                NumericAssertion(
+                    raw_text="OR 40.53",
+                    value=40.53,
+                    unit=None,
+                    role="primary",
+                    context="odds ratio",
+                ),
+            ],
+            explanation="OR/CI internally consistent.",
+        )
+        v = VerificationResult(
+            status="supported",
+            explanation="ok",
+            confidence=0.9,
+            numeric_check=nc,
+        )
+        d = dataclasses.asdict(v)
+        assert d["numeric_check"]["check_type"] == "or_ci_consistency"
+        assert d["numeric_check"]["consistent"] is True
+        assert d["numeric_check"]["extracted"][0]["value"] == 40.53
+
+
+class TestProvenanceStepNumericOperations:
+    def test_numeric_extract_operation_accepted(self) -> None:
+        from src.models import ProvenanceStep
+
+        step = ProvenanceStep(
+            step_id="s",
+            claim_id="c",
+            operation="numeric_extract",
+            input_hash="h1",
+            output_hash="h2",
+            model_id=None,
+            timestamp=0.0,
+            tokens_in=None,
+            tokens_out=None,
+            cache_hit=None,
+            confidence=None,
+        )
+        assert step.operation == "numeric_extract"
+
+    def test_numeric_check_operation_accepted(self) -> None:
+        from src.models import ProvenanceStep
+
+        step = ProvenanceStep(
+            step_id="s",
+            claim_id="c",
+            operation="numeric_check",
+            input_hash="h1",
+            output_hash="h2",
+            model_id=None,
+            timestamp=0.0,
+            tokens_in=None,
+            tokens_out=None,
+            cache_hit=None,
+            confidence=None,
+        )
+        assert step.operation == "numeric_check"

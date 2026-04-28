@@ -3,11 +3,21 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from src.numeric.checks import NumericCheckResult
 
 ClaimType = Literal["factual_numeric", "factual_qualitative", "methodological", "causal"]
 VerificationStatus = Literal["supported", "unsupported", "not_addressed", "partially_supported"]
-OperationType = Literal["extract", "resolve", "verify", "aggregate"]
+OperationType = Literal[
+    "extract",
+    "resolve",
+    "verify",
+    "aggregate",
+    "numeric_extract",
+    "numeric_check",
+]
 VerifiabilityStatus = Literal["verifiable", "no_citations_found", "low_citation_density"]
 SectionLabel = Literal["introduction", "methods", "results", "discussion", "other"]
 
@@ -52,6 +62,7 @@ class VerificationResult:
     fulltext_available: bool = False
     verification_depth: Literal["fulltext", "abstract"] = "abstract"
     retraction_status: bool = False
+    numeric_check: NumericCheckResult | None = None
 
 
 @dataclass(frozen=True)

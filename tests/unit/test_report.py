@@ -330,6 +330,62 @@ class TestPhase1ReportFields:
         assert verification["source_section"] == "results"
         assert verification["verification_depth"] == "fulltext"
 
+    def test_numeric_checks_summary_counts(self, tmp_path: Path) -> None:
+        from src.numeric.checks import NumericCheckResult
+        from src.report import build_report
+
+        nc_consistent = NumericCheckResult(
+            check_type="or_ci_consistency",
+            consistent=True,
+            extracted=[],
+            explanation="OK",
+        )
+        nc_flagged = NumericCheckResult(
+            check_type="or_ci_consistency",
+            consistent=False,
+            extracted=[],
+            explanation="bad",
+        )
+
+        claims = [_make_claim(f"c{i}") for i in range(3)]
+        sources = {f"c{i}": _make_source() for i in range(3)}
+        results = {
+            "c0": VerificationResult(
+                status="supported",
+                explanation="ok",
+                confidence=0.9,
+                numeric_check=nc_consistent,
+            ),
+            "c1": VerificationResult(
+                status="unsupported",
+                explanation="ok",
+                confidence=0.9,
+                numeric_check=nc_flagged,
+            ),
+            "c2": VerificationResult(
+                status="not_addressed",
+                explanation="ok",
+                confidence=0.9,
+                numeric_check=None,
+            ),
+        }
+        steps = [_make_step(f"s{i}", f"c{i}") for i in range(3)]
+
+        run_dir = build_report(
+            "report-numeric",
+            "Text.",
+            claims,
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["numeric_checks_run"] == 2
+        assert report["summary"]["numeric_inconsistencies_flagged"] == 1
+
     def test_retracted_sources_count_in_summary(self, tmp_path: Path) -> None:
         from src.report import build_report
 

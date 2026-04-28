@@ -102,6 +102,25 @@ def _compute_summary_stats(
         for c in claims
         if sources.get(c.claim_id, ResolvedSource(False, None, None, None, None)).retraction_status
     )
+    numeric_checks_run = sum(
+        1
+        for c in claims
+        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).numeric_check
+        is not None
+    )
+    numeric_inconsistencies_flagged = sum(
+        1
+        for c in claims
+        if (
+            (
+                nc := results.get(
+                    c.claim_id, VerificationResult("not_addressed", "", 0.0)
+                ).numeric_check
+            )
+            is not None
+            and not nc.consistent
+        )
+    )
 
     return {
         "total_claims": total,
@@ -113,6 +132,8 @@ def _compute_summary_stats(
         "verifiability_status": _verifiability_status(citation_found_rate),
         "fulltext_verified": fulltext_verified,
         "retracted_sources": retracted_sources,
+        "numeric_checks_run": numeric_checks_run,
+        "numeric_inconsistencies_flagged": numeric_inconsistencies_flagged,
     }
 
 

@@ -291,6 +291,42 @@ def verify_claim_fulltext(
     return result, step
 
 
+def verify_claim_fulltext_with_numeric(
+    claim: Claim,
+    source: ResolvedSource,
+    passages: list[PaperChunk],
+    *,
+    model_id: str = MODEL_ID,
+    api_key: str | None = None,
+) -> tuple[VerificationResult, list[ProvenanceStep]]:
+    """Run full-text LLM verification AND the deterministic numeric engine.
+
+    Returns the VerificationResult with `numeric_check` populated when the engine
+    runs successfully, plus the full list of provenance steps (verify + extract +
+    optional check).
+
+    Numeric engine is invoked only when the claim contains numeric assertions that
+    yield an OR/CI triple. When the engine returns None (no triple found), the
+    VerificationResult is returned unchanged with `numeric_check=None`.
+
+    Never raises.
+    """
+    from src.numeric.engine import run_numeric_check
+
+    result, verify_step = verify_claim_fulltext(
+        claim, source, passages, model_id=model_id, api_key=api_key
+    )
+
+    numeric_result, numeric_steps = run_numeric_check(
+        claim.claim_text, claim_id=claim.claim_id, model_id=model_id, api_key=api_key
+    )
+
+    if numeric_result is not None:
+        result = dataclasses.replace(result, numeric_check=numeric_result)
+
+    return result, [verify_step, *numeric_steps]
+
+
 def verify_claim(
     claim: Claim,
     source: ResolvedSource,

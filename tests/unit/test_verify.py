@@ -385,3 +385,146 @@ class TestVerifyClaimFulltext:
         call = mock_client.messages.create.call_args
         system_blocks = call.kwargs["system"]
         assert system_blocks[0]["cache_control"] == {"type": "ephemeral"}
+
+
+class TestVerifyClaimFulltextWithNumeric:
+    @patch("src.numeric.engine.run_numeric_check")
+    @patch("src.verify.verify_claim_fulltext")
+    def test_numeric_check_attached_when_engine_returns_result(
+        self,
+        mock_verify_ft: MagicMock,
+        mock_run_numeric: MagicMock,
+    ) -> None:
+        from src.models import ProvenanceStep, VerificationResult
+        from src.numeric.checks import NumericCheckResult
+
+        ft_result = VerificationResult(
+            status="supported",
+            explanation="ok",
+            confidence=0.9,
+            fulltext_available=True,
+            verification_depth="fulltext",
+        )
+        ft_step = ProvenanceStep(
+            step_id="vs",
+            claim_id="claim-1",
+            operation="verify",
+            input_hash="i",
+            output_hash="o",
+            model_id="m",
+            timestamp=0.0,
+            tokens_in=100,
+            tokens_out=20,
+            cache_hit=False,
+            confidence=0.9,
+        )
+        mock_verify_ft.return_value = (ft_result, ft_step)
+
+        nc_result = NumericCheckResult(
+            check_type="or_ci_consistency",
+            consistent=True,
+            extracted=[],
+            explanation="OR/CI internally consistent.",
+        )
+        mock_run_numeric.return_value = (
+            nc_result,
+            [
+                ProvenanceStep(
+                    step_id="ne",
+                    claim_id="claim-1",
+                    operation="numeric_extract",
+                    input_hash="i",
+                    output_hash="o",
+                    model_id="m",
+                    timestamp=0.0,
+                    tokens_in=200,
+                    tokens_out=50,
+                    cache_hit=False,
+                    confidence=None,
+                ),
+                ProvenanceStep(
+                    step_id="nc",
+                    claim_id="claim-1",
+                    operation="numeric_check",
+                    input_hash="i",
+                    output_hash="o",
+                    model_id=None,
+                    timestamp=0.0,
+                    tokens_in=None,
+                    tokens_out=None,
+                    cache_hit=None,
+                    confidence=None,
+                ),
+            ],
+        )
+
+        from src.verify import verify_claim_fulltext_with_numeric
+
+        result, steps = verify_claim_fulltext_with_numeric(
+            _make_claim(), _make_source(), _make_passages(2)
+        )
+        assert result.numeric_check is not None
+        assert result.numeric_check.consistent is True
+        assert len(steps) == 3
+        assert steps[0].operation == "verify"
+        assert steps[1].operation == "numeric_extract"
+        assert steps[2].operation == "numeric_check"
+
+    @patch("src.numeric.engine.run_numeric_check")
+    @patch("src.verify.verify_claim_fulltext")
+    def test_no_numeric_assertions_returns_none_check(
+        self,
+        mock_verify_ft: MagicMock,
+        mock_run_numeric: MagicMock,
+    ) -> None:
+        from src.models import ProvenanceStep, VerificationResult
+
+        ft_result = VerificationResult(
+            status="supported",
+            explanation="ok",
+            confidence=0.9,
+            fulltext_available=True,
+            verification_depth="fulltext",
+        )
+        ft_step = ProvenanceStep(
+            step_id="vs",
+            claim_id="claim-1",
+            operation="verify",
+            input_hash="i",
+            output_hash="o",
+            model_id="m",
+            timestamp=0.0,
+            tokens_in=100,
+            tokens_out=20,
+            cache_hit=False,
+            confidence=0.9,
+        )
+        mock_verify_ft.return_value = (ft_result, ft_step)
+
+        # Engine returns None when no OR/CI triple is found
+        mock_run_numeric.return_value = (
+            None,
+            [
+                ProvenanceStep(
+                    step_id="ne",
+                    claim_id="claim-1",
+                    operation="numeric_extract",
+                    input_hash="i",
+                    output_hash="o",
+                    model_id="m",
+                    timestamp=0.0,
+                    tokens_in=200,
+                    tokens_out=50,
+                    cache_hit=False,
+                    confidence=None,
+                ),
+            ],
+        )
+
+        from src.verify import verify_claim_fulltext_with_numeric
+
+        result, steps = verify_claim_fulltext_with_numeric(
+            _make_claim(), _make_source(), _make_passages(2)
+        )
+        assert result.numeric_check is None
+        assert len(steps) == 2

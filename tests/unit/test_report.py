@@ -264,6 +264,99 @@ class TestBuildReport:
         assert report["summary"]["total_cost_usd"] == pytest.approx(0.0018, rel=1e-3)
 
 
+class TestPhase1ReportFields:
+    def test_fulltext_verified_count_in_summary(self, tmp_path: Path) -> None:
+        from src.report import build_report
+
+        claims = [_make_claim(f"c{i}") for i in range(3)]
+        sources = {f"c{i}": _make_source() for i in range(3)}
+        results = {
+            "c0": VerificationResult(
+                status="supported",
+                explanation="ok",
+                confidence=0.9,
+                verification_depth="fulltext",
+                fulltext_available=True,
+            ),
+            "c1": VerificationResult(
+                status="unsupported",
+                explanation="ok",
+                confidence=0.9,
+                verification_depth="fulltext",
+                fulltext_available=True,
+            ),
+            "c2": VerificationResult(  # abstract path
+                status="supported",
+                explanation="ok",
+                confidence=0.9,
+            ),
+        }
+        steps = [_make_step(f"s{i}", f"c{i}") for i in range(3)]
+
+        run_dir = build_report(
+            "report-fulltext", "Text.", claims, sources, results, steps, output_dir=tmp_path
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["fulltext_verified"] == 2
+
+    def test_source_passages_serialized(self, tmp_path: Path) -> None:
+        from src.report import build_report
+
+        claims = [_make_claim("c1")]
+        sources = {"c1": _make_source()}
+        results = {
+            "c1": VerificationResult(
+                status="supported",
+                explanation="ok",
+                confidence=0.9,
+                source_passages=["First quote.", "Second quote."],
+                source_section="results",
+                fulltext_available=True,
+                verification_depth="fulltext",
+            )
+        }
+        steps = [_make_step("s1", "c1")]
+
+        run_dir = build_report(
+            "report-passages", "Text.", claims, sources, results, steps, output_dir=tmp_path
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        verification = report["claims"][0]["verification"]
+        assert verification["source_passages"] == ["First quote.", "Second quote."]
+        assert verification["source_section"] == "results"
+        assert verification["verification_depth"] == "fulltext"
+
+    def test_retracted_sources_count_in_summary(self, tmp_path: Path) -> None:
+        from src.report import build_report
+
+        claims = [_make_claim("c1"), _make_claim("c2")]
+        sources = {
+            "c1": ResolvedSource(
+                found=True,
+                doi="10.1/r",
+                title="T",
+                abstract="a",
+                similarity_score=1.0,
+                retraction_status=True,
+            ),
+            "c2": _make_source(),
+        }
+        results = {"c1": _make_result(), "c2": _make_result()}
+        steps = [_make_step(f"s{i}", f"c{i + 1}") for i in range(2)]
+
+        run_dir = build_report(
+            "report-retr", "Text.", claims, sources, results, steps, output_dir=tmp_path
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["retracted_sources"] == 1
+
+
 class TestVerifiabilityStatus:
     """Tests for verifiability_status field in report summary."""
 

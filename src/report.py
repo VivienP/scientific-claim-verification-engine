@@ -91,6 +91,18 @@ def _compute_summary_stats(
     )
     citation_found_rate = found_count / total if total > 0 else 0.0
 
+    fulltext_verified = sum(
+        1
+        for c in claims
+        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).verification_depth
+        == "fulltext"
+    )
+    retracted_sources = sum(
+        1
+        for c in claims
+        if sources.get(c.claim_id, ResolvedSource(False, None, None, None, None)).retraction_status
+    )
+
     return {
         "total_claims": total,
         "supported": supported,
@@ -99,6 +111,8 @@ def _compute_summary_stats(
         "partially_supported": partially_supported,
         "citation_found_rate": citation_found_rate,
         "verifiability_status": _verifiability_status(citation_found_rate),
+        "fulltext_verified": fulltext_verified,
+        "retracted_sources": retracted_sources,
     }
 
 

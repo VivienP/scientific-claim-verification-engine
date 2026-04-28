@@ -11,10 +11,13 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from src.bm25_selector import select_passages
+from src.chunker import chunk_paper
 from src.extract import extract_claims
+from src.fetch_fulltext import fetch_fulltext
 from src.report import build_report
 from src.resolve import resolve_citations
-from src.verify import verify_claim
+from src.verify import verify_claim, verify_claim_fulltext
 
 
 def main() -> None:
@@ -39,13 +42,29 @@ def main() -> None:
     all_steps.extend(resolve_steps)
 
     results = {}
+    fulltext_methods: dict[str, str] = {}
     for claim in claims:
-        result, verify_step = verify_claim(claim, sources[claim.claim_id])
+        source = sources[claim.claim_id]
+        fulltext, method = fetch_fulltext(source)
+        fulltext_methods[claim.claim_id] = method
+
+        if fulltext is not None:
+            chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
+            passages = select_passages(claim.claim_text, chunks, top_k=3)
+            result, verify_step = verify_claim_fulltext(claim, source, passages)
+        else:
+            result, verify_step = verify_claim(claim, source)
+
         results[claim.claim_id] = result
         all_steps.append(verify_step)
 
     run_dir = build_report(report_id, text, claims, sources, results, all_steps)
     print(f"Report written to: {run_dir}")
+    print(
+        "Full-text retrieval methods: "
+        + ", ".join(f"{m}={list(fulltext_methods.values()).count(m)}"
+                    for m in sorted(set(fulltext_methods.values())))
+    )
 
     report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))
     status = report["summary"]["verifiability_status"]

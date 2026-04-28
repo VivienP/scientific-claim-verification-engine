@@ -46,3 +46,8 @@ development-roadmap.md
 CLAUDE.md
 .claude/
 decisions/
+
+# Local caches and tooling
+.cache/
+.codex/
+.commit-split-backup/

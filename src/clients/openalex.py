@@ -78,17 +78,38 @@ def _reconstruct_abstract(inv_idx: dict[str, list[int]] | None) -> str | None:
     return " ".join(positions[i] for i in sorted(positions))
 
 
+def _extract_pmcid(pmcid_raw: str | None) -> str | None:
+    """Normalise OpenAlex PMC URL or bare ID → 'PMC1234567' form."""
+    if not pmcid_raw:
+        return None
+    cleaned = pmcid_raw.rstrip("/").split("/")[-1]
+    if cleaned.upper().startswith("PMC"):
+        return "PMC" + cleaned[3:]
+    if cleaned.isdigit():
+        return f"PMC{cleaned}"
+    return cleaned
+
+
 def _build_resolved_source(result: dict[str, Any], query_year: int | None) -> ResolvedSource:
     result_year: int | None = result.get("publication_year")
     abstract: str | None = _reconstruct_abstract(result.get("abstract_inverted_index"))
     doi_raw: str | None = result.get("doi")
     doi: str | None = doi_raw.replace("https://doi.org/", "") if doi_raw else None
+
+    oa_info: dict[str, Any] = result.get("open_access") or {}
+    oa_url: str | None = oa_info.get("oa_url") or oa_info.get("pdf_url")
+
+    ids_info: dict[str, Any] = result.get("ids") or {}
+    pmcid: str | None = _extract_pmcid(ids_info.get("pmcid"))
+
     return ResolvedSource(
         found=True,
         doi=doi,
         title=result.get("title"),
         abstract=abstract,
         similarity_score=_compute_similarity(result_year, query_year),
+        oa_url=oa_url,
+        pmcid=pmcid,
     )
 
 
@@ -113,7 +134,10 @@ def search_paper(
     if cached is not None:
         logger.debug("cache_hit", query=query)
         data: dict[str, Any] = json.loads(cached)
-        return ResolvedSource(**data)
+        # Drop unknown keys defensively (e.g. if older code wrote a different schema).
+        valid_keys = {f.name for f in dataclasses.fields(ResolvedSource)}
+        clean = {k: v for k, v in data.items() if k in valid_keys}
+        return ResolvedSource(**clean)
 
     params: dict[str, str | int] = {
         "search": query,

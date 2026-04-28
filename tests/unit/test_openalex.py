@@ -61,6 +61,90 @@ class TestReconstructAbstract:
         assert _reconstruct_abstract({}) is None
 
 
+class TestPhase1Fields:
+    def test_oa_url_extracted(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        resp = {
+            "results": [
+                {
+                    "title": "T",
+                    "doi": "https://doi.org/10.1/x",
+                    "publication_year": 2023,
+                    "open_access": {"oa_url": "https://oa.example/paper.pdf"},
+                }
+            ]
+        }
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json=resp)
+        result = search_paper("query 2023", db_path=tmp_path / "cache.db")
+        assert result.oa_url == "https://oa.example/paper.pdf"
+
+    def test_pdf_url_fallback_when_no_oa_url(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        resp = {
+            "results": [
+                {
+                    "title": "T",
+                    "doi": "https://doi.org/10.1/x",
+                    "publication_year": 2023,
+                    "open_access": {"oa_url": None, "pdf_url": "https://oa.example/paper.pdf"},
+                }
+            ]
+        }
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json=resp)
+        result = search_paper("query 2023", db_path=tmp_path / "cache.db")
+        assert result.oa_url == "https://oa.example/paper.pdf"
+
+    def test_pmcid_url_normalized(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        resp = {
+            "results": [
+                {
+                    "title": "T",
+                    "doi": "https://doi.org/10.1/x",
+                    "publication_year": 2023,
+                    "ids": {"pmcid": "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1234567/"},
+                }
+            ]
+        }
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json=resp)
+        result = search_paper("query 2023", db_path=tmp_path / "cache.db")
+        assert result.pmcid == "PMC1234567"
+
+    def test_no_oa_metadata_keeps_none_defaults(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json=_PAPER_RESPONSE)
+        result = search_paper("Hoffmann 2022", db_path=tmp_path / "cache.db")
+        assert result.oa_url is None
+        assert result.pmcid is None
+        assert result.retraction_status is False
+
+    def test_old_cache_entry_missing_phase1_fields(self, tmp_path: Path) -> None:
+        """Old cache entries (before Phase 1) lack oa_url/pmcid; should still deserialize."""
+        import json as _json
+
+        from src.clients._cache import init_db
+        from src.clients._cache import put as _put
+
+        db = tmp_path / "cache.db"
+        init_db(db)
+        # Simulate an old cache record without the Phase 1 fields
+        old_payload = {
+            "found": True,
+            "doi": "10.1/legacy",
+            "title": "Old Paper",
+            "abstract": "Some abstract.",
+            "similarity_score": 1.0,
+        }
+        from src.clients.openalex import _cache_key
+
+        _put(db, _cache_key("legacy 2020"), _json.dumps(old_payload), 60)
+
+        result = search_paper("legacy 2020", db_path=db)
+        assert result.found is True
+        assert result.doi == "10.1/legacy"
+        assert result.oa_url is None
+        assert result.pmcid is None
+        assert result.retraction_status is False
+
+
 class TestSearchPaperFound:
     def test_happy_path(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(url=_OA_URL_PATTERN, json=_PAPER_RESPONSE)

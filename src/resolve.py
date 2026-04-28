@@ -1,7 +1,8 @@
-"""Batch citation resolution via OpenAlex."""
+"""Batch citation resolution via OpenAlex with CrossRef fallback and retraction check."""
 
 from __future__ import annotations
 
+import dataclasses
 import hashlib
 import time
 import uuid
@@ -9,6 +10,7 @@ from pathlib import Path
 
 import structlog
 
+from src.clients import crossref as _crossref
 from src.clients.openalex import search_paper
 from src.models import Claim, ProvenanceStep, ResolvedSource
 
@@ -53,6 +55,17 @@ def resolve_citations(
         else:
             query = _build_query(claim)
             source = search_paper(query, api_key=api_key, db_path=db_path)
+            if not source.found:
+                cf_source = _crossref.search_paper(query, db_path=db_path)
+                if cf_source.found:
+                    source = cf_source
+                    logger.info("crossref_fallback_success", claim_id=claim.claim_id)
+
+        if source.doi is not None:
+            retracted = _crossref.check_retraction(source.doi, db_path=db_path)
+            if retracted:
+                logger.warning("retraction_detected", claim_id=claim.claim_id, doi=source.doi)
+            source = dataclasses.replace(source, retraction_status=retracted)
 
         sources[claim.claim_id] = source
         steps.append(

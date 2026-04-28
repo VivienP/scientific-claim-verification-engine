@@ -2,13 +2,23 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Literal
 
 ClaimType = Literal["factual_numeric", "factual_qualitative", "methodological", "causal"]
 VerificationStatus = Literal["supported", "unsupported", "not_addressed", "partially_supported"]
 OperationType = Literal["extract", "resolve", "verify", "aggregate"]
 VerifiabilityStatus = Literal["verifiable", "no_citations_found", "low_citation_density"]
+SectionLabel = Literal["introduction", "methods", "results", "discussion", "other"]
+
+
+@dataclass(frozen=True)
+class PaperChunk:
+    doi: str
+    section: SectionLabel
+    text: str
+    char_start: int
+    char_end: int
 
 
 @dataclass(frozen=True)
@@ -27,6 +37,9 @@ class ResolvedSource:
     title: str | None
     abstract: str | None
     similarity_score: float | None
+    oa_url: str | None = None
+    pmcid: str | None = None
+    retraction_status: bool = False
 
 
 @dataclass(frozen=True)
@@ -34,6 +47,11 @@ class VerificationResult:
     status: VerificationStatus
     explanation: str
     confidence: float
+    source_passages: list[str] = field(default_factory=list)
+    source_section: str | None = None
+    fulltext_available: bool = False
+    verification_depth: Literal["fulltext", "abstract"] = "abstract"
+    retraction_status: bool = False
 
 
 @dataclass(frozen=True)

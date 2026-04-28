@@ -25,6 +25,78 @@ def _make_claim(
     )
 
 
+class TestPhase1ResolveBehavior:
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_openalex_miss_then_crossref_hit(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+        mock_cf.return_value = ResolvedSource(True, "10.1/x", "T", None, None)
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+        assert sources["c1"].found is True
+        assert sources["c1"].doi == "10.1/x"
+        mock_cf.assert_called_once()
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_openalex_miss_and_crossref_miss(
+        self, mock_oa: MagicMock, mock_cf: MagicMock, mock_retr: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+        assert sources["c1"].found is False
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_openalex_hit_skips_crossref(
+        self, mock_oa: MagicMock, mock_cf: MagicMock, mock_retr: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(True, "10.1/y", "T", "abs", 1.0)
+        from src.resolve import resolve_citations
+
+        resolve_citations([_make_claim("c1")])
+        mock_cf.assert_not_called()
+
+    @patch("src.resolve._crossref.check_retraction")
+    @patch("src.resolve.search_paper")
+    def test_retraction_check_called_when_doi_present(
+        self, mock_oa: MagicMock, mock_retr: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(True, "10.1/x", "T", "abs", 1.0)
+        mock_retr.return_value = True
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+        mock_retr.assert_called_once_with("10.1/x", db_path=None)
+        assert sources["c1"].retraction_status is True
+
+    @patch("src.resolve._crossref.check_retraction")
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_retraction_check_skipped_when_no_doi(
+        self, mock_oa: MagicMock, mock_cf: MagicMock, mock_retr: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+        mock_retr.assert_not_called()
+        assert sources["c1"].retraction_status is False
+
+
 class TestResolveCitations:
     @patch("src.resolve.search_paper")
     def test_happy_path(self, mock_search: MagicMock) -> None:
@@ -142,7 +214,13 @@ class TestResolveCitations:
             },
         )
 
-        with patch("src.clients.openalex.time.sleep"):
+        with (
+            patch("src.clients.openalex.time.sleep"),
+            patch(
+                "src.resolve._crossref.search_paper",
+                return_value=ResolvedSource(False, None, None, None, None),
+            ),
+        ):
             claims = [_make_claim("c0"), _make_claim("c1")]
             sources, steps = resolve_citations(claims, db_path=tmp_path / "cache.db")
 

@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 from anthropic.types import TextBlock
 
-from src.models import Claim, ProvenanceStep, ResolvedSource
+from src.models import Claim, PaperChunk, ProvenanceStep, ResolvedSource
 
 
 def _text_block(text: str) -> TextBlock:
@@ -232,3 +232,156 @@ class TestVerifyClaimShortCircuit:
 
         _, step = verify_claim(_make_claim(), _make_source())
         assert step.cache_hit is None
+
+
+def _make_passages(n: int = 3) -> list[PaperChunk]:
+    return [
+        PaperChunk(
+            doi="10.1/x",
+            section="results" if i == 0 else "introduction",
+            text=f"Passage number {i} with substantive textual content for testing purposes.",
+            char_start=i * 100,
+            char_end=i * 100 + 80,
+        )
+        for i in range(n)
+    ]
+
+
+def _fulltext_response(
+    status: str = "supported",
+    section: str = "results",
+    passages: list[str] | None = None,
+) -> str:
+    if passages is None:
+        passages = ["Quoted sentence from passage."]
+    import json as _json
+
+    body = {
+        "status": status,
+        "explanation": "Found support in passages.",
+        "confidence": 0.9,
+        "source_passages": passages,
+        "source_section": section,
+    }
+    return _json.dumps(body)
+
+
+class TestVerifyClaimFulltext:
+    @patch("src.verify.anthropic.Anthropic")
+    def test_three_passages_calls_llm_with_passages(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block(_fulltext_response())]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 80
+        mock_response.usage.cache_read_input_tokens = 500
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_fulltext
+
+        result, _step = verify_claim_fulltext(_make_claim(), _make_source(), _make_passages(3))
+        assert result.status == "supported"
+        assert result.verification_depth == "fulltext"
+        assert result.fulltext_available is True
+        assert result.source_passages == ["Quoted sentence from passage."]
+        assert result.source_section == "results"
+
+        # Inspect the user message that was sent
+        call = mock_client.messages.create.call_args
+        user_message = call.kwargs["messages"][0]["content"]
+        assert "<passage" in user_message
+        assert "Passage number 0" in user_message
+
+    @patch("src.verify.verify_claim")
+    def test_empty_passages_falls_back_to_abstract(self, mock_verify: MagicMock) -> None:
+        from src.models import VerificationResult
+
+        mock_verify.return_value = (
+            VerificationResult(status="supported", explanation="abs", confidence=0.9),
+            ProvenanceStep(
+                step_id="s",
+                claim_id="claim-1",
+                operation="verify",
+                input_hash="i",
+                output_hash="o",
+                model_id="m",
+                timestamp=0.0,
+                tokens_in=10,
+                tokens_out=5,
+                cache_hit=False,
+                confidence=0.9,
+            ),
+        )
+
+        from src.verify import verify_claim_fulltext
+
+        result, _ = verify_claim_fulltext(_make_claim(), _make_source(), [])
+        mock_verify.assert_called_once()
+        assert result.verification_depth == "abstract"
+        assert result.fulltext_available is False
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_retraction_status_mirrored(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block(_fulltext_response())]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 80
+        mock_response.usage.cache_read_input_tokens = 0
+        mock_response.usage.cache_creation_input_tokens = 500
+        mock_client.messages.create.return_value = mock_response
+
+        retracted_source = ResolvedSource(
+            found=True,
+            doi="10.1/r",
+            title="T",
+            abstract="a",
+            similarity_score=1.0,
+            retraction_status=True,
+        )
+
+        from src.verify import verify_claim_fulltext
+
+        result, _ = verify_claim_fulltext(_make_claim(), retracted_source, _make_passages(2))
+        assert result.retraction_status is True
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_malformed_response_returns_parse_error(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block("not json at all")]
+        mock_response.usage.input_tokens = 100
+        mock_response.usage.output_tokens = 10
+        mock_response.usage.cache_read_input_tokens = 0
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_fulltext
+
+        result, _ = verify_claim_fulltext(_make_claim(), _make_source(), _make_passages(1))
+        assert result.status == "not_addressed"
+        assert result.confidence == 0.0
+        assert result.verification_depth == "fulltext"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_cache_control_on_system_prompt(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block(_fulltext_response())]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 80
+        mock_response.usage.cache_read_input_tokens = 500
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_fulltext
+
+        verify_claim_fulltext(_make_claim(), _make_source(), _make_passages(2))
+        call = mock_client.messages.create.call_args
+        system_blocks = call.kwargs["system"]
+        assert system_blocks[0]["cache_control"] == {"type": "ephemeral"}

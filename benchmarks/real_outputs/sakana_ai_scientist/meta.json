@@ -1,0 +1,12 @@
+{
+  "tool": "Sakana AI Scientist v2",
+  "agent_or_model": "AI Scientist v2 (BFTS, agentic tree search; ICLR 2025 workshop submission)",
+  "prompt_used": "broad topic: compositional regularization for neural network generalization",
+  "fetch_date": "2026-04-28",
+  "source_url": "https://github.com/SakanaAI/AI-Scientist-ICLR2025-Workshop-Experiment/raw/master/compositional-regularization/annotated_paper.pdf",
+  "paper_title": "Compositional Regularization: Unexpected Obstacles in Enhancing Neural Network Generalization",
+  "notable_context": "First fully AI-generated paper to pass peer review (ICLR 2025 ICBINB workshop, average reviewer score 6.33). Reports a negative result on compositional regularization techniques.",
+  "extraction_method": "pymupdf 1.26.4 (fitz.get_text page-concatenated)",
+  "input_chars": 24066,
+  "estimated_inline_citations": 13
+}

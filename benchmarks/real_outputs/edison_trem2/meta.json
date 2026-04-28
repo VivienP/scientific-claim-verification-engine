@@ -1,0 +1,8 @@
+{
+  "tool": "Edison Scientific Literature",
+  "agent_or_model": "Edison Literature agent (production)",
+  "prompt_used": "What is the role of TREM2 in Alzheimer's microglia, and what are the key quantitative findings?",
+  "fetch_date": "2026-04-13",
+  "source_url_if_any": null,
+  "license_note": "Output used for verification benchmarking only."
+}

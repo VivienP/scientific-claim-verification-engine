@@ -1,0 +1,406 @@
+{
+  "report_id": "sakana_compreg_phase1plus2_64fd279c",
+  "timestamp": 1777370239.4869516,
+  "input_text": "000\n001\n002\n003\n004\n005\n006\n007\n008\n009\n010\n011\n012\n013\n014\n015\n016\n017\n018\n019\n020\n021\n022\n023\n024\n025\n026\n027\n028\n029\n030\n031\n032\n033\n034\n035\n036\n037\n038\n039\n040\n041\n042\n043\n044\n045\n046\n047\n048\n049\n050\n051\n052\n053\nUnder review as a workshop paper at ICLR 2025\nCOMPOSITIONAL REGULARIZATION:\nUNEXPECTED OBSTACLES IN ENHANCING NEURAL\nNETWORK GENERALIZATION\nAnonymous authors\nPaper under double-blind review\nABSTRACT\nNeural networks excel in many tasks but often struggle with compositional gener-\nalization\u2014the ability to understand and generate novel combinations of familiar\ncomponents. This limitation hampers their performance on tasks requiring sys-\ntematic reasoning beyond the training data. In this work, we introduce a training\nmethod that incorporates an explicit compositional regularization term into the\nloss function, aiming to encourage the network to develop compositional repre-\nsentations. Contrary to our expectations, our experiments on synthetic arithmetic\nexpression datasets reveal that models trained with compositional regularization\ndo not achieve significant improvements in generalization to unseen combinations\ncompared to baseline models. Additionally, we find that increasing the complex-\nity of expressions exacerbates the models\u2019 difficulties, regardless of compositional\nregularization. These findings highlight the challenges of enforcing compositional\nstructures in neural networks and suggest that such regularization may not be suf-\nficient to enhance compositional generalization.\n1\nINTRODUCTION\nCompositional generalization refers to the ability to understand and produce novel combinations of\nknown components, a fundamental aspect of human cognition (Ito et al., 2022). Despite the success\nof neural networks in various domains, they often struggle with compositional generalization, lim-\niting their applicability in tasks requiring systematic reasoning beyond the training data (Qu et al.,\n2023; Klinger et al., 2020). Previous efforts to enhance compositional generalization have explored\nvarious approaches, including architectural modifications and training strategies (Finn et al., 2017;\nLepori et al., 2023). One promising direction is the incorporation of regularization terms that en-\nComment:\nCiting MAML\nin the context\nof composi-\ntional gener-\nalization does\nnot seem en-\ntirely appropri-\nate\ncourage certain properties in the learned representations (Yin et al., 2023).\nIn this paper, we introduce a training method that incorporates an explicit compositional regular-\nization term into the loss function. This regularization term is designed to penalize deviations from\nexpected compositional structures in the network\u2019s internal representations, with the aim of encour-\naging the network to form compositional representations. We hypothesized that this approach would\nenhance the network\u2019s ability to generalize to unseen combinations. However, our experiments on\nsynthetic arithmetic expression datasets show that the inclusion of compositional regularization does\nnot lead to the expected improvements in generalization performance. In some cases, it even hinders\nthe learning process. Furthermore, we observe that increasing the complexity of arithmetic expres-\nsions, such as using more operators or nesting\nComment:\nThe dataset\nused in the\nexperiments\ndid not con-\ntain a nesting\nstructure, but\nsome exper-\niments were\nconducted\nwith increas-\ning complexity\nby incorpo-\nrating more\noperators.\n, exacerbates the models\u2019 generalization difficulties\nregardless of the regularization. These unexpected results highlight the challenges of enforcing\ncompositionality through regularization and suggest that this approach may not be straightforwardly\neffective.\nIn summary, we propose a compositional regularization term intended to enhance compositional\ngeneralization in neural networks, conduct extensive experiments to evaluate its impact, and analyze\nthe unexpected outcomes, including the impact of operator complexity, discussing potential reasons\nwhy compositional regularization did not yield the anticipated benefits.\n1\n\n\n054\n055\n056\n057\n058\n059\n060\n061\n062\n063\n064\n065\n066\n067\n068\n069\n070\n071\n072\n073\n074\n075\n076\n077\n078\n079\n080\n081\n082\n083\n084\n085\n086\n087\n088\n089\n090\n091\n092\n093\n094\n095\n096\n097\n098\n099\n100\n101\n102\n103\n104\n105\n106\n107\nUnder review as a workshop paper at ICLR 2025\n2\nRELATED WORK\nComment: An\nincomplete and\ntoo general\nversion of a\nrelated work\nsection.\nCompositional generalization in neural networks has been a topic of considerable research interest\n(Klinger et al., 2020). Ito et al. (2022) explored abstract representations to tackle this issue, empha-\nsizing the importance of compositionality in achieving human-like reasoning. Yin et al. (2023) pro-\nposed consistency regularization training to enhance compositional generalization. Meta-learning\napproaches, such as Model-Agnostic Meta-Learning (MAML) (Finn et al., 2017), have also been\ninvestigated to improve generalization capabilities. Lepori et al. (2023) studied structural composi-\ntionality in neural networks, suggesting that networks may implicitly learn to decompose complex\ntasks.\nOur work differs by directly incorporating an explicit regularization term into the training objective\nto enforce compositional structures. Despite the theoretical appeal, our findings indicate that such\nregularization may not effectively enhance compositional generalization and that operator complex-\nity plays a significant role in the models\u2019 performance limitations.\n3\nMETHOD\nOur goal is to enhance compositional generalization in neural networks by incorporating a composi-\ntional regularization term into the training loss. We focus on a simple yet illustrative task: evaluating\narithmetic expressions involving basic operators.\n3.1\nMODEL ARCHITECTURE\nWe use an LSTM-based neural network (Goodfellow et al., 2016)\nComment:\nThis should be\nHochreiter &\nSchmidhuber\n(1997).\nto model the mapping from input\nexpressions to their computed results. The model consists of an embedding layer, an LSTM layer,\nand a fully connected output layer.\n3.2\nCOMPOSITIONAL REGULARIZATION\nLet ht be the hidden state at time t. We define the compositional regularization term as the mean\nComment:\nThis should be\nmore precise.\nE.g. refer to\nthe embed-\nding hidden\nstate. A bet-\nter alternative\nwould be et\nand et\u22121.\nsquared difference between successive hidden states:\nLcomp =\n1\nT \u22121\nT \u22121\nX\nt=1\n\u2225ht+1 \u2212ht\u22252\n(1)\nwhere T is the length of the input sequence.\nThis term penalizes large changes in hidden states between successive time steps, encouraging the\nmodel to form additive representations, which are a simple form of compositionality.\n3.3\nTRAINING OBJECTIVE\nThe total loss is the sum of the main loss (mean squared error between predicted and true results)\nand the compositional regularization term weighted by a hyperparameter \u03bb:\nLtotal = Lmain + \u03bbLcomp.\n(2)\nWe experimented with different values of \u03bb to assess its impact on compositional generalization.\n4\nEXPERIMENTS\n4.1\nEXPERIMENTAL SETUP\nWe generated synthetic datasets of arithmetic expressions to evaluate compositional generalization.\nThe datasets consist of expressions combining digits and operators (e.g., \u201c3+4\u201d, \u201c7*2\u201d). We com-\npared models trained with and without the compositional regularization term and performed several\nablation studies to assess the impact of different hyperparameters, operator complexity, and archi-\ntectural choices.\n2\n\n\n108\n109\n110\n111\n112\n113\n114\n115\n116\n117\n118\n119\n120\n121\n122\n123\n124\n125\n126\n127\n128\n129\n130\n131\n132\n133\n134\n135\n136\n137\n138\n139\n140\n141\n142\n143\n144\n145\n146\n147\n148\n149\n150\n151\n152\n153\n154\n155\n156\n157\n158\n159\n160\n161\nUnder review as a workshop paper at ICLR 2025\nFigure 1: Baseline model performance over epochs. Left: Training and test loss decrease over\nepochs, indicating learning progress. Middle: Test accuracy increases, reaching approximately\n84%.\nComment:\nFigure 1 shows\nonly up to\n40% accuracy,\nbut since Fig-\nure 2 (Right),\nwhich uses a\nsimilar setup,\nshows around\n84%, it\u2019s likely\nthat the x-axis\nof Figure 1 is\ntruncated.\nRight: Compositional loss remains steady, suggesting the model does not inherently develop\ncompositional representations without regularization.\n4.1.1\nDATASETS\n\u2022 Training set: 1,000 randomly generated expressions using a limited set of numbers and\noperators.\n\u2022 Test set: 200 expressions not seen during training, including novel combinations of num-\nbers and operators, as well as increased operator complexity.\n4.1.2\nIMPLEMENTATION DETAILS\n\u2022 Models were trained for 30 epochs using the Adam optimizer and mean squared error loss.\n\u2022 The compositional regularization term was weighted by \u03bb = 0.1 unless otherwise specified.\n\u2022 We evaluated model performance using test accuracy (percentage of correct predictions\nwithin\nComment:\n\u201cWithin a tol-\nerance\u201d refers\nto the fact that\nthe model re-\ngresses its out-\nput to match\nthe ground\ntruth numerical\nanswer. See\nthe Code Re-\nview section.\na tolerance) and compositional loss.\n\u2022 Experiments were repeated with different hyperparameters and operator complexities.\n4.2\nRESULTS\n4.2.1\nBASELINE PERFORMANCE\nWe first trained the baseline LSTM model without compositional regularization. Figure 1 shows the\nComment:\nThe figure\nlacks an ex-\nplanation for\nthe shadowed\narea, which\nshould be clar-\nified as rep-\nresenting the\nstandard devi-\nation across 3\nor 4 indepen-\ndent runs.\ntraining and test loss, test accuracy, and compositional loss over epochs. As training progresses, both\ntraining and test loss decrease, and test accuracy increases, reaching approximately 84% accuracy.\nThe compositional loss remains relatively steady, indicating that without regularization, the model\nComment:\nThis claim\ncannot be in-\nferred from\nFigure 1\n(Right).\ndoes not inherently develop compositional representations.\nComment:\nThis section\nis meant to\nshow the base-\nline perfor-\nmance, but it\nalso includes\nthe compo-\nsitional loss\nplot, which is\nconfusing.\n4.2.2\nIMPACT OF COMPOSITIONAL REGULARIZATION\nWe introduced the compositional regularization term with different weights \u03bb and assessed its im-\npact. Figure 2 illustrates the effects of varying \u03bb on training loss, compositional loss, and final test\naccuracy. Higher values of \u03bb led to a lower compositional loss but did not improve test accuracy.\nIn some cases, the test accuracy decreased. This suggests that while compositional regularization\nencourages the learning of compositional representations as measured by the regularization term, it\nmay interfere with the main learning objective by constraining the model\u2019s capacity to fit the training\ndata.\n4.2.3\nIMPACT OF OPERATOR COMPLEXITY\nWe investigated how increasing the operator complexity of arithmetic expressions affects model\nperformance. Figure 3 presents the training loss, validation loss, and final validation accuracy for\nexpressions with varying numbers of operators. Our results show that as the complexity of the ex-\npressions increases, the models\u2019 ability to generalize diminishes significantly. Neither the baseline\nmodel nor the model with compositional regularization could handle expressions with higher opera-\ntor complexity effectively. This finding emphasizes that compositional regularization alone may not\naddress the challenges posed by complex compositional structures.\n3\n\n\n162\n163\n164\n165\n166\n167\n168\n169\n170\n171\n172\n173\n174\n175\n176\n177\n178\n179\n180\n181\n182\n183\n184\n185\n186\n187\n188\n189\n190\n191\n192\n193\n194\n195\n196\n197\n198\n199\n200\n201\n202\n203\n204\n205\n206\n207\n208\n209\n210\n211\n212\n213\n214\n215\nUnder review as a workshop paper at ICLR 2025\nFigure 2: Impact of compositional weight \u03bb on model performance. Left: Training loss over epochs\nfor different \u03bb. Higher \u03bb values slightly increase training loss. Middle: Compositional loss de-\ncreases with higher \u03bb,\nComment:\nThis is a\nstretch because\nthe paper has\nnot rigorously\nshown that\nlower compo-\nsitional loss\nleads to more\ncompositional-\nity.\nindicating the regularization term effectively enforces compositionality.\nRight: Final test accuracy does not improve with higher \u03bb and may decrease, suggesting a trade-off\nbetween compositional regularization and the primary learning objective.\nFigure 3: Model performance on expressions with varying operator complexity. Left: Training\nloss increases with operator complexity, indicating the models struggle to fit more complex data.\nMiddle: Validation loss is higher for complex expressions, reflecting poor generalization. Right:\nFinal validation\nComment:\nThis should\nbe \u201cFinal val-\nidation loss\nincreases\u201d to\nmatch the fig-\nure, although\nthe mean-\ning remains\nroughly the\nsame.\naccuracy decreases significantly as operator complexity increases, underscoring\ninherent limitations in handling complex compositional structures with compositional regularization\nalone.\n5\nCONCLUSION\nIn this work, we introduced a compositional regularization term with the intention of enhancing\ncompositional generalization in neural networks. Our experiments on synthetic arithmetic expres-\nsion datasets revealed that compositional regularization did not lead to the expected improvements\nin generalization performance. In some cases, it even hindered the learning process. Additionally,\nwe found that increasing the complexity of arithmetic expressions exacerbates the models\u2019 general-\nization difficulties, highlighting inherent limitations.\nThese findings highlight the challenges of enforcing compositional structures in neural networks\nthrough regularization. Possible reasons for the lack of improvement include conflicts between the\nregularization term and the primary learning objective, which may cause the network to prioritize\nminimizing the compositional loss over fitting the data. Additionally, the measure of composition-\nality used in the regularization term may not align with the aspects of compositionality that are\ncritical for generalization. The synthetic dataset may also not adequately capture the complexities\nof compositional generalization in real-world tasks, and increased operator complexity introduces\nadditional challenges that compositional regularization alone cannot overcome.\nFor future work, we suggest exploring alternative regularization strategies, refining the definition of\ncompositionality in the context of neural networks, and testing on more complex datasets. Investi-\ngating models that can inherently handle higher operator complexity, such as those with recursive or\nhierarchical structures, may also be beneficial. Our findings underscore the importance of rigorously\nevaluating proposed methods and openly reporting negative or inconclusive results to advance our\nunderstanding of the challenges in deep learning.\n4\n\n\n216\n217\n218\n219\n220\n221\n222\n223\n224\n225\n226\n227\n228\n229\n230\n231\n232\n233\n234\n235\n236\n237\n238\n239\n240\n241\n242\n243\n244\n245\n246\n247\n248\n249\n250\n251\n252\n253\n254\n255\n256\n257\n258\n259\n260\n261\n262\n263\n264\n265\n266\n267\n268\n269\nUnder review as a workshop paper at ICLR 2025\nREFERENCES\nChelsea Finn, P. Abbeel, and S. Levine. Model-agnostic meta-learning for fast adaptation of deep\nnetworks. pp. 1126\u20131135, 2017.\nIan Goodfellow, Yoshua Bengio, Aaron Courville, and Yoshua Bengio. Deep learning, volume 1.\nMIT Press, 2016.\nTakuya Ito, Tim Klinger, D. Schultz, J. Murray, Michael W. Cole, and Mattia Rigotti. Compositional\ngeneralization through abstract representations in human and artificial neural networks. 2022.\nTim Klinger, D. Adjodah, Vincent Marois, Joshua Joseph, M. Riemer, A. Pentland, and Murray\nCampbell. A study of compositional generalization in neural models. ArXiv, abs/2006.09437,\n2020.\nMichael A. Lepori, Thomas Serre, and Ellie Pavlick. Break it down: Evidence for structural com-\npositionality in neural networks. ArXiv, abs/2301.10884, 2023.\nCarolyn Qu, Rodrigo Nieto, \u2022. Mentor, and John Hewitt. Compositional generalization based on\nsemantic interpretation: Where can neural networks improve? 2023.\nAshish Vaswani, Noam M. Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez,\nLukasz Kaiser, and Illia Polosukhin. Attention is all you need. pp. 5998\u20136008, 2017.\nYongjing Yin, Jiali Zeng, Yafu Li, Fandong Meng, Jie Zhou, and Yue Zhang. Consistency regular-\nization training for compositional generalization. pp. 1294\u20131308, 2023.\nSUPPLEMENTARY MATERIAL\nA\nEFFECT OF EMBEDDING DIMENSION\nWe explored the impact of different embedding dimensions on model performance. Figure 4 shows\nthe training loss, compositional loss, and final test accuracy for embedding dimensions 16, 32, 64,\nand 128. Increasing\nComment:\nIncreasing the\nembedding\ndimension did\nimprove test\naccuracy, but it\nappears to be\nplateauing.\nthe embedding dimension did not consistently improve test accuracy. While\nlarger embedding dimensions provide the model with greater capacity, our results indicate that\nsimply increasing model capacity is not sufficient to enhance compositional generalization in this\nComment:\nThis could\nbe viewed as\nhinting that\nthe regularizer\nis applied to\nthe embedding\nhidden state.\ncontext. This suggests that the bottleneck may lie in the model\u2019s ability to capture compositional\nstructures rather than in its representational capacity.\nFigure 4: Effect of embedding dimension on model performance. Left: Training loss decreases\nsimilarly across embedding dimensions, indicating comparable learning progress. Middle: Compo-\nsitional loss trends are similar, suggesting embedding size has limited impact on compositionality\nas measured. Right: Final test accuracy does not consistently improve with larger embedding di-\nmensions, highlighting that increasing model capacity alone does not enhance compositional gener-\nalization.\nB\nINTEGRATION OF ATTENTION MECHANISM\nWe compared the baseline model with an enhanced model that incorporates an attention mecha-\nnism Vaswani et al. (2017). The attention mechanism is known to improve performance in various\nsequence-to-sequence tasks by allowing the model to focus on relevant parts of the input sequence.\n5\n\n\n270\n271\n272\n273\n274\n275\n276\n277\n278\n279\n280\n281\n282\n283\n284\n285\n286\n287\n288\n289\n290\n291\n292\n293\n294\n295\n296\n297\n298\n299\n300\n301\n302\n303\n304\n305\n306\n307\n308\n309\n310\n311\n312\n313\n314\n315\n316\n317\n318\n319\n320\n321\n322\n323\nUnder review as a workshop paper at ICLR 2025\nB.1\nEXPERIMENTAL SETUP\nWe modified the baseline LSTM model to include an attention layer after the LSTM outputs. The\nattention weights were calculated based on the hidden states, and a context vector was formed to aid\nin the final output prediction.\nB.2\nRESULTS\nThe attention model achieves a test accuracy similar to the baseline, as shown in Figure 5. While the\nComment:\nThe conclusion\nhere seems\nwrong. From\nthe figure,\nthe attention-\naugmented\nLSTM per-\nforms much\nbetter than\nthe baseline\nLSTM, where\nthe former re-\nports 100%\nfinal test accu-\nracy. See the\nCode Review\nfor more de-\ntails.\nattention mechanism slightly improved the training dynamics, it did not lead to significant improve-\nments in generalization performance. This suggests that the challenges in compositional generaliza-\ntion are not primarily due to the model\u2019s ability to focus on relevant parts of the input sequence but\nmay be related to deeper architectural limitations or the need for more sophisticated mechanisms to\ncapture compositionality.\nFigure 5: Comparison of baseline and attention models. Left: Training loss over epochs shows sim-\nilar convergence for both models. Middle: Compositional loss remains comparable, indicating that\nattention does not significantly enhance compositional representations. Right: Final test accuracy is\nsimilar for both models, suggesting that the attention mechanism does not address the compositional\ngeneralization challenges.\nComment:\nThe gener-\nated caption\nseems to be\nstrongly influ-\nenced by the\nconclusion in\nthe main text.\nFor example,\neven though\nattention out-\nperforms\nthe base-\nline LSTM,\nit states that\nthe two are\nroughly simi-\nlar.\nC\nADDITIONAL EXPERIMENTS\nC.1\nABLATION STUDY ON COMPOSITIONAL WEIGHT\nWe conducted an ablation study on the compositional weight \u03bb to further investigate its impact on\nmodel performance. Figures 6 and 7 show the training loss and final test accuracy for various values\nof \u03bb. Higher \u03bb values effectively reduce the compositional loss but adversely affect test accuracy.\nThis reinforces the conclusion that emphasizing compositional regularization may conflict with the\nprimary learning objective.\nC.2\nCOMPARISON OF LSTM AND RNN ARCHITECTURES\nWe compared the performance of LSTM and simple RNN architectures to assess the influence of\nmodel choice on compositional generalization. Figure 8 illustrates the training loss and final test\naccuracy for both models. The LSTM model showed marginal improvements over the simple RNN,\nbut both architectures struggled with compositional generalization, indicating that the limitations\nare not solely due to the recurrent unit type.\nC.3\nDROPOUT IMPACT\nWe investigated the impact of dropout on model performance. Figure 9 shows the final test accuracy\nfor different dropout rates. We found that increasing the dropout rate did not lead to significant\nimprovements in generalization, suggesting that regularization techniques like dropout may not ad-\ndress compositional generalization challenges. This indicates that standard regularization methods\nmay not be sufficient to overcome the inherent difficulties in learning compositional structures.\n6\n\n\n324\n325\n326\n327\n328\n329\n330\n331\n332\n333\n334\n335\n336\n337\n338\n339\n340\n341\n342\n343\n344\n345\n346\n347\n348\n349\n350\n351\n352\n353\n354\n355\n356\n357\n358\n359\n360\n361\n362\n363\n364\n365\n366\n367\n368\n369\n370\n371\n372\n373\n374\n375\n376\n377\nUnder review as a workshop paper at ICLR 2025\nFigure 6: Training loss over epochs for different values of compositional weight \u03bb. Increasing\n\u03bb leads to slightly higher training loss, indicating potential interference with the primary learning\nobjective.\nFigure 7: Final test accuracy for different values of compositional weight \u03bb. Higher \u03bb values do\nnot improve test accuracy and may lead to decreased performance, suggesting a trade-off between\ncompositional regularization and generalization.\nComment:\nHard to draw\nany conclusion\nfrom this plot\nalone.\nFigure 8: Comparison of LSTM and RNN architectures. Left: Training loss over epochs shows\nsimilar convergence patterns, with LSTM performing slightly better. Right: Final test accuracy is\nmarginally higher for LSTM, but both models struggle with compositional generalization, suggest-\ning that recurrent unit choice does not resolve the underlying challenges.\nD\nHYPERPARAMETERS AND TRAINING DETAILS\nWe provide additional details on the hyperparameters and training procedures used in our experi-\nments:\n7\n\n\n378\n379\n380\n381\n382\n383\n384\n385\n386\n387\n388\n389\n390\n391\n392\n393\n394\n395\n396\n397\n398\n399\n400\n401\n402\n403\n404\n405\n406\n407\n408\n409\n410\n411\n412\n413\n414\n415\n416\n417\n418\n419\n420\n421\n422\n423\n424\n425\n426\n427\n428\n429\n430\n431\nUnder review as a workshop paper at ICLR 2025\nFigure 9: Final test accuracy for different dropout rates.\nComment:\nThe figure\nonly shows\nthe best con-\nfiguration,\neven though\nthe caption\nsuggests that\nresults for dif-\nferent dropout\nrates are in-\ncluded.\nHigher dropout rates did not enhance\ncompositional generalization, indicating limited effectiveness of dropout in this context.\n\u2022 Learning rate: 0.001\n\u2022 Batch size: 32\n\u2022 Embedding dimensions: Tested values of 16, 32, 64, 128\n\u2022 Hidden units: 64 for LSTM layers\n\u2022 Optimizer: Adam\n\u2022 Activation functions: ReLU for hidden layers\nComment:\nReLU is not\nused\n\u2022 Dropout rates: Tested values of 0.0, 0.2, and 0.5\nComment: 0.3\ninstead of 0.2\n\u2022 Loss function: Mean squared error for main loss\n\u2022 Regularization weight (\u03bb): Tested values of 0.0 (baseline), 0.1, 0.3, 0.5, 0.7, 1.0\nComment:\n0.01 instead of\n0.3 and 0.7\n\u2022 Number of epochs: 30\nComment:\nMinor: tested\n10, 30, and 50\nE\nADDITIONAL NOTES\n\u2022 All experiments were implemented using PyTorch.\n\u2022 Training was conducted on a single NVIDIA GPU.\n\u2022 Early stopping was not used; models were trained for a fixed number of epochs.\n\u2022 The synthetic dataset was generated with a predefined random seed for reproducibility.\n8\n",
+  "summary": {
+    "total_claims": 13,
+    "supported": 0,
+    "unsupported": 0,
+    "not_addressed": 13,
+    "partially_supported": 0,
+    "citation_found_rate": 0.7692307692307693,
+    "verifiability_status": "verifiable",
+    "fulltext_verified": 2,
+    "retracted_sources": 0,
+    "numeric_checks_run": 0,
+    "numeric_inconsistencies_flagged": 0,
+    "total_cost_usd": 0.277932
+  },
+  "claims": [
+    {
+      "claim_id": "69038bc9-d046-4cb8-bb65-1a52164c26e8",
+      "claim_text": "Compositional generalization is a fundamental aspect of human cognition.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Ito"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.1073/pnas.2111505119",
+        "title": "Inverting the structure\u2013property map of truss metamaterials by deep learning",
+        "abstract": "Inspired by crystallography, the periodic assembly of trusses into architected materials has enjoyed popularity for more than a decade and produced countless cellular structures with beneficial mechanical properties. Despite the successful and steady enrichment of the truss design space, the inverse design has remained a challenge: While predicting effective truss properties is now commonplace, efficiently identifying architectures that have homogeneous or spatially varying target properties has remained a roadblock to applications from lightweight structures to biomimetic implants. To overcome this gap, we propose a deep-learning framework, which combines neural networks with enforced physical constraints, to predict truss architectures with fully tailored anisotropic stiffness. Trained on millions of unit cells, it covers an enormous design space of topologically distinct truss lattices and accurately identifies architectures matching previously unseen stiffness responses. We demonstrate the application to patient-specific bone implants matching clinical stiffness data, and we discuss the extension to spatially graded cellular structures with locally optimal properties.",
+        "similarity_score": 0.9,
+        "oa_url": "https://www.pnas.org/content/pnas/119/1/e2111505119.full.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is about deep learning for designing truss lattice architectures and bone implants, with no mention of human cognition or compositional generalization.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "8846a36c-db25-44a3-8283-48e692365012",
+      "claim_text": "Neural networks often struggle with compositional generalization, limiting their applicability in tasks requiring systematic reasoning beyond the training data.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Qu",
+        "Klinger"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1162/tacl_a_00471",
+        "title": "TopiOCQA: Open-domain Conversational Question Answering with Topic Switching",
+        "abstract": "Abstract In a conversational question answering scenario, a questioner seeks to extract information about a topic through a series of interdependent questions and answers. As the conversation progresses, they may switch to related topics, a phenomenon commonly observed in information-seeking search sessions. However, current datasets for conversational question answering are limiting in two ways: 1) they do not contain topic switches; and 2) they assume the reference text for the conversation is given, that is, the setting is not open-domain. We introduce TopiOCQA (pronounced Tapioca), an open-domain conversational dataset with topic switches based on Wikipedia. TopiOCQA contains 3,920 conversations with information-seeking questions and free-form answers. On average, a conversation in our dataset spans 13 question-answer turns and involves four topics (documents). TopiOCQA poses a challenging test-bed for models, where efficient retrieval is required on multiple turns of the same conversation, in conjunction with constructing valid responses using conversational history. We evaluate several baselines, by combining state-of-the-art document retrieval methods with neural reader models. Our best model achieves F1 of 55.8, falling short of human performance by 14.2 points, indicating the difficulty of our dataset. Our dataset and code are available at https://mcgill-nlp.github.io/topiocqa.",
+        "similarity_score": 0.9,
+        "oa_url": "https://direct.mit.edu/tacl/article-pdf/doi/10.1162/tacl_a_00471/2008126/tacl_a_00471.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is about TopiOCQA, a conversational question answering dataset with topic switches, and does not discuss compositional generalization or neural networks' systematic reasoning capabilities beyond training data.",
+        "confidence": 0.98,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "7896ba87-4f78-42d0-95d3-0fb0bd7ad3eb",
+      "claim_text": "Neural networks often struggle with compositional generalization, limiting their applicability in tasks requiring systematic reasoning beyond the training data.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Klinger"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1111/jcpp.13176",
+        "title": "Annual Research Review: Looking back to look forward \u2013 changes in the concept of autism and implications for future research",
+        "abstract": "The concept of autism is a significant contribution from child psychiatry that has entered wider culture and public consciousness, and has evolved significantly over the last four decades. Taking a rather personal retrospective, reflecting on our own time in autism research, this review explores changes in the concept of autism and the implications of these for future research. We focus on seven major changes in how autism is thought of, operationalised, and recognised: (1) from a narrow definition to wide diagnostic criteria; (2) from a rare to a relatively common condition, although probably still under-recognised in women; (3) from something affecting children, to a lifelong condition; (4) from something discreet and distinct, to a dimensional view; (5) from one thing to many 'autisms', and a compound or 'fractionable' condition; (6) from a focus on 'pure' autism, to recognition that complexity and comorbidity is the norm; and finally, (7) from conceptualising autism purely as a 'developmental disorder', to recognising a neurodiversity perspective, operationalised in participatory research models. We conclude with some challenges for the field and suggestions for areas currently neglected in autism research.",
+        "similarity_score": 1.0,
+        "oa_url": "https://discovery.ucl.ac.uk/10091945/1/Frith_HappeFrith%20Changes%20in%20autism%20concept.Prefinal.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is entirely about the evolution of autism research and diagnosis concepts over the last four decades. It contains no information about neural networks, compositional generalization, or systematic reasoning in machine learning.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "091de513-17d0-4200-bb25-d8cc6304e5e0",
+      "claim_text": "Previous efforts to enhance compositional generalization have explored architectural modifications and training strategies including Model-Agnostic Meta-Learning (MAML).",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Finn"
+      ],
+      "cited_year": 2017,
+      "source": {
+        "found": true,
+        "doi": "10.1093/nar/gkw1129",
+        "title": "CDD/SPARCLE: functional classification of proteins via subfamily domain architectures",
+        "abstract": "NCBI's Conserved Domain Database (CDD) aims at annotating biomolecular sequences with the location of evolutionarily conserved protein domain footprints, and functional sites inferred from such footprints. An archive of pre-computed domain annotation is maintained for proteins tracked by NCBI's Entrez database, and live search services are offered as well. CDD curation staff supplements a comprehensive collection of protein domain and protein family models, which have been imported from external providers, with representations of selected domain families that are curated in-house and organized into hierarchical classifications of functionally distinct families and sub-families. CDD also supports comparative analyses of protein families via conserved domain architectures, and a recent curation effort focuses on providing functional characterizations of distinct subfamily architectures using SPARCLE:",
+        "similarity_score": 0.9,
+        "oa_url": "https://academic.oup.com/nar/article-pdf/45/D1/D200/8846941/gkw1129.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is about NCBI's Conserved Domain Database (CDD) for annotating protein domain footprints, which is entirely unrelated to compositional generalization, architectural modifications, training strategies, or Model-Agnostic Meta-Learning (MAML).",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "340c97cf-fcf5-41f4-9a2f-51d7f4d064df",
+      "claim_text": "Previous efforts to enhance compositional generalization have explored architectural modifications and training strategies.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Lepori"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1111/brv.12958",
+        "title": "Biotic homogenisation and differentiation as directional change in beta diversity: synthesising driver\u2013response relationships to develop conceptual models across ecosystems",
+        "abstract": "Biotic homogenisation is defined as decreasing dissimilarity among ecological assemblages sampled within a given spatial area over time. Biotic differentiation, in turn, is defined as increasing dissimilarity over time. Overall, changes in the spatial dissimilarities among assemblages (termed 'beta diversity') is an increasingly recognised feature of broader biodiversity change in the Anthropocene. Empirical evidence of biotic homogenisation and biotic differentiation remains scattered across different ecosystems. Most meta-analyses quantify the prevalence and direction of change in beta diversity, rather than attempting to identify underlying ecological drivers of such changes. By conceptualising the mechanisms that contribute to decreasing or increasing dissimilarity in the composition of ecological assemblages across space, environmental managers and conservation practitioners can make informed decisions about what interventions may be required to sustain biodiversity and can predict potential biodiversity outcomes of future disturbances. We systematically reviewed and synthesised published empirical evidence for ecological drivers of biotic homogenisation and differentiation across terrestrial, marine, and freshwater realms to derive conceptual models that explain changes in spatial beta diversity. We pursued five key themes in our review: (i) temporal environmental change; (ii) disturbance regime; (iii) connectivity alteration and species redistribution; (iv) habitat change; and (v) biotic and trophic interactions. Our first conceptual model highlights how biotic homogenisation and differentiation can occur as a function of changes in local (alpha) diversity or regional (gamma) diversity, independently of species invasions and losses due to changes in species occurrence among assemblages. Second, the direction and magnitude of change in beta diversity depends on the interaction between spatial variation (patchiness) and temporal variation (synchronicity) of disturbance events. Third, in the context of connectivity and species redistribution, divergent beta diversity outcomes occur as different species have different dispersal characteristics, and the magnitude of beta diversity change associated with species invasions also depends strongly on alpha and gamma diversity prior to species invasion. Fourth, beta diversity is positively linked with spatial environmental variability, such that biotic homogenisation and differentiation occur when environmental heterogeneity decreases or increases, respectively. Fifth, species interactions can influence beta diversity via habitat modification, disease, consumption (trophic dynamics), competition, and by altering ecosystem productivity. Our synthesis highlights the multitude of mechanisms that cause assemblages to be more or less spatially similar in composition (taxonomically, functionally, phylogenetically) through time. We consider that future studies should aim to enhance our collective understanding of ecological systems by clarifying the underlying mechanisms driving homogenisation or differentiation, rather than focusing only on reporting the prevalence and direction of change in beta diversity, per se.",
+        "similarity_score": 1.0,
+        "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/brv.12958",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is entirely about biotic homogenisation and differentiation in ecological assemblages, with no mention of compositional generalization, architectural modifications, or training strategies (which appear to relate to machine learning or AI). The claim's subject matter is completely unrelated to the abstract's content.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "15cfd42b-c928-4510-a27d-d1f742531d82",
+      "claim_text": "Regularization terms that encourage certain properties in the learned representations have been explored as a promising direction for compositional generalization.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Yin"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1007/s12559-023-10179-8",
+        "title": "Interpreting Black-Box Models: A Review on Explainable Artificial Intelligence",
+        "abstract": "Abstract Recent years have seen a tremendous growth in Artificial Intelligence (AI)-based methodological development in a broad range of domains. In this rapidly evolving field, large number of methods are being reported using machine learning (ML) and Deep Learning (DL) models. Majority of these models are inherently complex and lacks explanations of the decision making process causing these models to be termed as 'Black-Box'. One of the major bottlenecks to adopt such models in mission-critical application domains, such as banking, e-commerce, healthcare, and public services and safety, is the difficulty in interpreting them. Due to the rapid proleferation of these AI models, explaining their learning and decision making process are getting harder which require transparency and easy predictability. Aiming to collate the current state-of-the-art in interpreting the black-box models, this study provides a comprehensive analysis of the explainable AI (XAI) models. To reduce false negative and false positive outcomes of these back-box models, finding flaws in them is still difficult and inefficient. In this paper, the development of XAI is reviewed meticulously through careful selection and analysis of the current state-of-the-art of XAI research. It also provides a comprehensive and in-depth evaluation of the XAI frameworks and their efficacy to serve as a starting point of XAI for applied and theoretical researchers. Towards the end, it highlights emerging and critical issues pertaining to XAI research to showcase major, model-specific trends for better explanation, enhanced transparency, and improved prediction accuracy.",
+        "similarity_score": 1.0,
+        "oa_url": "https://link.springer.com/content/pdf/10.1007/s12559-023-10179-8.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The provided passage is a review paper on Explainable Artificial Intelligence (XAI) and does not discuss compositional generalization or regularization terms that encourage specific properties in learned representations for that purpose. The topic of compositional generalization is not addressed anywhere in this passage.",
+        "confidence": 0.97,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "c099596f-844c-4c87-98fb-55c6fcd3c8eb",
+      "claim_text": "Ito et al. (2022) explored abstract representations to tackle compositional generalization, emphasizing the importance of compositionality in achieving human-like reasoning.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Ito"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.omtn.2023.03.013",
+        "title": "Resistance to nirmatrelvir due to mutations in the Mpro in the subvariants of SARS-CoV-2 Omicron: Another concern?",
+        "abstract": "The world has faced 3 years of the COVID-19 pandemic with billions of infections, millions of deaths, and a massive economic crisis. Since the pandemic began, scientists have started to fight against SARS-CoV-2. One significant scientific effort was searching for successful therapeutic molecules against the virus. The repurposing of the drug candidates was initiated in the initial stage of the pandemic.1Cantini F. Goletti D. Petrone L. Najafi Fard S. Niccoli L. Foti R. Immune therapy, or antiviral therapy, or both for COVID-19: a systematic review.Drugs. 2020; 80: 1929-1946Crossref PubMed Scopus (71) Google Scholar,2Chakraborty C. Sharma A.R. Bhattacharya M. Agoramoorthy G. Lee S.S. The drug repurposing for COVID-19 clinical trials provide very effective therapeutic combinations: lessons learned from major clinical studies.Front. Pharmacol. 2021; 12: 704205Crossref PubMed Scopus (56) Google Scholar,3Saha R.P. Sharma A.R. Singh M.K. Samanta S. Bhakta S. Mandal S. Bhattacharya M. Lee S.S. Chakraborty C. Repurposing drugs, ongoing vaccine, and new therapeutic development initiatives against COVID-19.Front. Pharmacol. 2020; 11: 1258Crossref PubMed Scopus (84) Google Scholar Along with drug repurposing, new molecule discovery was started by exploring the drug targets. The most significant drug targets are RdRp, Mpro/3CLpro, and others.4More S.A. Patil A.S. Sakle N.S. Mokale S.N. Network analysis and molecular mapping for SARS-CoV-2 to reveal drug targets and repurposing of clinically developed drugs.Virology. 2021; 555: 10-18Crossref PubMed Scopus (15) Google Scholar,5Chakraborty C. Bhattacharya M. Mallick B. Sharma A.R. Lee S.S. Agoramoorthy G. SARS-CoV-2 protein drug targets landscape: a potential pharmacological insight view for the new drug development.Expet Rev. Clin. Pharmacol. 2021; 14: 225-238Crossref PubMed Scopus (15) Google Scholar The possible repurposed and newly discovered therapeutic molecules have been tested in vivo, in vitro, and through clinical trials. They found several effective therapeutic molecules against this virus, such as nirmatrelvir, ritonavir, remdesivir, molnupiravir, etc. One recent effective drug against the SARS-CoV-2 Omicron variant and its subvariant is Paxlovid, which combines two therapeutic molecules (nirmatrelvir and ritonavir). Paxlovid shows high effectiveness against SARS-CoV-2 emerging variants and subvariants.6Ledford H. Maxmen A. African clinical trial denied access to key COVID drug Paxlovid.Nature. 2022; 604: 412-413Crossref PubMed Scopus (9) Google Scholar,7Callaway E. COVID rebound is surprisingly common - even without Paxlovid.Nature. 2022; (Preprint at)https://doi.org/10.1038/d41586-022-02121-zCrossref Google Scholar,8Niraj N. Mahajan S.S. Prakash A. Sarma P. Medhi B. Paxlovid: a promising drug for the challenging treatment of SARS-COV-2 in the pandemic era.Indian J. Pharmacol. 2022; 54: 452-458PubMed Google Scholar,9Mohapatra R.K. Tiwari R. Sarangi A.K. Islam M.R. Chakraborty C. Dhama K. Omicron (B.1.1.529) variant of SARS-CoV-2: concerns, challenges, and recent updates.J. Med. Virol. 2022; 94: 2336-2342Crossref PubMed Scopus (59) Google Scholar During the past 3 years, several variants have been created in nature with significant mutations in the S protein and other proteins like RdRp, Mpro/3CLpro, etc.10Cappell M.S. Friedman D. Mikhail N. Chyloperitoneum associated with chronic severe sarcoidosis.Am. J. Gastroenterol. 1993; 88: 99-101PubMed Google Scholar,11Chakraborty C. Sharma A.R. Bhattacharya M. Agoramoorthy G. Lee S.S. Evolution, mode of transmission, and mutational landscape of newly emerging SARS-CoV-2 variants.mBio. 2021; 12: e0114021Crossref PubMed Scopus (44) Google Scholar These mutations have caused drug resistance, which has been reported from time to time.12Chakraborty C. Sharma A.R. Bhattacharya M. Lee S.S. A detailed overview of immune escape, antibody escape, partial vaccine escape of SARS-CoV-2 and their emerging variants with escape mutations.Front. Immunol. 2022; 13: 801522Crossref PubMed Scopus (39) Google Scholar,13Chakraborty C. Bhattacharya M. Sharma A.R. Emerging mutations in the SARS-CoV-2 variants and their role in antibody escape to small molecule-based therapeutic resistance.Curr. Opin. Pharmacol. 2022; 62: 64-73Crossref PubMed Scopus (24) Google Scholar Several significant mutations have been observed in the SARS-CoV-2 Omicron variant and its subvariants that cause therapeutic escape.14Chakraborty C. Bhattacharya M. Sharma A.R. Mallik B. Omicron (B.1.1.529) - a new heavily mutated variant: mapped location and probable properties of its mutations with an emphasis on S-glycoprotein.Int. J. Biol. Macromol. 2022; 219: 980-997Crossref PubMed Scopus (13) Google Scholar,15Chakraborty C. Bhattacharya M. Sharma A.R. Dhama K. Lee S.S. Continent-wide evolutionary trends of emerging SARS-CoV-2 variants: dynamic profiles from Alpha to Omicron.GeroScience. 2022; 44: 2371-2392Crossref PubMed Scopus (9) Google Scholar,16Chatterjee S. Bhattacharya M. Nag S. Dhama K. Chakraborty C. A detailed overview of SARS-CoV-2 Omicron: its sub-variants, mutations and pathophysiology, clinical characteristics, immunological landscape, immune escape, and therapies.Viruses. 2023; 15: 167Crossref PubMed Scopus (23) Google Scholar,17Chakraborty C. Bhattacharya M. Sharma A.R. Dhama K. Lee S.S. The rapid emergence of multiple sublineages of Omicron (B.1.1.529) variant: dynamic profiling via molecular phylogenetics and mutational landscape studies.J. Infect. Public Health. 2022; 15: 1234-1258Crossref PubMed Scopus (10) Google Scholar The phenomenon of therapeutic escape causes immense concern to scientists. Recently, several mutations have been noted in Mpro/3CLpro, which might be responsible for the nirmatrelvir resistance (Figure 1). SARS-CoV-2 has acquired a wide range of mutations in its non-structural proteins during its variant generation. They have allowed it to adjust quickly to the environment, increase its infectivity rate, and eventually develop drug resistance due to several mutations in the hotspot residues. This is actually for its survival. The FDA has approved the nirmatrelvir molecule (an antiviral component of Paxlovid) for treating mild-to-moderate infections to combat the developing variations predominantly observed in Omicron and its subvariants.18Padhi A.K. Tripathi T. Hotspot residues and resistance mutations in the nirmatrelvir-binding site of SARS-CoV-2 main protease: design, identification, and correlation with globally circulating viral genomes.Biochem. Biophys. Res. Commun. 2022; 629: 54-60Crossref PubMed Scopus (12) Google Scholar It has been proven that the oral antiviral nirmatrelvir, which targets the 3CL protease of SARS-CoV-2, is clinically effective against the COVID-19 pandemic.19Iketani S. Mohri H. Culbertson B. Hong S.J. Duan Y. Luck M.I. Annavajhala M.K. Guo Y. Sheng Z. Uhlemann A.C. et al.Multiple pathways for SARS-CoV-2 resistance to nirmatrelvir.Nature. 2023; 613: 558-564Crossref PubMed Scopus (63) Google Scholar This drug interacts with the Cys145 residue of the SARS-CoV-2 nsp5 by establishing a covalent bond.20Lan S. Neilsen G. Slack R.L. Cantara W.A. Castaner A.E. Lorson Z.C. Lulkin N.D. Zhang H. Lee J. Cilento M.E. Tedbury P.R. Nirmatrelvir resistance in SARS-CoV-2 Omicron_BA.1 and WA1 replicons and escape strategies.bioRxiv. 2023; (Preprint at)https://doi.org/10.1101/2022.12.31.522389Crossref Scopus (0) Google Scholar New SARS-CoV-2 variants that potently evade the currently available therapeutics continue to arise due to the intense selective pressure against the spike glycoprotein. Many sublineages from Omicron have been reported so far.21Willett B.J. Grove J. MacLean O.A. Wilkie C. De Lorenzo G. Furnon W. Cantoni D. Scott S. Logan N. Ashraf S. et al.SARS-CoV-2 Omicron is an immune escape variant with an altered cell entry pathway.Nat. Microbiol. 2022; 7: 1161-1179Crossref PubMed Scopus (161) Google Scholar,22Greaney A.J. Starr T.N. Gilchuk P. Zost S.J. Binshtein E. Loes A.N. Hilton S.K. Huddleston J. Eguia R. Crawford K.H.D. et al.Complete mapping of mutations to the SARS-CoV-2 spike receptor-binding domain that escape antibody recognition.Cell Host Microbe. 2021; 29: 44-57.e9Abstract Full Text Full Text PDF PubMed Scopus (564) Google Scholar,23Greaney A.J. Loes A.N. Crawford K.H.D. Starr T.N. Malone K.D. Chu H.Y. Bloom J.D. Comprehensive mapping of mutations in the SARS-CoV-2 receptor-binding domain that affect recognition by polyclonal human plasma antibodies.Cell Host Microbe. 2021; 29: 463-476.e6Abstract Full Text Full Text PDF PubMed Scopus (618) Google Scholar,24Kudriavtsev A.V. Vakhrusheva A.V. Novoseletsky C.V.N. Bozdaganyan M.E. Shaitan K.V. Kirpichnikov M.P. Sokolova O.S. Immune escape associated with RBD Omicron mutations and SARS-CoV-2 evolution dynamics.Viruses. 2022; 14: 1603Crossref PubMed Scopus (11) Google Scholar Antiviral treatments are crucial for treating those who are not immunized or in cases of illness that develop suddenly. Because of its vital role in coronavirus replication, the nsp5 protease found in SARS-CoV-2 and other coronaviruses makes it an extremely promising therapeutic target.21Willett B.J. Grove J. MacLean O.A. Wilkie C. De Lorenzo G. Furnon W. Cantoni D. Scott S. Logan N. Ashraf S. et al.SARS-CoV-2 Omicron is an immune escape variant with an altered cell entry pathway.Nat. Microbiol. 2022; 7: 1161-1179Crossref PubMed Scopus (161) Google Scholar During the SARS pandemic in 2002 and the more recent SARS-CoV-2 pandemic, the major protease (Mpro/3CLpro) of the coronavirus (CoV) family was initially investigated as a target for designing various therapeutics.25Anand K. Ziebuhr J. Wadhwani P. Mesters J.R. Hilgenfeld R. Coronavirus main proteinase (3CLpro) structure: basis for design of anti-SARS drugs.Science. 2003; 300: 1763-1767Crossref PubMed Scopus (1359) Google Scholar,26Boras B. Jones R.M. Anson B.J. Arenson D. Aschenbrenner L. Bakowski M.A. Beutler N. Binder J. Chen E. Eng H. et al.Preclinical characterization of an intravenous coronavirus 3CL protease inhibitor for the potential treatment of COVID19.Nat. Commun. 2021; 12: 6055Crossref PubMed Scopus (130) Google Scholar,27Service R.F. A call to arms.Science. 2021; 371: 1092-1095Crossref PubMed Scopus (7) Google Scholar The successful results obtained by constructing protease inhibitors for the hepatitis C virus (HCV) and HIV-1 virus instigated the development of a similar therapeutic to treat SARS-CoV-2 virus infection.28Flexner C. HIV-protease inhibitors.N. Engl. J. Med. 1998; 338: 1281-1292Crossref PubMed Scopus (772) Google Scholar,29Anderson J. Schiffer C. Lee S.K. Swanstrom R. Viral protease inhibitors.Handb. Exp. Pharmacol. 2009; 189: 85-110Crossref PubMed Scopus (94) Google Scholar SARS-CoV-2 viruses now in circulation have Mpro mutations that make them resistant to nirmatrelvir. For instance, the M49I mutation was discovered in 1,883 genomes in May 2022, with a minor increase in late 2021.30Sedova M. Jaroszewski L. Iyer M. Godzik A. Monitoring for SARS-CoV-2 drug resistance mutations in broad viral populations.bioRxiv. 2022; (Preprint at)https://doi.org/10.1101/2022.05.27.493798Crossref Google Scholar Sasi et al. highlighted that the potency of nirmatrelvir is decreased by five mutations, namely Q189E, Q192T, N142L, Q189I, and E166M. The IC50 of nirmatrelvir was reduced by a factor of 24 against the E166M mutation.31Sasi V.M. Ullrich S. Ton J. Fry S.E. Johansen-Leete J. Payne R.J. Nitsche C. Jackson C.J. Predicting antiviral resistance mutations in SARS-CoV-2 main protease with computational and experimental screening.Biochemistry. 2022; 61: 2495-2505Crossref PubMed Scopus (11) Google Scholar According to phylogenetic analyses, nirmatrelvir-resistant variants are transmissible and appear to have existed before nirmatrelvir was introduced into the human population.32Moghadasi S.A. Heilmann E. Moraes S.N. Kearns F.L. von Laer D. Amaro R.E. et al.Transmissible SARS-CoV-2 variants with resistance to clinical protease inhibitors.bioRxiv. 2022; (Preprint at)https://doi.org/10.1101/2022.08.07.503099Crossref PubMed Scopus (0) Google Scholar In addition, Lan et al.20Lan S. Neilsen G. Slack R.L. Cantara W.A. Castaner A.E. Lorson Z.C. Lulkin N.D. Zhang H. Lee J. Cilento M.E. Tedbury P.R. Nirmatrelvir resistance in SARS-CoV-2 Omicron_BA.1 and WA1 replicons and escape strategies.bioRxiv. 2023; (Preprint at)https://doi.org/10.1101/2022.12.31.522389Crossref Scopus (0) Google Scholar designed specific mutations to hinder nirmatrelvir\u2019s ability to attach to its substrate to study nirmatrelvir resistance. They used 12 wild-type SARS-CoV-2 replicons and one subvariant of the Omicron (BA.1), followed by specific enzymatic assays and cell-based complementation. The result demonstrated that E166V conferred strong nirmatrelvir resistance, approximately 55-fold, with a significant drop in wild-type replicon fitness (nearly 20-fold), but not in the BA.1 subvariant (2-fold), in both cases. However, L50F improved the fitness of wild-type replicons. Due to these variations, Omicron possibly may have a lower resistance barrier than the wild-type variant.20Lan S. Neilsen G. Slack R.L. Cantara W.A. Castaner A.E. Lorson Z.C. Lulkin N.D. Zhang H. Lee J. Cilento M.E. Tedbury P.R. Nirmatrelvir resistance in SARS-CoV-2 Omicron_BA.1 and WA1 replicons and escape strategies.bioRxiv. 2023; (Preprint at)https://doi.org/10.1101/2022.12.31.522389Crossref Scopus (0) Google Scholar Despite the prevalent mutation in the Mpro site of the Omicron variant, namely P132H, nirmatrelvir has maintained its in vitro efficacy against the sublineages of Omicron, namely BQ.1.1,33Imai M. Ito M. Kiso M. Yamayoshi S. Uraki R. Fukushi S. Watanabe S. Suzuki T. Maeda K. Sakai-Tagawa Y. et al.Efficacy of antiviral agents against Omicron subvariants BQ.1.1 and XBB.N. Engl. J. Med. 2023; 388: 89-91Crossref PubMed Scopus (77) Google Scholar XBB,33Imai M. Ito M. Kiso M. Yamayoshi S. Uraki R. Fukushi S. Watanabe S. Suzuki T. Maeda K. Sakai-Tagawa Y. et al.Efficacy of antiviral agents against Omicron subvariants BQ.1.1 and XBB.N. Engl. J. Med. 2023; 388: 89-91Crossref PubMed Scopus (77) Google Scholar BA.1,34Greasley S.E. Noell S. Plotnikova O. Ferre R. Liu W. Bolanos B. Fennell K. Nicki J. Craig T. Zhu Y. et al.Structural basis for the in vitro efficacy of nirmatrelvir against SARS-CoV-2 variants.J. Biol. Chem. 2022; 298: 101972Abstract Full Text Full Text PDF PubMed Scopus (59) Google Scholar BA.1.1,35Takashita E. Yamayoshi S. Simon V. van Bakel H. Sordillo E.M. Pekosz A. Fukushi S. Suzuki T. Maeda K. Halfmann P. et al.Efficacy of antibodies and antiviral drugs against Omicron BA.2.12.1, BA.4, and BA.5 subvariants.N. Engl. J. Med. 2022; 387: 468-470Crossref PubMed Scopus (132) Google Scholar BA.5,35Takashita E. Yamayoshi S. Simon V. van Bakel H. Sordillo E.M. Pekosz A. Fukushi S. Suzuki T. Maeda K. Halfmann P. et al.Efficacy of antibodies and antiviral drugs against Omicron BA.2.12.1, BA.4, and BA.5 subvariants.N. Engl. J. Med. 2022; 387: 468-470Crossref PubMed Scopus (132) Google Scholar BA.4,35Takashita E. Yamayoshi S. Simon V. van Bakel H. Sordillo E.M. Pekosz A. Fukushi S. Suzuki T. Maeda K. Halfmann P. et al.Efficacy of antibodies and antiviral drugs against Omicron BA.2.12.1, BA.4, and BA.5 subvariants.N. Engl. J. Med. 2022; 387: 468-470Crossref PubMed Scopus (132) Google Scholar BA.2,35Takashita E. Yamayoshi S. Simon V. van Bakel H. Sordillo E.M. Pekosz A. Fukushi S. Suzuki T. Maeda K. Halfmann P. et al.Efficacy of antibodies and antiviral drugs against Omicron BA.2.12.1, BA.4, and BA.5 subvariants.N. Engl. J. Med. 2022; 387: 468-470Crossref PubMed Scopus (132) Google Scholar BA.2.12.1,35Takashita E. Yamayoshi S. Simon V. van Bakel H. Sordillo E.M. Pekosz A. Fukushi S. Suzuki T. Maeda K. Halfmann P. et al.Efficacy of antibodies and antiviral drugs against Omicron BA.2.12.1, BA.4, and BA.5 subvariants.N. Engl. J. Med. 2022; 387: 468-470Crossref PubMed Scopus (132) Google Scholar BA.2,35Takashita E. Yamayoshi S. Simon V. van Bakel H. Sordillo E.M. Pekosz A. Fukushi S. Suzuki T. Maeda K. Halfmann P. et al.Efficacy of antibodies and antiviral drugs against Omicron BA.2.12.1, BA.4, and BA.5 subvariants.N. Engl. J. Med. 2022; 387: 468-470Crossref PubMed Scopus (132) Google Scholar BA.2.12.1,35Takashita E. Yamayoshi S. Simon V. van Bakel H. Sordillo E.M. Pekosz A. Fukushi S. Suzuki T. Maeda K. Halfmann P. et al.Efficacy of antibodies and antiviral drugs against Omicron BA.2.12.1, BA.4, and BA.5 subvariants.N. Engl. J. Med. 2022; 387: 468-470Crossref PubMed Scopus (132) Google Scholar and BA.2.75.36Saito A. Tamura T. Zahradnik J. Deguchi S. Tabata K. Anraku Y. Kimura I. Ito J. Yamasoba D. Nasser H. et al.Virological characteristics of the SARS-CoV-2 Omicron BA.2.75 variant.Cell Host Microbe. 2022; 30: 1540-1555.e15Abstract Full Text Full Text PDF PubMed Scopus (37) Google Scholar The outcomes of the clinical trials testing nirmatrelvir are encouraging, but there are still many challenges in their widespread application. First, the trial participants received treatment when the infection was still in its early stages. In practice, it can be challenging to administer antivirals to patients as soon as they are diagnosed as positive. Second, despite careful patient selection, nirmatrelvir monotherapy produces suboptimal clinical results.37Mahase E. Covid-19: pfizer's paxlovid is 89% effective in patients at risk of serious illness, company reports.BMJ. 2021; 375: n2713Crossref PubMed Scopus (249) Google Scholar,38Jayk Bernal A. Gomes da Silva M.M. Musungaie D.B. Kovalchuk E. Gonzalez A. Delos Reyes V. Mart\u00edn-Quir\u00f3s A. Caraco Y. Williams-Diaz A. Brown M.L. et al.Molnupiravir for oral treatment of covid-19 in Nonhospitalized patients.N. Engl. J. Med. 2022; 386: 509-520Crossref PubMed Scopus (839) Google Scholar Nirmatrelvir has been shown to reduce viral infection in hamsters\u2019 respiratory organs after they are infected by the BA.2 variant.39Uraki R. Kiso M. Iida S. Imai M. Takashita E. Kuroda M. Halfmann P.J. Loeber S. Maemura T. Yamayoshi S. et al.Characterization and antiviral susceptibility of SARS-CoV-2 Omicron BA.2.Nature. 2022; 607: 119-127Crossref PubMed Scopus (112) Google Scholar The transmission of the virus was suppressed entirely in a group of animals given a human-equivalent dose of molnupiravir. Still, a pharmacokinetic human-equivalent dose of nirmatrelvir did not significantly lower the SARS-CoV-2 titers in ferrets. It also did not prevent viral transmission to untreated ferrets in direct contact. While the prophylactic nirmatrelvir treatment resulted in an infection in all contacts, prophylactic molnupiravir treatment of uninfected ferrets close to the infected group prevented SARS-CoV-2 transmission.40Cox R.M. Lieber C.M. Wolf J.D. Karimi A. Lieberman N.A.P. Sticher Z.M. Roychoudhury P. Andrews M.K. Krueger R.E. Natchus M.G. et al.Paxlovid-like nirmatrelvir/ritonavir fails to block SARS-CoV-2 transmission in ferrets.bioRxiv. 2022; (Preprint at)https://doi.org/10.1101/2022.08.07.503099Crossref Scopus (0) Google Scholar An analysis by Iketani et al.19Iketani S. Mohri H. Culbertson B. Hong S.J. Duan Y. Luck M.I. Annavajhala M.K. Guo Y. Sheng Z. Uhlemann A.C. et al.Multiple pathways for SARS-CoV-2 resistance to nirmatrelvir.Nature. 2023; 613: 558-564Crossref PubMed Scopus (63) Google Scholar of 13 recombinant SARS-CoV-2 clones revealed that higher levels of resistance needed the accumulation of further mutations, because three noteworthy mutations, namely T21I, P252L, and T304I, caused resistance. The most significant resistance was acquired by the E166V mutation (nearly However, this mutation also reduced the ability of the virus to which was by like and The results also that the viral resistance to nirmatrelvir can quickly develop in vitro through a of and the mutations found provide a to the of resistance in more and the development of protease inhibitors in S. Mohri H. Culbertson B. Hong S.J. Duan Y. Luck M.I. Annavajhala M.K. Guo Y. Sheng Z. Uhlemann A.C. et al.Multiple pathways for SARS-CoV-2 resistance to nirmatrelvir.Nature. 2023; 613: 558-564Crossref PubMed Scopus (63) Google Scholar According to molecular a of L50F with and E166V reduced the efficacy nirmatrelvir and The inhibitor and maintained their against the emerging resistant However, a of these with nirmatrelvir has shown to be more effective with the of the These affect for the SARS-CoV-2 virus are and to be Y. A. C. A. et SARS-CoV-2 variants with high fitness in an cell 2022; PubMed Scopus Google Scholar The and development of nirmatrelvir reduce the due to the COVID-19 pandemic in This drug has shown to be in the Omicron with in vitro and clinical In the of 2022, nirmatrelvir in it one of the most common antivirals the J. J. Jackson M.E. D. B. S. K. et of oral antiviral drugs for treatment of COVID-19 by - 2022; PubMed Google Scholar this drug is the immune the virus, resistant that may have It makes to on of patients nirmatrelvir treatment to the emergence of a virus. resistance be in vitro, as has with other viral infections, it similar results in most of the COVID-19 treatments have been given as it is that treatments can be by a drug to reduce the of SARS-CoV-2 S. Mohri H. Culbertson B. Hong S.J. Duan Y. Luck M.I. Annavajhala M.K. Guo Y. Sheng Z. Uhlemann A.C. et al.Multiple pathways for SARS-CoV-2 resistance to nirmatrelvir.Nature. 2023; 613: 558-564Crossref PubMed Scopus (63) Google Scholar scientists to on other drug and more antiviral molecules to increase the therapeutic for treating emerging variants and subvariants of SARS-CoV-2. it hinder drug resistance by the SARS-CoV-2 variants and subvariants and to reduce the due to the ongoing COVID-19 The that the the of this study are available the",
+        "similarity_score": 0.9,
+        "oa_url": "http://www.cell.com/article/S2162253123000720/pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The source abstract is entirely about COVID-19, SARS-CoV-2 treatments, and nirmatrelvir resistance. It contains no information about Ito et al. (2022), abstract representations, compositional generalization, or human-like reasoning.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "d6489345-5f5e-4bdd-ba56-2fcd86ead620",
+      "claim_text": "Yin et al. (2023) proposed consistency regularization training to enhance compositional generalization.",
+      "claim_type": "methodological",
+      "cited_authors": [
+        "Yin"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.bbii.2023.100024",
+        "title": "The suggestions of ancient Chinese philosophy and medicine for contemporary scientific research, and integrative care.",
+        "abstract": "According to Kelley et al. (2023), BBI Integrative \u2018recognises the historical importance of Eastern health practices in the entire field of PNI\u2019 (psychoneuroimmunology). We applaud this editorial innovation and believe that it is an important step in advancing the ability to provide healing to human beings. This article aims to illustrate suggestions for scientific research and integrative care derived from studying the ancient Chinese medicine and philosophy using pathophysiological and clinical examples. It shows how some fundamental categories of ancient Chinese philosophies, such as the yin\u2013yang theory, and healing models, such as yang sheng (nurturing life), can help us understand how the immune system works and where the foundations of health are rooted. It also examines some examples of the yin\u2013yang dialectic in immunology, such as T helper 1 (Th1) circuit control by the same cells that initially produce cytokines (IL-12 and IFN-\u03b3) to activate this circuit and then produce Th2 circuit cytokines (IL-4) to moderate it. In addition, the transformation of regulatory T-cells into inflammatory T-cells (Th17) and the IL-6 dual pro- or anti-inflammatory face, depends on the context. In the first example, yin is present in yang. In the second, the yang is in the yin. Finally, we present an example of the cytokine yin\u2013yang. This article also shows the surprising concordances of ancient Chinese chronobiology with the modern science of circadian rhythms and the unknown connections between organs, such as between the lungs and gut, which has drawn the attention of modern scientific research only recently. Finally, this article highlights the peculiar approach of ancient Chinese medicine to prevention and treatment, called yang sheng, which shows strong concordance with the model proposed by Psychoneuroendocrineimmunology.",
+        "similarity_score": 1.0,
+        "oa_url": "https://doi.org/10.1016/j.bbii.2023.100024",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract discusses ancient Chinese medicine, yin-yang theory, and immunology (psychoneuroimmunology), and has no relation to Yin et al. (2023)'s proposed consistency regularization training for compositional generalization in machine learning or NLP.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "13ba1879-1e9f-41d7-8910-3d8d83737fe2",
+      "claim_text": "Lepori et al. (2023) studied structural compositionality in neural networks, suggesting that networks may implicitly learn to decompose complex tasks.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Lepori"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.crohns.2009.12.003",
+        "title": "The second European evidence-based Consensus on the diagnosis and management of Crohn's disease: Definitions and diagnosis",
+        "abstract": "International audience",
+        "similarity_score": 0.8,
+        "oa_url": "https://academic.oup.com/ecco-jcc/article-pdf/4/1/7/26359608/4-1-7.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract provided contains only 'International audience' with no substantive content about neural networks, structural compositionality, or task decomposition. There is no information to evaluate the claim.",
+        "confidence": 0.95,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "a1d9e69c-1a04-437d-90fc-2c2d8bfdb6ea",
+      "claim_text": "The baseline LSTM model without compositional regularization reached approximately 84% test accuracy.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "84c5ea22-f20c-49ce-b6c7-adbde42b5b7d",
+      "claim_text": "The attention mechanism is known to improve performance in various sequence-to-sequence tasks by allowing the model to focus on relevant parts of the input sequence.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Vaswani"
+      ],
+      "cited_year": 2017,
+      "source": {
+        "found": true,
+        "doi": "10.4230/lipics.itp.2023.19",
+        "title": "MizAR 60 for Mizar 50",
+        "abstract": "As a present to Mizar on its 50th anniversary, we develop an AI/TP system that automatically proves about 60% of the Mizar theorems in the hammer setting. We also automatically prove 75% of the Mizar theorems when the automated provers are helped by using only the premises used in the human-written Mizar proofs. We describe the methods and large-scale experiments leading to these results. This includes in particular the E and Vampire provers, their ENIGMA and Deepire learning modifications, a number of learning-based premise selection methods, and the incremental loop that interleaves growing a corpus of millions of ATP proofs with training increasingly strong AI/TP systems on them. We also present a selection of Mizar problems that were proved automatically.",
+        "similarity_score": 0.8,
+        "oa_url": "https://drops.dagstuhl.de/storage/00lipics/lipics-vol268-itp2023/LIPIcs.ITP.2023.19/LIPIcs.ITP.2023.19.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The passages are about automated theorem proving for Mizar using ENIGMA and other AI/TP methods. While transformers and RNNs are briefly mentioned as architectures used for premise selection, the passages do not discuss or evaluate the attention mechanism's role in improving performance on sequence-to-sequence tasks.",
+        "confidence": 0.92,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "646d7c70-96af-42c9-9501-87354ba806aa",
+      "claim_text": "Higher values of \u03bb led to a lower compositional loss but did not improve test accuracy.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "212ec3b4-e257-4c3c-bf5e-20ae1fe45258",
+      "claim_text": "As the complexity of arithmetic expressions increases, the models' ability to generalize diminishes significantly.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    }
+  ]
+}

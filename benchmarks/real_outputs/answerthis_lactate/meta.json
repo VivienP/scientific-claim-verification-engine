@@ -1,0 +1,12 @@
+{
+  "tool": "AnswerThis",
+  "agent_or_model": "AnswerThis (web UI literature review, manual paste)",
+  "prompt_used": "Lactate pharmacokinetics in interstitial fluid during exercise",
+  "fetch_date": "2026-04-28",
+  "source_url": null,
+  "paper_title": "Exploring Activity-Induced Lactate Pharmacokinetics: Implications for Minimally-Invasive Monitoring",
+  "notable_context": "Topic where Vivien has ground-truth domain knowledge from a 2023 literature review. Rich numeric content (kinetics, lag times, MCT genetics, sensor specs) and dense bracket-style inline citations [N].",
+  "extraction_method": "manual paste of AnswerThis web UI output",
+  "input_chars": 30946,
+  "estimated_inline_citations": 60
+}

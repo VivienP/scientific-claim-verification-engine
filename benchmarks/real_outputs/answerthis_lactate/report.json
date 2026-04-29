@@ -1,0 +1,677 @@
+{
+  "report_id": "answerthis_lactate_phase1plus2_d2678055",
+  "timestamp": 1777376031.260855,
+  "input_text": "# Exploring Activity-Induced Lactate Pharmacokinetics: Implications for Minimally-Invasive Monitoring\n## 1. Lactate Compartmentalization and Transvascular Exchange Dynamics\n1.1 Blood Lactate Heterogeneity: Arterial, Venous, and Capillary Compartments\nThe concentration of lactate in blood is not uniform across the arterial-venous system during exercise. Arterial blood represents the systemic lactate pool that has equilibrated through the lungs and systemic circulation, while venous blood at the site of active muscle contains substantially elevated lactate concentrations reflecting local production [1]. Capillary blood, the transitional fluid between arterial and venous compartments, exhibits intermediate lactate concentrations that reflect the balance between lactate uptake from plasma and lactate production from working muscle tissue. This arterio-venous lactate gradient is a critical but often overlooked parameter in wearable sensor design\u2014most continuous lactate sensors are NOT designed to capture arterial-equivalent lactate concentrations, yet clinical interpretation often assumes near-arterial values.\n\nThe magnitude of arterio-venous lactate differences can be substantial during intense exercise. Regional blood flow heterogeneity and varying lactate production rates across muscle groups create temporal and spatial concentration gradients that persist even at rest [2]. Capillary transit time heterogeneity\u2014variability in the time individual red blood cells spend in tissue capillaries\u2014directly influences lactate extraction efficiency and the concentration gradient available for diffusion into interstitial fluid [2]. Importantly, changes in capillary hemodynamics during and after exercise alter these exchange gradients in ways that are difficult to predict from systemic blood lactate measurements alone.\n\n1.2 Interstitial Fluid as a Distinct Compartment with Delayed Equilibration\nInterstitial fluid (ISF) surrounding skeletal muscle tissue represents a distinct aqueous compartment physically separated from blood by the vascular endothelium [3]. The ISF volume in the human body exceeds blood volume by approximately threefold, yet collecting diagnostically useful ISF is more challenging than blood collection because extraction from dermis disrupts the delicate pressure balance between ISF, plasma, and lymph, triggering local inflammation and confounding analyte concentrations [3]. This is not merely a technical inconvenience\u2014it is a fundamental pharmacokinetic barrier that directly constrains sensor accuracy and must be explicitly considered in sensor design.\n\nThe relationship between blood and ISF lactate is characterized by substantial lag time and nonlinear concentration dynamics. During a glucose tolerance test in animal models, the delay in rising glucose concentrations between blood and interstitial fluid was approximately 10-15 minutes, with statistically similar time lags observed across multiple anatomical ISF compartments [4]. However, ISF equilibration dynamics are not uniform\u2014they depend critically on local blood flow, capillary permeability, tissue metabolic activity, and the specific anatomical location of the ISF being sampled [4]. For lactate in dermal ISF during exercise, the lag time can extend to 10 minutes between blood changes and ISF changes when proper lag correction is applied (Pearson's r = 0.85 with 10-minute lag), yet without accounting for this delay the correlation deteriorates substantially [5].\n\n1.3 Capillary Permeability and Lactate Transport Mechanisms\nLactate transport from blood to interstitial fluid is governed by a combination of passive diffusion down concentration gradients and active transport via monocarboxylate transporters (MCTs) [6]. The monocarboxylate transporter family, particularly MCT1 and MCT4, exhibits tissue-specific and physiological state-dependent expression that alters lactate transport capacity [7]. Genetic variations in MCT genes (MCT1, MCT2, MCT4) influence lactate kinetics following high-intensity exercise, with specific haplotypes associated with differential lactate clearance rates and maximum lactate concentrations [7]. This genetic heterogeneity means that blood-to-ISF lactate dynamics vary substantially between individuals, complicating the development of universalized sensor calibration algorithms.\n\nThe Starling-Landis principle, which describes transvascular fluid exchange, has been substantially revised based on contemporary understanding of endothelial structure and function [8]. The endothelial glycocalyx, a gel-like layer lining the inner surface of capillaries, plays a critical role in determining what molecules can readily equilibrate between blood and interstitial fluid [9]. Lactate, as a small hydrophilic molecule, crosses the endothelial barrier relatively freely compared to macromolecules, yet the revised Michel-Weinbaum model indicates that even small molecules experience significant resistance to transit when physiological conditions alter glycocalyx structure [9]. During intense exercise, local inflammation, shear stress, and metabolic acidosis may all alter endothelial permeability in ways that change lactate transport kinetics in unpredictable directions.\n\n## 2. Transport Kinetics and Mass Transfer Limitations in Biofluid Sampling\n2.1 Diffusion-Limited Transport from Muscle Tissue to Dermis\nThe path lactate must travel from skeletal muscle fiber to dermal interstitial fluid involves passage through multiple tissue barriers: the muscle plasma membrane, muscle interstitium, vascular endothelium, and dermal tissue to the site of sensor insertion. Each barrier imposes diffusion resistance proportional to the tissue thickness and inversely proportional to the lactate diffusion coefficient [10]. During exercise, active muscle lactate production creates a steep concentration gradient across these barriers, but the rate of lactate diffusion into overlying skin is fundamentally limited by the surface area available for transport and the diffusivity of lactate through tissue [10].\n\nMathematical modeling of transvascular exchange indicates that the diffusion distance from capillary center to interstitial space is critical: smaller capillary radii and greater diffusion distances result in longer equilibration times for any blood-borne solute [11]. A theoretical model of blood-to-ISF glucose transfer, calibrated using fluorescent isotope methods, demonstrated that the required lag time for substantial (63%) equilibration ranged from approximately 5-15 minutes depending on diffusion distance and tissue blood flow [11]. For lactate, which shares similar molecular weight and charge properties with glucose, these lag times should be approximately comparable, yet the actual transport kinetics depend sensitively on local perfusion patterns during dynamic exercise states.\n\nThe practical implication is stark: a microneedle-based sensor inserted into dermis at depth of 300-500 micrometers does NOT directly measure muscle lactate; it measures dermal ISF lactate, which by definition lags the muscle lactate production. If the sensor measures 8 mM lactate in ISF, the corresponding muscle lactate concentration at that instant is higher, and the corresponding blood lactate concentration may be either higher or lower depending on the phase of exercise and clearance dynamics.\n\n2.2 Mass Transport Limitations in Low-Flux Biofluid Systems\nElectrochemical biosensors depend on mass transport of analyte to the electrode surface, and the rate of mass transport critically constrains sensor performance in low-flux biofluid systems such as sweat and ISF [12]. A comprehensive investigation of Prussian Blue-based electrochemical biosensors operating under different hydrodynamic conditions (electrolyte velocity ranging from 2\u00d710\u207b\u2075 to 5\u00d710\u2070 mm/s) revealed enormous effects of flow on sensor response, explained by transport limitations for both analyte influx and reaction product outflux [12]. At low flow velocities typical of dermal ISF (~10\u207b\u2074 mm/s), diffusion-limited currents dominate, meaning sensor response becomes independent of enzyme kinetics and entirely dependent on the rate at which lactate can reach the electrode surface.\n\nIn microfluidic systems designed for sweat sensing, natural sweat flow rates are extremely low (~10\u207b\u2075 to 10\u207b\u00b3 mL/min from individual sweat glands), creating severe mass transport constraints [12]. Sweat composition is highly variable across different glandular populations (eccrine vs apocrine) and changes dynamically during exercise, further complicating the relationship between measured sweat lactate and physiological lactate status. The implication for sensor design is that improving sensitivity by increasing enzyme amount or modifying electrode materials provides diminishing returns when the limiting step is diffusion-limited transport; instead, sensor geometry must be optimized to maximize effective diffusion area and minimize diffusion distance [12].\n\n2.3 Time Lag and Response Kinetics in Microneedle Systems\nMicroneedle-based lactate sensors demonstrate characteristic time delays between blood concentration changes and sensor signal changes. In intradermal lactate monitoring with a fully integrated microneedle sensing system, in vivo measurements in rat models showed a positive correlation between ISF and blood lactate (Pearson's r = 0.85) when a lag time of 10 minutes was explicitly considered in the analysis [5]. Without lag-time correction, the correlation coefficient dropped substantially, indicating that the 10-minute delay is not merely statistical noise but represents a genuine pharmacokinetic phenomenon reflecting diffusion from capillary into dermal ISF and then into the microneedle collecting chamber.\n\nThe 10-minute lag time reflects contributions from multiple sources: (1) diffusion time from muscle capillary to dermal ISF, (2) diffusion time from dermal ISF into the microneedle chamber itself, (3) response time of the electrochemical sensor to changing lactate concentration, and (4) time required for the sensor's electronics to process and transmit the signal [5]. A predictive framework for microneedle sensor response quantifies tradeoffs between response time and limits of detection based on physical scaling laws, demonstrating that faster response times require either larger sensor surface areas or shorter diffusion pathways\u2014both of which can compromise biocompatibility or detection sensitivity [13]. This fundamental tradeoff cannot be overcome through improved electronics or signal processing; it is embedded in the biophysics of solute transport.\n\n## 3. Interstitial Fluid Pharmacokinetics: Temporal Dynamics and Accuracy Limitations\n3.1 Lag Between Blood and ISF Lactate During Exercise Transitions\nThe temporal response of ISF lactate to abrupt changes in exercise intensity is substantially slower than blood lactate response. During an acute transition from rest to high-intensity exercise, blood lactate can rise 2-4 mM within minutes, but ISF lactate rises more gradually, taking 10-15 minutes to reach concentrations that accurately reflect blood lactate levels [5]. This lag is not uniform across all ISF compartments\u2014dermal ISF exhibits different kinetics than muscle ISF, which differs from visceral ISF [4]. For a wearable sensor applied to skin, the relevant compartment is dermal ISF, which may lag deeper muscle ISF by additional minutes.\n\nThe asymmetry between lactate rising and falling is important for sensor design considerations. During the initial phase of exercise, lactate production exceeds clearance and both blood and ISF lactate concentrations rise. However, during recovery after exercise, lactate clears from blood into tissues and through hepatic gluconeogenesis, while ISF lactate continues diffusing out of tissues into blood for several minutes after blood lactate has already peaked and begun declining [14]. This creates a scenario where a sensor measuring dermal ISF lactate shows declining values while muscle lactate production may still be elevated\u2014a situation that could confuse interpretation of athlete recovery if not properly understood.\n\n3.2 Reverse Iontophoresis and ISF Extraction Artifacts\nReverse iontophoresis, a technique for non-invasive extraction of ISF through electrical stimulation, introduces additional complexities to ISF biomarker measurement. The technique induces pH variations at the skin surface through electrochemical reactions, and these pH changes can substantially affect analyte concentrations in extracted ISF, particularly for metabolites whose apparent concentration depends on ionization state [15]. A study calibrating glucose detection via reverse iontophoresis demonstrated that without pH correction, mean absolute relative difference (MARD) between measured and reference glucose was 34.44%, but with pH calibration MARD decreased to 14.78% [15]. For lactate, which exists in equilibrium between protonated (pKa ~3.86) and deprotonated forms, the measured lactate concentration in extracted ISF depends on the pH at the point of extraction.\n\nBeyond pH effects, reverse iontophoresis disrupts the normal pressure equilibrium between ISF, plasma, and lymph, causing local inflammation and transiently altering ISF analyte concentrations [3]. The perturbed ISF collected by reverse iontophoresis may not accurately reflect the lactate concentration in undisturbed ISF under the sensor. This creates a fundamental measurement accuracy limitation: the process of extracting ISF for analysis can alter the very analyte concentrations being measured. Microneedle-based passive sampling avoids this artifact by not inducing electrical current, but faces the opposite problem of very low sampling volume and slow diffusion into the collecting chamber.\n\n3.3 Environmental and Physiological Modulation of ISF-Blood Relationships\nThe relationship between blood and ISF lactate changes under different environmental and physiological conditions. A comparative study of glucose in blood and ISF during different exercise intensities found Pearson's r correlation coefficient of 0.92 during resting conditions with glucose intake, but correlation dropped to 0.45 during resting fasted conditions and declined further to 0.70 during high-intensity exercise [16]. These varying correlations indicate that the blood-to-ISF relationship is not stable across conditions and cannot be captured by a single calibration model applicable across all physiological states.\n\nAmbient temperature influences sweat lactate and blood lactate relationships independent of the ISF-blood relationship. During incremental exercise in hot (30\u00b0C) versus normal (20\u00b0C) temperature conditions, blood lactate was significantly higher in hot conditions, but sweat lactate showed early increases with altered kinetics that did not correlate reliably with blood lactate changes [17]. This environmental dependence means that a sensor calibrated under temperate laboratory conditions may not maintain accuracy during competitive events where environmental conditions differ substantially.\n\n## 4. Biofluid Sampling Challenges: Volume Constraints and Temporal Resolution\n4.1 Microneedle Chamber Geometry and Sampling Volume\nMicroneedles for ISF sampling typically create collecting chambers with volumes measured in nanoliters to microliters. An optofluidic microneedle system demonstrated the ability to collect and retain 0.6 nL samples for analysis [18], while other systems report collecting 6-50 microliters over 15-30 minute collection periods during rest or light activity [19]. The implications of small sampling volumes are substantial: they limit the number of successive measurements possible, constrain the types of analytical methods available (many traditional assays require microliter quantities), and require extremely sensitive detection schemes.\n\nThe rate of ISF flow into a microneedle chamber during normal dermal conditions is determined by the hydraulic conductivity of skin, the osmotic gradient across microneedle walls, and the pressure differential between ISF and the collection chamber. Hydrogel-forming microneedles that swell upon insertion into skin can enhance fluid uptake by creating local osmotic gradients, improving collection rates compared to solid microneedles [20]. However, even with optimized hydrogel composition and geometry, collection rates during resting conditions are quite slow (~1-5 microliters per hour), meaning temporal resolution for continuous measurement is inherently limited unless multiple parallel microneedles are used.\n\n4.2 Sweat Collection and Composition Variability\nSweat sampling presents fundamentally different constraints than ISF sampling through microneedles. Natural sweat secretion rates during rest are negligible (~0.001-0.01 mL/hour), rising to ~1-2 mL/hour during moderate exercise on a per-gland basis, but with enormous variability between individual sweat glands and across body regions [21]. Sweat collected from individual glands is subject to rapid evaporation, local reabsorption, and degradation of biochemical markers, creating a temporal window for analysis measured in minutes rather than hours.\n\nThe composition of sweat is highly variable across different sweat gland populations. Eccrine sweat glands (thermoregulatory) dominate on the torso and limbs, while apocrine glands (stress-responsive) are concentrated in armpits and groin regions; these gland types produce chemically distinct sweat compositions [22]. Additionally, sweat composition changes over the course of continuous sweating as acclimatization processes alter electrolyte reabsorption in the sweat duct, making time-series sweat measurements complicated by this intrinsic temporal drift in sweat chemistry independent of physiological changes. A wearable lactate sensor may measure rising or falling sweat lactate concentrations that reflect sweat gland adaptation rather than changes in systemic lactate metabolism.\n\n4.3 Temporal Correlation Between Compartments During Exercise Transitions\nThe temporal correlation between different biofluid compartments during exercise transitions reveals fundamental limitations in using any single biofluid as a proxy for exercise-induced lactate dynamics. In Division I collegiate baseball pitchers undergoing standardized throwing protocols, simultaneous measurement of capillary blood lactate, ISF lactate via microneedle, and sweat lactate via touch-based sensor revealed dramatic differences: ISF lactate showed strong correlation with blood lactate (\u03c1 = 0.93) but sweat lactate showed weak correlation (\u03c1 = 0.36) [23]. This disparity reflects the different routes and kinetics of lactate appearance in each compartment\u2014sweat lactate arises through local sweat gland metabolism and filtration processes distinct from ISF lactate dynamics.\n\n## 5. Sensor Design Requirements Derived from Pharmacokinetic Constraints\n5.1 Detection Range and Sensitivity Requirements\nThe physiological concentration range for lactate in ISF extends from approximately 0.5-1 mM at rest to potentially 15-20 mM during maximal exercise, though the precise upper limit depends on exercise mode, duration, and individual lactate production capacity [24]. Electrochemical lactate sensors must maintain linear response across this range without saturation, yet many enzymatic sensors exhibit nonlinear calibration curves at very high lactate concentrations due to substrate saturation of the enzyme or electrode-limiting current [25]. This requires careful electrode design to balance sensitivity (slope of response curve) with linear range.\n\nThe minimum detection limit (MDL) that provides clinical utility depends on the specific application. For athletic training monitoring, MDL < 0.5 mM is typically considered acceptable, while for critical care monitoring of sepsis-associated hyperlactatemia, MDL should ideally be < 0.25 mM to detect early increases from baseline [5]. However, low MDL comes at the cost of reduced dynamic range and slower response time, representing a fundamental engineering tradeoff that cannot be avoided through improved materials alone [13].\n\n5.2 Response Time Requirements and Temporal Resolution\nThe clinically meaningful response time for a lactate sensor depends on its intended application. For real-time athletic coaching during a competition, 5-10 minute response times may be acceptable because coaching interventions happen on timescales of minutes to intervals; however, for clinical monitoring of sepsis progression, 10-30 minute lag times could be problematic if early intervention is time-critical [26]. The current state of the art demonstrates that response times of 10-30 minutes are characteristic of ISF-based lactate sensors, with the lag predominantly reflecting pharmacokinetic delays rather than sensor electronics [5].\n\nAn important distinction must be made: response time is NOT synonymous with sampling frequency. A sensor can provide measurements every 30 seconds (high sampling frequency) while each measurement reflects lactate concentration from 10 minutes prior (long response lag). This means real-time trending is possible, but the data always lags actual physiological state. For applications where immediate feedback is required (such as an athlete adapting intensity during competition), this lag becomes clinically significant and must be communicated to users.\n\n5.3 Calibration Stability and Drift During Continuous Monitoring\nElectrochemical lactate sensors inserted into skin show characteristic calibration drift over 8-24 hours of continuous wear, with causes including electrode fouling from proteins in ISF, loss of enzyme activity from proteolysis or oxidative degradation, and changes in electrode impedance from biofouling films [5]. The drift is not always monotonic (sensor readings don't simply creep higher or lower); instead, the relationship between true lactate concentration and sensor signal can shift in complex ways, requiring periodic recalibration [5].\n\nPractical implications: a wearable lactate sensor providing day-long continuous monitoring requires either frequent (every 2-4 hours) recalibration against a reference standard, or incorporation of antifouling coatings and materials that substantially increase device complexity and cost [27]. The assumption that a sensor can be factory-calibrated and then provide accurate readings for 24-48 hours without recalibration is not supported by current evidence from in vivo studies.\n\n## 6. Electrode-Biofluid Interactions and Sensor Surface Mass Transport\n6.1 Diffusion-Limited Current and Sensor Saturation\nAt an amperometric lactate electrode operating at fixed potential, the measured current depends on the rate at which lactate diffuses to the electrode surface and reacts. At low lactate concentrations, the reaction kinetics (enzyme turnover rate) is the limiting step. However, at higher concentrations or during high measurement frequencies, the diffusion of lactate through the thin unstirred layer adjacent to the electrode becomes limiting, leading to diffusion-limited current that is proportional to bulk lactate concentration but independent of enzyme activity [12].\n\nThe thickness of the diffusion layer adjacent to an electrode inserted into dermal ISF depends on the flow rate of ISF across the electrode surface. In static ISF with no bulk flow, the diffusion layer thickness is relatively large (~100-500 micrometers), limiting the rate of lactate delivery to the electrode [12]. This explains why sweat-based sensors, which benefit from higher flow rates during exercise, can achieve higher sensitivity and faster response times compared to static ISF sensors; the fluid flow helps deplete the diffusion layer and maintain high lactate delivery rates [12].\n\n6.2 Enzyme Kinetics and Non-Enzymatic Approaches\nMost wearable lactate sensors employ lactate oxidase, an enzyme that catalyzes L-lactate oxidation to pyruvate while reducing oxygen or other electron acceptors [25]. Lactate oxidase exhibits Michaelis-Menten kinetics with Km typically in the range 5-10 mM, meaning enzyme turnover rates saturate at physiological lactate concentrations approaching 20 mM [25]. This enzyme saturation can create nonlinearity in the sensor response at very high lactate concentrations, requiring careful calibration or enzyme engineering to linearize output across the full physiological range.\n\nNon-enzymatic sensors based on metal catalysts (such as nickel-cobalt layered double hydroxides or platinum) avoid enzyme saturation and proteolytic degradation but typically exhibit lower selectivity and higher background currents from interfering substances in ISF [25]. The tradeoff between selectivity and stability must be explicitly evaluated for each application; enzymatic approaches work well for short-term monitoring (hours to days) while non-enzymatic approaches may be superior for longer-term implants (weeks to months).\n\n6.3 Analyte Consumption at the Electrode and Measurement Artifacts\nDuring amperometric measurement at relatively high applied potentials, the electrochemical oxidation of lactate is coupled to consumption of the analyte molecule. High measurement currents correspond to high rates of lactate consumption at the electrode surface, potentially depleting lactate in the diffusion layer and causing the measured current to underestimate true bulk lactate concentration [28]. This is particularly problematic for high-frequency measurements (multiple readings per minute) where successive measurements might sample the partially-depleted diffusion layer.\n\nIn microfluidic measurement chambers, this issue is mitigated by continuous flow, which replenishes the diffusion layer between measurements [28]. However, in dermal ISF without active pumping, the diffusion layer recovery after each measurement depends on ISF diffusion rates, introducing measurement-to-measurement correlations and making the effective temporal resolution worse than the apparent sampling frequency. A real-time cortisol sensor monitoring dynamic concentration profiles in microfluidic chambers showed time delays of ~90 seconds to measure 63% of concentration change, with lag time contributions from diffusion, reaction kinetics, and signal processing [28].\n\n## 7. Clinical and Practical Implications of Pharmacokinetic Constraints\n7.1 Sensor Accuracy During Athletic Performance Monitoring\nThe lag between ISF lactate and blood lactate fundamentally constrains the utility of wearable sensors for real-time coaching decisions during competition. In collegiate pitchers, continuous ISF lactate monitoring revealed dynamic elevations during pitching activity (peak changes ~4.1 mmol/L) that resolved within 20-30 minutes post-activity, correlating strongly with blood lactate (\u03c1 = 0.93) [29]. However, this high correlation was established post-hoc through statistical analysis of the entire dataset; at any individual moment during competition, the ISF lactate value displayed by the sensor reflects physiological state from approximately 10 minutes earlier. Coaching decisions based on real-time sensor readout during active competition must account for this lag explicitly.\n\n7.2 Precision Medicine and Therapeutic Drug Monitoring\nFor applications requiring real-time adjustment of drug infusions or exercise intensity based on metabolite monitoring, the 10-minute lag is clinically problematic. In levodopa monitoring for Parkinson's disease management, real-time tracking of drug levels in ISF using molecularly imprinted polymer sensors validated in rat models showed that temporal correlations between ISF and plasma levodopa were strong (when lag correction was applied) but optimal adjustable dosing regimens required accounting for the pharmacokinetic lag [30]. Similar constraints apply to lactate monitoring for sepsis management or intensive care unit monitoring\u2014the lag means decisions made based on current sensor readings are responding to physiological state from minutes prior.\n\n7.3 Standardization and Regulatory Challenges\nThe complex pharmacokinetic relationships between blood lactate, ISF lactate, and sweat lactate create regulatory and standardization challenges for wearable lactate sensors. Current regulatory frameworks (FDA, ISO) typically require that non-invasive sensors maintain accuracy within specified limits compared to reference blood measurements. However, if ISF lactate inherently lags blood lactate by 10 minutes, the question arises: should the sensor be judged against simultaneous blood measurements or against time-shifted blood measurements? Different regulatory decisions could substantially impact device approval pathways.\n\nFurthermore, the lack of consensus on how to account for measurement lag in continuous glucose monitoring devices suggests similar challenges will emerge for lactate. Some continuous glucose monitoring studies have reported MARD (mean absolute relative difference) values comparing sensor glucose to simultaneous blood glucose, while others explicitly account for time lag in their comparisons. A comprehensive review of CGM devices in athletes found that correlations between ISF and capillary blood glucose ranged from 0.45 (resting fasted) to 0.92 (resting with glucose intake) [16], illustrating how physiological state modulates the biofluid compartment relationships and complicates standardized comparison metrics.\n\n## Conclusion\nThe development of minimally-invasive lactate sensors must be grounded in rigorous understanding of lactate transport kinetics, interstitial fluid pharmacokinetics, and the fundamental mass transport limitations of biofluid sampling. The persistent 10-minute lag between blood lactate changes and dermal ISF lactate changes is not a measurement artifact that can be engineered away\u2014it reflects genuine biophysical constraints on diffusion through tissue barriers and into collection chambers. Similarly, mass transport limitations at low biofluid flow rates create inherent constraints on sensor response time and sensitivity that cannot be overcome through improved electronics or enzyme engineering alone.\n\nThe distinction between systemic lactate metabolism (relevant to understanding recovery physiology and fatigue) and the spatial diffusion dynamics governing sensor design must be explicitly recognized. A comprehensive understanding of activity-induced lactate pharmacokinetics requires not merely knowledge of arterio-venous lactate gradients and clearance kinetics, but detailed characterization of the capillary permeability mechanisms, tissue-specific diffusion barriers, and ISF volume dynamics that determine how quickly a change in muscle lactate production translates into a detectable change at a dermal sensor. Only with this engineering-focused pharmacokinetic perspective can rational sensor design specifications be derived and clinical utility properly evaluated.\n\n## References\n\n[1] G. Ferretti and P. D. Prampero, \u201cA reassessment of the energetic significance of blood lactate accumulation during exercise,\u201d European Journal of Applied Physiology, Feb. 2026, doi: 10.1007/s00421-026-06134-8.\n[2] L. \u00d8stergaard et al., \u201cThe role of capillary transit time heterogeneity in myocardial oxygenation and ischemic heart disease,\u201d Basic Research in Cardiology, Apr. 2014, doi: https://doi.org/10.1007/s00395-014-0409-x.\n[3] M. Friedel et al., \u201cOpportunities and challenges in the diagnostic utility of dermal interstitial fluid,\u201d Nature Biomedical Engineering, Jan. 2023, doi: https://doi.org/10.1038/s41551-022-00998-9.\n[4] T. I. Chan, Y. W. Yip, T. T. C. Man, C. Pang, and M. Brelen, \u201cComparing the Rise in Glucose Concentration in Blood, Aqueous and Interstitial Fluid During a Glucose Tolerance Test,\u201d Translational Vision Science & Technology, Nov. 2022, doi: 10.1167/tvst.11.11.3.\n[5] Q. Wang et al., \u201cIntradermal Lactate Monitoring Based on a Microneedle Sensor Patch for Enhanced In Vivo Accuracy,\u201d ACS Sensors, May 2024, doi: 10.1021/acssensors.4c00337.\n[6] A. P. Halestrap, \"The monocarboxylate transporter family \u2014 Structure and functional characterization,\" *IUBMB Life*, vol. 64, no. 1, pp. 1\u20139, Jan. 2012, doi: 10.1002/iub.573.\n[7] E. Maculewicz, A. Mastalerz, A. Garbacz, A. Mr\u00f3z, P. Stastny, M. Petr, D. Kolinger, P. Vostatkov\u00e1, and A. Bojarczuk, \"The interactions between monocarboxylate transporter genes MCT1, MCT2, and MCT4 and the kinetics of blood lactate production and removal after high-intensity efforts in elite males: a cross-sectional study,\" BMC Genomics, vol. 26, p. 133, Feb. 2025, doi: 10.1186/s12864-025-11307-4.\n[8] J. R. Levick and C. C. Michel, \"Microvascular fluid exchange and the revised Starling principle,\" *Cardiovascular Research*, vol. 87, no. 2, pp. 198\u2013210, Jul. 2010, doi: 10.1093/cvr/cvq062.\n[9] S. Weinbaum, L. M. Cancel, B. M. Fu, and J. M. Tarbell, \"The Glycocalyx and Its Role in Vascular Physiology and Vascular Related Diseases,\" *Cardiovascular Engineering and Technology*, vol. 12, no. 1, pp. 37\u201371, Feb. 2021, doi: 10.1007/s13239-020-00485-9.\n[10] Y. G. Anissimov, O. G. Jepps, Y. Dancik, and M. S. Roberts, \"Mathematical and pharmacokinetic modelling of epidermal and dermal transport processes,\" *Advanced Drug Delivery Reviews*, vol. 65, no. 2, pp. 169\u2013190, Feb. 2013, doi: 10.1016/j.addr.2012.04.009.\n[11] T. Shi, D. Li, G. Li, Y. Zhang, K. Xu, and L. Lu, \"Modeling and Measurement of Correlation between Blood and Interstitial Glucose Changes,\" Journal of Diabetes Research, vol. 2016, p. 4596316, 2016, doi: 10.1155/2016/4596316.\n[12] M. A. Komkova, V. F. Gilemkhanova, E. E. Karyakina, and A. A. Karyakin, \"Mass transport limitations for electrochemical sensing in low-flux excretory fluids,\" *Biosensors and Bioelectronics*, vol. 228, p. 115194, May 2023, doi: 10.1016/j.bios.2023.115194.\n[13] M. Fratus, A. Verma, and M. A. Alam, \"Performance gain and electro-mechanical design optimization of microneedles for wearable sensor systems,\" *Biomedical Microdevices*, vol. 25, no. 4, p. 46, Dec. 2023, doi: 10.1007/s10544-023-00683-x.\n[14] M. L. Goodwin, J. E. Harris, A. Hern\u00e1ndez, and L. B. Gladden, \"Blood Lactate Measurements and Analysis during Exercise: A Guide for Clinicians,\" *Journal of Diabetes Science and Technology*, vol. 1, no. 4, pp. 558\u2013569, Jul. 2007, doi: 10.1177/193229680700100414.\n[15] W. Zhu, L. Wang, Y. Liu, et al., \"pH calibration allows accurate glucose detection in interstitial fluid via reverse iontophoresis,\" *Nature Communications*, vol. 16, p. 9986, 2025, doi: 10.1038/s41467-025-65453-0.\n[16] H. Bauhaus, P. Erdogan, H. Braun, and M. Thevis, \"Continuous Glucose Monitoring (CGM) in Sports \u2014 A Comparison between a CGM Device and Lab-Based Glucose Analyser under Resting and Exercising Conditions in Athletes,\" International Journal of Environmental Research and Public Health, vol. 20, no. 15, p. 6440, Jul. 2023, doi: 10.3390/ijerph20156440.\n[17] N. Takei, T. Inaba, Y. Morita, K. Kakinoki, H. Hatta, and Y. Kitaoka, \"Differential patterns of sweat and blood lactate concentration response during incremental exercise in varied ambient temperatures: A pilot study,\" *Temperature*, vol. 11, no. 3, pp. 247\u2013253, 2024, doi: 10.1080/23328940.2024.2375693.\n[18] S. A. Ranamukhaarachchi, C. Padeste, M. D\u00fcbner, U. O. H\u00e4feli, B. Stoeber, and V. J. Cadarso, \"Integrated hollow microneedle-optofluidic biosensor for therapeutic drug monitoring in sub-nanoliter volumes,\" *Scientific Reports*, vol. 6, p. 29075, Jul. 2016, doi: 10.1038/srep29075.\n[19] P. P. Samant, M. M. Nied\u017awiecki, N. Raviele, V. Tran, J. Mena-Lapaix, D. I. Walker, et al., \"Sampling interstitial fluid from human skin using a microneedle patch,\" *Science Translational Medicine*, vol. 12, no. 571, p. eaaw0285, Nov. 2020, doi: 10.1126/scitranslmed.aaw0285.\n[20] E. Caffarel-Salvador, A. J. Brady, E. Eltayib, T. Meng, A. Alonso-Vicente, P. Gonzalez-Vazquez, et al., \"Hydrogel-Forming Microneedle Arrays Allow Detection of Drugs and Glucose In Vivo: Potential for Use in Diagnosis and Therapeutic Drug Monitoring,\" *PLOS ONE*, vol. 10, no. 12, p. e0145644, Dec. 2015, doi: 10.1371/journal.pone.0145644.\n[21] N. A. S. Taylor and C. A. Machado-Moreira, \"Regional variations in transepidermal water loss, eccrine sweat gland density, sweat secretion rates and electrolyte composition in resting and exercising humans,\" *Extreme Physiology & Medicine*, vol. 2, no. 1, p. 4, Feb. 2013, doi: 10.1186/2046-7648-2-4.\n[22] L. B. Baker, \"Physiology of sweat gland function: The roles of sweating and sweat composition in human health,\" *Temperature*, vol. 6, no. 3, pp. 211\u2013259, 2019, doi: 10.1080/23328940.2019.1632145.\n[23] T. Boscarino, O. Djassemi, M. I. Khan, N. Chaiya, C. Moonla, B. Choi, A.-Y. Chang, E. Schena, L. Pecchia, V. Piemonte, J. Wang, et al., \"Monitoring blood lactate dynamics through sweat and interstitial fluid biofluids,\" Talanta, vol. 298, Pt B, p. 128985, Feb. 2026, doi: 10.1016/j.talanta.2025.128985.\n[24] P. Bollella, S. Sharma, A. E. G. Cass, and R. Antiochia, \"Microneedle-based biosensor for minimally-invasive lactate detection,\" *Biosensors and Bioelectronics*, vol. 123, pp. 152\u2013159, Jan. 2019, doi: 10.1016/j.bios.2018.08.010.\n[25] L. Rassaei, W. Olthuis, S. Tsujimura, E. J. R. Sudh\u00f6lter, and A. van den Berg, \"Lactate biosensors: current status and outlook,\" *Analytical and Bioanalytical Chemistry*, vol. 406, no. 1, pp. 123\u2013137, Jan. 2014, doi: 10.1007/s00216-013-7307-1.\n[26] N. I. Shapiro, M. D. Howell, D. Talmor, L. A. Nathanson, A. Lisbon, R. E. Wolfe, and J. W. Weiss, \"Serum lactate as a predictor of mortality in emergency department patients with infection,\" *Annals of Emergency Medicine*, vol. 45, no. 5, pp. 524\u2013528, May 2005, doi: 10.1016/j.annemergmed.2004.12.006.\n[27] X. Xuan, C. Chen, A. Molinero-Fernandez, E. Ekelund, D. Cardinale, M. Swar\u00e9n, L. Wedholm, M. Cuartero, and G. A. Crespo, \"Fully Integrated Wearable Device for Continuous Sweat Lactate Monitoring in Sports,\" ACS Sensors, vol. 8, no. 6, pp. 2401\u20132409, Jun. 2023, doi: 10.1021/acssensors.3c00708.\n[28] N. K. Singh, S. Chung, A.-Y. Chang, J. Wang, and D. A. Hall, \"A non-invasive wearable stress patch for real-time cortisol monitoring using a pseudoknot-assisted aptamer,\" *Biosensors and Bioelectronics*, vol. 227, p. 115097, May 2023, doi: 10.1016/j.bios.2023.115097.\n[29] O. Djassemi, O. Vila Dieguez, M. Reynoso, B. Kim, T. La Salle, N. Agajanian, J. K. Placio, E. Kroll, C. Moonla, A.-Y. Chang, A. L. Aguinaldo, S. R. Ward, and J. Wang, \"Continuous lactate monitoring for real-time fatigue assessment in baseball pitchers,\" Biosensors and Bioelectronics, vol. 304, p. 118611, 2026, doi: 10.1016/j.bios.2026.118611.\n[30] Y. Zhou, J. Li, Z. Xu, Y. Zhao, S. Zhang, T. Liu, Y. Yao, L. Fang, et al., \"A nanoMIP sensor for real-time in vivo monitoring of levodopa pharmacokinetics in precision Parkinson's therapy,\" Nature Communications, vol. 16, p. 10796, Dec. 2025, doi: 10.1038/s41467-025-65853-2.",
+  "summary": {
+    "total_claims": 19,
+    "supported": 1,
+    "unsupported": 0,
+    "not_addressed": 17,
+    "partially_supported": 1,
+    "citation_found_rate": 0.5263157894736842,
+    "verifiability_status": "verifiable",
+    "fulltext_verified": 8,
+    "retracted_sources": 0,
+    "numeric_checks_run": 0,
+    "numeric_inconsistencies_flagged": 0,
+    "total_cost_usd": 0.8751000000000002
+  },
+  "claims": [
+    {
+      "claim_id": "31ba825a-e3f7-4cdc-890d-e249f99d0e5c",
+      "claim_text": "The ISF volume in the human body exceeds blood volume by approximately threefold, yet collecting diagnostically useful ISF is more challenging than blood collection because extraction from dermis disrupts the delicate pressure balance between ISF, plasma, and lymph, triggering local inflammation and confounding analyte concentrations.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Friedel"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1002/adma.202304704",
+        "title": "A Wearable Touch\u2010Activated Device Integrated with Hollow Microneedles for Continuous Sampling and Sensing of Dermal Interstitial Fluid",
+        "abstract": "Dermal interstitial fluid (ISF) is emerging as a rich source of biomarkers that complements conventional biofluids such as blood and urine. However, the impact of ISF sampling in clinical applications has been limited owing to the challenges associated with extraction. The implementation of microneedle-based wearable devices that can extract dermal ISF in a pain-free and easy-to-use manner has attracted growing attention in recent years. Here, a fully integrated touch-activated wearable device based on a laser-drilled hollow microneedle (HMN) patch for continuous sampling and sensing of dermal ISF is introduced. The developed platform can produce and maintain the required vacuum pressure (as low as \u2248 -53 kPa) to collect adequate volumes of ISF (\u22482 \u00b5L needle<sup>-1</sup> h<sup>-1</sup> ) for medical applications. The vacuum system can be activated through a one-touch finger operation. A parametric study is performed to investigate the effect of microneedle array size, vacuum pressure, and extraction duration on collected ISF. The capability of the proposed platform for continuous health monitoring is further demonstrated by the electrochemical detection of glucose and pH levels of ISF in animal models. This HMN-based system provides an alternative tool to the existing invasive techniques for ISF collection and sensing for medical diagnosis and treatment.",
+        "similarity_score": 1.0,
+        "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/adma.202304704",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract discusses microneedle-based ISF extraction technology and its challenges related to collection methods, but does not mention ISF volume relative to blood volume, nor does it address the pressure balance between ISF, plasma, and lymph, or local inflammation confounding analyte concentrations.",
+        "confidence": 0.9,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "d9404bdf-258c-47fd-b02d-e8886f96f7eb",
+      "claim_text": "During a glucose tolerance test in animal models, the delay in rising glucose concentrations between blood and interstitial fluid was approximately 10-15 minutes, with statistically similar time lags observed across multiple anatomical ISF compartments.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Chan",
+        "Yip",
+        "Man",
+        "Pang",
+        "Brelen"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.3350/cmh.2022.0237",
+        "title": "Pathogenesis and treatment of non-alcoholic steatohepatitis and its fibrosis",
+        "abstract": "The initial presentation of non-alcoholic steatohepatitis (NASH) is hepatic steatosis. The dysfunction of lipid metabolism within hepatocytes caused by genetic factors, diet, and insulin resistance causes lipid accumulation. Lipotoxicity, oxidative stress, mitochondrial dysfunction, and endoplasmic reticulum stress would further contribute to hepatocyte injury and death, leading to inflammation and immune dysfunction in the liver. During the healing process, the accumulation of an excessive amount of fibrosis might occur while healing. During the development of NASH and liver fibrosis, the gut-liver axis, adipose-liver axis, and renin-angiotensin system (RAS) may be dysregulated and impaired. Translocation of bacteria or its end-products entering the liver could activate hepatocytes, Kupffer cells, and hepatic stellate cells, exacerbating hepatic steatosis, inflammation, and fibrosis. Bile acids regulate glucose and lipid metabolism through Farnesoid X receptors in the liver and intestine. Increased adipose tissue-derived non-esterified fatty acids would aggravate hepatic steatosis. Increased leptin also plays a role in hepatic fibrogenesis, and decreased adiponectin may contribute to hepatic insulin resistance. Moreover, dysregulation of peroxisome proliferator-activated receptors in the liver, adipose, and muscle tissues may impair lipid metabolism. In addition, the RAS may contribute to hepatic fatty acid metabolism, inflammation, and fibrosis. The treatment includes lifestyle modification, pharmacological therapy, and non-pharmacological therapy. Currently, weight reduction by lifestyle modification or surgery is the most effective therapy. However, vitamin E, pioglitazone, and obeticholic acid have also been suggested. In this review, we will introduce some new clinical trials and experimental therapies for the treatment of NASH and related fibrosis.",
+        "similarity_score": 1.0,
+        "oa_url": "https://www.e-cmh.org/upload/pdf/cmh-2022-0237.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The provided passage is entirely about non-alcoholic steatohepatitis (NASH) and non-alcoholic fatty liver disease (NAFLD) pathogenesis and treatment. It contains no information about glucose tolerance tests in animal models, time lags between blood and interstitial fluid glucose concentrations, or interstitial fluid compartments.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "3210fdc1-cf18-48a1-9eb7-679d2d2ea519",
+      "claim_text": "For lactate in dermal ISF during exercise, the lag time can extend to 10 minutes between blood changes and ISF changes when proper lag correction is applied (Pearson's r = 0.85 with 10-minute lag), yet without accounting for this delay the correlation deteriorates substantially.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Wang"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41586-024-08249-4",
+        "title": "Applied body-fluid analysis by wearable devices",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "oa_url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC12007731/pdf/nihms-2069750.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "bab66361-5d20-4c0b-b90a-18d93a1af1c5",
+      "claim_text": "Genetic variations in MCT genes (MCT1, MCT2, MCT4) influence lactate kinetics following high-intensity exercise, with specific haplotypes associated with differential lactate clearance rates and maximum lactate concentrations.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Maculewicz",
+        "Mastalerz",
+        "Garbacz",
+        "Mr\u00f3z",
+        "Stastny",
+        "Petr",
+        "Kolinger",
+        "Vostatkov\u00e1",
+        "Bojarczuk"
+      ],
+      "cited_year": 2025,
+      "source": {
+        "found": true,
+        "doi": "10.3390/genes16101160",
+        "title": "Interactions Between Monocarboxylate Transporter MCT1 Gene Variants and the Kinetics of Blood Lactate Production and Removal After High-Intensity Efforts: A Cross-Sectional Study",
+        "abstract": "The results suggest that <i>MCT1</i> polymorphisms contribute to differences in LA metabolism and warrant replication in larger, more diverse cohorts.",
+        "similarity_score": 1.0,
+        "oa_url": "https://www.mdpi.com/2073-4425/16/10/1160/pdf?version=1759221507",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The passages strongly support that MCT1 gene variants influence lactate kinetics following high-intensity exercise, with specific genotypes associated with differential lactate clearance rates (DCC) and final lactate concentrations (LA30'). However, the claim specifically mentions MCT1, MCT2, and MCT4 genes with 'specific haplotypes associated with differential lactate clearance rates and maximum lactate concentrations.' The current study focuses exclusively on nine MCT1 SNPs (not MCT2/MCT4 in this paper), and notably, no associations with maximum lactate concentration (MAX LA) survived FDR correction. The haplotype aspect is only briefly referenced as coming from a prior study. Thus the claim is partially but not fully supported.",
+        "confidence": 0.78,
+        "source_passages": [
+          "Five variants (rs3789592, rs7556664, rs7169, rs1049434, rs6537765) remained significantly associated with LA measured 30 min after the second Wingate (LA30\u2032) and delta clearance capacity (DCC) in elites (codominant and recessive models: p = 0.01\u20130.03; false discovery rate (FDR)-adjusted p = 0.02\u20130.04).",
+          "Associations with maximum LA concentration (MAX LA) were initially observed for several SNPs. However, none of these remained statistically significant after correction for false discovery rate (FDR).",
+          "That study identified several promising genotype combinations and haplotype patterns, particularly involving MCT1, MCT2, and MCT4, which were associated with altered LA accumulation and clearance, despite limited functional annotations in public databases."
+        ],
+        "source_section": "results",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "4324a673-eacd-4837-b5db-1c512e51b4a2",
+      "claim_text": "A comprehensive investigation of Prussian Blue-based electrochemical biosensors operating under different hydrodynamic conditions (electrolyte velocity ranging from 2\u00d710\u207b\u2075 to 5\u00d710\u2070 mm/s) revealed enormous effects of flow on sensor response, explained by transport limitations for both analyte influx and reaction product outflux.",
+      "claim_type": "methodological",
+      "cited_authors": [
+        "Komkova",
+        "Gilemkhanova",
+        "Karyakina",
+        "Karyakin"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1002/elan.201700671",
+        "title": "Power Generation versus Conventional Potentiostatic Operation of Prussian Blue Based (Bio)Sensors",
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "c4619b90-8353-4c14-a867-85a4ef01b1be",
+      "claim_text": "A theoretical model of blood-to-ISF glucose transfer, calibrated using fluorescent isotope methods, demonstrated that the required lag time for substantial (63%) equilibration ranged from approximately 5-15 minutes depending on diffusion distance and tissue blood flow.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Shi",
+        "Li",
+        "Li",
+        "Zhang",
+        "Xu",
+        "Lu"
+      ],
+      "cited_year": 2016,
+      "source": {
+        "found": true,
+        "doi": "10.1088/1361-648x/aa8f79",
+        "title": "Advanced capabilities for materials modelling with Quantum ESPRESSO",
+        "abstract": "Quantum EXPRESSO is an integrated suite of open-source computer codes for quantum simulations of materials using state-of-the-art electronic-structure techniques, based on density-functional theory, density-functional perturbation theory, and many-body perturbation theory, within the plane-wave pseudopotential and projector-augmented-wave approaches. Quantum EXPRESSO owes its popularity to the wide variety of properties and processes it allows to simulate, to its performance on an increasingly broad array of hardware architectures, and to a community of researchers that rely on its capabilities as a core open-source development platform to implement their ideas. In this paper we describe recent extensions and improvements, covering new methodologies and property calculators, improved parallelization, code modularization, and extended interoperability both within the distribution and with external software.",
+        "similarity_score": 0.9,
+        "oa_url": "https://iopscience.iop.org/article/10.1088/1361-648X/aa8f79/pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract describes Quantum EXPRESSO, a software suite for quantum simulations of materials using electronic-structure techniques. It has no relevance to blood-to-ISF glucose transfer, fluorescent isotope methods, or any biological/physiological modeling.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "0e22ecc5-1c8d-4071-9a05-be4289c5ba99",
+      "claim_text": "In intradermal lactate monitoring with a fully integrated microneedle sensing system, in vivo measurements in rat models showed a positive correlation between ISF and blood lactate (Pearson's r = 0.85) when a lag time of 10 minutes was explicitly considered in the analysis.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Wang"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s43246-024-00468-6",
+        "title": "Interstitial fluid-based wearable biosensors for minimally invasive healthcare and biomedical applications",
+        "abstract": "Abstract Interstitial fluid (ISF), a biological fluid rich in diverse biomarkers and analytes and similar to blood composition, has garnered significant attention as a valuable source of clinically relevant information. Consequently, ISF-based wearable biosensors are emerging as powerful tools for non-invasive and minimally invasive disease diagnosis, personalized medicine, and other healthcare and biomedical applications. This review provides a comprehensive overview of recent advancements in ISF-based biosensors, with a particular focus on wearable ISF sensors. We first offer insights into ISF biomarkers and sampling techniques and discuss recent ISF sensing strategies that encompass materials, fabrication methods, and sensing mechanisms. Then, we present a comprehensive overview of their applications. Finally, we address the challenges faced in this field and offer a forward-looking perspective on promising future directions.",
+        "similarity_score": 1.0,
+        "oa_url": "https://www.nature.com/articles/s43246-024-00468-6.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The provided passages are from a review article about ISF-based wearable biosensors and do not contain any specific data about a Pearson's r = 0.85 correlation between ISF and blood lactate with a 10-minute lag time in rat models using a fully integrated microneedle sensing system. While the review mentions lactate monitoring in ISF and references related works, the specific quantitative claim is never addressed.",
+        "confidence": 0.95,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "1f662043-c5f1-49e7-90de-94eb29702d97",
+      "claim_text": "A study calibrating glucose detection via reverse iontophoresis demonstrated that without pH correction, mean absolute relative difference (MARD) between measured and reference glucose was 34.44%, but with pH calibration MARD decreased to 14.78%.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Zhu",
+        "Wang",
+        "Liu"
+      ],
+      "cited_year": 2025,
+      "source": {
+        "found": true,
+        "doi": "10.1373/clinchem.2010.161596",
+        "title": "Guidelines and Recommendations for Laboratory Analysis in the Diagnosis and Management of Diabetes Mellitus",
+        "abstract": "The guidelines provide specific recommendations based on published data or derived from expert consensus. Several analytes are of minimal clinical value at the present time, and measurement of them is not recommended.",
+        "similarity_score": 0.8,
+        "oa_url": "https://academic.oup.com/clinchem/article-pdf/57/6/e1/32654795/clinchem00e1.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract discusses clinical guidelines for analyte measurement recommendations, with no mention of glucose detection, reverse iontophoresis, pH correction, or MARD calculations.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "3cfa7faf-f9a0-422f-b8a5-da26c50164df",
+      "claim_text": "A comparative study of glucose in blood and ISF during different exercise intensities found Pearson's r correlation coefficient of 0.92 during resting conditions with glucose intake, but correlation dropped to 0.45 during resting fasted conditions and declined further to 0.70 during high-intensity exercise.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Bauhaus",
+        "Erdogan",
+        "Braun",
+        "Thevis"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.3390/s23229059",
+        "title": "The Impact of Sex, Body Mass Index, Age, Exercise Type and Exercise Duration on Interstitial Glucose Levels during Exercise",
+        "abstract": "The impact of age, sex and body mass index on interstitial glucose levels as measured via continuous glucose monitoring (CGM) during exercise in the healthy population is largely unexplored. We conducted a multivariable generalized estimating equation (GEE) analysis on CGM data (Dexcom G6, 10 days) collected from 119 healthy exercising individuals using CGM with the following specified covariates: age; sex; BMI; exercise type and duration. Females had lower postexercise glycemia as compared with males (92 \u00b1 18 vs. 100 \u00b1 20 mg/dL, <i>p</i> = 0.04) and a greater change in glycemia during exercise from pre- to postexercise (<i>p</i> = 0.001) or from pre-exercise to glucose nadir during exercise (<i>p</i> = 0.009). Younger individuals (i.e., <20 yrs) had higher glucose during exercise as compared with all other age groups (all <i>p</i> < 0.05) and less CGM data in the hypoglycemic range (<70 mg/dL) as compared with those aged 20-39 yrs (<i>p</i> < 0.05). Those who were underweight, based on body mass index (BMI: <18.5 kg/m<sup>2</sup>), had higher pre-exercise glycemia than the healthy BMI group (104 \u00b1 20 vs. 97 \u00b1 17 mg/dL, <i>p</i> = 0.02) but similar glucose levels after exercise. Resistance exercise was associated with less of a drop in glycemia as compared with aerobic or mixed forms of exercise (<i>p</i> = 0.008) and resulted in a lower percent of time in the hypoglycemic (<i>p</i> = 0.04) or hyperglycemic (glucose > 140 mg/dL) (<i>p</i> = 0.03) ranges. In summary, various factors such as age, sex and exercise type appear to have subtle but potentially important influence on CGM measurements during exercise in healthy individuals.",
+        "similarity_score": 1.0,
+        "oa_url": "https://www.mdpi.com/1424-8220/23/22/9059/pdf?version=1699521513",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The passages are from a study about CGM-measured interstitial glucose during exercise in healthy individuals, examining effects of sex, BMI, age, exercise type, and duration. None of the passages mention Pearson's r correlation coefficients between blood glucose and ISF glucose under different conditions (resting with glucose intake, resting fasted, or high-intensity exercise). The specific values claimed (r=0.92, r=0.45, r=0.70) are not discussed anywhere in these passages.",
+        "confidence": 0.97,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "a68b9430-c72a-4082-b615-25699ee69ae3",
+      "claim_text": "During incremental exercise in hot (30\u00b0C) versus normal (20\u00b0C) temperature conditions, blood lactate was significantly higher in hot conditions, but sweat lactate showed early increases with altered kinetics that did not correlate reliably with blood lactate changes.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Takei",
+        "Inaba",
+        "Morita",
+        "Kakinoki",
+        "Hatta",
+        "Kitaoka"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.5114/jhk/218610",
+        "title": "Physiological Effects of the Cool Vest Jacket on Recovery after a Repeated Shuttle Sprint Ability Test",
+        "abstract": "Soccer is an intermittent sport requiring rapid recovery from repeated high-intensity efforts, especially under heat stress conditions. Cooling vests have emerged as a practical strategy to enhance post-exercise heat dissipation, yet their physiological effects remain underexplored. This study aimed to assess the efficacy of a cooling vest following a repeated shuttle sprint ability (RSSA) test under hot conditions, focusing on skin temperature, blood lactate, and heart rate responses. Eleven recreational male soccer players completed two RSSA tests in a randomized crossover design, each followed by 15 min of passive recovery with or without a cooling vest. Skin temperature was measured at five anatomical sites, while blood lactate and the heart rate were recorded at baseline, pre-test, and at 0, 1, 3, 5, 10, and 15 min post-exercise. Compared with the control condition, the cooling vest intervention significantly reduced skin temperature at the 3rd and the 5th min post-exercise (3 min: dz = \u22121.54, 95% CI [\u22122.53, \u22120.55], p &lt; 0.001; 5 min: dz = \u22120.90, 95% CI [\u22121.71, \u22120.08], p = 0.016). Transient between-condition differences were also observed for blood lactate at the 3rd and the 5th min (3 min: dz = \u22121.00, 95% CI [\u22121.95, \u22120.006], p = 0.022; 5 min: dz = \u22121.34, 95% CI [\u22122.36, \u22120.31], p = 0.003) and for the heart rate at 1 min post-exercise (dz = \u22120.84, 95% CI [\u22121.59, \u22120.09], p = 0.013). No consistent differences were found at other time points. The protocol showed high between-day reliability (CV = 2.47%; ICC = 0.75), supporting the validity of the observed effects. In conclusion, post-exercise use of a cooling vest after repeated sprints in the heat accelerates early superficial thermal recovery, as evidenced by reductions in skin temperature during the first minutes of recovery. Transient and isolated differences were also observed for the heart rate and blood lactate concentration; however, these effects were not sustained across the full recovery time-course. From a practical perspective, cooling vests may be useful during short recovery windows in intermittent sports, while further research is needed to determine whether broader or longer-lasting physiological benefits can be achieved.",
+        "similarity_score": 0.8,
+        "oa_url": "https://jhk.termedia.pl/pdf-218610-138195?filename=Physiological-Effects-of-.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The passages describe a study comparing post-exercise recovery with or without a cooling vest after repeated sprint exercise in hot conditions (~32\u00b0C). They do not address a comparison between blood lactate responses during incremental exercise at 30\u00b0C versus 20\u00b0C, nor do they discuss sweat lactate kinetics or their correlation with blood lactate changes across temperature conditions. The claim's specific assertion about sweat lactate and its kinetics during incremental exercise at different temperatures is not examined in this study.",
+        "confidence": 0.92,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "9d4ead62-a4b7-457b-bda4-2b40be3bfd39",
+      "claim_text": "An optofluidic microneedle system demonstrated the ability to collect and retain 0.6 nL samples for analysis.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Ranamukhaarachchi",
+        "Padeste",
+        "D\u00fcbner",
+        "H\u00e4feli",
+        "Stoeber",
+        "Cadarso"
+      ],
+      "cited_year": 2016,
+      "source": {
+        "found": true,
+        "doi": "10.1038/srep29075",
+        "title": "Integrated hollow microneedle-optofluidic biosensor for therapeutic drug monitoring in sub-nanoliter volumes",
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passages explicitly state that the microneedle-optofluidic biosensor collects and retains 0.6 nL samples inside the microneedle lumen for analysis, with the analyte being bound to the functionalized inner lumen surface during collection.",
+        "confidence": 0.97,
+        "source_passages": [
+          "VAN-HRP (concentration: 0.22\u20132.20 \u03bcM) is bound to the AcKAA immobilized inside the microneedle lumen (~0.6 nL volume pulled into the lumen).",
+          "VAN in a concentration range from 0.07 to 72.6 \u03bcM (corresponding to a 0.1\u2013100 molar ratio of VAN: VAN-HRP) is competitively bound to VAN-HRP pre-loaded microneedle lumen surfaces by capillary action (pulling ~0.6 nL volume into the lumen), simulating the microneedle behavior in real therapeutic applications.",
+          "The proposed microneedle-optofluidic biosensor can detect vancomycin with a sample volume of 0.6 nL and a LoD of <100 nM, validating this painless point of care system with significant potential to reduce healthcare costs and patients suffering."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "65c46092-cffa-4237-b8c3-b8fe3f34ca32",
+      "claim_text": "Other microneedle systems report collecting 6-50 microliters over 15-30 minute collection periods during rest or light activity.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Samant",
+        "Nied\u017awiecki",
+        "Raviele",
+        "Tran",
+        "Mena-Lapaix",
+        "Walker"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1126/scitranslmed.aaw0285",
+        "title": "Sampling interstitial fluid from human skin using a microneedle patch",
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "b20efa2e-45c6-4755-841f-93702669ee17",
+      "claim_text": "In Division I collegiate baseball pitchers undergoing standardized throwing protocols, simultaneous measurement of capillary blood lactate, ISF lactate via microneedle, and sweat lactate via touch-based sensor revealed that ISF lactate showed strong correlation with blood lactate (\u03c1 = 0.93) but sweat lactate showed weak correlation (\u03c1 = 0.36).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Boscarino",
+        "Djassemi",
+        "Khan",
+        "Chaiya",
+        "Moonla",
+        "Choi",
+        "Chang",
+        "Schena",
+        "Pecchia",
+        "Piemonte",
+        "Wang"
+      ],
+      "cited_year": 2026,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.talanta.2025.128985",
+        "title": "Monitoring blood lactate dynamics through sweat and interstitial fluid biofluids",
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "1f29cc37-9b28-408a-9b0b-244e681539f7",
+      "claim_text": "In collegiate pitchers, continuous ISF lactate monitoring revealed dynamic elevations during pitching activity (peak changes ~4.1 mmol/L) that resolved within 20-30 minutes post-activity, correlating strongly with blood lactate (\u03c1 = 0.93).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Djassemi",
+        "Vila Dieguez",
+        "Reynoso",
+        "Kim",
+        "La Salle",
+        "Agajanian",
+        "Placio",
+        "Kroll",
+        "Moonla",
+        "Chang",
+        "Aguinaldo",
+        "Ward",
+        "Wang"
+      ],
+      "cited_year": 2026,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.bios.2026.118611",
+        "title": "Continuous lactate monitoring for real-time fatigue assessment in baseball pitchers",
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "647fb4df-73f9-4bee-ac01-7f6dddbc63c8",
+      "claim_text": "In levodopa monitoring for Parkinson's disease management, real-time tracking of drug levels in ISF using molecularly imprinted polymer sensors validated in rat models showed that temporal correlations between ISF and plasma levodopa were strong (when lag correction was applied) but optimal adjustable dosing regimens required accounting for the pharmacokinetic lag.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Zhou",
+        "Li",
+        "Xu",
+        "Zhao",
+        "Zhang",
+        "Liu",
+        "Yao",
+        "Fang"
+      ],
+      "cited_year": 2025,
+      "source": {
+        "found": true,
+        "doi": "10.3390/s23239498",
+        "title": "The Emergence of AI-Based Wearable Sensors for Digital Health Technology: A Review",
+        "abstract": "Disease diagnosis and monitoring using conventional healthcare services is typically expensive and has limited accuracy. Wearable health technology based on flexible electronics has gained tremendous attention in recent years for monitoring patient health owing to attractive features, such as lower medical costs, quick access to patient health data, ability to operate and transmit data in harsh environments, storage at room temperature, non-invasive implementation, mass scaling, etc. This technology provides an opportunity for disease pre-diagnosis and immediate therapy. Wearable sensors have opened a new area of personalized health monitoring by accurately measuring physical states and biochemical signals. Despite the progress to date in the development of wearable sensors, there are still several limitations in the accuracy of the data collected, precise disease diagnosis, and early treatment. This necessitates advances in applied materials and structures and using artificial intelligence (AI)-enabled wearable sensors to extract target signals for accurate clinical decision-making and efficient medical care. In this paper, we review two significant aspects of smart wearable sensors. First, we offer an overview of the most recent progress in improving wearable sensor performance for physical, chemical, and biosensors, focusing on materials, structural configurations, and transduction mechanisms. Next, we review the use of AI technology in combination with wearable technology for big data processing, self-learning, power-efficiency, real-time data acquisition and processing, and personalized health for an intelligent sensing platform. Finally, we present the challenges and future opportunities associated with smart wearable sensors.",
+        "similarity_score": 0.8,
+        "oa_url": "https://www.mdpi.com/1424-8220/23/23/9498/pdf?version=1701253944",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The provided passages are from a general review paper on AI-based wearable sensors and do not contain any specific information about molecularly imprinted polymer sensors for levodopa monitoring in ISF, validation in rat models, or pharmacokinetic lag correction between ISF and plasma levodopa levels in Parkinson's disease management.",
+        "confidence": 0.95,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "361c2d1d-3463-477c-9094-5cde6412018d",
+      "claim_text": "A real-time cortisol sensor monitoring dynamic concentration profiles in microfluidic chambers showed time delays of ~90 seconds to measure 63% of concentration change, with lag time contributions from diffusion, reaction kinetics, and signal processing.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Singh",
+        "Chung",
+        "Chang",
+        "Wang",
+        "Hall"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.3390/s23239498",
+        "title": "The Emergence of AI-Based Wearable Sensors for Digital Health Technology: A Review",
+        "abstract": "Disease diagnosis and monitoring using conventional healthcare services is typically expensive and has limited accuracy. Wearable health technology based on flexible electronics has gained tremendous attention in recent years for monitoring patient health owing to attractive features, such as lower medical costs, quick access to patient health data, ability to operate and transmit data in harsh environments, storage at room temperature, non-invasive implementation, mass scaling, etc. This technology provides an opportunity for disease pre-diagnosis and immediate therapy. Wearable sensors have opened a new area of personalized health monitoring by accurately measuring physical states and biochemical signals. Despite the progress to date in the development of wearable sensors, there are still several limitations in the accuracy of the data collected, precise disease diagnosis, and early treatment. This necessitates advances in applied materials and structures and using artificial intelligence (AI)-enabled wearable sensors to extract target signals for accurate clinical decision-making and efficient medical care. In this paper, we review two significant aspects of smart wearable sensors. First, we offer an overview of the most recent progress in improving wearable sensor performance for physical, chemical, and biosensors, focusing on materials, structural configurations, and transduction mechanisms. Next, we review the use of AI technology in combination with wearable technology for big data processing, self-learning, power-efficiency, real-time data acquisition and processing, and personalized health for an intelligent sensing platform. Finally, we present the challenges and future opportunities associated with smart wearable sensors.",
+        "similarity_score": 1.0,
+        "oa_url": "https://www.mdpi.com/1424-8220/23/23/9498/pdf?version=1701253944",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The provided passages are from a review paper on AI-based wearable sensors for digital health technology and do not contain any specific information about a real-time cortisol sensor with ~90 second time delays for measuring 63% of concentration change in microfluidic chambers, nor any discussion of lag time contributions from diffusion, reaction kinetics, and signal processing in that context.",
+        "confidence": 0.97,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "b45cccef-bece-4155-9e7b-aab5f88e7c31",
+      "claim_text": "Lactate oxidase exhibits Michaelis-Menten kinetics with Km typically in the range 5-10 mM, meaning enzyme turnover rates saturate at physiological lactate concentrations approaching 20 mM.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Rassaei",
+        "Olthuis",
+        "Tsujimura",
+        "Sudh\u00f6lter",
+        "van den Berg"
+      ],
+      "cited_year": 2014,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.apsusc.2016.05.006",
+        "title": "Self-assembled monolayers of 1-alkenes on oxidized platinum surfaces as platforms for immobilized enzymes for biosensing",
+        "abstract": null,
+        "similarity_score": 0.8,
+        "oa_url": "https://ars.els-cdn.com/content/image/1-s2.0-S0169433216309965-fx1_lrg.jpg",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "99434086-a1e3-457f-b54b-fc968e97c79e",
+      "claim_text": "Natural sweat secretion rates during rest are negligible (~0.001-0.01 mL/hour), rising to ~1-2 mL/hour during moderate exercise on a per-gland basis, but with enormous variability between individual sweat glands and across body regions.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Taylor",
+        "Machado-Moreira"
+      ],
+      "cited_year": 2013,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.jtherbio.2014.10.006",
+        "title": "Considerations for the measurement of core, skin and mean body temperatures",
+        "abstract": null,
+        "similarity_score": 0.9,
+        "oa_url": "https://researchportal.port.ac.uk/portal/en/publications/considerations-for-the-measurement-of-core-skin-and-mean-body-temperatures(9a65bb45-622a-4ee8-ad17-cb6b3a6ed136).html",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "006c61ba-d847-4133-a4f8-8cbf9813bd36",
+      "claim_text": "Capillary transit time heterogeneity\u2014variability in the time individual red blood cells spend in tissue capillaries\u2014directly influences lactate extraction efficiency and the concentration gradient available for diffusion into interstitial fluid.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "\u00d8stergaard"
+      ],
+      "cited_year": 2014,
+      "source": {
+        "found": true,
+        "doi": "10.1117/1.nph.3.2.020401",
+        "title": "Emerging research areas in need of neurophotonics: report from the 2014 Aarhus Capillary Transit Time Heterogeneity (CTH) meeting",
+        "abstract": null,
+        "similarity_score": null,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    }
+  ]
+}

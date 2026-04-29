@@ -1,5 +1,14 @@
 #!/usr/bin/env python
-"""End-to-end pipeline demo using a real Edison Scientific Literature agent output."""
+"""End-to-end pipeline demo using a real Edison Scientific Literature agent output.
+
+Default input: benchmarks/real_outputs/edison_trem2/input.txt (TREM2 microglia, ~21 claims).
+Pass any path as argv[1] to override.
+
+Expected output (with cache warm, ~$1.25, ~3-4 min):
+  Extracted 21 claims.
+  Report written to: reports/runs/{uuid}/
+  Full-text retrieval methods: abstract_fallback=7, oa_url_pdf=8, pmc_xml=6
+"""
 
 from __future__ import annotations
 
@@ -17,7 +26,7 @@ from src.extract import extract_claims
 from src.fetch_fulltext import fetch_fulltext
 from src.report import build_report
 from src.resolve import resolve_citations
-from src.verify import verify_claim, verify_claim_fulltext
+from src.verify import verify_claim, verify_claim_fulltext_with_numeric
 
 
 def main() -> None:
@@ -27,8 +36,13 @@ def main() -> None:
         sys.exit(1)
 
     sample_path = (
-        Path(sys.argv[1]) if len(sys.argv) > 1
-        else Path(__file__).parent / "inputs" / "crow_sample.txt"
+        Path(sys.argv[1])
+        if len(sys.argv) > 1
+        else Path(__file__).parent.parent
+        / "benchmarks"
+        / "real_outputs"
+        / "edison_trem2"
+        / "input.txt"
     )
     text = sample_path.read_text(encoding="utf-8")
     report_id = str(uuid.uuid4())
@@ -51,19 +65,22 @@ def main() -> None:
         if fulltext is not None:
             chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
             passages = select_passages(claim.claim_text, chunks, top_k=3)
-            result, verify_step = verify_claim_fulltext(claim, source, passages)
+            result, verify_steps = verify_claim_fulltext_with_numeric(claim, source, passages)
+            all_steps.extend(verify_steps)
         else:
             result, verify_step = verify_claim(claim, source)
+            all_steps.append(verify_step)
 
         results[claim.claim_id] = result
-        all_steps.append(verify_step)
 
     run_dir = build_report(report_id, text, claims, sources, results, all_steps)
     print(f"Report written to: {run_dir}")
     print(
         "Full-text retrieval methods: "
-        + ", ".join(f"{m}={list(fulltext_methods.values()).count(m)}"
-                    for m in sorted(set(fulltext_methods.values())))
+        + ", ".join(
+            f"{m}={list(fulltext_methods.values()).count(m)}"
+            for m in sorted(set(fulltext_methods.values()))
+        )
     )
 
     report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))

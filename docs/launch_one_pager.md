@@ -14,12 +14,12 @@ Takes any scientific text (paper draft, AI summary, literature review) and produ
 
 | tool | claims | passage found | supported | partially | unsupported | not addressed | numeric checks | cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Edison Scientific (TREM2) | 21 | 14 | 3 | 1 | 0 | 17 | 2 | $1.25 |
-| Sakana AI Scientist v2 | 13 | 2 | 0 | 0 | 0 | 13 | 0 | $0.28 |
-| AnswerThis (lactate) | 19 | 8 | 1 | 1 | 0 | 17 | 0 | $0.88 |
-| **Total** | **53** | **24** | **4** | **2** | **0** | **47** | **2** | **$2.41** |
+| Edison Scientific (TREM2) | 21 | 12 | 0 | 4 | 0 | 17 | 1 | $0.24 |
+| Sakana AI Scientist v2 | 17 | 3 | 1 | 0 | 0 | 16 | 0 | $0.32 |
+| AnswerThis (lactate) | 23 | 11 | 2 | 0 | 1 | 20 | 0 | $0.23 |
+| **Total** | **61** | **26** | **3** | **4** | **1** | **53** | **1** | **$0.79** |
 
-Use these as real-output evidence, not as a contradiction-catching claim: the current benchmark found 6 supported/partial claims and abstained on 47.
+Use these as real-output evidence, not as a track record: the current benchmark found 7 supported/partial claims, 1 unsupported (an AnswerThis MCT haplotype overclaim that the cited source addresses for MCT1 only), and abstained on 53.
 
 ## How it works
 
@@ -31,7 +31,7 @@ Use these as real-output evidence, not as a contradiction-catching claim: the cu
 6. **Numeric check** — deterministic OR/CI and p-value/CI checks (Python, no LLM in the comparison step)
 7. **Report** — claim-by-claim verdict with full provenance trail (every step hashed, cached, costed)
 
-Engineering choices that matter: prompt-cached system prompts, structured logging, mypy --strict, 200+ unit tests, F1=0.94 on SciFact dev split (verifier-only; locked test split untouched).
+Engineering choices that matter: prompt-cached system prompts, structured logging, mypy --strict, 203 unit tests, F1=0.94 on SciFact dev split (verifier-only; locked test split untouched).
 
 Controlled canary cases live under `benchmarks/canary/` for demoing weak resolution, contradictions, narrow numeric inconsistencies, and retraction checks without mixing seeded controls into real-output metrics.
 

@@ -13,12 +13,12 @@ from typing import Literal
 import structlog
 from dotenv import load_dotenv
 
-load_dotenv()
-
 from src.clients._cache import default_db_path, prune_expired
 from src.models import Claim, ResolvedSource
 from src.report import _compute_cost
 from src.verify import verify_claim
+
+load_dotenv()
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 

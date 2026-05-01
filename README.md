@@ -2,7 +2,7 @@
 
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
-![Tests](https://img.shields.io/badge/tests-200%2B-brightgreen)
+![Tests](https://img.shields.io/badge/tests-203-brightgreen)
 
 Auditable claim-by-claim evidence review for scientific text.
 
@@ -30,15 +30,21 @@ AI-for-science outputs:
 
 | tool | claims | passage found | supported | partially | unsupported | not addressed | numeric checks | cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Edison Scientific, TREM2 | 21 | 14 | 3 | 1 | 0 | 17 | 2 | $1.25 |
-| Sakana AI Scientist v2 | 13 | 2 | 0 | 0 | 0 | 13 | 0 | $0.28 |
-| AnswerThis, lactate | 19 | 8 | 1 | 1 | 0 | 17 | 0 | $0.88 |
-| **Total** | **53** | **24** | **4** | **2** | **0** | **47** | **2** | **$2.41** |
+| Edison Scientific, TREM2 | 21 | 12 | 0 | 4 | 0 | 17 | 1 | $0.24 |
+| Sakana AI Scientist v2 | 17 | 3 | 1 | 0 | 0 | 16 | 0 | $0.32 |
+| AnswerThis, lactate | 23 | 11 | 2 | 0 | 1 | 20 | 0 | $0.23 |
+| **Total** | **61** | **26** | **3** | **4** | **1** | **53** | **1** | **$0.79** |
 
-Interpretation: across 53 real-output claims, the system found 6
-supported/partially-supported claims and abstained on 47 where evidence was not
-located or was insufficient. That is useful for review triage, but it is not yet
-evidence that the system reliably catches real-world contradictions.
+Interpretation: across 61 real-output claims, the system surfaced 7
+supported/partially-supported claims, 1 unsupported (an AnswerThis claim
+asserting MCT1, MCT2, MCT4 haplotype effects that the cited source addresses
+only for MCT1), and abstained on 53 where evidence was not located or was
+insufficient. That is useful for review triage, but the single unsupported
+verdict on a real input is preliminary evidence rather than a track record —
+treat it as such. Numbers are extracted programmatically from the per-tool
+`report.json` files; see `benchmarks/real_outputs/SUMMARY.md` for the full
+table including new diagnostic columns (`no_passage_found`,
+`fulltext_unavailable`, `resolution_low_confidence`).
 
 ## Canary Controls
 
@@ -62,13 +68,18 @@ python scripts/show_report.py
 
 Default input: `benchmarks/real_outputs/edison_trem2/input.txt`.
 
-Expected shape:
+Expected shape (cache-cold, ~3-4 min, ~$0.25):
 
 ```text
 Extracted 21 claims.
 Report written to: reports/runs/{report_id}/
-Full-text retrieval methods: abstract_fallback=7, oa_url_pdf=8, pmc=6
+Full-text retrieval methods: abstract_fallback=N, oa_url_pdf=N, unpaywall_pdf=N
 ```
+
+The exact retrieval-method counts vary run-to-run with extraction
+non-determinism and OA availability. See
+`benchmarks/real_outputs/edison_trem2/report.json` for the most recent
+committed run (12 passage-found, 9 fulltext-unavailable, $0.24).
 
 Run the canary controls explicitly:
 

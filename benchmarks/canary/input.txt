@@ -1,0 +1,18 @@
+# Scientific Claim Verification Canary Input
+
+This is a seeded canary document for demo and regression testing. It is not a
+real AI-for-science tool output.
+
+Jumper et al. (2021) showed that AlphaFold achieved protein structure
+predictions that were less accurate than random baselines.
+
+The trial reports a strong statistically significant odds-ratio effect even
+though the confidence interval crosses the null: treatment response improved
+substantially (OR 2.0, 95% CI 0.8-1.2, p = 0.001) (Nguyen et al., 2020).
+
+Wakefield et al. (1998) established that the MMR vaccine causes autism in
+children.
+
+Smith et al. (2020) demonstrated that protein folding chaperone kinetics are
+governed by conformable fractional boundary equations.
+

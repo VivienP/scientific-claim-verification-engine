@@ -8,30 +8,32 @@ Generative tools (literature reviews, AI-generated drafts, autonomous-agent pape
 
 ## What it does
 
-Takes any scientific text (paper draft, AI summary, literature review) and produces a per-claim verification report grounded in the cited source's full text — not just abstracts. Surfaces three failure modes peer review misses: claim-source contradictions, internally inconsistent statistics, and citations to retracted papers.
+Takes any scientific text (paper draft, AI summary, literature review) and produces a per-claim verification report grounded in the cited source's full text — not just abstracts. Current positioning: honest evidence grounding with explicit abstention diagnostics, plus narrow deterministic numeric checks where applicable.
 
 ## Demo numbers (real outputs from three AI-for-science tools)
 
-| tool | claims | full-text verified | supported | partially | unsupported | numeric checks | cost |
-|---|---|---|---|---|---|---|---|
-| Edison Scientific (TREM2) | 21 | 14 | 3 | 1 | 0 | 2 | $1.25 |
-| Sakana AI Scientist v2 | 13 | 2 | 0 | 0 | 0 | 0 | $0.28 |
-| AnswerThis (lactate) | 19 | 8 | 1 | 1 | 0 | 0 | $0.88 |
-| **Total** | **53** | **24** | **4** | **2** | **0** | **2** | **$2.41** |
+| tool | claims | passage found | supported | partially | unsupported | not addressed | numeric checks | cost |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Edison Scientific (TREM2) | 21 | 14 | 3 | 1 | 0 | 17 | 2 | $1.25 |
+| Sakana AI Scientist v2 | 13 | 2 | 0 | 0 | 0 | 13 | 0 | $0.28 |
+| AnswerThis (lactate) | 19 | 8 | 1 | 1 | 0 | 17 | 0 | $0.88 |
+| **Total** | **53** | **24** | **4** | **2** | **0** | **47** | **2** | **$2.41** |
 
-`<!-- TODO: replace numeric_inconsistencies_flagged column once a clear inconsistency is captured -->`
+Use these as real-output evidence, not as a contradiction-catching claim: the current benchmark found 6 supported/partial claims and abstained on 47.
 
 ## How it works
 
 1. **Extract** — LLM pulls verifiable claims with author/year anchors from free-form text
 2. **Resolve** — OpenAlex + CrossRef → DOI for each citation
 3. **Fetch full text** — chain: OA URL → PMC → Unpaywall → abstract fallback (zero-cost public APIs)
-4. **Chunk + select** — IMRAD section-aware chunking; BM25 picks the 3 most relevant passages
+4. **Chunk + select** — IMRAD section-aware chunking; BM25 picks relevant passages or reports `no_passage_found`
 5. **Verify** — full-text passage comparison against the claim, with cited-source provenance
-6. **Numeric check** — deterministic OR/CI consistency engine (Python, no LLM in the comparison step)
+6. **Numeric check** — deterministic OR/CI and p-value/CI checks (Python, no LLM in the comparison step)
 7. **Report** — claim-by-claim verdict with full provenance trail (every step hashed, cached, costed)
 
-Engineering choices that matter: prompt-cached system prompts, structured logging, mypy --strict, 173+ unit tests, F1=0.94 on SciFact dev split (locked test split untouched).
+Engineering choices that matter: prompt-cached system prompts, structured logging, mypy --strict, 200+ unit tests, F1=0.94 on SciFact dev split (verifier-only; locked test split untouched).
+
+Controlled canary cases live under `benchmarks/canary/` for demoing weak resolution, contradictions, narrow numeric inconsistencies, and retraction checks without mixing seeded controls into real-output metrics.
 
 ## Worked example: numeric consistency
 

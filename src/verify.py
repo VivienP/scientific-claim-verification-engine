@@ -109,12 +109,14 @@ _SHORT_CIRCUIT_RESULT = VerificationResult(
     status="not_addressed",
     explanation="Source not found or abstract unavailable.",
     confidence=1.0,
+    evidence_quality="no_evidence",
 )
 
 _PARSE_ERROR_RESULT = VerificationResult(
     status="not_addressed",
     explanation="Parse error.",
     confidence=0.0,
+    evidence_quality="no_evidence",
 )
 
 _VALID_STATUSES: set[str] = {"supported", "unsupported", "not_addressed", "partially_supported"}
@@ -189,15 +191,22 @@ def verify_claim_fulltext(
     Never raises. Falls back to a parse-error result on malformed responses.
     """
     if not passages:
-        result, step = verify_claim(claim, source, model_id=model_id, api_key=api_key)
+        abstract_result, step = verify_claim(claim, source, model_id=model_id, api_key=api_key)
+        result = dataclasses.replace(
+            abstract_result,
+            fulltext_available=True,
+            verification_depth="abstract",
+            retrieval_status="no_passage_found",
+            retraction_status=source.retraction_status,
+        )
         return (
+            result,
             dataclasses.replace(
-                result,
-                fulltext_available=False,
-                verification_depth="abstract",
-                retraction_status=source.retraction_status,
+                step,
+                input_hash=_hash(repr((claim, source, passages))),
+                output_hash=_hash(repr(result)),
+                confidence=result.confidence,
             ),
-            step,
         )
 
     ts = time.time()
@@ -254,6 +263,8 @@ def verify_claim_fulltext(
             source_section=source_section,
             fulltext_available=True,
             verification_depth="fulltext",
+            retrieval_status="passage_found",
+            evidence_quality="quoted_passage" if source_passages else "no_evidence",
             retraction_status=source.retraction_status,
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
@@ -271,6 +282,8 @@ def verify_claim_fulltext(
             source_section=None,
             fulltext_available=True,
             verification_depth="fulltext",
+            retrieval_status="passage_found",
+            evidence_quality="no_evidence",
             retraction_status=source.retraction_status,
         )
 

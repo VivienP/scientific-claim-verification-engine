@@ -38,7 +38,7 @@ except ImportError:
     print(
         "Error: edison-client is not installed.\n"
         "  pip install edison-client\n"
-        "  or: pip install -e \".[edison]\"",
+        '  or: pip install -e ".[edison]"',
         file=sys.stderr,
     )
     sys.exit(1)

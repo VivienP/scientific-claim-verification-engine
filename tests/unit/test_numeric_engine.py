@@ -35,3 +35,55 @@ class TestRunNumericCheck:
         assert result is None
         assert len(steps) == 1
         assert steps[0].operation == "numeric_extract"
+
+    @patch("src.numeric.engine.extract_numeric_assertions")
+    def test_p_value_ci_check_runs_when_no_or_ci_triple(self, mock_extract: MagicMock) -> None:
+        from src.models import ProvenanceStep
+        from src.numeric.checks import NumericAssertion
+
+        mock_extract.return_value = (
+            [
+                NumericAssertion(
+                    raw_text="p = 0.001",
+                    value=0.001,
+                    unit=None,
+                    role="p_value",
+                    context="odds ratio difference between groups",
+                ),
+                NumericAssertion(
+                    raw_text="0.8",
+                    value=0.8,
+                    unit=None,
+                    role="ci_low",
+                    context="95% CI lower bound for odds ratio",
+                ),
+                NumericAssertion(
+                    raw_text="1.2",
+                    value=1.2,
+                    unit=None,
+                    role="ci_high",
+                    context="95% CI upper bound for odds ratio",
+                ),
+            ],
+            ProvenanceStep(
+                step_id="ne",
+                claim_id="claim-1",
+                operation="numeric_extract",
+                input_hash="i",
+                output_hash="o",
+                model_id="m",
+                timestamp=0.0,
+                tokens_in=10,
+                tokens_out=5,
+                cache_hit=False,
+                confidence=None,
+            ),
+        )
+
+        result, steps = run_numeric_check("Claim reports p = 0.001, 95% CI 0.8-1.2")
+
+        assert result is not None
+        assert result.check_type == "p_value_ci_consistency"
+        assert result.consistent is False
+        assert len(steps) == 2
+        assert steps[1].operation == "numeric_check"

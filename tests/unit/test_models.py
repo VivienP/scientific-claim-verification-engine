@@ -70,6 +70,8 @@ class TestResolvedSource:
         assert source.found is True
         assert source.doi == "10.1000/test"
         assert source.similarity_score == 0.95
+        assert source.title_match_score is None
+        assert source.resolution_low_confidence is False
 
     def test_resolved_source_not_found(self) -> None:
         source = ResolvedSource(
@@ -99,6 +101,8 @@ class TestVerificationResult:
         )
         assert result.status == "supported"
         assert result.confidence == 0.9
+        assert result.retrieval_status == "fulltext_unavailable"
+        assert result.evidence_quality == "abstract_only"
 
     def test_verification_result_all_statuses(self) -> None:
         for status in ("supported", "unsupported", "not_addressed", "partially_supported"):

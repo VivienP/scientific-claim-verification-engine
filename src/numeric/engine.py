@@ -13,10 +13,13 @@ from src.numeric.checks import (
     NumericAssertion,
     NumericCheckResult,
     check_or_ci_consistency,
+    check_p_value_ci_consistency,
 )
 from src.numeric.extract import MODEL_ID, extract_numeric_assertions
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
+
+_RATIO_TERMS = ("odds ratio", "hazard ratio", "risk ratio", "relative risk")
 
 
 def _hash(data: str) -> str:
@@ -70,6 +73,32 @@ def _find_or_ci_triple(
     return or_value, ci_low, ci_high
 
 
+def _infer_null_value(assertions: list[NumericAssertion]) -> float:
+    text = " ".join(f"{a.raw_text} {a.context}" for a in assertions).lower()
+    if any(term in text for term in _RATIO_TERMS):
+        return 1.0
+    return 0.0
+
+
+def _find_p_value_ci_tuple(
+    assertions: list[NumericAssertion],
+) -> tuple[float, float, float, float] | None:
+    p_value: float | None = None
+    ci_low: float | None = None
+    ci_high: float | None = None
+    for assertion in assertions:
+        if assertion.role == "p_value" and p_value is None:
+            p_value = assertion.value
+        elif assertion.role == "ci_low" and ci_low is None:
+            ci_low = assertion.value
+        elif assertion.role == "ci_high" and ci_high is None:
+            ci_high = assertion.value
+
+    if p_value is None or ci_low is None or ci_high is None:
+        return None
+    return p_value, ci_low, ci_high, _infer_null_value(assertions)
+
+
 def run_numeric_check(
     claim_text: str,
     *,
@@ -79,10 +108,9 @@ def run_numeric_check(
 ) -> tuple[NumericCheckResult | None, list[ProvenanceStep]]:
     """Extract numeric assertions and run any applicable deterministic check.
 
-    MVP: only the OR/CI consistency check is implemented. Returns (None, [extract_step])
-    if no OR/CI triple is found in the extraction. Otherwise returns
-    (NumericCheckResult, [extract_step, check_step]).
-    Never raises.
+    Runs the first applicable deterministic check. OR/CI consistency is tried
+    first because it is most specific; p-value/CI null-crossing is the fallback
+    when no OR/CI triple is available. Never raises.
     """
     ts_check = time.time()
 
@@ -95,18 +123,35 @@ def run_numeric_check(
         return None, [extract_step]
 
     triple = _find_or_ci_triple(assertions)
-    if triple is None:
-        logger.debug("numeric_no_or_ci_triple", claim_id=claim_id, n_assertions=len(assertions))
-        return None, [extract_step]
-
-    or_value, ci_low, ci_high = triple
-    result = check_or_ci_consistency(or_value, ci_low, ci_high, extracted=assertions)
+    input_payload: tuple[float, ...]
+    if triple is not None:
+        or_value, ci_low, ci_high = triple
+        result = check_or_ci_consistency(or_value, ci_low, ci_high, extracted=assertions)
+        input_payload = triple
+    else:
+        p_ci_tuple = _find_p_value_ci_tuple(assertions)
+        if p_ci_tuple is None:
+            logger.debug(
+                "numeric_no_applicable_check",
+                claim_id=claim_id,
+                n_assertions=len(assertions),
+            )
+            return None, [extract_step]
+        p_value, ci_low, ci_high, null_value = p_ci_tuple
+        result = check_p_value_ci_consistency(
+            p_value,
+            ci_low,
+            ci_high,
+            null_value=null_value,
+            extracted=assertions,
+        )
+        input_payload = p_ci_tuple
 
     check_step = ProvenanceStep(
         step_id=str(uuid.uuid4()),
         claim_id=claim_id,
         operation="numeric_check",
-        input_hash=_hash(repr(triple)),
+        input_hash=_hash(repr(input_payload)),
         output_hash=_hash(repr(result)),
         model_id=None,  # deterministic — no LLM
         timestamp=ts_check,

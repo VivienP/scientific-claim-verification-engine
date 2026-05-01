@@ -2,48 +2,78 @@
 
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
-![Tests](https://img.shields.io/badge/tests-99%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-200%2B-brightgreen)
 
-Auditable, claim-by-claim verification of scientific text against cited sources.
+Auditable claim-by-claim evidence review for scientific text.
 
-## What it does
+This project is a design-partner alpha for teams that need to turn AI-generated scientific drafts, literature reviews, and agent outputs into a source-grounded verification report. The current launch story is deliberately conservative: this is an honest evidence-grounding verifier, not yet a broad automatic
+inconsistency detector.
 
-Takes free-form scientific text (paper excerpt, literature review, etc.) and outputs:
+## What It Does
 
-- A `report.json` with a verdict for each extracted claim (`supported` / `unsupported` / `partially_supported` / `not_addressed`)
-- A `provenance.jsonl` with a full audit trail of every LLM call, token count, and cache hit
+The pipeline takes free-form scientific text and writes:
 
-## Demo
+- `report.json`: one record per extracted claim, with verdict, cited source,
+  retrieval status, evidence quality, source quotes when found, and numeric
+  checks when applicable.
+- `provenance.jsonl`: append-only provenance for each extraction, resolution,
+  verification, numeric, and aggregation step, including token and cache data.
 
-Pipeline running on a real [Edison Scientific](https://edisonscientific.com) Literature agent output (TREM2 / Alzheimer's microglia):
+Supported verdicts are `supported`, `unsupported`, `partially_supported`, and
+`not_addressed`. The verifier keeps abstention explicit instead of forcing weak
+evidence into a contradiction.
 
-<img src="docs/assets/demo_run.gif" width="375" alt="CLI run">
+## Real-Output Benchmark
 
-Claim-by-claim verification report:
+Committed reports under `benchmarks/real_outputs/` currently cover three
+AI-for-science outputs:
 
-<img src="docs/assets/demo_report.png" width="375" alt="Verification report">
+| tool | claims | passage found | supported | partially | unsupported | not addressed | numeric checks | cost |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Edison Scientific, TREM2 | 21 | 14 | 3 | 1 | 0 | 17 | 2 | $1.25 |
+| Sakana AI Scientist v2 | 13 | 2 | 0 | 0 | 0 | 13 | 0 | $0.28 |
+| AnswerThis, lactate | 19 | 8 | 1 | 1 | 0 | 17 | 0 | $0.88 |
+| **Total** | **53** | **24** | **4** | **2** | **0** | **47** | **2** | **$2.41** |
 
-SciFact benchmark — pipeline vs. direct Claude (same model, no pipeline):
+Interpretation: across 53 real-output claims, the system found 6
+supported/partially-supported claims and abstained on 47 where evidence was not
+located or was insufficient. That is useful for review triage, but it is not yet
+evidence that the system reliably catches real-world contradictions.
 
-<img src="docs/assets/demo_metrics.png" width="375" alt="Metrics">
+## Canary Controls
 
-## Quick start
+`benchmarks/canary/` contains a clearly labeled seeded input for demo and
+regression testing. It is separate from the real-output benchmark and should not
+be merged into public aggregate counts. The canary exercises:
+
+- weak source resolution
+- contradicted claim
+- deterministic p-value/CI inconsistency
+- retraction check path
+
+## Quick Start
 
 ```bash
 pip install -e ".[dev]"
 export ANTHROPIC_API_KEY=sk-...
 python examples/sample_run.py
+python scripts/show_report.py
 ```
 
-Report files are written to `reports/runs/{report_id}/`.
+Default input: `benchmarks/real_outputs/edison_trem2/input.txt`.
 
-### Run on Edison Scientific output
+Expected shape:
+
+```text
+Extracted 21 claims.
+Report written to: reports/runs/{report_id}/
+Full-text retrieval methods: abstract_fallback=7, oa_url_pdf=8, pmc=6
+```
+
+Run the canary controls explicitly:
 
 ```bash
-pip install -e ".[edison]"
-export EDISON_API_KEY=...
-python scripts/fetch_edison_sample.py "What is the role of TREM2 in Alzheimer's microglia?" --slug trem2
-python examples/sample_run.py examples/inputs/edison_trem2.txt
+python examples/sample_run.py benchmarks/canary/input.txt
 python scripts/show_report.py
 ```
 
@@ -51,72 +81,41 @@ python scripts/show_report.py
 
 ```text
 input text
-    → extract_claims()     # LLM: extract verifiable claims with citations
-    → resolve_citations()  # OpenAlex: find abstracts for each cited source
-    → verify_claim()       # LLM: compare claim against abstract
-    → build_report()       # Aggregate: write report.json + provenance.jsonl
+  -> extract_claims()              # LLM: citation-anchored claims
+  -> resolve_citations()           # OpenAlex + CrossRef fallback
+  -> fetch_fulltext()              # OA URL -> PMC -> Unpaywall -> abstract fallback
+  -> chunk_paper()                 # deterministic IMRAD section chunks
+  -> select_passages()             # BM25; empty when no lexical passage match
+  -> verify_claim_fulltext()       # LLM verifier over selected passages or abstract
+  -> run_numeric_check()           # deterministic OR/CI and p-value/CI checks
+  -> build_report()                # report.json + provenance.jsonl
 ```
+
+Resolution and retrieval diagnostics are first-class fields:
+
+- `source.title_match_score`: lexical title/abstract overlap with the query.
+- `source.resolution_low_confidence`: true when source matching is weak.
+- `verification.retrieval_status`: `passage_found`, `no_passage_found`, or
+  `fulltext_unavailable`.
+- `verification.evidence_quality`: `quoted_passage`, `abstract_only`, or
+  `no_evidence`.
 
 ## Public API
 
-### `src.extract.extract_claims`
+Core calls:
 
 ```python
-def extract_claims(
-    text: str,
-    *,
-    model_id: str = "claude-sonnet-4-6",
-    api_key: str | None = None,
-) -> tuple[list[Claim], ProvenanceStep]: ...
+claims, extract_step = extract_claims(text)
+sources, resolve_steps = resolve_citations(claims)
+fulltext, method = fetch_fulltext(source)
+chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
+passages = select_passages(claim.claim_text, chunks, top_k=3)
+result, steps = verify_claim_fulltext_with_numeric(claim, source, passages)
+run_dir = build_report(report_id, text, claims, sources, results, steps)
 ```
 
-### `src.resolve.resolve_citations`
-
-```python
-def resolve_citations(
-    claims: list[Claim],
-    *,
-    db_path: Path | None = None,
-) -> tuple[dict[str, ResolvedSource], list[ProvenanceStep]]: ...
-```
-
-### `src.verify.verify_claim`
-
-```python
-def verify_claim(
-    claim: Claim,
-    source: ResolvedSource,
-    *,
-    model_id: str = "claude-sonnet-4-6",
-    api_key: str | None = None,
-) -> tuple[VerificationResult, ProvenanceStep]: ...
-```
-
-### `src.report.build_report`
-
-```python
-def build_report(
-    report_id: str,
-    input_text: str,
-    claims: list[Claim],
-    sources: dict[str, ResolvedSource],
-    results: dict[str, VerificationResult],
-    provenance_steps: list[ProvenanceStep],
-    *,
-    output_dir: Path | None = None,
-) -> Path: ...
-```
-
-Returns the path to the run directory (`reports/runs/{report_id}/`).
-
-## Data models
-
-All models are frozen dataclasses defined in `src/models.py`:
-
-- `Claim` — a single extracted claim with citation metadata
-- `ResolvedSource` — result of an OpenAlex lookup (abstract, DOI, similarity score)
-- `VerificationResult` — LLM verdict with confidence and explanation
-- `ProvenanceStep` — audit record for one pipeline step (tokens, cache hit, model ID)
+Data models are frozen dataclasses in `src/models.py`: `Claim`,
+`ResolvedSource`, `VerificationResult`, `ProvenanceStep`, and `PaperChunk`.
 
 ## Evaluation
 
@@ -124,90 +123,39 @@ All models are frozen dataclasses defined in `src/models.py`:
 python scripts/eval_scifact.py --split dev
 ```
 
-Uses the SciFact dataset in `eval/scifact/`. The `test` split is locked — never use it during development.
+SciFact is used as a verifier regression baseline. The current F1 = 0.94 number
+is verifier-only: `scripts/eval_scifact.py` builds oracle claims and oracle
+abstract sources, then calls `verify_claim()`. It does not measure the full
+extract -> resolve -> retrieve -> verify pipeline.
 
-### SciFact dev results (PoC baseline)
-
-| Approach | F1 | Macro-F1 | Cost (50 claims) |
-| --- | --- | --- | --- |
-| **This pipeline** (structured system prompt + provenance) | **0.94** | **0.94** | $0.17 |
-| Direct LLM (naive single prompt, same model) | 0.62 | 0.60 | $0.10 |
-
-Full dev set (300 claims): F1 = **0.923**, Macro-F1 = **0.919**, total cost = $0.84.
-
-Per-class F1 (300 claims): supported = 0.905 · unsupported = 0.889 · not\_addressed = 0.961.
-
-Baseline locked at `eval/results/baseline_phase0.json`.
+The SciFact test split is locked and must not be used for prompt selection or
+tuning.
 
 ## Development
 
 ```bash
-python -m pytest tests/unit/ -v          # 99 tests, all offline
-python -m mypy --strict src/             # zero errors
-python -m ruff check src/ tests/ scripts/
-python -m ruff format src/ tests/ scripts/
+python -m pytest -v
+python -m mypy --strict src
+python -m ruff check src tests scripts examples
 ```
 
-## Cost estimate
+## Known Limitations
 
-Targeting < $0.10 per 2-page document.
+- Extraction currently requires explicit author/year citation anchors. Numeric bracket citations work only when the references are present in the input.
+- `similarity_score` is still year-proximity; use `title_match_score` and `resolution_low_confidence` for source-match diagnostics.
+- BM25 is lexical. If no chunk shares claim tokens, the pipeline now reports `no_passage_found` instead of sending arbitrary first chunks to the verifier.
+- LLM `confidence` is self-reported and not calibrated. Treat
+  `retrieval_status`, `evidence_quality`, and source quotes as higher-signal evidence diagnostics.
+- Numeric coverage is intentionally narrow: OR/CI consistency and p-value/CI null-crossing checks only.
+- Each claim is checked against its cited source, not against the whole literature.
 
-- Input: $3.00 / M tokens
-- Cached input: $0.30 / M tokens (prompt caching on all system prompts)
-- Output: $15.00 / M tokens
+## Design Partners
 
-Token costs are logged per call and summed in `report.json` under `summary.total_cost_usd`.
+Looking for medical writing, regulatory/scientific review, and AI-for-science tool teams with two real documents per week to verify privately. The useful feedback is where the system abstains, misses contradictions, or over-flags
+weak evidence.
 
-## Known limitations
-
-The current pipeline (PoC) verifies claims against **paper abstracts only**. This has two structural consequences:
-
-### Coverage by claim type
-
-| Claim type | Verifiable with abstracts | Example |
-| --- | --- | --- |
-| Qualitative high-level | Partially | "TREM2 is implicated in microglial activation" |
-| Specific quantitative | No | "KD = 86.50 nM", "p < 0.0001", "39% vs 11.5%" |
-| Methodological | No | Exact experimental conditions, concentrations |
-
-Quantitative and methodological claims are located in figures, tables, and methods sections — never in abstracts. This is a structural limitation of the data source, not the pipeline. Expect 60–70% `not_addressed` on dense scientific reports containing precise numerical findings.
-
-### Resolver quality
-
-OpenAlex fuzzy matching occasionally returns an incorrect paper (high similarity score, wrong study). This produces `not_addressed` verdicts that look like missing coverage rather than retrieval errors. The `similarity_score` field in the report is the primary diagnostic signal.
-
-### Single-source verification
-
-Each claim is verified against its cited source only. No cross-referencing against corroborating or contradicting literature.
-
----
-
-## Future work
-
-### Phase 1 — Full-text verification
-
-Move from abstract-level to full-text verification, closing the coverage gap on quantitative and methodological claims.
-
-- **Full-text retrieval chain** — PubMed Central OA → Unpaywall → PDF → abstract fallback (with `fulltext_unavailable` flag)
-- **Section-aware chunking** — IMRAD structure (Introduction / Methods / Results / Discussion) maps each claim to the relevant section; never sliding window
-- **Passage selection** — BM25 top-3 chunks for focused verification
-- **Source quotes in output** — exact sentences from the source paper supporting or contradicting the claim
-
-### Phase 2 — Deterministic numerical engine
-
-Catch quantitative errors that LLMs are structurally unreliable at detecting. The comparison step is 100% deterministic Python — no LLM calls.
-
-- **Statistical consistency checker** — verifies that reported p-values are plausible given effect size and sample size (`scipy.stats`, `statsmodels`)
-- **Unit and magnitude checker** — flags order-of-magnitude mismatches and unit errors (e.g. μM vs mM)
-- **Percentage and ratio verification** — detects inverted ratios, incorrect percentages, multi-arm trial inconsistencies
-- **Property-based testing** (`hypothesis`) — comparison engine is symmetric and deterministic on all inputs
-
----
-
-## Contributing
-
-Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, code style, and PR guidelines.
+Contact: [vivienperrelle@gmail.com](mailto:vivienperrelle@gmail.com)
 
 ## License
 
-Apache 2.0 — see [LICENSE](LICENSE).
+Apache 2.0. See [LICENSE](LICENSE).

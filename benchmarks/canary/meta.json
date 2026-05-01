@@ -1,0 +1,7 @@
+{
+  "name": "launch_canary",
+  "type": "seeded_control",
+  "created_date": "2026-04-29",
+  "purpose": "Exercise weak resolution, contradiction, numeric inconsistency, and retraction-check demo paths.",
+  "public_positioning": "Controlled canary suite; do not count as real-tool benchmark evidence."
+}

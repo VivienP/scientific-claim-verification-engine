@@ -6,6 +6,7 @@ from src.numeric.checks import (
     NumericAssertion,
     NumericCheckResult,
     check_or_ci_consistency,
+    check_p_value_ci_consistency,
 )
 
 
@@ -83,3 +84,30 @@ class TestCheckOrCiConsistency:
     def test_default_extracted_is_empty_list(self) -> None:
         r = check_or_ci_consistency(2.0, 1.0, 3.0)
         assert r.extracted == []
+
+
+class TestCheckPValueCiConsistency:
+    def test_significant_p_value_with_ci_excluding_null_is_consistent(self) -> None:
+        r = check_p_value_ci_consistency(0.01, 1.2, 2.4, null_value=1.0)
+        assert r.consistent is True
+        assert r.check_type == "p_value_ci_consistency"
+
+    def test_significant_p_value_with_ci_crossing_null_is_inconsistent(self) -> None:
+        r = check_p_value_ci_consistency(0.001, 0.8, 1.2, null_value=1.0)
+        assert r.consistent is False
+        assert "crosses null" in r.explanation
+
+    def test_non_significant_p_value_with_ci_excluding_null_is_inconsistent(self) -> None:
+        r = check_p_value_ci_consistency(0.20, 1.2, 2.4, null_value=1.0)
+        assert r.consistent is False
+        assert "excludes null" in r.explanation
+
+    def test_additive_null_defaults_to_zero(self) -> None:
+        r = check_p_value_ci_consistency(0.03, -0.1, 0.4)
+        assert r.consistent is False
+        assert "crosses null=0.0" in r.explanation
+
+    def test_invalid_p_value_is_inconsistent(self) -> None:
+        r = check_p_value_ci_consistency(1.5, 1.2, 2.4, null_value=1.0)
+        assert r.consistent is False
+        assert "p-value" in r.explanation

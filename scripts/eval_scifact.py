@@ -11,6 +11,9 @@ from pathlib import Path
 from typing import Literal
 
 import structlog
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from src.clients._cache import default_db_path, prune_expired
 from src.models import Claim, ResolvedSource

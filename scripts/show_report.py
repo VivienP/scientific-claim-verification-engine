@@ -44,6 +44,7 @@ _WIDTH = 76
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _find_latest_report() -> Path:
     runs_dir = Path("reports/runs")
     if not runs_dir.exists():
@@ -60,9 +61,7 @@ def _find_latest_report() -> Path:
 
 def _wrap(text: str, indent: int) -> str:
     prefix = " " * indent
-    return textwrap.fill(
-        text, width=_WIDTH, initial_indent=prefix, subsequent_indent=prefix
-    )
+    return textwrap.fill(text, width=_WIDTH, initial_indent=prefix, subsequent_indent=prefix)
 
 
 def _badge(status: str) -> str:
@@ -75,9 +74,14 @@ def _truncate(text: str, max_len: int) -> str:
     return text if len(text) <= max_len else text[: max_len - 1] + "…"
 
 
+def _fmt_float(value: float | int | str | None) -> str:
+    return "n/a" if value is None else f"{float(value):.2f}"
+
+
 # ---------------------------------------------------------------------------
 # Display
 # ---------------------------------------------------------------------------
+
 
 def show(report_path: Path) -> None:
     report: dict[str, Any] = json.loads(report_path.read_text(encoding="utf-8"))
@@ -111,14 +115,36 @@ def show(report_path: Path) -> None:
         if source["found"] and source["title"]:
             title = _truncate(str(source["title"]), 72)
             print(_wrap(f"Source: {title}", indent=5))
+            match = _fmt_float(source.get("title_match_score"))
+            weak = "LOW CONFIDENCE" if source.get("resolution_low_confidence") else "ok"
+            print(
+                _wrap(
+                    f"Match : year={_fmt_float(source.get('similarity_score'))} "
+                    f"title={match} ({weak})",
+                    indent=5,
+                )
+            )
         else:
-            print(f"     {_YELLOW}Source: ✗ Not found in Semantic Scholar{_RESET}")
+            print(f"     {_YELLOW}Source: ✗ Not found in OpenAlex/CrossRef{_RESET}")
+
+        verification: dict[str, Any] = claim["verification"]
+        retrieval = str(verification.get("retrieval_status", "unknown"))
+        evidence = str(verification.get("evidence_quality", "unknown"))
+        conf: float = verification["confidence"]
+        evidence_line = f"Evidence: retrieval={retrieval} quality={evidence} confidence={conf:.2f}"
+        print(_wrap(evidence_line, indent=5))
+
+        passages = verification.get("source_passages") or []
+        for passage in passages[:2]:
+            print(_wrap(f"Quote : {passage!s}", indent=5))
+
+        numeric = verification.get("numeric_check")
+        if numeric:
+            numeric_status = "consistent" if numeric.get("consistent") else "INCONSISTENT"
+            print(_wrap(f"Numeric: {numeric_status} ({numeric.get('check_type')})", indent=5))
 
         explanation = _truncate(str(claim["verification"]["explanation"]), 300)
         print(_wrap(f"Why   : {explanation}", indent=5))
-
-        conf: float = claim["verification"]["confidence"]
-        print(f"     Conf  : {conf:.2f}")
         print()
 
     print(f"{_DIM}{thin}{_RESET}")
@@ -127,6 +153,8 @@ def show(report_path: Path) -> None:
         f"  unsupported={summary['unsupported']}"
         f"  not_addressed={summary['not_addressed']}"
         f"  partially={summary['partially_supported']}"
+        f"  no_passage={summary.get('no_passage_found', 0)}"
+        f"  weak_resolution={summary.get('resolution_low_confidence', 0)}"
     )
     print(status_summary)
     print(f"{_BOLD}{border}{_RESET}\n")
@@ -135,6 +163,7 @@ def show(report_path: Path) -> None:
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):

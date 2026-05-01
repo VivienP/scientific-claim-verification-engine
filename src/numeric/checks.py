@@ -1,7 +1,4 @@
-"""Pure-Python deterministic numeric checks. Zero LLM, zero scipy.
-
-MVP: one check only — OR/CI internal consistency.
-"""
+"""Pure-Python deterministic numeric checks. Zero LLM, zero scipy."""
 
 from __future__ import annotations
 
@@ -9,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import Literal
 
 NumericRole = Literal["primary", "ci_low", "ci_high", "comparator", "p_value", "n"]
-CheckType = Literal["or_ci_consistency"]
+CheckType = Literal["or_ci_consistency", "p_value_ci_consistency"]
 
 _MAX_CI_RATIO = 50.0  # plausibility heuristic for OR/CI ratio
 
@@ -87,6 +84,61 @@ def check_or_ci_consistency(
 
     return NumericCheckResult(
         check_type="or_ci_consistency",
+        consistent=consistent,
+        extracted=extracted,
+        explanation=explanation,
+    )
+
+
+def check_p_value_ci_consistency(
+    p_value: float,
+    ci_low: float,
+    ci_high: float,
+    *,
+    null_value: float = 0.0,
+    alpha: float = 0.05,
+    extracted: list[NumericAssertion] | None = None,
+) -> NumericCheckResult:
+    """Check whether a p-value and CI agree about excluding the null value.
+
+    This intentionally does not recompute a p-value. It only checks the
+    high-signal contradiction reviewers expect: a significant p-value paired
+    with a CI crossing the null, or a non-significant p-value paired with a CI
+    excluding the null.
+    """
+    extracted = extracted if extracted is not None else []
+    failures: list[str] = []
+
+    if not (0.0 <= p_value <= 1.0):
+        failures.append(f"p-value must be between 0 and 1 (got {p_value})")
+    if ci_low > ci_high:
+        failures.append(f"CI inverted: ci_low={ci_low} > ci_high={ci_high}")
+
+    if not failures:
+        ci_excludes_null = ci_high < null_value or ci_low > null_value
+        p_significant = p_value < alpha
+        if p_significant and not ci_excludes_null:
+            failures.append(
+                f"p={p_value} is significant at alpha={alpha}, but CI "
+                f"[{ci_low}, {ci_high}] crosses null={null_value}"
+            )
+        elif not p_significant and ci_excludes_null:
+            failures.append(
+                f"p={p_value} is not significant at alpha={alpha}, but CI "
+                f"[{ci_low}, {ci_high}] excludes null={null_value}"
+            )
+
+    consistent = not failures
+    if consistent:
+        explanation = (
+            f"p-value/CI internally consistent: p={p_value}, CI [{ci_low}, {ci_high}], "
+            f"null={null_value}, alpha={alpha}."
+        )
+    else:
+        explanation = "p-value/CI inconsistent: " + "; ".join(failures)
+
+    return NumericCheckResult(
+        check_type="p_value_ci_consistency",
         consistent=consistent,
         extracted=extracted,
         explanation=explanation,

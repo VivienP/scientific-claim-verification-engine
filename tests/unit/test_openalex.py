@@ -205,6 +205,58 @@ class TestSearchPaperFound:
         assert result.found is True
         assert result.abstract is None
 
+    def test_low_title_overlap_sets_resolution_low_confidence(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        response = {
+            "results": [
+                {
+                    "id": "https://openalex.org/W1",
+                    "title": "Unrelated conformable fractional equations",
+                    "abstract_inverted_index": {"Boundary": [0], "values": [1]},
+                    "publication_year": 2020,
+                    "doi": "https://doi.org/10.1/wrong",
+                }
+            ]
+        }
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json=response)
+        result = search_paper(
+            "Smith 2020 protein folding chaperone kinetics",
+            db_path=tmp_path / "cache.db",
+        )
+        assert result.found is True
+        assert result.title_match_score == 0.0
+        assert result.resolution_low_confidence is True
+
+    def test_title_overlap_breaks_same_year_tie(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        response = {
+            "results": [
+                {
+                    "id": "https://openalex.org/W1",
+                    "title": "Unrelated conformable fractional equations",
+                    "abstract_inverted_index": {"Boundary": [0], "values": [1]},
+                    "publication_year": 2020,
+                    "doi": "https://doi.org/10.1/wrong",
+                },
+                {
+                    "id": "https://openalex.org/W2",
+                    "title": "Protein folding chaperone kinetics in vitro",
+                    "abstract_inverted_index": {"Protein": [0], "folding": [1], "kinetics": [2]},
+                    "publication_year": 2020,
+                    "doi": "https://doi.org/10.1/right",
+                },
+            ]
+        }
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json=response)
+        result = search_paper(
+            "Smith 2020 protein folding chaperone kinetics",
+            db_path=tmp_path / "cache.db",
+        )
+        assert result.doi == "10.1/right"
+        assert result.resolution_low_confidence is False
+
 
 class TestSearchPaperNotFound:
     def test_empty_results(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:

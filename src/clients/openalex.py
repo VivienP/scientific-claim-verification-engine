@@ -25,6 +25,22 @@ _CACHE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 _MAILTO = "vivienperrelle@gmail.com"  # polite pool — better rate limits
 
 _YEAR_PATTERN = re.compile(r"\b(19|20)\d{2}\b")
+_LEXICAL_TOKEN_PATTERN = re.compile(r"[a-z0-9]+")
+_LOW_TITLE_MATCH_THRESHOLD = 0.15
+_STOPWORDS = {
+    "and",
+    "are",
+    "but",
+    "for",
+    "from",
+    "into",
+    "not",
+    "of",
+    "the",
+    "this",
+    "that",
+    "with",
+}
 
 
 def _cache_key(query: str) -> str:
@@ -49,20 +65,42 @@ def _compute_similarity(result_year: int | None, query_year: int | None) -> floa
     return 0.8
 
 
-def _pick_best_result(data: list[dict[str, Any]], query_year: int | None) -> dict[str, Any] | None:
+def _content_tokens(text: str) -> set[str]:
+    return {
+        token
+        for token in _LEXICAL_TOKEN_PATTERN.findall(text.lower())
+        if len(token) > 2 and token not in _STOPWORDS and not _YEAR_PATTERN.fullmatch(token)
+    }
+
+
+def _compute_title_match_score(query: str, result: dict[str, Any]) -> float | None:
+    query_tokens = _content_tokens(query)
+    if not query_tokens:
+        return None
+
+    abstract = _reconstruct_abstract(result.get("abstract_inverted_index")) or ""
+    title = str(result.get("title") or "")
+    result_tokens = _content_tokens(f"{title} {abstract}")
+    if not result_tokens:
+        return 0.0
+
+    return len(query_tokens.intersection(result_tokens)) / len(query_tokens)
+
+
+def _pick_best_result(
+    data: list[dict[str, Any]], query_year: int | None, query: str
+) -> dict[str, Any] | None:
     if not data:
         return None
-    if query_year is None:
-        return data[0]
-    # Prefer exact year match, then ±1, then first result
-    for result in data:
-        if result.get("publication_year") == query_year:
-            return result
-    for result in data:
-        year = result.get("publication_year")
-        if year is not None and abs(year - query_year) <= 1:
-            return result
-    return data[0]
+
+    def score(item: tuple[int, dict[str, Any]]) -> tuple[float, float, int]:
+        index, result = item
+        result_year: int | None = result.get("publication_year")
+        year_score = _compute_similarity(result_year, query_year)
+        lexical_score = _compute_title_match_score(query, result) or 0.0
+        return year_score + lexical_score, year_score, -index
+
+    return max(enumerate(data), key=score)[1]
 
 
 def _reconstruct_abstract(inv_idx: dict[str, list[int]] | None) -> str | None:
@@ -90,11 +128,14 @@ def _extract_pmcid(pmcid_raw: str | None) -> str | None:
     return cleaned
 
 
-def _build_resolved_source(result: dict[str, Any], query_year: int | None) -> ResolvedSource:
+def _build_resolved_source(
+    result: dict[str, Any], query_year: int | None, query: str
+) -> ResolvedSource:
     result_year: int | None = result.get("publication_year")
     abstract: str | None = _reconstruct_abstract(result.get("abstract_inverted_index"))
     doi_raw: str | None = result.get("doi")
     doi: str | None = doi_raw.replace("https://doi.org/", "") if doi_raw else None
+    title_match_score = _compute_title_match_score(query, result)
 
     oa_info: dict[str, Any] = result.get("open_access") or {}
     oa_url: str | None = oa_info.get("oa_url") or oa_info.get("pdf_url")
@@ -108,6 +149,10 @@ def _build_resolved_source(result: dict[str, Any], query_year: int | None) -> Re
         title=result.get("title"),
         abstract=abstract,
         similarity_score=_compute_similarity(result_year, query_year),
+        title_match_score=title_match_score,
+        resolution_low_confidence=(
+            title_match_score is not None and title_match_score < _LOW_TITLE_MATCH_THRESHOLD
+        ),
         oa_url=oa_url,
         pmcid=pmcid,
     )
@@ -174,16 +219,18 @@ def search_paper(
             payload: dict[str, Any] = response.json()
             results_list: list[dict[str, Any]] = payload.get("results", [])
 
-            best = _pick_best_result(results_list, query_year)
+            best = _pick_best_result(results_list, query_year, query)
             if best is None:
                 return _not_found
 
-            resolved = _build_resolved_source(best, query_year)
+            resolved = _build_resolved_source(best, query_year, query)
             logger.info(
                 "paper_resolved",
                 title=resolved.title,
                 year=best.get("publication_year"),
                 similarity_score=resolved.similarity_score,
+                title_match_score=resolved.title_match_score,
+                resolution_low_confidence=resolved.resolution_low_confidence,
             )
 
             put(resolved_db_path, key, json.dumps(dataclasses.asdict(resolved)), _CACHE_TTL_SECONDS)

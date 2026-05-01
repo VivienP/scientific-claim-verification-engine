@@ -277,6 +277,7 @@ class TestPhase1ReportFields:
                 confidence=0.9,
                 verification_depth="fulltext",
                 fulltext_available=True,
+                retrieval_status="passage_found",
             ),
             "c1": VerificationResult(
                 status="unsupported",
@@ -284,6 +285,7 @@ class TestPhase1ReportFields:
                 confidence=0.9,
                 verification_depth="fulltext",
                 fulltext_available=True,
+                retrieval_status="passage_found",
             ),
             "c2": VerificationResult(  # abstract path
                 status="supported",
@@ -315,6 +317,8 @@ class TestPhase1ReportFields:
                 source_section="results",
                 fulltext_available=True,
                 verification_depth="fulltext",
+                retrieval_status="passage_found",
+                evidence_quality="quoted_passage",
             )
         }
         steps = [_make_step("s1", "c1")]
@@ -411,6 +415,62 @@ class TestPhase1ReportFields:
             report = json.load(f)
 
         assert report["summary"]["retracted_sources"] == 1
+
+    def test_evidence_diagnostic_summary_counts(self, tmp_path: Path) -> None:
+        from src.report import build_report
+
+        claims = [_make_claim(f"c{i}") for i in range(4)]
+        sources = {
+            "c0": _make_source(),
+            "c1": _make_source(),
+            "c2": ResolvedSource(
+                found=True,
+                doi="10.1/weak",
+                title="Weak Match",
+                abstract="a",
+                similarity_score=1.0,
+                resolution_low_confidence=True,
+            ),
+            "c3": _make_source(found=False),
+        }
+        results = {
+            "c0": VerificationResult(
+                status="supported",
+                explanation="ok",
+                confidence=0.9,
+                verification_depth="fulltext",
+                fulltext_available=True,
+                retrieval_status="passage_found",
+            ),
+            "c1": VerificationResult(
+                status="not_addressed",
+                explanation="No relevant passage.",
+                confidence=0.9,
+                verification_depth="abstract",
+                fulltext_available=True,
+                retrieval_status="no_passage_found",
+            ),
+            "c2": _make_result("not_addressed"),
+            "c3": _make_result("not_addressed"),
+        }
+        steps = [_make_step(f"s{i}", f"c{i}") for i in range(4)]
+
+        run_dir = build_report(
+            "report-diagnostics",
+            "Text.",
+            claims,
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["fulltext_verified"] == 1
+        assert report["summary"]["no_passage_found"] == 1
+        assert report["summary"]["fulltext_unavailable"] == 2
+        assert report["summary"]["resolution_low_confidence"] == 1
 
 
 class TestVerifiabilityStatus:

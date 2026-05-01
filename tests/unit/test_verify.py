@@ -295,7 +295,7 @@ class TestVerifyClaimFulltext:
         assert "Passage number 0" in user_message
 
     @patch("src.verify.verify_claim")
-    def test_empty_passages_falls_back_to_abstract(self, mock_verify: MagicMock) -> None:
+    def test_empty_passages_marks_no_passage_found(self, mock_verify: MagicMock) -> None:
         from src.models import VerificationResult
 
         mock_verify.return_value = (
@@ -320,7 +320,8 @@ class TestVerifyClaimFulltext:
         result, _ = verify_claim_fulltext(_make_claim(), _make_source(), [])
         mock_verify.assert_called_once()
         assert result.verification_depth == "abstract"
-        assert result.fulltext_available is False
+        assert result.fulltext_available is True
+        assert result.retrieval_status == "no_passage_found"
 
     @patch("src.verify.anthropic.Anthropic")
     def test_retraction_status_mirrored(self, mock_anthropic_cls: MagicMock) -> None:
@@ -366,6 +367,7 @@ class TestVerifyClaimFulltext:
         assert result.status == "not_addressed"
         assert result.confidence == 0.0
         assert result.verification_depth == "fulltext"
+        assert result.retrieval_status == "passage_found"
 
     @patch("src.verify.anthropic.Anthropic")
     def test_cache_control_on_system_prompt(self, mock_anthropic_cls: MagicMock) -> None:

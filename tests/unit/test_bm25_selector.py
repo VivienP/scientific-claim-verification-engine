@@ -48,10 +48,10 @@ class TestSelectPassages:
 
     def test_fewer_chunks_than_top_k(self) -> None:
         chunks = [_chunk("only chunk here with some content for the test", 0)]
-        result = select_passages("query", chunks, top_k=3)
+        result = select_passages("chunk", chunks, top_k=3)
         assert result == chunks
 
-    def test_zero_scores_returns_top_k_by_position(self) -> None:
+    def test_zero_scores_returns_empty(self) -> None:
         chunks = [
             _chunk("alpha beta gamma delta epsilon zeta eta theta iota kappa", 0),
             _chunk("lambda mu nu xi omicron pi rho sigma tau upsilon phi chi", 1),
@@ -59,10 +59,7 @@ class TestSelectPassages:
         ]
         # query has zero overlap with any chunk
         result = select_passages("xxxx yyyy zzzz", chunks, top_k=2)
-        assert len(result) == 2
-        # When all scores are zero, returns first top_k by position
-        assert result[0].char_start == 0
-        assert result[1].char_start == 100
+        assert result == []
 
     def test_deterministic(self) -> None:
         chunks = [

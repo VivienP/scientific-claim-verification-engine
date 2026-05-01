@@ -20,6 +20,8 @@ OperationType = Literal[
 ]
 VerifiabilityStatus = Literal["verifiable", "no_citations_found", "low_citation_density"]
 SectionLabel = Literal["introduction", "methods", "results", "discussion", "other"]
+RetrievalStatus = Literal["passage_found", "no_passage_found", "fulltext_unavailable"]
+EvidenceQuality = Literal["quoted_passage", "abstract_only", "no_evidence"]
 
 
 @dataclass(frozen=True)
@@ -47,6 +49,8 @@ class ResolvedSource:
     title: str | None
     abstract: str | None
     similarity_score: float | None
+    title_match_score: float | None = None
+    resolution_low_confidence: bool = False
     oa_url: str | None = None
     pmcid: str | None = None
     retraction_status: bool = False
@@ -61,6 +65,8 @@ class VerificationResult:
     source_section: str | None = None
     fulltext_available: bool = False
     verification_depth: Literal["fulltext", "abstract"] = "abstract"
+    retrieval_status: RetrievalStatus = "fulltext_unavailable"
+    evidence_quality: EvidenceQuality = "abstract_only"
     retraction_status: bool = False
     numeric_check: NumericCheckResult | None = None
 

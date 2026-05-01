@@ -34,6 +34,7 @@ _WIDTH = 68
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _load(path: Path) -> dict[str, Any]:
     return cast(dict[str, Any], json.loads(path.read_text(encoding="utf-8")))
 
@@ -64,6 +65,7 @@ def _row(
 # ---------------------------------------------------------------------------
 # Display
 # ---------------------------------------------------------------------------
+
 
 def show(pipeline: dict[str, Any], baseline: dict[str, Any]) -> None:
     pm: dict[str, Any] = pipeline["metrics"]
@@ -100,16 +102,14 @@ def show(pipeline: dict[str, Any], baseline: dict[str, Any]) -> None:
 
     print(f"\n{thin}")
     print(f"  {'Run cost':24s}  ${pc:>9.2f}  ${bc:>13.2f}")
-    print(
-        f"  {_DIM}* Baseline run on {bn} claims;"
-        f" pipeline on {pn} claims.{_RESET}"
-    )
+    print(f"  {_DIM}* Baseline run on {bn} claims; pipeline on {pn} claims.{_RESET}")
     print(f"{_BOLD}{border}{_RESET}\n")
 
 
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     if hasattr(sys.stdout, "reconfigure"):

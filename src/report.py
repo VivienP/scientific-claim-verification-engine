@@ -58,68 +58,39 @@ def _compute_summary_stats(
 ) -> dict[str, int | float | str]:
     """Pure helper — compute summary statistics. No I/O."""
     total = len(claims)
-    supported = sum(
-        1
-        for c in claims
-        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).status
-        == "supported"
-    )
-    unsupported = sum(
-        1
-        for c in claims
-        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).status
-        == "unsupported"
-    )
-    not_addressed = sum(
-        1
-        for c in claims
-        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).status
-        == "not_addressed"
-    )
-    partially_supported = sum(
-        1
-        for c in claims
-        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).status
-        == "partially_supported"
-    )
 
-    found_count = sum(
-        1
-        for c in claims
-        if sources.get(c.claim_id, ResolvedSource(False, None, None, None, None)).abstract
-        is not None
-    )
+    def result_for(claim: Claim) -> VerificationResult:
+        return results.get(
+            claim.claim_id,
+            VerificationResult(status="not_addressed", explanation="", confidence=0.0),
+        )
+
+    def source_for(claim: Claim) -> ResolvedSource:
+        return sources.get(
+            claim.claim_id,
+            ResolvedSource(found=False, doi=None, title=None, abstract=None, similarity_score=None),
+        )
+
+    supported = sum(1 for c in claims if result_for(c).status == "supported")
+    unsupported = sum(1 for c in claims if result_for(c).status == "unsupported")
+    not_addressed = sum(1 for c in claims if result_for(c).status == "not_addressed")
+    partially_supported = sum(1 for c in claims if result_for(c).status == "partially_supported")
+
+    found_count = sum(1 for c in claims if source_for(c).abstract is not None)
     citation_found_rate = found_count / total if total > 0 else 0.0
 
-    fulltext_verified = sum(
-        1
-        for c in claims
-        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).verification_depth
-        == "fulltext"
+    fulltext_verified = sum(1 for c in claims if result_for(c).retrieval_status == "passage_found")
+    no_passage_found = sum(
+        1 for c in claims if result_for(c).retrieval_status == "no_passage_found"
     )
-    retracted_sources = sum(
-        1
-        for c in claims
-        if sources.get(c.claim_id, ResolvedSource(False, None, None, None, None)).retraction_status
+    fulltext_unavailable = sum(
+        1 for c in claims if result_for(c).retrieval_status == "fulltext_unavailable"
     )
-    numeric_checks_run = sum(
-        1
-        for c in claims
-        if results.get(c.claim_id, VerificationResult("not_addressed", "", 0.0)).numeric_check
-        is not None
-    )
+    retracted_sources = sum(1 for c in claims if source_for(c).retraction_status)
+    resolution_low_confidence = sum(1 for c in claims if source_for(c).resolution_low_confidence)
+    numeric_checks_run = sum(1 for c in claims if result_for(c).numeric_check is not None)
     numeric_inconsistencies_flagged = sum(
-        1
-        for c in claims
-        if (
-            (
-                nc := results.get(
-                    c.claim_id, VerificationResult("not_addressed", "", 0.0)
-                ).numeric_check
-            )
-            is not None
-            and not nc.consistent
-        )
+        1 for c in claims if ((nc := result_for(c).numeric_check) is not None and not nc.consistent)
     )
 
     return {
@@ -131,6 +102,9 @@ def _compute_summary_stats(
         "citation_found_rate": citation_found_rate,
         "verifiability_status": _verifiability_status(citation_found_rate),
         "fulltext_verified": fulltext_verified,
+        "no_passage_found": no_passage_found,
+        "fulltext_unavailable": fulltext_unavailable,
+        "resolution_low_confidence": resolution_low_confidence,
         "retracted_sources": retracted_sources,
         "numeric_checks_run": numeric_checks_run,
         "numeric_inconsistencies_flagged": numeric_inconsistencies_flagged,

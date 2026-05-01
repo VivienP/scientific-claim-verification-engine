@@ -1,0 +1,163 @@
+{
+  "report_id": "canary_rerun_21ed177d",
+  "timestamp": 1777645576.7523792,
+  "input_text": "# Scientific Claim Verification Canary Input\n\nThis is a seeded canary document for demo and regression testing. It is not a\nreal AI-for-science tool output.\n\nJumper et al. (2021) showed that AlphaFold achieved protein structure\npredictions that were less accurate than random baselines.\n\nThe trial reports a strong statistically significant odds-ratio effect even\nthough the confidence interval crosses the null: treatment response improved\nsubstantially (OR 2.0, 95% CI 0.8-1.2, p = 0.001) (Nguyen et al., 2020).\n\nWakefield et al. (1998) established that the MMR vaccine causes autism in\nchildren.\n\nSmith et al. (2020) demonstrated that protein folding chaperone kinetics are\ngoverned by conformable fractional boundary equations.\n\n",
+  "summary": {
+    "total_claims": 4,
+    "supported": 0,
+    "unsupported": 1,
+    "not_addressed": 3,
+    "partially_supported": 0,
+    "citation_found_rate": 0.5,
+    "verifiability_status": "low_citation_density",
+    "fulltext_verified": 2,
+    "no_passage_found": 0,
+    "fulltext_unavailable": 2,
+    "resolution_low_confidence": 0,
+    "retracted_sources": 0,
+    "numeric_checks_run": 0,
+    "numeric_inconsistencies_flagged": 0,
+    "total_cost_usd": 0.03246
+  },
+  "claims": [
+    {
+      "claim_id": "4bcee280-cebb-400b-b377-64d66b2ceb47",
+      "claim_text": "AlphaFold achieved protein structure predictions that were less accurate than random baselines.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Jumper"
+      ],
+      "cited_year": 2021,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41586-021-03828-1",
+        "title": "Highly accurate protein structure prediction for the human proteome",
+        "abstract": ", at a scale that covers almost the entire human proteome (98.5% of human proteins). The resulting dataset covers 58% of residues with a confident prediction, of which a subset (36% of all residues) have very high confidence. We introduce several metrics developed by building on the AlphaFold model and use them to interpret the dataset, identifying strong multi-domain predictions as well as regions that are likely to be disordered. Finally, we provide some case studies to illustrate how high-quality predictions could be used to generate biological hypotheses. We are making our predictions freely available to the community and anticipate that routine large-scale and high-accuracy structure prediction will become an important tool that will allow new questions to be addressed from a structural perspective.",
+        "similarity_score": 1.0,
+        "title_match_score": 0.6666666666666666,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.nature.com/articles/s41586-021-03828-1.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "unsupported",
+        "explanation": "The passage explicitly describes AlphaFold as achieving 'highly accurate protein structure prediction' and refers to it as 'state-of-the-art,' covering 58% of residues with confident predictions and 36% with very high confidence. This directly contradicts the claim that AlphaFold achieved predictions less accurate than random baselines.",
+        "confidence": 0.95,
+        "source_passages": [
+          "The resulting dataset covers 58% of residues with a confident prediction, of which a subset (36% of all residues) have very high confidence.",
+          "here we markedly expand the structural coverage of the proteome by applying the state-of-the-art machine learning method, AlphaFold2, at a scale that covers almost the entire human proteome (98.5% of human proteins)."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "6814b005-d46a-462b-bd85-f0ed2d6d3dd4",
+      "claim_text": "Treatment response improved substantially with OR 2.0, 95% CI 0.8-1.2, p = 0.001.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Nguyen"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.3322/caac.21820",
+        "title": "Cancer statistics, 2024",
+        "abstract": "Each year, the American Cancer Society estimates the numbers of new cancer cases and deaths in the United States and compiles the most recent data on population-based cancer occurrence and outcomes using incidence data collected by central cancer registries (through 2020) and mortality data collected by the National Center for Health Statistics (through 2021). In 2024, 2,001,140 new cancer cases and 611,720 cancer deaths are projected to occur in the United States. Cancer mortality continued to decline through 2021, averting over 4 million deaths since 1991 because of reductions in smoking, earlier detection for some cancers, and improved treatment options in both the adjuvant and metastatic settings. However, these gains are threatened by increasing incidence for 6 of the top 10 cancers. Incidence rates increased during 2015-2019 by 0.6%-1% annually for breast, pancreas, and uterine corpus cancers and by 2%-3% annually for prostate, liver (female), kidney, and human papillomavirus-associated oral cancers and for melanoma. Incidence rates also increased by 1%-2% annually for cervical (ages 30-44 years) and colorectal cancers (ages <55 years) in young adults. Colorectal cancer was the fourth-leading cause of cancer death in both men and women younger than 50 years in the late-1990s but is now first in men and second in women. Progress is also hampered by wide persistent cancer disparities; compared to White people, mortality rates are two-fold higher for prostate, stomach and uterine corpus cancers in Black people and for liver, stomach, and kidney cancers in Native American people. Continued national progress will require increased investment in cancer prevention and access to equitable treatment, especially among American Indian and Alaska Native and Black individuals.",
+        "similarity_score": 0.8,
+        "title_match_score": 0.4,
+        "resolution_low_confidence": false,
+        "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.3322/caac.21820",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is about cancer incidence and mortality statistics in the United States for 2024, and does not discuss any treatment response data, odds ratios, confidence intervals, or p-values related to treatment outcomes.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "7c82ad5e-f0f2-438b-808d-853a9ba5379e",
+      "claim_text": "The MMR vaccine causes autism in children.",
+      "claim_type": "causal",
+      "cited_authors": [
+        "Wakefield"
+      ],
+      "cited_year": 1998,
+      "source": {
+        "found": true,
+        "doi": "10.1016/s0140-6736(98)26012-0",
+        "title": "Autism, inflammatory bowel disease, and MMR vaccine",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 0.6,
+        "resolution_low_confidence": false,
+        "oa_url": "http://www.thelancet.com/article/S0140673698260120/pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "92800219-98f2-41c1-a0f0-b76abf691e1e",
+      "claim_text": "Protein folding chaperone kinetics are governed by conformable fractional boundary equations.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Smith"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41580-018-0081-3",
+        "title": "Functions and mechanisms of non-histone protein acetylation",
+        "abstract": null,
+        "similarity_score": 0.8,
+        "title_match_score": 0.2,
+        "resolution_low_confidence": false,
+        "oa_url": "https://curis.ku.dk/ws/files/275375005/Narita_et_al._NRMCB_2019_AAM.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The provided passages are about non-histone protein acetylation and post-translational modifications, with no mention of protein folding chaperone kinetics or conformable fractional boundary equations.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    }
+  ]
+}

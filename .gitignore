@@ -51,3 +51,6 @@ decisions/
 .cache/
 .codex/
 .commit-split-backup/
+
+# Local-only docs (outreach drafts, private notes) — suffix .local.md to keep untracked
+*.local.md

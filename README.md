@@ -6,8 +6,11 @@
 
 Auditable claim-by-claim evidence review for scientific text.
 
-This project is a design-partner alpha for teams that need to turn AI-generated scientific drafts, literature reviews, and agent outputs into a source-grounded verification report. The current launch story is deliberately conservative: this is an honest evidence-grounding verifier, not yet a broad automatic
-inconsistency detector.
+The pipeline turns free-form scientific text — paper drafts, literature
+reviews, AI-generated summaries — into a source-grounded verification report,
+one verdict per cited claim, with full provenance. The current scope is
+deliberately conservative: this is an honest evidence-grounding verifier, not
+a broad automatic inconsistency detector.
 
 ## What It Does
 
@@ -160,12 +163,10 @@ python -m ruff check src tests scripts examples
 - Numeric coverage is intentionally narrow: OR/CI consistency and p-value/CI null-crossing checks only.
 - Each claim is checked against its cited source, not against the whole literature.
 
-## Design Partners
+## Contact
 
-Looking for medical writing, regulatory/scientific review, and AI-for-science tool teams with two real documents per week to verify privately. The useful feedback is where the system abstains, misses contradictions, or over-flags
-weak evidence.
-
-Contact: [vivienperrelle@gmail.com](mailto:vivienperrelle@gmail.com)
+Questions, feedback, or interesting failure modes:
+[vivienperrelle@gmail.com](mailto:vivienperrelle@gmail.com).
 
 ## License
 

@@ -66,4 +66,4 @@ The canary is a controlled four-claim input designed to exercise contradiction d
 
 ## Honest reading of the new aggregate
 
-After the post-audit pipeline rerun, the three real-tool benchmarks surface **1 unsupported** verdict (up from 0 in the prior run) and **3 supported / 4 partially_supported** verdicts (vs. 4 / 2 previously). The new diagnostics now distinguish `passage_found` from `fulltext_unavail` from `no_passage_found`, eliminating the prior misleading `verification_depth=fulltext` label on claims where BM25 had silently fallen back to irrelevant chunks. See `docs/quality_audit_2026-04-29.md` for the audit that prompted this rerun.
+After the post-audit pipeline rerun, the three real-tool benchmarks surface **1 unsupported** verdict (up from 0 in the prior run) and **3 supported / 4 partially_supported** verdicts (vs. 4 / 2 previously). The new diagnostics now distinguish `passage_found` from `fulltext_unavail` from `no_passage_found`, eliminating the prior misleading `verification_depth=fulltext` label on claims where BM25 had silently fallen back to irrelevant chunks.

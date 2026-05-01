@@ -47,7 +47,10 @@ All three must pass clean before a PR is accepted. The CI pipeline enforces this
 4. Run `ruff` and `mypy` — must be clean.
 5. Open a PR with a clear description of what changed and why.
 
-If you're adding a new pipeline module, read [docs/specs/mvp-pipeline.md](docs/specs/mvp-pipeline.md) first — it documents the data model and provenance logging contract that all modules must respect.
+If you're adding a new pipeline module, read [README.md](README.md) for the
+overall data flow and follow the existing modules in [src/](src/) as
+reference — every module emits a `ProvenanceStep` (see [src/models.py](src/models.py))
+and respects the rules in [.claude/rules/](.claude/rules/).
 
 ## Reporting bugs
 

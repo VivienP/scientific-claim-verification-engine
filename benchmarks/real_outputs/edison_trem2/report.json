@@ -1,55 +1,55 @@
 {
-  "report_id": "edison_trem2_rerun_2f823ac6",
-  "timestamp": 1777646526.7528512,
+  "report_id": "edison_trem2_rerun_59b8842d",
+  "timestamp": 1777669176.9499373,
   "input_text": "Question: What is the role of TREM2 in Alzheimer's microglia, and what are the key quantitative findings?\n\n## Technical summary: role of TREM2 in Alzheimer\u2019s microglia\n\n### Functional role in microglial biology during AD\nTriggering receptor expressed on myeloid cells 2 (TREM2) is a microglia-enriched immunoreceptor that signals via the adaptor DAP12/TYROBP and is repeatedly implicated in the transition from a homeostatic program toward plaque-associated disease-responsive programs (often described as DAM/ARM/MGnD-like states), enabling microglia to proliferate/survive, migrate/chemotax toward pathology, and execute lipid- and debris-handling functions (ulrich2017elucidatingtherole pages 5-6, mcquade2020geneexpressionand pages 1-2, kerenshaul2017auniquemicroglia pages 8-10). In mouse AD models, loss or reduction of TREM2 consistently reduces plaque-associated microglial clustering and microgliosis; Trem2 deficiency is also associated with increased plaque-associated neuritic/axonal dystrophy, consistent with a microglial \u201cbarrier/compaction\u201d protective function near plaques (ulrich2017elucidatingtherole pages 5-6, yeh2017trem2microgliaand pages 15-17).\n\nMechanistically, TREM2 functions as a sensor of lipids and pathological aggregates. A key quantitative demonstration is direct binding of oligomeric amyloid-\u03b2 (A\u03b2) to TREM2 and downstream activation of SYK/AKT signaling, providing a plausible ligand-driven route for microglia to detect A\u03b2-rich environments and mount a response (zhong2018amyloidbetamodulatesmicroglial pages 4-6, zhong2018amyloidbetamodulatesmicroglial media 0f3d900d).\n\nIn human AD tissue, microglial subpopulation composition is strongly shaped by A\u03b2/tau pathology and by APOE/TREM2 genotypes. A prominent example is the CD163+ \u201camyloid-responsive microglia\u201d (ARM) state, which is depleted in carriers of the TREM2 R47H risk variant, consistent with impaired plaque-adaptive microglial programming in risk-variant carriers (nguyen2020apoeandtrem2 pages 13-14). Complementing these tissue observations, human iPSC-derived microglia lacking TREM2 display reduced survival signaling, impaired chemotaxis via SDF-1\u03b1/CXCR4, and impaired uptake of key substrates such as lipidated APOE, consistent with loss of core microglial \u201csensome\u201d and response functions relevant to AD lesions (mcquade2020geneexpressionand pages 4-5, mcquade2020geneexpressionand pages 7-8).\n\n### Key quantitative findings\nThe following table compiles the main quantitative findings available in the retrieved sources.\n\n| Study/system | TREM2 manipulation or genotype | Microglial role/process measured | Key quantitative result(s) | Interpretation |\n|---|---|---|---|---|\n| Zhong 2018, mouse/biochemical assays | WT TREM2 interaction with oligomeric A\u03b21-42 | Ligand sensing and signaling | oA\u03b21-42 bound sTREM2-Fc with **KD = 86.50 nM**; A\u03b2 tested at **1.25\u201310.0 \u03bcM**; microglia stimulated with **1.0 \u03bcM** oA\u03b21-42; WT vs Trem2-KO showed reduced p-Syk/T-Syk and p-Akt/T-Akt responses in KO (**n = 3**, **p < 0.01 to p < 0.001**) (zhong2018amyloidbetamodulatesmicroglial pages 4-6, zhong2018amyloidbetamodulatesmicroglial media 0f3d900d) | TREM2 is a direct high-affinity sensor for oligomeric A\u03b2 |\n| Nguyen 2020, human postmortem snRNA-seq | TREM2 R47H carrier vs TREM2 WT; pathology-stratified AD tissue | Amyloid-responsive microglial state (ARM) | ARM were **77.5%** of microglia in **A+T\u2212** vs **7.8%** in **A\u2212T\u2212** (**OR 40.53, 95% CI 23.58\u201373.71**); ARM fell to **25.7%** in **A+T+** vs A+T\u2212 (**OR 0.101, 95% CI 0.082\u20130.124**); **TREM2 R47H** cases had **15.0% ARM** and showed depletion relative to TREM2-WT A+T+ (**OR 0.509, 95% CI 0.381\u20130.676**); ARM marker **CD163 log2FC = 5.1** (**adj. p = 2.48 \u00d7 10^-7**) (nguyen2020apoeandtrem2 pages 13-14, nguyen2020apoeandtrem2 pages 1-3) | TREM2 supports the plaque-associated ARM program in human AD |\n| McQuade 2020, human iPSC-derived microglia | CRISPR TREM2 knockout vs isogenic WT | Chemotaxis/CXCR4 signaling, survival, APOE uptake | **39%** of WT vs **11.5%** of KO microglia responded to **SDF-1\u03b1**; baseline apoptosis/caspase 3/7 increased in KO (**p < 0.0001**); after 72 h cytokine starvation, pairwise WT vs KO: complete medium **p = 0.0052**, -TGFB1 **p = 0.0035**, -IL34/MCSF **p = 0.0014**, -IL34/MCSF/TGFB1 **p = 0.045**; KO cells showed **no significant uptake of APOE fluorescence above vehicle control** (mcquade2020geneexpressionand pages 7-8, mcquade2020geneexpressionand pages 4-5, mcquade2020geneexpressionand pages 1-2) | TREM2 is required for survival signaling, chemotaxis, and APOE phagocytic response |\n| Yeh 2017, AD-model synthesis of mouse studies | Trem2 deficiency or haploinsufficiency | Microglial maintenance around plaques; barrier function | Microglial density increased **2-fold by 2 years of age** vs **6 months** in WT, but this age-dependent increase was absent in Trem2-deficient mice; dystrophic axon formation around plaques was **70% less prevalent** in areas protected by microglia (yeh2017trem2microgliaand pages 13-15, yeh2017trem2microgliaand pages 15-17) | TREM2 sustains plaque-associated microglial accumulation and neuroprotective barrier effects |\n| Zhong 2019, 5xFAD mouse hippocampus | Exogenous soluble TREM2 (sTREM2) delivery | Plaque-associated microglial activation and plaque remodeling | sTREM2 was detectable at **24 h** after injection, but was barely detectable by **day 3** and **day 7**; after **7 days**, the number of **large plaques (>40 \u03bcm diameter)** was markedly reduced (**P < 0.0001**) (zhong2019solubletrem2ameliorates pages 1-2) | Increasing sTREM2 enhances protective microglial anti-amyloid activity |\n\n\n*Table: This table compiles the main quantitative evidence on how TREM2 shapes Alzheimer\u2019s microglial behavior, including A\u03b2 sensing, disease-associated state transitions, chemotaxis/survival, and plaque remodeling. It is useful as a compact evidence summary with exact values and citations.*\n\n#### Highlights (numbers that most directly anchor the microglial role)\n* **Direct A\u03b2 sensing:** oligomeric A\u03b21\u201342 binds sTREM2-Fc with **KD = 86.50 nM**, supporting high-affinity recognition of a disease-relevant A\u03b2 species (zhong2018amyloidbetamodulatesmicroglial pages 4-6, zhong2018amyloidbetamodulatesmicroglial media 0f3d900d).\n* **Human microglial state composition depends on TREM2 genotype:** ARM constituted **77.5%** of microglia in **A+T\u2212** vs **7.8%** in **A\u2212T\u2212** brains (**OR 40.53**), while **TREM2 R47H** cases had **15.0% ARM** (**OR 0.509** vs TREM2-WT A+T+), indicating depletion of a plaque-responsive state in risk-variant carriers (nguyen2020apoeandtrem2 pages 13-14).\n* **Human microglial chemotaxis signaling:** in iPSC microglia, **39%** of WT vs **11.5%** of TREM2 KO cells responded to SDF-1\u03b1, quantifying impaired CXCR4-linked chemotactic signaling (mcquade2020geneexpressionand pages 7-8).\n* **Neuroprotective barrier association:** dystrophic axon formation around plaques was **70% less prevalent** in areas \u201cprotected by microglia,\u201d consistent with plaque-proximal microglial shielding/compaction functions that are disrupted when TREM2-dependent plaque responses are impaired (yeh2017trem2microgliaand pages 15-17).\n\n### Notes on what remains quantitatively under-specified in retrieved excerpts\nSome key TREM2-linked AD outcomes (e.g., exact % changes in plaque load across specific amyloid models/ages; exact DAM stage-2 proportions in Trem2\u2212/\u2212 vs WT; detailed plaque compaction metrics) are described qualitatively in the retrieved pages but would require additional targeted extraction from figures/supplementary tables beyond the currently retrieved text snippets (ulrich2017elucidatingtherole pages 5-6, kerenshaul2017auniquemicroglia pages 8-10, krasemann2017thetrem2apoepathway pages 12-15).\n\nReferences\n\n1. (ulrich2017elucidatingtherole pages 5-6): Jason D. Ulrich, Tyler K. Ulland, Marco Colonna, and David M. Holtzman. Elucidating the role of trem2 in alzheimer's disease. Neuron, 94 2:237-248, Apr 2017. URL: https://doi.org/10.1016/j.neuron.2017.02.042, doi:10.1016/j.neuron.2017.02.042. This article has 399 citations and is from a highest quality peer-reviewed journal.\n\n2. (mcquade2020geneexpressionand pages 1-2): Amanda McQuade, You Jung Kang, Jonathan Hasselmann, Amit Jairaman, Alexandra Sotelo, Morgan Coburn, Sepideh Kiani Shabestari, Jean Paul Chadarevian, Gianna Fote, Christina H. Tu, Emma Danhash, Jorge Silva, Eric Martinez, Carl Cotman, G. Aleph Prieto, Leslie M. Thompson, Joan S. Steffan, Ian Smith, Hayk Davtyan, Michael Cahalan, Hansang Cho, and Mathew Blurton-Jones. Gene expression and functional deficits underlie trem2-knockout microglia responses in human models of alzheimer\u2019s disease. Nature Communications, Oct 2020. URL: https://doi.org/10.1038/s41467-020-19227-5, doi:10.1038/s41467-020-19227-5. This article has 371 citations and is from a highest quality peer-reviewed journal.\n\n3. (kerenshaul2017auniquemicroglia pages 8-10): Hadas Keren-Shaul, Amit Spinrad, Assaf Weiner, Orit Matcovitch-Natan, Raz Dvir-Szternfeld, Tyler K. Ulland, Eyal David, Kuti Baruch, David Lara-Astaiso, Beata Toth, Shalev Itzkovitz, Marco Colonna, Michal Schwartz, and Ido Amit. A unique microglia type associated with restricting development of alzheimer's disease. Cell, 169 7:1276-1290.e17, Jun 2017. URL: https://doi.org/10.1016/j.cell.2017.05.018, doi:10.1016/j.cell.2017.05.018. This article has 5638 citations and is from a highest quality peer-reviewed journal.\n\n4. (yeh2017trem2microgliaand pages 15-17): Felix L. Yeh, David V. Hansen, and Morgan Sheng. Trem2, microglia, and neurodegenerative diseases. Trends in molecular medicine, 23 6:512-533, Jun 2017. URL: https://doi.org/10.1016/j.molmed.2017.03.008, doi:10.1016/j.molmed.2017.03.008. This article has 483 citations and is from a domain leading peer-reviewed journal.\n\n5. (zhong2018amyloidbetamodulatesmicroglial pages 4-6): Li Zhong, Zongqi Wang, Daxin Wang, Zhe Wang, Yuka A. Martens, Linbei Wu, Ying Xu, Kai Wang, Jianguo Li, Ruizhi Huang, Dan Can, Huaxi Xu, Guojun Bu, and Xiao-Fen Chen. Amyloid-beta modulates microglial responses by binding to the triggering receptor expressed on myeloid cells 2 (trem2). Molecular Neurodegeneration, Mar 2018. URL: https://doi.org/10.1186/s13024-018-0247-7, doi:10.1186/s13024-018-0247-7. This article has 206 citations and is from a highest quality peer-reviewed journal.\n\n6. (zhong2018amyloidbetamodulatesmicroglial media 0f3d900d): Li Zhong, Zongqi Wang, Daxin Wang, Zhe Wang, Yuka A. Martens, Linbei Wu, Ying Xu, Kai Wang, Jianguo Li, Ruizhi Huang, Dan Can, Huaxi Xu, Guojun Bu, and Xiao-Fen Chen. Amyloid-beta modulates microglial responses by binding to the triggering receptor expressed on myeloid cells 2 (trem2). Molecular Neurodegeneration, Mar 2018. URL: https://doi.org/10.1186/s13024-018-0247-7, doi:10.1186/s13024-018-0247-7. This article has 206 citations and is from a highest quality peer-reviewed journal.\n\n7. (nguyen2020apoeandtrem2 pages 13-14): Aivi T. Nguyen, Kui Wang, Gang Hu, Xuran Wang, Zhen Miao, Joshua A. Azevedo, EunRan Suh, Vivianna M. Van Deerlin, David Choi, Kathryn Roeder, Mingyao Li, and Edward B. Lee. Apoe and trem2 regulate amyloid responsive microglia in alzheimer\u2019s disease. Acta neuropathologica, 140:477-493, Aug 2020. URL: https://doi.org/10.1007/s00401-020-02200-3, doi:10.1007/s00401-020-02200-3. This article has 238 citations and is from a highest quality peer-reviewed journal.\n\n8. (mcquade2020geneexpressionand pages 4-5): Amanda McQuade, You Jung Kang, Jonathan Hasselmann, Amit Jairaman, Alexandra Sotelo, Morgan Coburn, Sepideh Kiani Shabestari, Jean Paul Chadarevian, Gianna Fote, Christina H. Tu, Emma Danhash, Jorge Silva, Eric Martinez, Carl Cotman, G. Aleph Prieto, Leslie M. Thompson, Joan S. Steffan, Ian Smith, Hayk Davtyan, Michael Cahalan, Hansang Cho, and Mathew Blurton-Jones. Gene expression and functional deficits underlie trem2-knockout microglia responses in human models of alzheimer\u2019s disease. Nature Communications, Oct 2020. URL: https://doi.org/10.1038/s41467-020-19227-5, doi:10.1038/s41467-020-19227-5. This article has 371 citations and is from a highest quality peer-reviewed journal.\n\n9. (mcquade2020geneexpressionand pages 7-8): Amanda McQuade, You Jung Kang, Jonathan Hasselmann, Amit Jairaman, Alexandra Sotelo, Morgan Coburn, Sepideh Kiani Shabestari, Jean Paul Chadarevian, Gianna Fote, Christina H. Tu, Emma Danhash, Jorge Silva, Eric Martinez, Carl Cotman, G. Aleph Prieto, Leslie M. Thompson, Joan S. Steffan, Ian Smith, Hayk Davtyan, Michael Cahalan, Hansang Cho, and Mathew Blurton-Jones. Gene expression and functional deficits underlie trem2-knockout microglia responses in human models of alzheimer\u2019s disease. Nature Communications, Oct 2020. URL: https://doi.org/10.1038/s41467-020-19227-5, doi:10.1038/s41467-020-19227-5. This article has 371 citations and is from a highest quality peer-reviewed journal.\n\n10. (nguyen2020apoeandtrem2 pages 1-3): Aivi T. Nguyen, Kui Wang, Gang Hu, Xuran Wang, Zhen Miao, Joshua A. Azevedo, EunRan Suh, Vivianna M. Van Deerlin, David Choi, Kathryn Roeder, Mingyao Li, and Edward B. Lee. Apoe and trem2 regulate amyloid responsive microglia in alzheimer\u2019s disease. Acta neuropathologica, 140:477-493, Aug 2020. URL: https://doi.org/10.1007/s00401-020-02200-3, doi:10.1007/s00401-020-02200-3. This article has 238 citations and is from a highest quality peer-reviewed journal.\n\n11. (yeh2017trem2microgliaand pages 13-15): Felix L. Yeh, David V. Hansen, and Morgan Sheng. Trem2, microglia, and neurodegenerative diseases. Trends in molecular medicine, 23 6:512-533, Jun 2017. URL: https://doi.org/10.1016/j.molmed.2017.03.008, doi:10.1016/j.molmed.2017.03.008. This article has 483 citations and is from a domain leading peer-reviewed journal.\n\n12. (zhong2019solubletrem2ameliorates pages 1-2): Li Zhong, Ying Xu, Rengong Zhuo, Tingting Wang, Kai Wang, Ruizhi Huang, Daxin Wang, Yue Gao, Yifei Zhu, Xuan Sheng, Kai Chen, Na Wang, Lin Zhu, Dan Can, Yuka Marten, Mitsuru Shinohara, Chia-Chen Liu, Dan Du, Hao Sun, Lei Wen, Huaxi Xu, Guojun Bu, and Xiao-Fen Chen. Soluble trem2 ameliorates pathological phenotypes by modulating microglial functions in an alzheimer\u2019s disease model. Nature Communications, Mar 2019. URL: https://doi.org/10.1038/s41467-019-09118-9, doi:10.1038/s41467-019-09118-9. This article has 377 citations and is from a highest quality peer-reviewed journal.\n\n13. (krasemann2017thetrem2apoepathway pages 12-15): Susanne Krasemann, Charlotte Madore, Ron Cialic, Caroline Baufeld, Narghes Calcagno, Rachid El Fatimy, Lien Beckers, Elaine O\u2019Loughlin, Yang Xu, Zain Fanek, David J. Greco, Scott T. Smith, George Tweet, Zachary Humulock, Tobias Zrzavy, Patricia Conde-Sanroman, Mar Gacias, Zhiping Weng, Hao Chen, Emily Tjon, Fargol Mazaheri, Kristin Hartmann, Asaf Madi, Jason D. Ulrich, Markus Glatzel, Anna Worthmann, Joerg Heeren, Bogdan Budnik, Cynthia Lemere, Tsuneya Ikezu, Frank L. Heppner, Vladimir Litvak, David M. Holtzman, Hans Lassmann, Howard L. Weiner, Jordi Ochando, Christian Haass, and Oleg Butovsky. The trem2-apoe pathway drives the transcriptional phenotype of dysfunctional microglia in neurodegenerative diseases. Immunity, 47 3:566-581.e9, Sep 2017. URL: https://doi.org/10.1016/j.immuni.2017.08.008, doi:10.1016/j.immuni.2017.08.008. This article has 2965 citations and is from a highest quality peer-reviewed journal.",
   "summary": {
-    "total_claims": 21,
-    "supported": 0,
-    "unsupported": 0,
-    "not_addressed": 17,
-    "partially_supported": 4,
-    "citation_found_rate": 0.7142857142857143,
+    "total_claims": 20,
+    "supported": 3,
+    "unsupported": 1,
+    "not_addressed": 14,
+    "partially_supported": 2,
+    "citation_found_rate": 0.85,
     "verifiability_status": "verifiable",
     "fulltext_verified": 12,
     "no_passage_found": 0,
-    "fulltext_unavailable": 9,
-    "resolution_low_confidence": 0,
+    "fulltext_unavailable": 8,
+    "resolution_low_confidence": 3,
     "retracted_sources": 0,
     "numeric_checks_run": 1,
     "numeric_inconsistencies_flagged": 0,
-    "total_cost_usd": 0.23876699999999995
+    "total_cost_usd": 0.382683
   },
   "claims": [
     {
-      "claim_id": "88219c34-f1ff-4933-b600-2c3110231244",
+      "claim_id": "651ae015-eb75-480a-a28d-780e3f19f609",
       "claim_text": "TREM2 signals via the adaptor DAP12/TYROBP and is implicated in the transition from a homeostatic program toward plaque-associated disease-responsive programs (DAM/ARM/MGnD-like states), enabling microglia to proliferate/survive, migrate/chemotax toward pathology, and execute lipid- and debris-handling functions.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
         "Ulrich",
-        "Ulland",
-        "Colonna",
-        "Holtzman"
+        "McQuade",
+        "Keren-Shaul"
       ],
       "cited_year": 2017,
       "source": {
         "found": true,
-        "doi": "10.1186/s13024-017-0197-5",
-        "title": "TREM2 in Neurodegenerative Diseases",
-        "abstract": "TREM2 variants have been identified as risk factors for Alzheimer's disease (AD) and other neurodegenerative diseases (NDDs). Because TREM2 encodes a receptor exclusively expressed on immune cells, identification of these variants conclusively demonstrates that the immune response can play an active role in the pathogenesis of NDDs. These TREM2 variants also confer the highest risk for developing Alzheimer's disease of any risk factor identified in nearly two decades, suggesting that understanding more about TREM2 function could provide key insights into NDD pathology and provide avenues for novel immune-related NDD biomarkers and therapeutics. The expression, signaling and function of TREM2 in NDDs have been extensively investigated in an effort to understand the role of immune function in disease pathogenesis and progression. We provide a comprehensive review of our current understanding of TREM2 biology, including new insights into the regulation of TREM2 expression, and TREM2 signaling and function across NDDs. While many open questions remain, the current body of literature provides clarity on several issues. While it is still often cited that TREM2 expression is decreased by pro-inflammatory stimuli, it is now clear that this is true in vitro, but inflammatory stimuli in vivo almost universally increase TREM2 expression. Likewise, while TREM2 function is classically described as promoting an anti-inflammatory phenotype, more than half of published studies demonstrate a pro-inflammatory role for TREM2, suggesting that its role in inflammation is much more complex. Finally, these components of TREM2 biology are applied to a discussion of how TREM2 impacts NDD pathologies and the latest assessment of how these findings might be applied to immune-directed clinical biomarkers and therapeutics.",
-        "similarity_score": 1.0,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
+        "doi": "10.1038/s41467-020-19227-5",
+        "title": "Gene expression and functional deficits underlie TREM2-knockout microglia responses in human models of Alzheimer\u2019s disease",
+        "abstract": "The discovery of TREM2 as a myeloid-specific Alzheimer's disease (AD) risk gene has accelerated research into the role of microglia in AD. While TREM2 mouse models have provided critical insight, the normal and disease-associated functions of TREM2 in human microglia remain unclear. To examine this question, we profile microglia differentiated from isogenic, CRISPR-modified TREM2-knockout induced pluripotent stem cell (iPSC) lines. By combining transcriptomic and functional analyses with a chimeric AD mouse model, we find that TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo. Single-cell sequencing of xenotransplanted human microglia further highlights a loss of disease-associated microglial (DAM) responses in human TREM2 knockout microglia that we validate by flow cytometry and immunohistochemistry. Taken together, these studies reveal both conserved and novel aspects of human TREM2 biology that likely play critical roles in the development and progression of AD.",
+        "similarity_score": 0.8,
+        "title_match_score": 0.125,
+        "resolution_low_confidence": true,
+        "oa_url": "https://www.nature.com/articles/s41467-020-19227-5.pdf",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
-        "status": "partially_supported",
-        "explanation": "The passage confirms TREM2 is a receptor expressed on immune cells (including microglia) and is a risk factor for AD, but does not explicitly mention DAP12/TYROBP signaling, the transition from homeostatic to DAM/ARM/MGnD-like states, or specific functions like proliferation/survival, migration/chemotaxis, and lipid/debris-handling. The passage is a general review abstract that touches on TREM2 signaling and function broadly but does not address the specific mechanistic details claimed.",
-        "confidence": 0.65,
+        "status": "supported",
+        "explanation": "The passage explicitly states that TREM2 requires DAP12/TYROBP as an adaptor protein and activates downstream signaling cascades. It also describes TREM2's roles in microglial survival, migration/chemotaxis, and lipid/debris handling (phagocytosis of APOE), and its involvement in DAM responses, all consistent with the claim about transition toward disease-responsive programs.",
+        "confidence": 0.9,
         "source_passages": [
-          "The expression, signaling and function of TREM2 in NDDs have been extensively investigated in an effort to understand the role of immune function in disease pathogenesis and progression.",
-          "TREM2 variants have been identified as risk factors for Alzheimer's disease (AD) and other neurodegenerative diseases (NDDs). Because TREM2 encodes a receptor exclusively expressed on immune cells, identification of these variants conclusively demonstrates that the immune response can play an active role in the pathogenesis of NDDs."
+          "To transduce intracellular responses, TREM2 requires an adaptor protein, Tyro Protein Kinase Binding Protein (TYROBP/DAP12), which activates downstream signaling cascades including SYK, ERK, PLCG2, and NFAT.",
+          "Single-cell sequencing of xenotransplanted human microglia further highlights a loss of disease-associated microglial (DAM) responses in human TREM2 knockout microglia that we validate by flow cytometry and immunohistochemistry.",
+          "TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo."
         ],
         "source_section": "other",
         "fulltext_available": true,
@@ -61,14 +61,12 @@
       }
     },
     {
-      "claim_id": "c99dd5b9-4a44-476a-b8a5-cfcaf95314b9",
-      "claim_text": "Loss or reduction of TREM2 consistently reduces plaque-associated microglial clustering and microgliosis in mouse AD models.",
+      "claim_id": "490864e2-2b23-4d1a-847a-736fc04fc406",
+      "claim_text": "In mouse AD models, loss or reduction of TREM2 consistently reduces plaque-associated microglial clustering and microgliosis; Trem2 deficiency is also associated with increased plaque-associated neuritic/axonal dystrophy.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
         "Ulrich",
-        "Ulland",
-        "Colonna",
-        "Holtzman"
+        "Yeh"
       ],
       "cited_year": 2017,
       "source": {
@@ -77,7 +75,7 @@
         "title": "TREM2 deficiency attenuates neuroinflammation and protects against neurodegeneration in a mouse model of tauopathy",
         "abstract": "Significance Alzheimer\u2019s disease (AD) is the most common cause of dementia and is a major public health problem for which there is currently no disease-modifying treatment. There is an urgent need for greater understanding of the molecular mechanisms underlying neurodegeneration in patients to create better therapeutic options. Recently, genetic studies uncovered novel AD risk variants in the microglial receptor, triggering receptor expressed on myeloid cells 2 (TREM2). Previous studies suggested that loss of TREM2 function worsens amyloid-\u03b2 (A\u03b2) plaque-related toxicity. In contrast, we observe TREM2 deficiency mitigates neuroinflammation and protects against brain atrophy in the context of tau pathology. These findings indicate dual roles for TREM2 and microglia in the context of amyloid versus tau pathology, which are important to consider for potential treatments targeting TREM2.",
         "similarity_score": 1.0,
-        "title_match_score": 0.3333333333333333,
+        "title_match_score": 0.4,
         "resolution_low_confidence": false,
         "oa_url": "https://www.pnas.org/content/pnas/114/43/11524.full.pdf",
         "pmcid": null,
@@ -85,8 +83,8 @@
       },
       "verification": {
         "status": "partially_supported",
-        "explanation": "The abstract supports that TREM2 loss reduces microglia-related responses (neuroinflammation) in the context of tau pathology, but notes that in the context of amyloid-\u03b2 plaque pathology, TREM2 loss 'worsens amyloid-\u03b2 plaque-related toxicity,' suggesting the relationship is not consistent across all AD mouse models. The claim's assertion of consistent reduction is contradicted by the dual roles described.",
-        "confidence": 0.75,
+        "explanation": "The abstract supports the claim that TREM2 deficiency affects plaque-associated microglial activity (noting 'loss of TREM2 function worsens amyloid-\u03b2 plaque-related toxicity' in prior studies), but the abstract itself presents contrasting findings where TREM2 deficiency 'mitigates neuroinflammation.' The claim about increased neuritic/axonal dystrophy with Trem2 deficiency is not directly addressed, and the abstract only partially aligns with the claim's assertions about consistent reduction in microgliosis.",
+        "confidence": 0.55,
         "source_passages": [],
         "source_section": null,
         "fulltext_available": false,
@@ -98,66 +96,17 @@
       }
     },
     {
-      "claim_id": "3b9fe9df-131c-438a-b620-099a800f9a1b",
-      "claim_text": "Trem2 deficiency is associated with increased plaque-associated neuritic/axonal dystrophy, consistent with a microglial barrier/compaction protective function near plaques.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [
-        "Yeh",
-        "Hansen",
-        "Sheng"
-      ],
-      "cited_year": 2017,
-      "source": {
-        "found": true,
-        "doi": "10.1186/s13024-018-0298-9",
-        "title": "New insights into the role of TREM2 in Alzheimer\u2019s disease",
-        "abstract": "Alzheimer's disease (AD) is the leading cause of dementia. The two histopathological markers of AD are amyloid plaques composed of the amyloid-\u03b2 (A\u03b2) peptide, and neurofibrillary tangles of aggregated, abnormally hyperphosphorylated tau protein. The majority of AD cases are late-onset, after the age of 65, where a clear cause is still unknown. However, there are likely different multifactorial contributors including age, enviornment, biology and genetics which can increase risk for the disease. Genetic predisposition is considerable, with heritability estimates of 60-80%. Genetic factors such as rare variants of TREM2 (triggering receptor expressed on myeloid cells-2) strongly increase the risk of developing AD, confirming the role of microglia in AD pathogenesis. In the last 5 years, several studies have dissected the mechanisms by which TREM2, as well as its rare variants affect amyloid and tau pathologies and their consequences in both animal models and in human studies. In this review, we summarize increases in our understanding of the involvement of TREM2 and microglia in AD development that may open new therapeutic strategies targeting the immune system to influence AD pathogenesis.",
-        "similarity_score": 0.9,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "The passage is a review abstract and background section that discusses TREM2's general role in AD, but does not specifically address the association between Trem2 deficiency and plaque-associated neuritic/axonal dystrophy or a microglial barrier/compaction protective function near plaques.",
-        "confidence": 0.85,
-        "source_passages": [],
-        "source_section": "other",
-        "fulltext_available": true,
-        "verification_depth": "fulltext",
-        "retrieval_status": "passage_found",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "7e276a3a-b218-44f8-a654-1df007f8e767",
+      "claim_id": "9e584301-80b8-4de5-ad3d-e25c68312c4e",
       "claim_text": "Oligomeric amyloid-\u03b2 (A\u03b2) directly binds to TREM2 and activates downstream SYK/AKT signaling.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
-        "Zhong",
-        "Wang",
-        "Wang",
-        "Wang",
-        "Martens",
-        "Wu",
-        "Xu",
-        "Wang",
-        "Li",
-        "Huang",
-        "Can",
-        "Xu",
-        "Bu",
-        "Chen"
+        "Zhong"
       ],
       "cited_year": 2018,
       "source": {
         "found": true,
-        "doi": "10.1007/s13361-018-1896-z",
-        "title": "Detection of Amyloid Beta (A\u03b2) Oligomeric Composition Using Matrix-Assisted Laser Desorption Ionization Mass Spectrometry (MALDI MS)",
+        "doi": "10.1007/0-387-23226-5_8",
+        "title": "Amyloid Accumulation and Pathogensis of Alzheimer\u2019s Disease: Significance of Monomeric, Oligomeric and Fibrillar A\u03b2",
         "abstract": null,
         "similarity_score": null,
         "title_match_score": null,
@@ -181,24 +130,83 @@
       }
     },
     {
-      "claim_id": "b26b65a0-248d-4d83-ab34-6b46c94ab0b5",
+      "claim_id": "39079a53-e287-4e9b-ad99-e4599c5a4d28",
+      "claim_text": "The CD163+ amyloid-responsive microglia (ARM) state is depleted in carriers of the TREM2 R47H risk variant.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Nguyen"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1007/s00401-021-02263-w",
+        "title": "Distinct amyloid-\u03b2 and tau-associated microglia profiles in Alzheimer\u2019s disease",
+        "abstract": "Alzheimer's disease (AD) is the most prevalent form of dementia and is characterized by abnormal extracellular aggregates of amyloid-\u03b2 and intraneuronal hyperphosphorylated tau tangles and neuropil threads. Microglia, the tissue-resident macrophages of the central nervous system (CNS), are important for CNS homeostasis and implicated in AD pathology. In amyloid mouse models, a phagocytic/activated microglia phenotype has been identified. How increasing levels of amyloid-\u03b2 and tau pathology affect human microglia transcriptional profiles is unknown. Here, we performed snRNAseq on 482,472 nuclei from non-demented control brains and AD brains containing only amyloid-\u03b2 plaques or both amyloid-\u03b2 plaques and tau pathology. Within the microglia population, distinct expression profiles were identified of which two were AD pathology-associated. The phagocytic/activated AD1-microglia population abundance strongly correlated with tissue amyloid-\u03b2 load and localized to amyloid-\u03b2 plaques. The AD2-microglia abundance strongly correlated with tissue phospho-tau load and these microglia were more abundant in samples with overt tau pathology. This full characterization of human disease-associated microglia phenotypes provides new insights in the pathophysiological role of microglia in AD and offers new targets for microglia-state-specific therapeutic strategies.",
+        "similarity_score": 0.9,
+        "title_match_score": 0.3333333333333333,
+        "resolution_low_confidence": false,
+        "oa_url": "https://link.springer.com/content/pdf/10.1007/s00401-021-02263-w.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The passages do not mention CD163+ amyloid-responsive microglia (ARM) or TREM2 R47H risk variant in any context. The study focuses on AD1 and AD2 microglia populations associated with amyloid-\u03b2 and tau pathology, without discussing TREM2 R47H carriers or ARM states defined by CD163 expression.",
+        "confidence": 0.95,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "d68c3361-37aa-4c30-a97e-98445323ae19",
+      "claim_text": "Human iPSC-derived microglia lacking TREM2 display reduced survival signaling, impaired chemotaxis via SDF-1\u03b1/CXCR4, and impaired uptake of lipidated APOE.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "McQuade"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41467-020-19227-5",
+        "title": "Gene expression and functional deficits underlie TREM2-knockout microglia responses in human models of Alzheimer\u2019s disease",
+        "abstract": "The discovery of TREM2 as a myeloid-specific Alzheimer's disease (AD) risk gene has accelerated research into the role of microglia in AD. While TREM2 mouse models have provided critical insight, the normal and disease-associated functions of TREM2 in human microglia remain unclear. To examine this question, we profile microglia differentiated from isogenic, CRISPR-modified TREM2-knockout induced pluripotent stem cell (iPSC) lines. By combining transcriptomic and functional analyses with a chimeric AD mouse model, we find that TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo. Single-cell sequencing of xenotransplanted human microglia further highlights a loss of disease-associated microglial (DAM) responses in human TREM2 knockout microglia that we validate by flow cytometry and immunohistochemistry. Taken together, these studies reveal both conserved and novel aspects of human TREM2 biology that likely play critical roles in the development and progression of AD.",
+        "similarity_score": 1.0,
+        "title_match_score": 0.5714285714285714,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.nature.com/articles/s41467-020-19227-5.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The passage supports impaired survival signaling (via CSF1R/M-CSF pathways and increased apoptosis), impaired chemotaxis via SDF-1\u03b1/CXCR4, and impaired phagocytosis/uptake of lipidated APOE in TREM2 KO microglia. However, the claim says 'reduced survival signaling' whereas the paper describes 'hypersensitivity to stress-induced cell death' \u2014 a nuanced but related finding. Additionally, the claim accurately reflects the APOE uptake deficit. The abstract explicitly states 'TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis,' directly supporting all three components of the claim.",
+        "confidence": 0.92,
+        "source_passages": [
+          "TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo.",
+          "When TREM2 expression is lost, we detected no signi\ufb01cant uptake of APOE \ufb02uorescence above the vehicle control (Fig. 3a).",
+          "TREM2 KO lines still demonstrated elevated caspase 3/7 signal compared to WT lines (Fig. 2a, c; red), highlighting that TREM2 KO microglia exhibit increased sensitivity to stress conditions and respond through apoptosis."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "8ac039cc-8a9e-4a45-b1b9-b8eaece6bc91",
       "claim_text": "Oligomeric A\u03b21-42 bound sTREM2-Fc with KD = 86.50 nM.",
       "claim_type": "factual_numeric",
       "cited_authors": [
-        "Zhong",
-        "Wang",
-        "Wang",
-        "Wang",
-        "Martens",
-        "Wu",
-        "Xu",
-        "Wang",
-        "Li",
-        "Huang",
-        "Can",
-        "Xu",
-        "Bu",
-        "Chen"
+        "Zhong"
       ],
       "cited_year": 2018,
       "source": {
@@ -228,71 +236,45 @@
       }
     },
     {
-      "claim_id": "490eea56-9a33-4415-8b8c-2d396b8df275",
-      "claim_text": "Amyloid-\u03b2 was tested at concentrations of 1.25\u201310.0 \u03bcM and microglia were stimulated with 1.0 \u03bcM oligomeric A\u03b21-42.",
+      "claim_id": "cdf8436c-0336-4a48-a0f1-566e0e570ec6",
+      "claim_text": "A\u03b2 was tested at concentrations of 1.25\u201310.0 \u03bcM and microglia were stimulated with 1.0 \u03bcM oligomeric A\u03b21-42.",
       "claim_type": "methodological",
       "cited_authors": [
-        "Zhong",
-        "Wang",
-        "Wang",
-        "Wang",
-        "Martens",
-        "Wu",
-        "Xu",
-        "Wang",
-        "Li",
-        "Huang",
-        "Can",
-        "Xu",
-        "Bu",
-        "Chen"
+        "Zhong"
       ],
       "cited_year": 2018,
       "source": {
         "found": true,
-        "doi": "10.1016/j.jalz.2018.06.2915",
-        "title": "O4\u201002\u201001: SOLUBLE TREM2 MODULATES MICROGLIAL FUNCTION AND PROTECTS AGAINST AMYLOID PATHOLOGY",
-        "abstract": null,
-        "similarity_score": null,
-        "title_match_score": null,
+        "doi": "10.4103/1673-5374.228720",
+        "title": "Melastatin-related transient receptor potential 2 channel in A\u03b2<sub>42</sub>-induced neuroinflammation: implications to Alzheimer\u2019s disease mechanism and development of therapeutics",
+        "abstract": "Alzheimer\u2019s disease (AD) is an age-related neurodegenerative disease that represents the most common cause of dementia among the elderly people. With the increasingly aging population, AD has presented an overwhelming healthcare challenge to modern society; the World Alzheimer Report 2015 has estimated that 46.8 million people worldwide lived with dementia in 2015 and this number will rise to 74.7 million in 2030 and that the total cost of dementia was 818 billion in US$ in 2015 and will reach two trillion in 2030. Post-mortem studies have identified two histopathological hallmarks in the brains of AD patients; extracellular senile plaque with elevated deposition of amyloid \u03b2 (A\u03b2) peptides, and intracellular neurofibrillary tangle composed of hyper-phosphorylated microtubule-associated protein tau. Etiologically, progressive neuronal loss within the cerebral cortex and hippocampus regions of the brain leads to irreversible decline in, and eventually complete loss of, memory and other cognitive functions that afflict AD patients. The widely-accepted amyloid cascade hypothesis for AD pathogenesis holds that accumulation and aggregation of neurotoxic A\u03b2 peptides, due to imbalance of their generation and clearance as a result of changes in genetic makeup, aging and/or exposure to environmental risk factors, is a major and early trigger of AD. This hypothesis has continuously gained support by preclinical and clinical studies (Selkoe and Hardy, 2016). However, the intensive and costly drug discovery efforts over the past decades based on such a hypothesis have proved extremely frustrating in developing effective therapeutics to treat or slow down the progress of AD, highlighting the need for more research to improve our understanding towards the cellular and molecular mechanisms by which A\u03b2 peptides bring about neurotoxicity and cognitive dysfunction. Neuro-inflammatory responses or changes have been well documented since early studies examining the brains of AD patients and been replicated in the brains of rodent models of AD. Microglial cells, derived from yolk sac during early development, are the major immunocompetent cells resident in the central nervous system. These cells therefore have the sensor and effector functions and exhibit strong phagocytic capacity, like macrophage cells in the peripheral immune system. Under healthy conditions or in a resting state, microglial cells adopt a ramified morphology and act as a sentinel to survey the brain parenchyma for pathogens and cellular debris and remove them mainly via phagocytosis (Wolf et al., 2017). In response to damage and infection or in contact with damage/pathogen-associated molecular patterns (DAMP/PAMP) molecules, microglial cells become activated with changing to an amoeboid morphology and initiate immune responses by generating proinflammatory mediators such as cytokines, chemokines and reactive oxygen species (ROS) in order to restore the normal brain homeostasis. There is accumulating evidence to show dual and opposing roles of microglial cells in AD. Microglial cells on one hand play an active role in clearing A\u03b2 by generation of anti-A\u03b2 antibodies and phagocytosis. Such a beneficial role however becomes progressively weakened and eventually inefficient with aging or following exposure to excessive A\u03b2 peptides. On the other hand, accumulation of A\u03b2 peptides as DAMP molecules can induce microglial activation and dysregulated release of proinflammatory mediators that cause neurotoxicity. Further release of DAMP molecules by degenerating neurons forms a vicious positive feedback loop leading to development of chronic proinflammatory environments that facilitate generation and accumulation of A\u03b2 peptides and are detrimental to neuronal survival. Such A\u03b2-induced neuroinflammation becomes irreversible, which may offer some explanation why therapeutic strategies aiming to halt the generation of A\u03b2 peptides are ineffective in treating AD in its late stage. There is rapidly rising interest in microglial cells for their role in A\u03b2-induced neuroinflammation and the underlying mechanisms and, additionally, targeting microglial cell functions as a novel and/or additional avenue of developing therapeutics for AD (Minter et al., 2016; Wes et al., 2016; Ramirez et al., 2017; Sarlus and Heneka, 2017). Melastatin-related transient receptor potential 2 (TRPM2) channel belongs to the mammalian superfamily of tetrameric transient receptor potential channels, with each subunit containing six transmembrane segments and intracellular N- and C-termini, and functions as a Ca2+-permeable cationic channel that is exclusively gated by intracellular ADP-ribose (ADPR) (Figure 1). TRPM2 channel is highly sensitive to activation by ROS indirectly through stimulating ADPR-generating mechanisms including poly(ADPR) polymerase-1 (PARP-1) in the nucleus (Jiang et al., 2010). Exposure of microglial cells to ROS elevated intracellular Ca2+ concentrations, and such Ca2+ responses were suppressed by genetic knockout of the TRPM2 expression (TRPM2-KO), pharmacological inhibition of the PARP-1 or the TRPM2 channel, or removal of extracellular Ca2+, supporting that the TRPM2 channel in microglial cells acts as a Ca2+-permeable channel on the cell surface (Syed Mortadza et al., 2017). Recent studies have revealed TRPM2 channel as a novel mechanism mediating A\u03b2-induced neuroinflammation (Ostapchenko et al., 2015; Aminzadeh et al., 2018; Syed Mortadza et al., 2018). The amyloid precursor protein/presenilin 1 (APP/PS1) mice, which express excessive amounts of A\u03b2 and develop amyloid deposition in hippocampus and other brain regions, are a widely-used AD model in study of A\u03b2-related pathogenesis. Ostapchenko et al have recently shown that TRPM2-KO rescued the APP/PS1 mice from A\u03b2-induced AD-related synaptic loss in hippocampus, microglial activation, and age-related deficit in memory (Ostapchenko et al., 2015). This study provides the first line of evidence to demonstrate a critical role for the TRPM2 channel in A\u03b2-induced microglial cell activation and neuroinflammation as well as neurotoxicity. Two more recent studies have shed further light on the role of the TRPM2 channel in microglial cells in A\u03b2-induced neuroinflammation and the underlying molecular or signalling mechanisms (Aminzadeh et al., 2018; Syed Mortadza et al., 2018).Figure 1: Schematic description of the melastatin-related transient receptor potential 2 (TRPM2) channel mechanisms of amyloid \u03b2-induced neuroinflammation.The TRPM2 channel mechanisms of amyloid \u03b2 (A\u03b2)-induced neuroinflammation revealed by Aminzadeh et al. (2018) and Syed Mortadza et al. (2018) are depicted in the red and green background, respectively. Exposure to A\u03b242 stimulates microglial cells to generate reactive oxygen species (ROS) through protein kinase C (PKC) and NADPH oxidases (NOX) and, additionally, through mitochondria. ROS in turn induces generation of ADP-ribose (ADPR), the TRPM2 channel specific activator, via activating poly(ADP-ribose) polymerase-1 (PARP-1) in the nucleus. Activation of the TRPM2 channel mediates extracellular Ca2+ influx, resulting in an increase in the intracellular Ca2+ concentration and consequent activation of Ca2+-sensitive tyrosine kinase PYK2 and downstream mitogen-activated protein kinases MEK/ERK as a positive feedback to enhance activation of the PARP-1 and TRPM2 channel. Such signalling mechanisms activating the TRPM2 channel is required for A\u03b242-induced microglial activation and generation of tumour necrosis factor-\u03b1 (TNF-\u03b1). In microglial cells prior primed with lipopolysaccharide (LPS) to stimulate synthesis of pro-interleukin-1\u03b2 (pro-IL-1\u03b2) via toll-like receptor 4 (TLR4), TRPM2-mediated increase in the intracellular Ca2+ concentration triggers activation of the NLRP3 inflammasome and caspase-1 that converts pro-IL-1\u03b2 to IL-1\u03b2 by cleavage.It has been shown that TRPM2 channel or more specifically TRPM2-mediated Ca2+ signalling plays an important role in coupling mitochondrial generation of ROS in response to exposure to DAMP/PAMP molecules such as charged lipids and particulate crystals to activation of the NLRP3 inflammasome and caspase-1 to induce maturation and secretion of interleukin-1\u03b2 (IL-1\u03b2) in macrophage cells (Zhong et al., 2013). Thus, Aminzadeh et al have drawn their attention to a similar question, namely, whether the TRPM2 channel in microglial cells has a role in A\u03b2-induced generation of IL-1\u03b2 (Aminzadeh et al., 2018). They showed that exposure to 10 \u03bcM A\u03b242, the most neurotoxic A\u03b2 peptide, induced generation of ROS through mitochondria and also nicotinamide adenine dinucleotide phosphate (NADPH)-dependent oxidases (NOX), and generation of IL-1\u03b2 in microglial cells that were prior primed with lipopolysaccharide (LPS). LPS is the major molecular component of the outer membrane of Gram-negative bacteria that is widely used as a PAMP molecule to induce immune cell activation, particularly synthesis of pro-IL-1\u03b2, via toll-like receptor 4 (TLR4) (Figure 1). A\u03b242-induced generation of IL-1\u03b2 was strongly inhibited by scavenging of ROS, inhibition of the PARP-1 to prevent ROS-induced activation of the TRPM2 channel, or chelation of intracellular Ca2+. In addition, the study showed that exposure to A\u03b242 induced activation of caspase-1, which was also suppressed by inhibition of PARP-1 activation or increase in the intracellular Ca2+ concentration. These findings have led the authors to conclude that the TRPM2 channel in microglial cells plays a vital role in A\u03b242-induced generation of IL-1\u03b2 via transducing NOX-mediated and/or mitochondrial generation of ROS to an intracellular Ca2+ signal that activates the NLRP3 inflammasome and caspase-1 (highlighted in red Figure 1). We have also investigated the role of the TRPM2 channel in A\u03b242-induced neuroinflammation, focusing on microglial cell activation and generation of tumour necrosis factor-\u03b1 (TNF-\u03b1) (Syed Mortadza et al., 2018), another proinflammatory cytokine critically implicated in AD pathogenesis (Minter et al., 2016). Exposure to A\u03b242 at biologically relevant concentrations (30\u2013300 nM) induced microglial cells to undergo prominent changes in cell morphology from a ramified and resting state-like morphology to a more activated state-like morphology. In addition, exposure to A\u03b242 stimulated microglial cells to express and secret TNF-\u03b1. A\u03b242-induced change in cell morphology or states, expression and secretion of TNF-\u03b1 were prevented by TRPM2-KO or inhibition of the PARP-1 or TRPM2 channel, revealing a critical role for the TRPM2 channel in A\u03b242-induced microglial cell activation and generation of TNF-\u03b1. Exposure to A\u03b242 increased the intracellular Ca2+ concentration that was largely prevented by TRPM2-KO, inhibition of the PARP-1 or the TRPM2 channel, or removal of extracellular Ca2+, indicating that TRPM2 channel mediates A\u03b242-induced Ca2+ signalling via extracellular Ca2+ influx. We further examined the signalling mechanisms responsible for A\u03b242-induced activation of the TRPM2 channel. Exposure to A\u03b242 induced generation of ROS and activation of PARP-1 in the nucleus. A\u03b242-induced generation of ROS and activation of the PARP-1 and TRPM2 channel were markedly suppressed by inhibition of protein kinase C (PKC) or NOX, particularly the NOX1/4 and NOX2 isoforms, and also by inhibition of the Ca2+-sensitive tyrosine kinase PYK2 or downstream mitogen-activated protein kinases MEK/ERK. Interestingly, A\u03b242-induced activation of the PARP-1 was significantly attenuated but not completely abrogated by TRPM2-KO. Furthermore, A\u03b242-induced activation of the PARP-1 in TRPM2-deficient microglial cells was fully blocked by inhibition of PKC or NOX, but not affected by inhibition of PYK2 or MEK/ERK. Taken together, these observations support the hypothesis that A\u03b242-induced PKC/NOX-mediated generation of ROS and ROS-induced generation of ADPR via activation of PARP-1 are vital in the initial activation of the TRPM2 channel and that TRPM2-mediated Ca2+ influx and subsequent activation of the PYK2/MEK/ERK signalling pathway serve as a positive feedback to further enhance activation of the PARP-1 and TRPM2 channel (highlighted in green in Figure 1). In summary, recent studies have disclosed novel TRPM2 channel mechanisms by which A\u03b2 peptides, more specifically A\u03b242, induce microglial cell activation and generation of IL-1\u03b2 and TNF-\u03b1, the two key proinflammatory cytokines in AD-related neuroinflammation (Figure 1). Nonetheless, it is evident that more studies are required to provide unifying and more insights into TRPM2-mediated neuroinflammation and the underlying molecular mechanisms and associated signalling pathways, thereby further improving the amyloid cascade hypothesis. Currently, there is limited availability with respect to TRPM2 specific inhibitors. With a body of compelling evidence accumulated from the above-discussed and many other recent studies that support the critical role of the TRPM2 channel in mediating numerous ROS-related diseases, the TRPM2 channel has become an increasingly attractive drug target and, as a result, there is growing interest in development of selective and potent TRPM2 inhibitors. It will be important and exciting therapeutically to test in the near future when such inhibitors become available whether pharmacological intervention of the TRPM2 channel mechanisms of A\u03b2-induced neuroinflammation provides a plausible therapeutic approach to mitigate the pathogenesis and progression of AD. The research work described in this article is supported in parts by grants from the Disciplinary Group of Psychology and Neuroscience Xinxiang Medical University, China (2016PN-KFKT-06), Department of Education of Henan Province, China (16IRTSTHN020), the National Natural Science Foundation of China (31471118), and UK Alzheimer\u2019s Research Trust (ART/PPG2009A/2).",
+        "similarity_score": 1.0,
+        "title_match_score": 0.75,
         "resolution_low_confidence": false,
-        "oa_url": null,
+        "oa_url": "https://doi.org/10.4103/1673-5374.228720",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
-        "status": "not_addressed",
-        "explanation": "Source not found or abstract unavailable.",
-        "confidence": 1.0,
+        "status": "unsupported",
+        "explanation": "The abstract states that Aminzadeh et al. used '10 \u03bcM A\u03b242' and that Syed Mortadza et al. used 'biologically relevant concentrations (30\u2013300 nM)' for microglial stimulation. The claim specifies concentrations of 1.25\u201310.0 \u03bcM and 1.0 \u03bcM oligomeric A\u03b21-42, which do not match the concentrations described in the abstract.",
+        "confidence": 0.85,
         "source_passages": [],
         "source_section": null,
         "fulltext_available": false,
         "verification_depth": "abstract",
         "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "no_evidence",
+        "evidence_quality": "abstract_only",
         "retraction_status": false,
         "numeric_check": null
       }
     },
     {
-      "claim_id": "01e12835-4846-4fe8-96e0-c34fe0a9de94",
+      "claim_id": "f22ffe42-e4ff-40bc-8fc9-37d6eefbd00e",
       "claim_text": "WT vs Trem2-KO microglia showed reduced p-Syk/T-Syk and p-Akt/T-Akt responses in KO (n = 3, p < 0.01 to p < 0.001).",
       "claim_type": "factual_numeric",
       "cited_authors": [
-        "Zhong",
-        "Wang",
-        "Wang",
-        "Wang",
-        "Martens",
-        "Wu",
-        "Xu",
-        "Wang",
-        "Li",
-        "Huang",
-        "Can",
-        "Xu",
-        "Bu",
-        "Chen"
+        "Zhong"
       ],
       "cited_year": 2018,
       "source": {
@@ -301,15 +283,15 @@
         "title": "New insights into the role of TREM2 in Alzheimer\u2019s disease",
         "abstract": "Alzheimer's disease (AD) is the leading cause of dementia. The two histopathological markers of AD are amyloid plaques composed of the amyloid-\u03b2 (A\u03b2) peptide, and neurofibrillary tangles of aggregated, abnormally hyperphosphorylated tau protein. The majority of AD cases are late-onset, after the age of 65, where a clear cause is still unknown. However, there are likely different multifactorial contributors including age, enviornment, biology and genetics which can increase risk for the disease. Genetic predisposition is considerable, with heritability estimates of 60-80%. Genetic factors such as rare variants of TREM2 (triggering receptor expressed on myeloid cells-2) strongly increase the risk of developing AD, confirming the role of microglia in AD pathogenesis. In the last 5 years, several studies have dissected the mechanisms by which TREM2, as well as its rare variants affect amyloid and tau pathologies and their consequences in both animal models and in human studies. In this review, we summarize increases in our understanding of the involvement of TREM2 and microglia in AD development that may open new therapeutic strategies targeting the immune system to influence AD pathogenesis.",
         "similarity_score": 1.0,
-        "title_match_score": null,
+        "title_match_score": 0.5,
         "resolution_low_confidence": false,
-        "oa_url": null,
+        "oa_url": "https://molecularneurodegeneration.biomedcentral.com/track/pdf/10.1186/s13024-018-0298-9",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The provided passage is a review article about TREM2's role in Alzheimer's disease and does not contain any data about p-Syk/T-Syk or p-Akt/T-Akt signaling comparisons between WT and Trem2-KO microglia, nor any statistical values related to such measurements.",
+        "explanation": "The passages provided are from a review article about TREM2 in Alzheimer's disease and discuss general TREM2 signaling pathways (including Syk and Akt as downstream components), but do not contain any specific experimental data comparing WT vs Trem2-KO microglia for p-Syk/T-Syk and p-Akt/T-Akt ratios with sample sizes (n=3) or specific p-values (p < 0.01 to p < 0.001).",
         "confidence": 0.95,
         "source_passages": [],
         "source_section": "other",
@@ -322,84 +304,28 @@
       }
     },
     {
-      "claim_id": "e4b719fb-0a7c-4014-8217-8e1133683219",
-      "claim_text": "The CD163+ amyloid-responsive microglia (ARM) state is depleted in carriers of the TREM2 R47H risk variant.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [
-        "Nguyen",
-        "Wang",
-        "Hu",
-        "Wang",
-        "Miao",
-        "Azevedo",
-        "Suh",
-        "Van Deerlin",
-        "Choi",
-        "Roeder",
-        "Li",
-        "Lee"
-      ],
-      "cited_year": 2020,
-      "source": {
-        "found": true,
-        "doi": "10.3389/fnins.2021.742065",
-        "title": "Microglia in Neuroinflammation and Neurodegeneration: From Understanding to Therapy",
-        "abstract": "Microglia are the resident macrophages of the central nervous system (CNS) acting as the first line of defense in the brain by phagocytosing harmful pathogens and cellular debris. Microglia emerge from early erythromyeloid progenitors of the yolk sac and enter the developing brain before the establishment of a fully mature blood-brain barrier. In physiological conditions, during brain development, microglia contribute to CNS homeostasis by supporting cell proliferation of neural precursors. In post-natal life, such cells contribute to preserving the integrity of neuronal circuits by sculpting synapses. After a CNS injury, microglia change their morphology and down-regulate those genes supporting homeostatic functions. However, it is still unclear whether such changes are accompanied by molecular and functional modifications that might contribute to the pathological process. While comprehensive transcriptome analyses at the single-cell level have identified specific gene perturbations occurring in the \"pathological\" microglia, still the precise protective/detrimental role of microglia in neurological disorders is far from being fully elucidated. In this review, the results so far obtained regarding the role of microglia in neurodegenerative disorders will be discussed. There is solid and sound evidence suggesting that regulating microglia functions during disease pathology might represent a strategy to develop future therapies aimed at counteracting brain degeneration in multiple sclerosis, Alzheimer's disease, Parkinson's disease, and amyotrophic lateral sclerosis.",
-        "similarity_score": 0.9,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "The provided passage is a general review of microglia in neuroinflammation and neurodegeneration and does not mention CD163+ amyloid-responsive microglia (ARM) states or TREM2 R47H risk variants.",
-        "confidence": 0.95,
-        "source_passages": [],
-        "source_section": "other",
-        "fulltext_available": true,
-        "verification_depth": "fulltext",
-        "retrieval_status": "passage_found",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "21f6f59c-2f69-4823-a2a4-8d6e9b35e6be",
-      "claim_text": "ARM were 77.5% of microglia in A+T\u2212 vs 7.8% in A\u2212T\u2212 brains (OR 40.53, 95% CI 23.58\u201373.71).",
+      "claim_id": "66ee6db3-0a4a-476d-811a-04b90efb83db",
+      "claim_text": "ARM were 77.5% of microglia in A+T\u2212 versus 7.8% in A\u2212T\u2212 brains (OR 40.53, 95% CI 23.58\u201373.71).",
       "claim_type": "factual_numeric",
       "cited_authors": [
-        "Nguyen",
-        "Wang",
-        "Hu",
-        "Wang",
-        "Miao",
-        "Azevedo",
-        "Suh",
-        "Van Deerlin",
-        "Choi",
-        "Roeder",
-        "Li",
-        "Lee"
+        "Nguyen"
       ],
       "cited_year": 2020,
       "source": {
         "found": true,
-        "doi": "10.3390/antiox12020316",
-        "title": "Genetic Polymorphisms in Oxidative Stress and Inflammatory Pathways as Potential Biomarkers in Alzheimer\u2019s Disease and Dementia",
-        "abstract": "Oxidative stress and neuroinflammation are important processes involved in Alzheimer's disease (AD) and mild cognitive impairment (MCI). Numerous risk factors, including genetic background, can affect the complex interplay between those mechanisms in the aging brain and can also affect typical AD hallmarks: amyloid plaques and neurofibrillary tangles. Our aim was to evaluate the association of polymorphisms in oxidative stress- and inflammation-related genes with cerebrospinal fluid (CSF) biomarker levels and cognitive test results. The study included 54 AD patients, 14 MCI patients with pathological CSF biomarker levels, 20 MCI patients with normal CSF biomarker levels and 62 controls. Carriers of two polymorphic <i>IL1B</i> rs16944 alleles had higher CSF A\u03b2<sub>1-42</sub> levels (<i>p</i> = 0.025), while carriers of at least one polymorphic <i>NFE2L2</i> rs35652124 allele had lower CSF A\u03b2<sub>1-42</sub> levels (<i>p</i> = 0.040). Association with <i>IL1B</i> rs16944 remained significant in the AD group (<i>p</i> = 0.029). Additionally, <i>MIR146A</i> rs2910164 was associated with A\u03b2<sub>42/40</sub> ratio (<i>p</i> = 0.043) in AD. Significant associations with cognitive test scores were observed for <i>CAT</i> rs1001179 (<i>p</i> = 0.022), <i>GSTP1</i> rs1138272 (<i>p</i> = 0.005), <i>KEAP1</i> rs1048290 and rs9676881 (both <i>p</i> = 0.019), as well as <i>NFE2L2</i> rs35652124 (<i>p</i> = 0.030). In the AD group, <i>IL1B</i> rs1071676 (<i>p</i> = 0.004), <i>KEAP1</i> rs1048290 and rs9676881 (both <i>p</i> = 0.035) remained associated with cognitive scores. Polymorphisms in antioxidative and inflammation genes might be associated with CSF biomarkers and cognitive test scores and could serve as additional biomarkers contributing to early diagnosis of dementia.",
+        "doi": "10.1016/j.sleep.2022.06.002",
+        "title": "SAS CARE 1: Sleep architecture changes in a cohort of patients with Ischemic Stroke/TIA",
+        "abstract": "OBJECTIVE: Changes in sleep architecture following ischemic stroke have been poorly investigated. Our objective was to explore changes of sleep structure in patients with ischemic stroke or transient ischemic attack in order to verify a possible predictive value of sleep with respect to clinical outcome. METHODS: Patients recruited in the prospective SAS-CARE study received two polysomnographies (PSG) in the acute and chronic phases after stroke/TIA. Sleep parameters were compared between the two time-points and matched with a non-stroke population randomly selected from the HypnoLaus cohort. RESULTS: Of the 169 patients investigated with PSG in the acute phase, 104 were again studied 3 months after stroke symptom onset and compared with 162 controls. The acute phase of stroke/TIA was associated with sleep disruption, which significantly improved in the chronic phase, but remained worse than controls (total sleep time improve from 318.8 \u00b1 90.8 to 348.4 \u00b1 81.5 min, compared to 388.2 \u00b1 71.3 in controls, sleep latency from 49.9 \u00b1 58.4 to 27.9 min, compared to 20.2 \u00b1 22 in controls, sleep efficiency from 58.2 \u00b1 18.1% to 27.9 \u00b1 36.4 min, compared to 83.4 \u00b1 10.3% in controls, wakefulness after sleep onset percentage from 36.5 \u00b1 17.3 to 29.3 \u00b1 15.6, compared to 13.2 \u00b1 9.2 in controls). The percentage of REM sleep was negatively associated with stroke severity, whereas stroke topography did not correlate with sleep parameters. CONCLUSIONS: This study confirmed a severe sleep disruption in the acute phase of stroke. Although a significant improvement of sleep quality was observed during the three months after stroke, sleep architecture did not normalize. In particular, sleep efficiency and REM sleep seem to be particularly affected by stroke in the acute phase, with a relative preservation of NREM sleep. We suggest that these sleep architecture changes represent a persistent marker of brain damage due to stroke. Further studies are needed to assess the relationship with stroke topographic and outcome.",
         "similarity_score": 0.8,
-        "title_match_score": null,
+        "title_match_score": 0.25,
         "resolution_low_confidence": false,
-        "oa_url": null,
+        "oa_url": "https://doi.org/10.1016/j.sleep.2022.06.002",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The abstract discusses polymorphisms in oxidative stress- and inflammation-related genes and their associations with CSF biomarkers and cognitive test scores in AD and MCI patients. It does not mention ARM (disease-associated microglia or activated response microglia), microglia percentages, A+T\u2212 or A\u2212T\u2212 classifications, or any odds ratios related to microglial populations.",
+        "explanation": "The abstract is about sleep architecture changes following ischemic stroke and transient ischemic attack, with no mention of microglia, ARM (activated response microglia), amyloid positivity (A+/A\u2212), tau positivity (T+/T\u2212), or any related neuroinflammatory or Alzheimer's disease biomarkers.",
         "confidence": 0.99,
         "source_passages": [],
         "source_section": null,
@@ -412,40 +338,29 @@
       }
     },
     {
-      "claim_id": "3478cb02-c4f8-4251-bb90-500071479bd3",
+      "claim_id": "5ce69d48-fb8b-415f-8e51-a0c2995b95f5",
       "claim_text": "ARM fell to 25.7% in A+T+ vs A+T\u2212 (OR 0.101, 95% CI 0.082\u20130.124).",
       "claim_type": "factual_numeric",
       "cited_authors": [
-        "Nguyen",
-        "Wang",
-        "Hu",
-        "Wang",
-        "Miao",
-        "Azevedo",
-        "Suh",
-        "Van Deerlin",
-        "Choi",
-        "Roeder",
-        "Li",
-        "Lee"
+        "Nguyen"
       ],
       "cited_year": 2020,
       "source": {
         "found": true,
-        "doi": "10.5847/wjem.j.1920-8642.2020.03.001",
-        "title": "Availability of basic life support courses for the general populations in India, Nigeria and the United Kingdom: An internet-based analysis",
-        "abstract": "In contrast to the UK, the availability and accessibility of BLS courses are critically limited in India and Nigeria, necessitating immediate interventions to optimize community CPR training and improve bystander CPR rates.",
+        "doi": "10.2147/opth.s281501",
+        "title": "&lt;p&gt;Real-World Outcomes in Patients with Diabetic Macular Edema Treated Long Term with Ranibizumab (VISION Study)&lt;/p&gt;",
+        "abstract": "AIM: Evaluate long-term real-world treatment patterns and associated effectiveness and safety outcomes in patients with diabetic macular edema (DME) treated \u226536 months with 0.5mg ranibizumab. METHODS: Open-label observational effectiveness study in 9 Belgian clinics. Included were primary treated eyes of 55 DME patients between August 2014 and March 2015 and followed for 3.5\u00b11.8 years. Eyes were 21.8% treatment (TX)-na\u00efve, 9.1% non-na\u00efve with exclusive prior anti-VEGF treatment (PRIOR-anti-VEGF), and 63.6% non-na\u00efve with other prior treatments (PRIOR-other). Intravitreal injections with ranibizumab were administered per ophthalmologists' best clinical judgment. Trend testing of changes in best-corrected visual acuity (BCVA) and central retinal thickness (CRT) over time occurred using mixed regression analysis. RESULTS: The mean\u00b1SD number of treatments in the first year was 5.1\u00b13.0 (TX-na\u00efve), 4.5\u00b12.7 (PRIOR-anti-VEGF) and 5.6\u00b13.1 (PRIOR-other). At 12 months, BCVA increased by 8.9\u00b116.4 letters from 59.7\u00b19.3 at baseline in TX-na\u00efve (p<0.0001), by 11.8\u00b19.9 from 61.6\u00b18.5 in PRIOR-anti-VEGF (p=0.03), and by 4.2\u00b110.6 from 58.2\u00b114.6 in PRIOR-other groups (p=0.0002). BCVA remained stable for the remainder of follow-up in all groups. CRT decreased over the first 2 months by monthly rates of -43.8\u00b5m in TX-na\u00efve (p=0.04), -75.7\u00b5m in PRIOR-anti-VEGF (p=0.02), and -65.8\u00b5m in PRIOR-other eyes (p=0.0003), showing stability afterwards. No unknown adverse events were recorded; a painful eye following injection was registered with a possible relationship to the treatment. CONCLUSION: This real-world study confirms the effectiveness of ranibizumab in preventing a decline in BCVA and demonstrated initial improvement and subsequent retention of BCVA in DME patients \u226536 months. Ranibizumab initially reduced and then maintained CRT. However, these data reveal that treatment intensity and BCVA and CRT outcomes are lower than those found in early efficacy trials. Under-treatment likely accounts for this efficacy-effectiveness gap. Yet, intravitreal ranibizumab is an effective and safe long-term treatment for DME under conditions of significant heterogeneity in patients and treatment patterns.",
         "similarity_score": 1.0,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
+        "title_match_score": 0.0,
+        "resolution_low_confidence": true,
+        "oa_url": "https://www.dovepress.com/getfile.php?fileID=64367",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The abstract discusses BLS courses and bystander CPR rates in India and Nigeria, with no mention of ARM, A+T+ vs A+T\u2212 groups, or any odds ratios related to the claim.",
-        "confidence": 0.99,
+        "explanation": "The abstract is about diabetic macular edema treatment with ranibizumab in a Belgian observational study. It does not mention ARM (Age-related Macular degeneration), A+T+ or A+T\u2212 classifications, or the specific odds ratio (OR 0.101, 95% CI 0.082\u20130.124) referenced in the claim.",
+        "confidence": 0.98,
         "source_passages": [],
         "source_section": null,
         "fulltext_available": false,
@@ -457,22 +372,11 @@
       }
     },
     {
-      "claim_id": "d8331c8a-23ee-4047-a614-58e497199e6d",
+      "claim_id": "3c4cb371-9721-4497-a008-0bfefda5bae0",
       "claim_text": "TREM2 R47H cases had 15.0% ARM and showed depletion relative to TREM2-WT A+T+ (OR 0.509, 95% CI 0.381\u20130.676).",
       "claim_type": "factual_numeric",
       "cited_authors": [
-        "Nguyen",
-        "Wang",
-        "Hu",
-        "Wang",
-        "Miao",
-        "Azevedo",
-        "Suh",
-        "Van Deerlin",
-        "Choi",
-        "Roeder",
-        "Li",
-        "Lee"
+        "Nguyen"
       ],
       "cited_year": 2020,
       "source": {
@@ -489,8 +393,8 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The provided passage is about a rat knock-in model of TREM2-R47H and does not contain any information about ARM (Alzheimer's Risk Marker) percentages, odds ratios, or comparisons between TREM2 R47H cases and TREM2-WT A+T+ groups as described in the claim.",
-        "confidence": 0.95,
+        "explanation": "The passages discuss a rat knock-in model of TREM2-R47H and its effects on Trem2 expression, splicing, and APP/A\u03b2 processing. They do not contain any information about ARM (Amyloid-Related Manifestations) percentages, odds ratios, or comparisons between TREM2 R47H cases and TREM2-WT A+T+ groups with the specific statistics cited in the claim (15.0% ARM, OR 0.509, 95% CI 0.381\u20130.676).",
+        "confidence": 0.97,
         "source_passages": [],
         "source_section": "other",
         "fulltext_available": true,
@@ -536,39 +440,234 @@
       }
     },
     {
-      "claim_id": "24bbc31c-92b0-4029-bbae-3ef978ed92ee",
+      "claim_id": "41f32129-b3a2-4c0e-bd21-20d53f22b095",
       "claim_text": "ARM marker CD163 had log2FC = 5.1 (adj. p = 2.48 \u00d7 10^-7).",
       "claim_type": "factual_numeric",
       "cited_authors": [
-        "Nguyen",
-        "Wang",
-        "Hu",
-        "Wang",
-        "Miao",
-        "Azevedo",
-        "Suh",
-        "Van Deerlin",
-        "Choi",
-        "Roeder",
-        "Li",
-        "Lee"
+        "Nguyen"
       ],
       "cited_year": 2020,
       "source": {
         "found": true,
-        "doi": "10.3390/biomedicines12020308",
-        "title": "Cell States and Interactions of CD8 T Cells and Disease-Enriched Microglia in Human Brains with Alzheimer\u2019s Disease",
-        "abstract": "Alzheimer's disease (AD) is a multi-stage neurodegenerative disorder characterized by beta-amyloid accumulation, hyperphosphorylated Tau deposits, neurodegeneration, neuroinflammation, and cognitive impairment. Recent studies implicate CD8 T cells as neuroimmune responders to the accumulation of AD pathology in the brain and potential contributors to toxic neuroinflammation. However, more evidence is needed to understand lymphocytes in disease, including their functional states, molecular mediators, and interacting cell types in diseased brain tissue. The scarcity of lymphocytes in brain tissue samples has limited the unbiased profiling of disease-associated cell types, cell states, drug targets, and relationships to common AD genetic risk variants based on transcriptomic analyses. However, using recent large-scale, high-quality single-nuclear sequencing datasets from over 84 Alzheimer's disease and control cases, we leverage single-nuclear RNAseq data from 800 lymphocytes collected from 70 individuals to complete unbiased molecular profiling. We demonstrate that effector memory CD8 T cells are the major lymphocyte subclass enriched in the brain tissues of individuals with AD dementia. We define disease-enriched interactions involving CD8 T cells and multiple brain cell subclasses including two distinct microglial disease states that correlate, respectively, to beta-amyloid and tau pathology. We find that beta-amyloid-associated microglia are a major hub of multicellular cross-talk gained in disease, including interactions involving both vulnerable neuronal subtypes and CD8 T cells. We reproduce prior reports that amyloid-response microglia are depleted in <i>APOE4</i> carriers. Overall, these human-based studies provide additional support for the potential relevance of effector memory CD8 T cells as a lymphocyte population of interest in AD dementia and provide new candidate interacting partners and drug targets for further functional study.",
-        "similarity_score": 0.8,
-        "title_match_score": null,
+        "doi": "10.1371/journal.pone.0237400",
+        "title": "Whole-blood transcriptome profiling reveals signatures of metformin and its therapeutic response",
+        "abstract": "Metformin, a biguanide agent, is the first-line treatment for type 2 diabetes mellitus due to its glucose-lowering effect. Despite its wide application in the treatment of multiple health conditions, the glycemic response to metformin is highly variable, emphasizing the need for reliable biomarkers. We chose the RNA-Seq-based comparative transcriptomics approach to evaluate the systemic effect of metformin and highlight potential predictive biomarkers of metformin response in drug-na\u00efve volunteers with type 2 diabetes in vivo. The longitudinal blood-derived transcriptome analysis revealed metformin-induced differential expression of novel and previously described genes involved in cholesterol homeostasis (SLC46A1 and LRP1), cancer development (CYP1B1, STAB1, CCR2, TMEM176B), and immune responses (CD14, CD163) after administration of metformin for three months. We demonstrate for the first time a transcriptome-based molecular discrimination between metformin responders (delta HbA1c \u2265 1% or 12.6 mmol/mol) and non-responders (delta HbA1c < 1% or 12.6 mmol/mol), that is determined by expression levels of 56 genes, explaining 13.9% of the variance in the therapeutic efficacy of the drug. Moreover, we found a significant upregulation of IRS2 gene (log2FC 0.89) in responders compared to non-responders before the use of metformin. Finally, we provide evidence for the mitochondrial respiratory complex I as one of the factors related to the high variability of the therapeutic response to metformin in patients with type 2 diabetes mellitus.",
+        "similarity_score": 1.0,
+        "title_match_score": 0.3333333333333333,
         "resolution_low_confidence": false,
-        "oa_url": null,
+        "oa_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0237400&type=printable",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The provided passage is an abstract and introduction section of the paper and does not contain specific quantitative data about CD163 log2FC or adjusted p-values. No mention of CD163 with the specific values claimed (log2FC = 5.1, adj. p = 2.48 \u00d7 10^-7) appears in the passage.",
+        "explanation": "Parse error.",
+        "confidence": 0.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "2e5f5fd6-6658-403b-8938-bfaec20a8faa",
+      "claim_text": "39% of WT versus 11.5% of TREM2 KO iPSC-derived microglia responded to SDF-1\u03b1 in chemotaxis assays.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "McQuade"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.3390/cancers13163956",
+        "title": "A Population-Based Analysis of 30-Year Mortality among Five-Year Survivors of Adolescent and Young Adult Cancer: The Roles of Primary Cancer, Subsequent Malignancy, and Other Health Conditions",
+        "abstract": "Despite an aggregate 5-year survival of 85%, many adolescents and young adults (AYAs, 15-39 years old) treated for cancer die prematurely decades later. To develop a more complete understanding of this problem, particularly the role of specific subsequent malignant neoplasms (SMNs), we used the SEER-9 registry to analyze causes of death (COD: Primary cancer, SMN, non-malignant conditions) among 162,317 AYAs diagnosed with first cancer between 1975-2012 and surviving 5 or more years. Cumulative mortality, attributable mortality, standardized mortality ratios (SMRs), and adjusted hazard ratios were determined for each cancer site and COD. At 30 years, cumulative mortality due to primary cancer was matched by that due to all other causes (12.8% 95% CI [12.5%, 13.0%] for primary cancer versus 12.8% [12.5%, 13.1%] for all other causes combined) in the combined cohort, and was overtaken by non-malignant conditions in Hodgkin lymphoma, testicular, cervical/uterine, and thyroid cancers. Overall, SMNs accounted for 20% of malignant deaths, the most common being lung/bronchus (25.6%), colorectal/liver/biliary/pancreas (19.1%), and breast (10.2%). For non-malignant conditions, excess risk was noted overall (SMR 1.37, 95% CI [1.34, 1.40]) and for infectious (1.97 [1.85, 2.10]), renal (1.85 [1.60, 2.13]), cardio/cerebrovascular (1.38 [1.33, 1.43]), and suicide (1.15 [1.04, 1.27]). Racial minorities were at significantly higher risk across all COD. Safer therapy, longitudinal monitoring, and primary/secondary preventive strategies are needed to reduce late mortality in this vulnerable population.",
+        "similarity_score": 0.9,
+        "title_match_score": 0.5,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.mdpi.com/2072-6694/13/16/3956/pdf?version=1628230787",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The provided passages are entirely about a population-based analysis of mortality among adolescent and young adult cancer survivors and contain no information about TREM2 KO iPSC-derived microglia, chemotaxis assays, or SDF-1\u03b1 responses.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "95a06a0e-198e-4387-b042-5ee63f2ebdbe",
+      "claim_text": "Baseline apoptosis/caspase 3/7 was increased in TREM2 KO microglia (p < 0.0001).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "McQuade"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1002/1878-0261.12807",
+        "title": "Cellular senescence in cancer: from mechanisms to detection",
+        "abstract": "Senescence refers to a cellular state featuring a stable cell-cycle arrest triggered in response to stress. This response also involves other distinct morphological and intracellular changes including alterations in gene expression and epigenetic modifications, elevated macromolecular damage, metabolism deregulation and a complex pro-inflammatory secretory phenotype. The initial demonstration of oncogene-induced senescence in vitro established senescence as an important tumour-suppressive mechanism, in addition to apoptosis. Senescence not only halts the proliferation of premalignant cells but also facilitates the clearance of affected cells through immunosurveillance. Failure to clear senescent cells owing to deficient immunosurveillance may, however, lead to a state of chronic inflammation that nurtures a pro-tumorigenic microenvironment favouring cancer initiation, migration and metastasis. In addition, senescence is a response to post-therapy genotoxic stress. Therefore, tracking the emergence of senescent cells becomes pivotal to detect potential pro-tumorigenic events. Current protocols for the in vivo detection of senescence require the analysis of fixed or deep-frozen tissues, despite a significant clinical need for real-time bioimaging methods. Accuracy and efficiency of senescence detection are further hampered by a lack of universal and more specific senescence biomarkers. Recently, in an attempt to overcome these hurdles, an assortment of detection tools has been developed. These strategies all have significant potential for clinical utilisation and include flow cytometry combined with histo- or cytochemical approaches, nanoparticle-based targeted delivery of imaging contrast agents, OFF-ON fluorescent senoprobes, positron emission tomography senoprobes and analysis of circulating SASP factors, extracellular vesicles and cell-free nucleic acids isolated from plasma. Here, we highlight the occurrence of senescence in neoplasia and advanced tumours, assess the impact of senescence on tumorigenesis and discuss how the ongoing development of senescence detection tools might improve early detection of multiple cancers and response to therapy in the near future.",
+        "similarity_score": 1.0,
+        "title_match_score": 0.16666666666666666,
+        "resolution_low_confidence": false,
+        "oa_url": "https://febs.onlinelibrary.wiley.com/doi/pdfdirect/10.1002/1878-0261.12807",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is about cellular senescence, tumor biology, and senescence detection tools, with no mention of TREM2, microglia, apoptosis, or caspase 3/7 activity.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "79a8b6e0-6ef6-4243-91fa-0c88be3ff6e3",
+      "claim_text": "After 72 h cytokine starvation, pairwise WT vs KO comparisons showed: complete medium p = 0.0052, -TGFB1 p = 0.0035, -IL34/MCSF p = 0.0014, -IL34/MCSF/TGFB1 p = 0.045.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "McQuade"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1155/2021/9912436",
+        "title": "Reactive Oxygen Species (ROS) Regulates Different Types of Cell Death by Acting as a Rheostat",
+        "abstract": "Reactive oxygen species (ROS) are essential for cellular signaling and response to stress. The level of ROS and the type of ROS determine the ability of cells to undergo cell death. Furthermore, dysregulation of the antioxidant pathways is associated with many diseases. It has become apparent that cell death can occur through different mechanisms leading to the classifications of different types of cell death such as apoptosis, ferroptosis, and necroptosis. ROS play essential roles in all forms of cell death, but it is only now coming into focus that ROS control and determine the type of cell death that occurs in any given cell. Indeed, ROS may act as a rheostat allowing different cell death mechanisms to be engaged and crosstalk with different cell death types. In this review, we will describe the ROS regulatory pathways and how they control different types of cell death under normal and disease states. We will also propose how ROS could provide a mechanism of crosstalk between cell death mechanisms and act as a rheostat determining the type of cell death.",
+        "similarity_score": 0.9,
+        "title_match_score": 0.0,
+        "resolution_low_confidence": true,
+        "oa_url": "https://downloads.hindawi.com/journals/omcl/2021/9912436.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract discusses reactive oxygen species (ROS) and their role in cell death mechanisms, with no mention of cytokine starvation experiments, WT vs KO comparisons, or the specific p-values and conditions (TGFB1, IL34/MCSF) cited in the claim.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "89867ee1-ca5b-404a-b046-fb861a0cc5e9",
+      "claim_text": "TREM2 KO iPSC-derived microglia showed no significant uptake of APOE fluorescence above vehicle control.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "McQuade"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41467-020-19227-5",
+        "title": "Gene expression and functional deficits underlie TREM2-knockout microglia responses in human models of Alzheimer\u2019s disease",
+        "abstract": "The discovery of TREM2 as a myeloid-specific Alzheimer's disease (AD) risk gene has accelerated research into the role of microglia in AD. While TREM2 mouse models have provided critical insight, the normal and disease-associated functions of TREM2 in human microglia remain unclear. To examine this question, we profile microglia differentiated from isogenic, CRISPR-modified TREM2-knockout induced pluripotent stem cell (iPSC) lines. By combining transcriptomic and functional analyses with a chimeric AD mouse model, we find that TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo. Single-cell sequencing of xenotransplanted human microglia further highlights a loss of disease-associated microglial (DAM) responses in human TREM2 knockout microglia that we validate by flow cytometry and immunohistochemistry. Taken together, these studies reveal both conserved and novel aspects of human TREM2 biology that likely play critical roles in the development and progression of AD.",
+        "similarity_score": 1.0,
+        "title_match_score": 0.5,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.nature.com/articles/s41467-020-19227-5.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly states that when TREM2 expression is lost, no significant uptake of APOE fluorescence above the vehicle control was detected, directly supporting the claim.",
+        "confidence": 0.98,
+        "source_passages": [
+          "When TREM2 expression is lost, we detected no signi\ufb01cant uptake of APOE \ufb02uorescence above the vehicle control (Fig. 3a)."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "a9cec9b0-8f2d-45a1-a6f5-1eff2cb14b96",
+      "claim_text": "Microglial density increased 2-fold by 2 years of age versus 6 months in WT mice, but this age-dependent increase was absent in Trem2-deficient mice.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Yeh"
+      ],
+      "cited_year": 2017,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41467-018-02926-5",
+        "title": "A transcriptomic atlas of aged human microglia",
+        "abstract": "With a rapidly aging global human population, finding a cure for late onset neurodegenerative diseases has become an urgent enterprise. However, these efforts are hindered by the lack of understanding of what constitutes the phenotype of aged human microglia-the cell type that has been strongly implicated by genetic studies in the pathogenesis of age-related neurodegenerative disease. Here, we establish the set of genes that is preferentially expressed by microglia in the aged human brain. This HuMi_Aged gene set captures a unique phenotype, which we confirm at the protein level. Furthermore, we find this gene set to be enriched in susceptibility genes for Alzheimer's disease and multiple sclerosis, to be increased with advancing age, and to be reduced by the protective APOE\u03b52 haplotype. APOE\u03b54 has no effect. These findings confirm the existence of an aging-related microglial phenotype in the aged human brain and its involvement in the pathological processes associated with brain aging.",
+        "similarity_score": 0.9,
+        "title_match_score": 0.4,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.nature.com/articles/s41467-018-02926-5.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The passages are from a study about transcriptomic profiling of aged human microglia and do not contain any information about microglial density changes between 6 months and 2 years of age in WT or Trem2-deficient mice.",
+        "confidence": 0.98,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "88f597d8-b2cc-45c5-8753-07244eaa8304",
+      "claim_text": "Dystrophic axon formation around plaques was 70% less prevalent in areas protected by microglia.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Yeh"
+      ],
+      "cited_year": 2017,
+      "source": {
+        "found": true,
+        "doi": "10.1186/s13024-018-0262-8",
+        "title": "The Trem2 R47H variant confers loss-of-function-like phenotypes in Alzheimer\u2019s disease",
+        "abstract": "BACKGROUND: The R47H variant of Triggering Receptor Expressed on Myeloid cells 2 (TREM2) confers greatly increased risk for Alzheimer's disease (AD), reflective of a central role for myeloid cells in neurodegeneration. Understanding how this variant confers AD risk promises to provide important insights into how myeloid cells contribute to AD pathogenesis and progression. METHODS: In order to investigate this mechanism, CRISPR/Cas9 was used to generate a mouse model of AD harboring one copy of the single nucleotide polymorphism (SNP) encoding the R47H variant in murine Trem2. TREM2 expression, myeloid cell responses to amyloid deposition, plaque burden, and neuritic dystrophy were assessed at 4 months of age. RESULTS: AD mice heterozygous for the Trem2 R47H allele exhibited reduced total Trem2 mRNA expression, reduced TREM2 expression around plaques, and reduced association of myeloid cells with plaques. These results were comparable to AD mice lacking one copy of Trem2. AD mice heterozygous for the Trem2 R47H allele also showed reduced myeloid cell responses to amyloid deposition, including a reduction in proliferation and a reduction in CD45 expression around plaques. Expression of the Trem2 R47H variant also reduced dense core plaque number but increased plaque-associated neuritic dystrophy. CONCLUSIONS: These data suggest that the AD-associated TREM2 R47H variant increases risk for AD by conferring a loss of TREM2 function and enhancing neuritic dystrophy around plaques.",
+        "similarity_score": 0.9,
+        "title_match_score": 0.3333333333333333,
+        "resolution_low_confidence": false,
+        "oa_url": "https://molecularneurodegeneration.biomedcentral.com/track/pdf/10.1186/s13024-018-0262-8",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The passages do not contain any specific claim about dystrophic axon formation being 70% less prevalent in areas protected by microglia. The passages discuss plaque-associated neuritic dystrophy in relation to TREM2 R47H variant effects, but no such specific quantitative finding (70% reduction in dystrophic axon formation in microglia-protected areas) is reported.",
         "confidence": 0.9,
         "source_passages": [],
         "source_section": "other",
@@ -581,384 +680,11 @@
       }
     },
     {
-      "claim_id": "b0cb26ec-a535-43e4-9d58-8e75286c600b",
-      "claim_text": "Human iPSC-derived microglia lacking TREM2 display reduced survival signaling, impaired chemotaxis via SDF-1\u03b1/CXCR4, and impaired uptake of lipidated APOE.",
+      "claim_id": "8cbed36e-6bdc-4dc6-8a3e-5b6dd5dd46ad",
+      "claim_text": "Exogenously delivered soluble TREM2 (sTREM2) was detectable at 24 h after injection in 5xFAD mouse hippocampus, but was barely detectable by day 3 and day 7.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
-        "McQuade",
-        "Kang",
-        "Hasselmann",
-        "Jairaman",
-        "Sotelo",
-        "Coburn",
-        "Shabestari",
-        "Chadarevian",
-        "Fote",
-        "Tu",
-        "Danhash",
-        "Silva",
-        "Martinez",
-        "Cotman",
-        "Prieto",
-        "Thompson",
-        "Steffan",
-        "Smith",
-        "Davtyan",
-        "Cahalan",
-        "Cho",
-        "Blurton-Jones"
-      ],
-      "cited_year": 2020,
-      "source": {
-        "found": true,
-        "doi": "10.1038/s41467-020-19227-5",
-        "title": "Gene expression and functional deficits underlie TREM2-knockout microglia responses in human models of Alzheimer\u2019s disease",
-        "abstract": "The discovery of TREM2 as a myeloid-specific Alzheimer's disease (AD) risk gene has accelerated research into the role of microglia in AD. While TREM2 mouse models have provided critical insight, the normal and disease-associated functions of TREM2 in human microglia remain unclear. To examine this question, we profile microglia differentiated from isogenic, CRISPR-modified TREM2-knockout induced pluripotent stem cell (iPSC) lines. By combining transcriptomic and functional analyses with a chimeric AD mouse model, we find that TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo. Single-cell sequencing of xenotransplanted human microglia further highlights a loss of disease-associated microglial (DAM) responses in human TREM2 knockout microglia that we validate by flow cytometry and immunohistochemistry. Taken together, these studies reveal both conserved and novel aspects of human TREM2 biology that likely play critical roles in the development and progression of AD.",
-        "similarity_score": 1.0,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "partially_supported",
-        "explanation": "The passage supports reduced microglial survival, impaired SDF-1\u03b1/CXCR4-mediated chemotaxis, and impaired phagocytosis of APOE in TREM2-knockout iPSC-derived microglia. However, the claim specifies 'lipidated APOE' and 'reduced survival signaling' (a mechanistic assertion), while the passage refers more broadly to 'reduces microglial survival' and 'phagocytosis of key substrates including APOE' without specifying lipidated APOE or survival signaling pathways explicitly.",
-        "confidence": 0.75,
-        "source_passages": [
-          "TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo."
-        ],
-        "source_section": "other",
-        "fulltext_available": true,
-        "verification_depth": "fulltext",
-        "retrieval_status": "passage_found",
-        "evidence_quality": "quoted_passage",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "ea06c8eb-52e7-408f-97c9-5e06fea51dca",
-      "claim_text": "39% of WT vs 11.5% of TREM2-KO iPSC-derived microglia responded to SDF-1\u03b1.",
-      "claim_type": "factual_numeric",
-      "cited_authors": [
-        "McQuade",
-        "Kang",
-        "Hasselmann",
-        "Jairaman",
-        "Sotelo",
-        "Coburn",
-        "Shabestari",
-        "Chadarevian",
-        "Fote",
-        "Tu",
-        "Danhash",
-        "Silva",
-        "Martinez",
-        "Cotman",
-        "Prieto",
-        "Thompson",
-        "Steffan",
-        "Smith",
-        "Davtyan",
-        "Cahalan",
-        "Cho",
-        "Blurton-Jones"
-      ],
-      "cited_year": 2020,
-      "source": {
-        "found": true,
-        "doi": "10.37544/1436-4980-2011-11-12-777",
-        "title": "Reifegradbewertung Ganzheitlicher Produktionssysteme",
-        "abstract": null,
-        "similarity_score": null,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "Source not found or abstract unavailable.",
-        "confidence": 1.0,
-        "source_passages": [],
-        "source_section": null,
-        "fulltext_available": false,
-        "verification_depth": "abstract",
-        "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "1198332a-b099-40c8-8a28-4351a94f7a94",
-      "claim_text": "Baseline apoptosis/caspase 3/7 was increased in TREM2-KO iPSC-derived microglia (p < 0.0001).",
-      "claim_type": "factual_numeric",
-      "cited_authors": [
-        "McQuade",
-        "Kang",
-        "Hasselmann",
-        "Jairaman",
-        "Sotelo",
-        "Coburn",
-        "Shabestari",
-        "Chadarevian",
-        "Fote",
-        "Tu",
-        "Danhash",
-        "Silva",
-        "Martinez",
-        "Cotman",
-        "Prieto",
-        "Thompson",
-        "Steffan",
-        "Smith",
-        "Davtyan",
-        "Cahalan",
-        "Cho",
-        "Blurton-Jones"
-      ],
-      "cited_year": 2020,
-      "source": {
-        "found": true,
-        "doi": "10.1084/jem.20220857",
-        "title": "Engineering an inhibitor-resistant human CSF1R variant for microglia replacement",
-        "abstract": "Hematopoietic stem cell transplantation (HSCT) can replace endogenous microglia with circulation-derived macrophages but has high mortality. To mitigate the risks of HSCT and expand the potential for microglia replacement, we engineered an inhibitor-resistant CSF1R that enables robust microglia replacement. A glycine to alanine substitution at position 795 of human CSF1R (G795A) confers resistance to multiple CSF1R inhibitors, including PLX3397 and PLX5622. Biochemical and cell-based assays show no discernable gain or loss of function. G795A- but not wildtype-CSF1R expressing macrophages efficiently engraft the brain of PLX3397-treated mice and persist after cessation of inhibitor treatment. To gauge translational potential, we CRISPR engineered human-induced pluripotent stem cell-derived microglia (iMG) to express G795A. Xenotransplantation studies demonstrate that G795A-iMG exhibit nearly identical gene expression to wildtype iMG, respond to inflammatory stimuli, and progressively expand in the presence of PLX3397, replacing endogenous microglia to fully occupy the brain. In sum, we engineered a human CSF1R variant that enables nontoxic, cell type, and tissue-specific replacement of microglia.",
-        "similarity_score": 0.8,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "The abstract does not mention TREM2-KO iPSC-derived microglia, apoptosis, or caspase 3/7 activity. The abstract focuses on engineering an inhibitor-resistant CSF1R variant (G795A) for microglia replacement therapy.",
-        "confidence": 0.98,
-        "source_passages": [],
-        "source_section": null,
-        "fulltext_available": false,
-        "verification_depth": "abstract",
-        "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "abstract_only",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "11c2d4fd-62fa-470d-9c18-7eeaccfbd0cd",
-      "claim_text": "After 72 h cytokine starvation, pairwise WT vs KO comparisons showed: complete medium p = 0.0052, -TGFB1 p = 0.0035, -IL34/MCSF p = 0.0014, -IL34/MCSF/TGFB1 p = 0.045.",
-      "claim_type": "factual_numeric",
-      "cited_authors": [
-        "McQuade",
-        "Kang",
-        "Hasselmann",
-        "Jairaman",
-        "Sotelo",
-        "Coburn",
-        "Shabestari",
-        "Chadarevian",
-        "Fote",
-        "Tu",
-        "Danhash",
-        "Silva",
-        "Martinez",
-        "Cotman",
-        "Prieto",
-        "Thompson",
-        "Steffan",
-        "Smith",
-        "Davtyan",
-        "Cahalan",
-        "Cho",
-        "Blurton-Jones"
-      ],
-      "cited_year": 2020,
-      "source": {
-        "found": true,
-        "doi": "10.1101/2020.07.27.219501",
-        "title": "Pathogenic mutations in LRRK2 sequester Rab8a to damaged lysosomes and regulate transferrin-mediated iron uptake in microglia",
-        "abstract": "Abstract Mutations in leucine-rich repeat kinase 2 (LRRK2) cause autosomal dominant Parkinson\u2019s disease (PD) while polymorphic LRRK2 variants are associated with sporadic PD. PD-linked mutations increase LRRK2 kinase activity and induce neurotoxicity in vitro and in vivo . The small GTPase Rab8a is a LRRK2 kinase substrate and is involved in receptor-mediated recycling and endocytic trafficking of transferrin, but the effect of PD-linked LRRK2 mutations on the function of Rab8a are poorly understood. Here, we show that gain-of-function mutations in LRRK2 induce sequestration of endogenous Rab8a into lysosomes in cells while pharmacological inhibition of LRRK2 kinase activity reverses this phenotype. Furthermore, we show that LRRK2 mutations drive accumulation of endocytosed transferrin into Rab8a-positive lysosomes leading to a dysregulation of iron transport. LRRK2 has been nominated as an integral part of cellular responses downstream of proinflammatory signals and is activated in microglia in post-mortem PD tissue. Here, we show that iPSC-derived microglia from patients carrying the most common LRRK2 mutation, G2019S, mistraffic transferrin to lysosomes proximal to the nucleus in proinflammatory conditions. Furthermore, G2019S knock-in mice show significant increase in iron deposition in microglia following intrastriatal LPS injection compared to wild type mice, accompanied by striatal accumulation of ferritin. Our data support a role of LRRK2 in modulating iron uptake and storage in response to proinflammatory stimuli in microglia.",
-        "similarity_score": 1.0,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "The abstract does not mention cytokine starvation experiments, p-values for pairwise WT vs KO comparisons, or the specific conditions described (complete medium, -TGFB1, -IL34/MCSF, -IL34/MCSF/TGFB1). The abstract focuses on LRRK2 mutations, Rab8a trafficking, iron transport, and microglial responses to LPS.",
-        "confidence": 0.97,
-        "source_passages": [],
-        "source_section": null,
-        "fulltext_available": false,
-        "verification_depth": "abstract",
-        "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "abstract_only",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "d6f84d0d-0d2a-4600-8dcd-b9448acd345d",
-      "claim_text": "TREM2-KO iPSC-derived microglia showed no significant uptake of APOE fluorescence above vehicle control.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [
-        "McQuade",
-        "Kang",
-        "Hasselmann",
-        "Jairaman",
-        "Sotelo",
-        "Coburn",
-        "Shabestari",
-        "Chadarevian",
-        "Fote",
-        "Tu",
-        "Danhash",
-        "Silva",
-        "Martinez",
-        "Cotman",
-        "Prieto",
-        "Thompson",
-        "Steffan",
-        "Smith",
-        "Davtyan",
-        "Cahalan",
-        "Cho",
-        "Blurton-Jones"
-      ],
-      "cited_year": 2020,
-      "source": {
-        "found": true,
-        "doi": "10.1038/s41467-020-19227-5",
-        "title": "Gene expression and functional deficits underlie TREM2-knockout microglia responses in human models of Alzheimer\u2019s disease",
-        "abstract": "The discovery of TREM2 as a myeloid-specific Alzheimer's disease (AD) risk gene has accelerated research into the role of microglia in AD. While TREM2 mouse models have provided critical insight, the normal and disease-associated functions of TREM2 in human microglia remain unclear. To examine this question, we profile microglia differentiated from isogenic, CRISPR-modified TREM2-knockout induced pluripotent stem cell (iPSC) lines. By combining transcriptomic and functional analyses with a chimeric AD mouse model, we find that TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo. Single-cell sequencing of xenotransplanted human microglia further highlights a loss of disease-associated microglial (DAM) responses in human TREM2 knockout microglia that we validate by flow cytometry and immunohistochemistry. Taken together, these studies reveal both conserved and novel aspects of human TREM2 biology that likely play critical roles in the development and progression of AD.",
-        "similarity_score": 1.0,
-        "title_match_score": 0.375,
-        "resolution_low_confidence": false,
-        "oa_url": "https://www.nature.com/articles/s41467-020-19227-5.pdf",
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "partially_supported",
-        "explanation": "The abstract explicitly states that TREM2 deletion 'impairs phagocytosis of key substrates including APOE,' which is consistent with reduced APOE uptake in TREM2-KO microglia. However, the passage does not specifically state that TREM2-KO iPSC-derived microglia showed 'no significant uptake above vehicle control' \u2014 only that phagocytosis was impaired, which could mean reduced but not absent uptake.",
-        "confidence": 0.65,
-        "source_passages": [
-          "TREM2 deletion reduces microglial survival, impairs phagocytosis of key substrates including APOE, and inhibits SDF-1\u03b1/CXCR4-mediated chemotaxis, culminating in an impaired response to beta-amyloid plaques in vivo."
-        ],
-        "source_section": "other",
-        "fulltext_available": true,
-        "verification_depth": "fulltext",
-        "retrieval_status": "passage_found",
-        "evidence_quality": "quoted_passage",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "e41221a2-25ab-45c7-a309-0a3d59e85d62",
-      "claim_text": "Microglial density increased 2-fold by 2 years of age vs 6 months in WT mice, but this age-dependent increase was absent in Trem2-deficient mice.",
-      "claim_type": "factual_numeric",
-      "cited_authors": [
-        "Yeh",
-        "Hansen",
-        "Sheng"
-      ],
-      "cited_year": 2017,
-      "source": {
-        "found": true,
-        "doi": "10.1186/s13024-018-0298-9",
-        "title": "New insights into the role of TREM2 in Alzheimer\u2019s disease",
-        "abstract": "Alzheimer's disease (AD) is the leading cause of dementia. The two histopathological markers of AD are amyloid plaques composed of the amyloid-\u03b2 (A\u03b2) peptide, and neurofibrillary tangles of aggregated, abnormally hyperphosphorylated tau protein. The majority of AD cases are late-onset, after the age of 65, where a clear cause is still unknown. However, there are likely different multifactorial contributors including age, enviornment, biology and genetics which can increase risk for the disease. Genetic predisposition is considerable, with heritability estimates of 60-80%. Genetic factors such as rare variants of TREM2 (triggering receptor expressed on myeloid cells-2) strongly increase the risk of developing AD, confirming the role of microglia in AD pathogenesis. In the last 5 years, several studies have dissected the mechanisms by which TREM2, as well as its rare variants affect amyloid and tau pathologies and their consequences in both animal models and in human studies. In this review, we summarize increases in our understanding of the involvement of TREM2 and microglia in AD development that may open new therapeutic strategies targeting the immune system to influence AD pathogenesis.",
-        "similarity_score": 0.9,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "The provided passage is a review article introduction/abstract about TREM2's role in Alzheimer's disease and does not contain any specific data about microglial density changes between 6 months and 2 years of age in WT or Trem2-deficient mice.",
-        "confidence": 0.95,
-        "source_passages": [],
-        "source_section": "other",
-        "fulltext_available": true,
-        "verification_depth": "fulltext",
-        "retrieval_status": "passage_found",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "1c27299c-e0eb-4373-b8d4-85f009c7bfed",
-      "claim_text": "Dystrophic axon formation around plaques was 70% less prevalent in areas protected by microglia.",
-      "claim_type": "factual_numeric",
-      "cited_authors": [
-        "Yeh",
-        "Hansen",
-        "Sheng"
-      ],
-      "cited_year": 2017,
-      "source": {
-        "found": true,
-        "doi": "10.1007/s13311-021-01146-y",
-        "title": "Neuropathology of Alzheimer's Disease",
-        "abstract": null,
-        "similarity_score": 0.8,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "The provided passage is a general review of Alzheimer's disease neuropathology and does not contain any specific information about dystrophic axon formation around plaques or the role of microglia in reducing such formation by any percentage.",
-        "confidence": 0.95,
-        "source_passages": [],
-        "source_section": "other",
-        "fulltext_available": true,
-        "verification_depth": "fulltext",
-        "retrieval_status": "passage_found",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "7857f633-617f-48b8-bd3d-4df1c373c4f2",
-      "claim_text": "Exogenously delivered soluble TREM2 (sTREM2) was detectable at 24 h after injection but was barely detectable by day 3 and day 7 in 5xFAD mouse hippocampus.",
-      "claim_type": "factual_numeric",
-      "cited_authors": [
-        "Zhong",
-        "Xu",
-        "Zhuo",
-        "Wang",
-        "Wang",
-        "Huang",
-        "Wang",
-        "Gao",
-        "Zhu",
-        "Sheng",
-        "Chen",
-        "Wang",
-        "Zhu",
-        "Can",
-        "Marten",
-        "Shinohara",
-        "Liu",
-        "Du",
-        "Sun",
-        "Wen",
-        "Xu",
-        "Bu",
-        "Chen"
+        "Zhong"
       ],
       "cited_year": 2019,
       "source": {
@@ -967,7 +693,7 @@
         "title": "TREM2 ectodomain and its soluble form in Alzheimer\u2019s disease",
         "abstract": "Triggering receptor expressed on myeloid cells 2 (TREM2) is a receptor mainly expressed on the surface of microglia. It mediates multiple pathophysiological processes in various diseases. Recently, TREM2 has been found to play a role in the development of Alzheimer's disease (AD). TREM2 is a transmembrane protein that is specifically expressed on microglia in the brain. It contains a long ectodomain that directly interacts with the extracellular environment to regulate microglial function. The ectodomain of TREM2 is processed by a disintegrin and metalloprotease, resulting in the release of a soluble form of TREM2 (sTREM2). Recent studies have demonstrated that sTREM2 is a bioactive molecule capable of binding ligands, activating microglia, and regulating immune responses during the AD continuum. Clinical studies revealed that sTREM2 level is elevated in cerebrospinal fluid (CSF) of AD patients, and the sTREM2 level is positively correlated with the levels of classical CSF biomarkers, namely t-tau and p-tau, indicating that it is a reliable predictor of the early stages of AD. Herein, we summarize the key results on the generation, structure, and function of sTREM2 to provide new insights into TREM2-related mechanisms underlying AD pathogenesis and to promote the development of TREM2-based therapeutic strategy.",
         "similarity_score": 0.9,
-        "title_match_score": 0.42857142857142855,
+        "title_match_score": 0.5,
         "resolution_low_confidence": false,
         "oa_url": "https://jneuroinflammation.biomedcentral.com/track/pdf/10.1186/s12974-020-01878-2",
         "pmcid": null,
@@ -975,7 +701,7 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The provided passage is a general review of TREM2 and sTREM2 in Alzheimer's disease and does not contain any specific experimental data about exogenously delivered sTREM2 detectability at 24 h, day 3, or day 7 in 5xFAD mouse hippocampus.",
+        "explanation": "The passages do not contain any information about the detectability of exogenously delivered soluble TREM2 (sTREM2) at specific time points (24 h, day 3, day 7) after injection in 5xFAD mouse hippocampus. The passages only mention that recombinant sTREM2 could decrease A\u03b2 deposition and rescue behavioral deficits in 5XFAD mice, but provide no pharmacokinetic or temporal detectability data.",
         "confidence": 0.95,
         "source_passages": [],
         "source_section": "other",
@@ -988,57 +714,38 @@
       }
     },
     {
-      "claim_id": "5d32bd37-38b7-451b-ab42-f3160d4a120c",
-      "claim_text": "After 7 days of sTREM2 delivery in 5xFAD mice, the number of large plaques (>40 \u03bcm diameter) was markedly reduced (P < 0.0001).",
+      "claim_id": "8d69bfcd-321f-4644-b2a4-3456c6403203",
+      "claim_text": "After 7 days of sTREM2 delivery, the number of large plaques (>40 \u03bcm diameter) was markedly reduced (P < 0.0001) in 5xFAD mice.",
       "claim_type": "factual_numeric",
       "cited_authors": [
-        "Zhong",
-        "Xu",
-        "Zhuo",
-        "Wang",
-        "Wang",
-        "Huang",
-        "Wang",
-        "Gao",
-        "Zhu",
-        "Sheng",
-        "Chen",
-        "Wang",
-        "Zhu",
-        "Can",
-        "Marten",
-        "Shinohara",
-        "Liu",
-        "Du",
-        "Sun",
-        "Wen",
-        "Xu",
-        "Bu",
-        "Chen"
+        "Zhong"
       ],
       "cited_year": 2019,
       "source": {
         "found": true,
-        "doi": "10.1371/journal.ppat.1008543",
-        "title": "TREM2 suppresses the proinflammatory response to facilitate PRRSV infection via PI3K/NF-\u03baB signaling",
-        "abstract": "Triggering receptor expressed on myeloid cells 2 (TREM2) serves as an anti-inflammatory receptor, negatively regulating the innate immune response. TREM2 is mainly expressed on dendritic cells and macrophages, the target cells of porcine reproductive and respiratory syndrome virus (PRRSV). Thus, we investigated the potential role of TREM2 in PRRSV infection in porcine alveolar macrophages (PAMs). We found that there was an increased expression of TREM2 upon PRRSV infection in vitro. TREM2 silencing restrained the replication of PRRSV, whereas TREM2 overexpression facilitated viral replication. The cytoplasmic tail domain of TREM2 interacted with PRRSV Nsp2 to promote infection. TREM2 downregulation led to early activation of PI3K/NF-\u03baB signaling, thus reinforcing the expression of proinflammatory cytokines and type I interferons. Due to the enhanced cytokine expression, a disintegrin and metalloproteinase 17 was activated to promote the cleavage of membrane CD163, which resulted in suppression of infection. Furthermore, exogenous soluble TREM2 (sTREM2)-mediated inhibition of PRRSV attachment might be attributed to its competitive binding to viral envelope proteins. In pigs, following PRRSV challenge in vivo, the expression of TREM2 in lungs and lymph nodes as well as the production of sTREM2 were significantly increased. These novel findings indicate that TREM2 plays a role in regulating PRRSV replication via the inflammatory response. Therefore, our work describes a novel antiviral mechanism against PRRSV infection and suggests that targeting TREM2 could be a new approach in the control of the PRRSV infection.",
-        "similarity_score": 0.9,
-        "title_match_score": null,
+        "doi": "10.1038/s41467-019-09118-9",
+        "title": "Soluble TREM2 ameliorates pathological phenotypes by modulating microglial functions in an Alzheimer\u2019s disease model",
+        "abstract": "Triggering receptor expressed on myeloid cells 2 (TREM2) is a microglial surface receptor genetically linked to the risk for Alzheimer's disease (AD). A proteolytic product, soluble TREM2 (sTREM2), is abundant in the cerebrospinal fluid and its levels positively correlate with neuronal injury markers. To gain insights into the pathological roles of sTREM2, we studied sTREM2 in the brain of 5xFAD mice, a model of AD, by direct stereotaxic injection of recombinant sTREM2 protein or by adeno-associated virus (AAV)-mediated expression. We found that sTREM2 reduces amyloid plaque load and rescues functional deficits of spatial memory and long-term potentiation. Importantly, sTREM2 enhances microglial proliferation, migration, clustering in the vicinity of amyloid plaques and the uptake and degradation of A\u03b2. Depletion of microglia abolishes the neuroprotective effects of sTREM2. Our study demonstrates a protective role of sTREM2 against amyloid pathology and related toxicity and suggests that increasing sTREM2 can be explored for AD therapy.",
+        "similarity_score": 1.0,
+        "title_match_score": 0.25,
         "resolution_low_confidence": false,
-        "oa_url": null,
+        "oa_url": "https://www.nature.com/articles/s41467-019-09118-9.pdf",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
-        "status": "not_addressed",
-        "explanation": "The provided passage is about TREM2's role in PRRSV infection in porcine macrophages, not about sTREM2 delivery in 5xFAD mice or amyloid plaque reduction. The claim about large plaques in an Alzheimer's mouse model is not addressed anywhere in these passages.",
-        "confidence": 0.98,
-        "source_passages": [],
+        "status": "supported",
+        "explanation": "The passage explicitly states that after 7 days of sTREM2 delivery to 5xFAD mice, the number of large plaques (>40 \u03bcm in diameter) was markedly reduced by sTREM2 with P < 0.0001 using paired Student's t test.",
+        "confidence": 0.99,
+        "source_passages": [
+          "Of note, the number of large plaques (>40 \u03bcm in diameter) was markedly reduced by sTREM2 (P < 0.0001, paired Student's t test) (Fig. 1d).",
+          "Seven days after delivery to the hippocampus of 5\u00d7FAD mice, sTREM2 dramatically reduced the amyloid plaque load in the ipsilateral hippocampus (Fig. 1b, c)."
+        ],
         "source_section": "other",
         "fulltext_available": true,
         "verification_depth": "fulltext",
         "retrieval_status": "passage_found",
-        "evidence_quality": "no_evidence",
+        "evidence_quality": "quoted_passage",
         "retraction_status": false,
         "numeric_check": null
       }

@@ -39,9 +39,7 @@ AI-for-science outputs:
 | **Total** | **61** | **26** | **3** | **4** | **1** | **53** | **1** | **$0.79** |
 
 Interpretation: across 61 real-output claims, the system surfaced 7
-supported/partially-supported claims, 1 unsupported (an AnswerThis claim
-asserting MCT1, MCT2, MCT4 haplotype effects that the cited source addresses
-only for MCT1), and abstained on 53 where evidence was not located or was
+supported/partially-supported claims, 1 unsupported, and abstained on 53 where evidence was not located or was
 insufficient. That is useful for review triage, but the single unsupported
 verdict on a real input is preliminary evidence rather than a track record —
 treat it as such. Numbers are extracted programmatically from the per-tool
@@ -166,7 +164,7 @@ python -m ruff check src tests scripts examples
 ## Contact
 
 Questions, feedback, or interesting failure modes:
-[vivienperrelle@gmail.com](mailto:vivienperrelle@gmail.com).
+[@PerrelleVivien](https://x.com/PerrelleVivien) on X.
 
 ## License
 

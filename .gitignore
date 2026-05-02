@@ -44,6 +44,7 @@ eval/scifact/claims_test.jsonl
 # Internal project management — not for public distribution
 development-roadmap.md
 launch-readiness-audit.md
+AGENTS.md
 CLAUDE.md
 .claude/
 decisions/

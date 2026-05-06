@@ -31,21 +31,14 @@ evidence into a contradiction.
 Committed reports under `benchmarks/real_outputs/` currently cover three
 AI-for-science outputs:
 
-| tool | claims | passage found | supported | partially | unsupported | not addressed | numeric checks | cost |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Edison Scientific, TREM2 | 21 | 12 | 0 | 4 | 0 | 17 | 1 | $0.24 |
-| Sakana AI Scientist v2 | 17 | 3 | 1 | 0 | 0 | 16 | 0 | $0.32 |
-| AnswerThis, lactate | 23 | 11 | 2 | 0 | 1 | 20 | 0 | $0.23 |
-| **Total** | **61** | **26** | **3** | **4** | **1** | **53** | **1** | **$0.79** |
+| tool | claims | supported | partially_supported | unsupported | not_addressed | citation_found_rate | fulltext_verified | retracted_sources | numeric_checks_run | numeric_inconsistencies_flagged | cost |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Edison Scientific Literature (TREM2) | 20 | 3 | 2 | 1 | 14 | 85.0% | 12 | 0 | 1 | 0 | $0.38 |
+| Sakana AI Scientist v2 (CompReg) | 14 | 0 | 0 | 0 | 14 | 71.4% | 3 | 0 | 0 | 0 | $0.16 |
+| AnswerThis (lactate ISF PK) | 25 | 1 | 1 | 1 | 22 | 64.0% | 13 | 0 | 0 | 0 | $0.47 |
+| **Total** | **59** | **4** | **3** | **2** | **50** | **72.9%** | **28** | **0** | **1** | **0** | **$1.01** |
 
-Interpretation: across 61 real-output claims, the system surfaced 7
-supported/partially-supported claims, 1 unsupported, and abstained on 53 where evidence was not located or was
-insufficient. That is useful for review triage, but the single unsupported
-verdict on a real input is preliminary evidence rather than a track record —
-treat it as such. Numbers are extracted programmatically from the per-tool
-`report.json` files; see `benchmarks/real_outputs/SUMMARY.md` for the full
-table including new diagnostic columns (`no_passage_found`,
-`fulltext_unavailable`, `resolution_low_confidence`).
+Numbers regenerated 2026-05-06 from `benchmarks/real_outputs/SUMMARY.md`. Re-run via `python scripts/check_summary_alignment.py`.
 
 ## Canary Controls
 

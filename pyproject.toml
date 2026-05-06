@@ -62,6 +62,7 @@ select = ["E", "F", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
 "tests/unit/test_fetch_fulltext.py" = ["E501"]
 "tests/unit/test_openalex.py" = ["E501"]
 "scripts/eval_scifact.py" = ["E501"]
+"scripts/generate_summary.py" = ["E501"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

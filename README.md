@@ -124,14 +124,17 @@ Data models are frozen dataclasses in `src/models.py`: `Claim`,
 
 ## Evaluation
 
+Verifier-component F1 = 0.94 on SciFact dev (oracle inputs)
+
+*Full-pipeline F1 against hand-labeled real documents is in progress — see `eval/e2e/`.*
+
+`scripts/eval_scifact.py` builds oracle claims and oracle abstract sources,
+bypassing extraction, resolution, retrieval, and BM25. It does not measure the
+full extract → resolve → retrieve → verify pipeline.
+
 ```bash
 python scripts/eval_scifact.py --split dev
 ```
-
-SciFact is used as a verifier regression baseline. The current F1 = 0.94 number
-is verifier-only: `scripts/eval_scifact.py` builds oracle claims and oracle
-abstract sources, then calls `verify_claim()`. It does not measure the full
-extract -> resolve -> retrieve -> verify pipeline.
 
 The SciFact test split is locked and must not be used for prompt selection or
 tuning.

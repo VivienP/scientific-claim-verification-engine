@@ -12,6 +12,14 @@ one verdict per cited claim, with full provenance. The current scope is
 deliberately conservative: this is an honest evidence-grounding verifier, not
 a broad automatic inconsistency detector.
 
+## Related Work
+
+[Valsci](https://github.com/bricee98/Valsci) ([Brice et al. 2025, BMC Bioinformatics](https://link.springer.com/article/10.1186/s12859-025-06159-4)) is an open-source, self-hostable scientific claim verifier with Semantic Scholar grounding, targeting large-batch literature verification with bibliometric scoring. This project differs in focus: (i) cited-source auditing of AI-agent outputs rather than literature corpora, (ii) a structured per-claim audit trail with full provenance, and (iii) deterministic retrieval and numeric checks separated from probabilistic LLM verification.
+
+[SciClaimEval](https://sciclaimeval.github.io/) is an emerging benchmark in the space, focused on claims supported by tables and figures rather than abstracts.
+
+This is an early entrant in an active category. Differentiation rests on architecture and use case (verifying outputs of AI-for-science agents against their cited sources), not on novelty of the problem.
+
 ## What It Does
 
 The pipeline takes free-form scientific text and writes:
@@ -44,12 +52,12 @@ Numbers regenerated 2026-05-06 from `benchmarks/real_outputs/SUMMARY.md`. Re-run
 
 `benchmarks/canary/` contains a clearly labeled seeded input for demo and
 regression testing. It is separate from the real-output benchmark and should not
-be merged into public aggregate counts. The canary exercises:
+be merged into public aggregate counts.
 
-- weak source resolution
-- contradicted claim
-- deterministic p-value/CI inconsistency
-- retraction check path
+Currently verified: contradiction detection (deliberately inverted AlphaFold
+claim → `unsupported`). Weak resolution, numeric inconsistency, and retraction
+paths are declared in `benchmarks/canary/README.md` under **Not yet
+implemented**.
 
 ## Quick Start
 

@@ -148,6 +148,75 @@ class TestVerifyClaimHappyPath:
         assert step.confidence == 0.9
 
 
+class TestVerifierPromptRubric:
+    def test_partial_support_precedes_unsupported_when_some_specific_evidence_matches(
+        self,
+    ) -> None:
+        from src.verify import _FULLTEXT_SYSTEM_PROMPT, _SYSTEM_PROMPT
+
+        # S1-P3 v2: partial precedence rule may use backticks; check the
+        # semantic content rather than a verbatim string.
+        for prompt in (_SYSTEM_PROMPT, _FULLTEXT_SYSTEM_PROMPT):
+            assert "takes precedence" in prompt
+            assert "partially_supported" in prompt
+            assert "unsupported" in prompt
+
+    def test_clause_a_collapses_off_topic_into_unsupported_in_both_prompts(self) -> None:
+        """S1-P3 Clause A: off-topic source → unsupported (not not_addressed).
+        Pinned in both abstract and fulltext prompts to prevent regression.
+        """
+        from src.verify import _FULLTEXT_SYSTEM_PROMPT, _SYSTEM_PROMPT
+
+        for prompt in (_SYSTEM_PROMPT, _FULLTEXT_SYSTEM_PROMPT):
+            assert "Clause A" in prompt
+            assert "off-topic" in prompt.lower()
+            # Both prompts must instruct the LLM not to emit not_addressed when
+            # content is provided.
+            assert "not `not_addressed`" in prompt or "NOT `not_addressed`" in prompt
+
+    def test_clause_b_uncertainty_band_inclusion_in_both_prompts(self) -> None:
+        """S1-P3 Clause B: range/IQR/CI/SD inclusion bidirectional rule."""
+        from src.verify import _FULLTEXT_SYSTEM_PROMPT, _SYSTEM_PROMPT
+
+        for prompt in (_SYSTEM_PROMPT, _FULLTEXT_SYSTEM_PROMPT):
+            assert "Clause B" in prompt
+            assert "uncertainty" in prompt.lower()
+            # Bidirectional: must mention both directions (claim-in-source-range
+            # AND source-point-in-claim-range)
+            assert "IQR" in prompt or "95% CI" in prompt
+            assert "central estimate" in prompt.lower()
+
+    def test_clause_c_trajectory_vs_snapshot_in_both_prompts(self) -> None:
+        """S1-P3 Clause C: directional/trajectory claims vs static evidence."""
+        from src.verify import _FULLTEXT_SYSTEM_PROMPT, _SYSTEM_PROMPT
+
+        for prompt in (_SYSTEM_PROMPT, _FULLTEXT_SYSTEM_PROMPT):
+            assert "Clause C" in prompt
+            assert "directional change" in prompt.lower()
+            assert "static" in prompt.lower()
+
+    def test_not_addressed_removed_from_response_schema(self) -> None:
+        """Clause A side-effect: the JSON schema in both prompts no longer offers
+        not_addressed as a valid output when content is present.
+
+        Robust against ordering of supported/unsupported/partially_supported in
+        the schema enum — only checks `not_addressed` is not listed as a value.
+        """
+        import re
+
+        from src.verify import _FULLTEXT_SYSTEM_PROMPT, _SYSTEM_PROMPT
+
+        schema_line_re = re.compile(r'"status":\s*"([^"]+)"')
+        for prompt in (_SYSTEM_PROMPT, _FULLTEXT_SYSTEM_PROMPT):
+            match = schema_line_re.search(prompt)
+            assert match is not None, "schema line missing"
+            allowed_values = match.group(1).split("|")
+            assert "not_addressed" not in allowed_values
+            assert "supported" in allowed_values
+            assert "unsupported" in allowed_values
+            assert "partially_supported" in allowed_values
+
+
 class TestVerifyClaimShortCircuit:
     def test_source_not_found_no_llm_call(self) -> None:
         """EC-2 variant: source.found=False → no Anthropic call."""
@@ -162,12 +231,25 @@ class TestVerifyClaimShortCircuit:
         assert step.operation == "verify"
         assert step.tokens_in is None
 
-    def test_abstract_none_no_llm_call(self) -> None:
-        """EC-2: Paper found but abstract=None → short-circuit."""
+    def test_abstract_none_short_title_no_llm_call(self) -> None:
+        """EC-2: Paper found, abstract=None, title shorter than the title-only
+        threshold (20 chars) → short-circuit (no Anthropic call).
+
+        Pinning a short title explicitly so the test does not silently regress
+        if `_make_source`'s default title (`"Test Paper"` = 10 chars) is
+        lengthened in the future.
+        """
         with patch("src.verify.anthropic.Anthropic") as mock_cls:
             from src.verify import verify_claim
 
-            result, step = verify_claim(_make_claim(), _make_source(found=True, abstract=None))
+            short_title_source = ResolvedSource(
+                found=True,
+                doi=None,
+                title="Short",
+                abstract=None,
+                similarity_score=1.0,
+            )
+            result, step = verify_claim(_make_claim(), short_title_source)
             mock_cls.assert_not_called()
 
         assert result.status == "not_addressed"
@@ -232,6 +314,159 @@ class TestVerifyClaimShortCircuit:
 
         _, step = verify_claim(_make_claim(), _make_source())
         assert step.cache_hit is None
+
+
+def _make_title_only_source(
+    title: str = "Real-time Continuous Measurement of Lactate via Microneedle Biosensor",
+) -> ResolvedSource:
+    """Source with no abstract but a long, informative title (title-only mode trigger)."""
+    return ResolvedSource(
+        found=True,
+        doi="10.1/x",
+        title=title,
+        abstract=None,
+        similarity_score=1.0,
+        title_match_score=1.0,
+    )
+
+
+class TestVerifyClaimTitleOnly:
+    """Bug B fix (S1-P1-B): when source.abstract is None but source.title is
+    informative, route to title-only mode. Verdict is hard-capped at
+    partially_supported to prevent overclaim from a title alone.
+    """
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_title_only_partially_supported_when_title_matches_subject(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "partially_supported", '
+                '"explanation": "Title matches the claim subject.", '
+                '"confidence": 0.6}'
+            )
+        ]
+        mock_response.usage.input_tokens = 80
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 80
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_title_only
+
+        result, step = verify_claim_title_only(_make_claim(), _make_title_only_source())
+
+        assert result.status == "partially_supported"
+        assert result.evidence_quality == "title_only"
+        assert result.verification_depth == "title_only"
+        assert step.operation == "verify"
+        assert step.tokens_in == 80
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_title_only_unsupported_when_title_off_topic(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "unsupported", '
+                '"explanation": "Title addresses a different specific assertion.", '
+                '"confidence": 0.7}'
+            )
+        ]
+        mock_response.usage.input_tokens = 80
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 80
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_title_only
+
+        result, _step = verify_claim_title_only(_make_claim(), _make_title_only_source())
+
+        assert result.status == "unsupported"
+        assert result.evidence_quality == "title_only"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_title_only_hard_caps_supported_to_partially_supported(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """Defensive: even if the LLM ignores the prompt and returns 'supported',
+        the deterministic post-LLM cap downgrades it. Confidence is also clamped.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block('{"status": "supported", "explanation": "I am sure!", "confidence": 0.95}')
+        ]
+        mock_response.usage.input_tokens = 80
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 80
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_title_only
+
+        result, _step = verify_claim_title_only(_make_claim(), _make_title_only_source())
+
+        assert result.status == "partially_supported"
+        assert result.confidence <= 0.7
+        assert result.evidence_quality == "title_only"
+
+    def test_verify_routes_to_title_only_when_abstract_none_long_title(self) -> None:
+        """Integration: verify_claim() routes to title-only mode when
+        abstract is None but title is informative (>20 chars).
+        """
+        with patch("src.verify.anthropic.Anthropic") as mock_anthropic_cls:
+            mock_client = MagicMock()
+            mock_anthropic_cls.return_value = mock_client
+            mock_response = MagicMock()
+            mock_response.content = [
+                _text_block(
+                    '{"status": "partially_supported", '
+                    '"explanation": "Title supports.", '
+                    '"confidence": 0.6}'
+                )
+            ]
+            mock_response.usage.input_tokens = 80
+            mock_response.usage.output_tokens = 30
+            mock_response.usage.cache_read_input_tokens = 80
+            mock_response.usage.cache_creation_input_tokens = 0
+            mock_client.messages.create.return_value = mock_response
+
+            from src.verify import verify_claim
+
+            result, _step = verify_claim(_make_claim(), _make_title_only_source())
+
+        assert result.status == "partially_supported"
+        assert result.evidence_quality == "title_only"
+        assert result.verification_depth == "title_only"
+
+    def test_verify_short_circuits_when_abstract_none_and_title_too_short(self) -> None:
+        """Boundary: title-only mode requires title len > 20. Short titles
+        still short-circuit to not_addressed (preserves EC-2 contract).
+        """
+        with patch("src.verify.anthropic.Anthropic") as mock_anthropic_cls:
+            from src.verify import verify_claim
+
+            short = ResolvedSource(
+                found=True,
+                doi="10.1/x",
+                title="Short",
+                abstract=None,
+                similarity_score=1.0,
+            )
+            result, _step = verify_claim(_make_claim(), short)
+            mock_anthropic_cls.assert_not_called()
+
+        assert result.status == "not_addressed"
 
 
 def _make_passages(n: int = 3) -> list[PaperChunk]:

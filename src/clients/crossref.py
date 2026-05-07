@@ -5,7 +5,9 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import json
+import re
 import time
+import unicodedata
 import urllib.parse
 from pathlib import Path
 from typing import Any
@@ -31,10 +33,162 @@ _HEADERS = {
 }
 
 _NOT_FOUND = ResolvedSource(found=False, doi=None, title=None, abstract=None, similarity_score=None)
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "for",
+    "in",
+    "of",
+    "on",
+    "the",
+    "to",
+    "with",
+}
+_SEARCH_TRANSLATION = str.maketrans(
+    {
+        "\u00a0": " ",
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2212": "-",
+    }
+)
 
 
 def _cache_key(prefix: str, value: str) -> str:
     return hashlib.sha256(f"{prefix}:{value}".encode()).hexdigest()
+
+
+def _normalise_doi(doi_raw: str | None) -> str | None:
+    if doi_raw is None:
+        return None
+    return doi_raw.replace("https://doi.org/", "")
+
+
+def _normalise_search_text(text: str) -> str:
+    translated = text.translate(_SEARCH_TRANSLATION)
+    decomposed = unicodedata.normalize("NFKD", translated)
+    ascii_text = decomposed.encode("ascii", "ignore").decode("ascii")
+    return " ".join(ascii_text.split())
+
+
+def _content_tokens(text: str) -> set[str]:
+    return {
+        token
+        for token in _TOKEN_RE.findall(_normalise_search_text(text).lower())
+        if token not in _STOPWORDS
+    }
+
+
+def _title_from_work_message(message: dict[str, Any]) -> str | None:
+    title_list: list[str] | None = message.get("title")
+    return title_list[0] if title_list else None
+
+
+def _work_type_score(work_type: str | None) -> float:
+    if work_type == "journal-article":
+        return 0.25
+    if work_type in {"posted-content", "component", "grant"}:
+        return -0.25
+    return 0.0
+
+
+def _candidate_score(query: str, item: dict[str, Any], index: int) -> tuple[float, float, int]:
+    """Score a CrossRef candidate against the query.
+
+    Bug C fix (S1-P1-C): the previous score `|q & t| / |t|` was asymmetric
+    and overweighted short titles whose tokens were all in the query (any
+    token outside the query proportionally penalized longer titles). This
+    caused the wrong-pick on claim 005 — Collange's short title beat Raa's
+    long title even though Raa shared more absolute overlap with the query.
+    Jaccard `|q & t| / |q | t|` is symmetric and rewards absolute overlap.
+    """
+    query_tokens = _content_tokens(query)
+    title_tokens = _content_tokens(_title_from_work_message(item) or "")
+    if not query_tokens or not title_tokens:
+        lexical_score = 0.0
+    else:
+        union_size = len(query_tokens | title_tokens)
+        lexical_score = len(query_tokens & title_tokens) / union_size
+    doi_score = 0.05 if item.get("DOI") else 0.0
+    return (
+        lexical_score + _work_type_score(item.get("type")) + doi_score,
+        lexical_score,
+        -index,
+    )
+
+
+def _pick_best_item(query: str, items: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not items:
+        return None
+    return max(enumerate(items), key=lambda item: _candidate_score(query, item[1], item[0]))[1]
+
+
+def _resolved_from_work_message(message: dict[str, Any]) -> ResolvedSource:
+    return ResolvedSource(
+        found=True,
+        doi=_normalise_doi(message.get("DOI")),
+        title=_title_from_work_message(message),
+        abstract=None,
+        similarity_score=None,
+    )
+
+
+def fetch_work_by_doi(
+    doi: str,
+    *,
+    timeout: float = 10.0,
+    db_path: Path | None = None,
+) -> ResolvedSource:
+    """Fetch a CrossRef work by exact DOI using /works/{doi}."""
+    if not doi:
+        return _NOT_FOUND
+    resolved_db_path = db_path if db_path is not None else _default_db_path()
+    normalised = _normalise_doi(doi.strip()) or ""
+    key = _cache_key("crossref:doi", normalised.lower())
+
+    cached = get(resolved_db_path, key)
+    if cached is not None:
+        logger.debug("crossref_doi_cache_hit", doi=normalised)
+        data: dict[str, Any] = json.loads(cached)
+        return ResolvedSource(**{**dataclasses.asdict(_NOT_FOUND), **data})
+
+    encoded_doi = urllib.parse.quote(normalised, safe="")
+    url = f"{_BASE_URL}/works/{encoded_doi}"
+
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.get(url, params={"mailto": _MAILTO}, headers=_HEADERS)
+        if response.status_code == 404:
+            put(
+                resolved_db_path,
+                key,
+                json.dumps(dataclasses.asdict(_NOT_FOUND)),
+                _CACHE_TTL_SECONDS,
+            )
+            return _NOT_FOUND
+        response.raise_for_status()
+        payload: dict[str, Any] = response.json()
+        message: dict[str, Any] = payload.get("message", {})
+        if not message:
+            return _NOT_FOUND
+        resolved = _resolved_from_work_message(message)
+        put(resolved_db_path, key, json.dumps(dataclasses.asdict(resolved)), _CACHE_TTL_SECONDS)
+        logger.info("crossref_doi_resolved", doi=resolved.doi, title=resolved.title)
+        return resolved
+    except httpx.HTTPStatusError as exc:
+        logger.error("crossref_doi_request_error", doi=normalised, error=str(exc))
+        return _NOT_FOUND
+    except httpx.RequestError as exc:
+        logger.error("crossref_doi_request_error", doi=normalised, error=str(exc))
+        return _NOT_FOUND
+    except Exception as exc:
+        logger.error("crossref_doi_unexpected_error", doi=normalised, error=str(exc))
+        return _NOT_FOUND
 
 
 def search_paper(
@@ -52,7 +206,7 @@ def search_paper(
     Retries on 429 with exponential backoff (max 3, base 2.0s).
     """
     resolved_db_path = db_path if db_path is not None else _default_db_path()
-    key = _cache_key("crossref", query)
+    key = _cache_key("crossref:v2", query)
 
     cached = get(resolved_db_path, key)
     if cached is not None:
@@ -63,7 +217,7 @@ def search_paper(
     url = f"{_BASE_URL}/works"
     params: dict[str, str | int] = {
         "query.bibliographic": query,
-        "rows": 1,
+        "rows": 5,
         "mailto": _MAILTO,
     }
 
@@ -88,21 +242,12 @@ def search_paper(
             if not items:
                 return _NOT_FOUND
 
-            item = items[0]
-            doi_raw: str | None = item.get("DOI")
-            doi = doi_raw.replace("https://doi.org/", "") if doi_raw else doi_raw
-            title_list: list[str] | None = item.get("title")
-            title = title_list[0] if title_list else None
-
-            resolved = ResolvedSource(
-                found=True,
-                doi=doi,
-                title=title,
-                abstract=None,
-                similarity_score=None,
-            )
+            item = _pick_best_item(query, items)
+            if item is None:
+                return _NOT_FOUND
+            resolved = _resolved_from_work_message(item)
             put(resolved_db_path, key, json.dumps(dataclasses.asdict(resolved)), _CACHE_TTL_SECONDS)
-            logger.info("crossref_resolved", doi=doi, title=title)
+            logger.info("crossref_resolved", doi=resolved.doi, title=resolved.title)
             return resolved
 
         except httpx.HTTPStatusError as exc:

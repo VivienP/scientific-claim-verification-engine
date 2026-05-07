@@ -24,6 +24,19 @@ class TestClaim:
         assert claim.cited_authors == ["Smith", "Jones"]
         assert claim.cited_year == 2020
         assert claim.claim_type == "causal"
+        assert claim.citation_markers == []
+
+    def test_claim_citation_markers(self) -> None:
+        claim = Claim(
+            claim_id="abc-123",
+            claim_text="X causes Y [3, 5-7]",
+            cited_authors=["Smith"],
+            cited_year=None,
+            claim_type="factual_qualitative",
+            citation_markers=[3, 5, 6, 7],
+        )
+
+        assert claim.citation_markers == [3, 5, 6, 7]
 
     def test_claim_frozen(self) -> None:
         claim = Claim(

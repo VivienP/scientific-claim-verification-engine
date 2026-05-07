@@ -21,7 +21,7 @@ OperationType = Literal[
 VerifiabilityStatus = Literal["verifiable", "no_citations_found", "low_citation_density"]
 SectionLabel = Literal["introduction", "methods", "results", "discussion", "other"]
 RetrievalStatus = Literal["passage_found", "no_passage_found", "fulltext_unavailable"]
-EvidenceQuality = Literal["quoted_passage", "abstract_only", "no_evidence"]
+EvidenceQuality = Literal["quoted_passage", "abstract_only", "title_only", "no_evidence"]
 
 
 @dataclass(frozen=True)
@@ -40,6 +40,7 @@ class Claim:
     cited_authors: list[str]
     cited_year: int | None
     claim_type: ClaimType
+    citation_markers: list[int] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -64,7 +65,7 @@ class VerificationResult:
     source_passages: list[str] = field(default_factory=list)
     source_section: str | None = None
     fulltext_available: bool = False
-    verification_depth: Literal["fulltext", "abstract"] = "abstract"
+    verification_depth: Literal["fulltext", "abstract", "title_only"] = "abstract"
     retrieval_status: RetrievalStatus = "fulltext_unavailable"
     evidence_quality: EvidenceQuality = "abstract_only"
     retraction_status: bool = False

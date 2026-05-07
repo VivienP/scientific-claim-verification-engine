@@ -40,8 +40,34 @@ class TestExtractClaimsHappyPath:
         assert claims[0].cited_authors == ["Smith"]
         assert claims[0].cited_year == 2020
         assert claims[0].claim_type == "causal"
+        assert claims[0].citation_markers == []
         assert isinstance(claims[0].claim_id, str)
         assert len(claims[0].claim_id) > 0
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_preserves_numbered_citation_markers(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"claims": [{"claim_text": "X increases Y", "cited_authors": ["Smith"], '
+                '"cited_year": null, "citation_markers": [81, 82, 83], '
+                '"claim_type": "factual_qualitative"}]}'
+            )
+        ]
+        mock_response.usage.input_tokens = 100
+        mock_response.usage.output_tokens = 50
+        mock_response.usage.cache_read_input_tokens = 0
+        mock_response.usage.cache_creation_input_tokens = 100
+        mock_client.messages.create.return_value = mock_response
+
+        from src.extract import extract_claims
+
+        claims, _step = extract_claims("X increases Y [81-83].")
+
+        assert len(claims) == 1
+        assert claims[0].citation_markers == [81, 82, 83]
 
     @patch("src.extract.anthropic.Anthropic")
     def test_provenance_step_populated(self, mock_anthropic_cls: MagicMock) -> None:

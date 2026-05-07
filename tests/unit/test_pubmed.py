@@ -6,10 +6,33 @@ from pathlib import Path
 
 from pytest_httpx import HTTPXMock
 
-from src.clients.pubmed import fetch_abstract, fetch_abstract_by_doi, find_pmid_by_doi
+from src.clients.pubmed import (
+    PubMedRecord,
+    fetch_abstract,
+    fetch_abstract_by_doi,
+    fetch_record,
+    find_pmid_by_doi,
+    find_pmid_by_title,
+)
 
 _ESEARCH_OK = '{"esearchresult": {"idlist": ["12345678"]}}'
 _ESEARCH_EMPTY = '{"esearchresult": {"idlist": []}}'
+_ESEARCH_MULTI = '{"esearchresult": {"idlist": ["17685700", "19885119"]}}'
+_ESUMMARY_MULTI = {
+    "result": {
+        "uids": ["17685700", "19885119"],
+        "17685700": {
+            "title": (
+                "Familiarization and reliability of multiple sprint running performance indices."
+            )
+        },
+        "19885119": {
+            "title": (
+                "Blood lactate measurements and analysis during exercise: a guide for clinicians."
+            )
+        },
+    }
+}
 
 _EFETCH_TEXT = """1. Sample Journal. 2007 Jul;1(4):558-569.
 
@@ -28,6 +51,7 @@ sample interpretation.
 Copyright © 2007 Diabetes Technology Society.
 
 DOI: 10.1177/193229680700100414
+PMCID: PMC2769631
 PMID: 12345678
 """
 
@@ -64,6 +88,65 @@ class TestFindPmidByDoi:
         assert a == b == "12345678"
         assert len(httpx_mock.get_requests()) == 1
 
+
+class TestFindPmidByTitle:
+    def test_happy_path_uses_title_and_year(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        httpx_mock.add_response(text=_ESEARCH_OK)
+
+        pmid = find_pmid_by_title(
+            "Reliability and accuracy of six hand-held blood lactate analysers",
+            year=2015,
+            db_path=tmp_path / "c.db",
+        )
+
+        assert pmid == "12345678"
+        url = str(httpx_mock.get_requests()[0].url)
+        assert "%5BTitle%5D" in url
+        assert "2015%5Bdp%5D" in url
+
+    def test_cache_hit_skips_http(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        db = tmp_path / "c.db"
+        httpx_mock.add_response(text=_ESEARCH_OK)
+
+        first = find_pmid_by_title("Blood lactate measurements", year=2007, db_path=db)
+        second = find_pmid_by_title("Blood lactate measurements", year=2007, db_path=db)
+
+        assert first == second == "12345678"
+        assert len(httpx_mock.get_requests()) == 1
+
+    def test_broad_title_year_fallback_when_exact_title_misses(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(text=_ESEARCH_EMPTY)
+        httpx_mock.add_response(text=_ESEARCH_OK)
+
+        pmid = find_pmid_by_title(
+            "Reliability and Accuracy of Six Hand-Held Blood Lactate Analysers",
+            year=2015,
+            db_path=tmp_path / "c.db",
+        )
+
+        assert pmid == "12345678"
+        urls = [str(request.url) for request in httpx_mock.get_requests()]
+        assert "%5BTitle%5D" in urls[0]
+        assert "%5BTitle%5D" not in urls[1]
+
+    def test_ranks_multiple_broad_candidates_by_title_overlap(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(text=_ESEARCH_EMPTY)
+        httpx_mock.add_response(text=_ESEARCH_MULTI)
+        httpx_mock.add_response(json=_ESUMMARY_MULTI)
+
+        pmid = find_pmid_by_title(
+            "Blood lactate measurements and analysis during exercise: a guide for clinicians",
+            year=2007,
+            db_path=tmp_path / "c.db",
+        )
+
+        assert pmid == "19885119"
+        assert "esummary" in str(httpx_mock.get_requests()[2].url)
+
     def test_negative_cached(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         db = tmp_path / "c.db"
         httpx_mock.add_response(text=_ESEARCH_EMPTY)
@@ -85,12 +168,52 @@ class TestFetchAbstract:
         assert "Author information" not in abstract
         assert "Copyright" not in abstract
 
+    def test_fetch_record_extracts_doi_and_pmcid(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(text=_EFETCH_TEXT)
+
+        record = fetch_record("12345678", db_path=tmp_path / "c.db")
+
+        assert isinstance(record, PubMedRecord)
+        assert record.pmid == "12345678"
+        assert record.doi == "10.1177/193229680700100414"
+        assert record.pmcid == "PMC2769631"
+        assert record.abstract is not None
+        assert "63%" in record.abstract
+
     def test_blank_pmid_short_circuits(self, tmp_path: Path) -> None:
         assert fetch_abstract("", db_path=tmp_path / "c.db") is None
 
     def test_too_short_returns_none(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(text="1. Brief.\n\nShort.\n\nPMID: 1\n")
         assert fetch_abstract("1", db_path=tmp_path / "c.db") is None
+
+    def test_too_short_record_cache_hit_returns_none(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        db = tmp_path / "c.db"
+        httpx_mock.add_response(text="1. Brief.\n\nShort.\n\nPMID: 1\n")
+
+        assert fetch_record("1", db_path=db) is None
+        assert fetch_record("1", db_path=db) is None
+        assert len(httpx_mock.get_requests()) == 1
+
+    def test_fetch_record_keeps_identifiers_when_abstract_is_short(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(
+            text="1. Brief.\n\nShort.\n\nDOI: 10.1234/example\nPMCID: PMC123\nPMID: 1\n"
+        )
+
+        record = fetch_record("1", db_path=tmp_path / "c.db")
+
+        assert record == PubMedRecord(
+            pmid="1",
+            abstract=None,
+            doi="10.1234/example",
+            pmcid="PMC123",
+        )
 
     def test_http_error(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(status_code=429)

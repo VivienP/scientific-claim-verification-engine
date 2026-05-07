@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 import uuid
 from typing import Any  # Any used for json.loads() return type only
@@ -37,6 +38,9 @@ For each claim, extract:
 - claim_text: the exact claim as stated (verbatim or minimally paraphrased)
 - cited_authors: list of author last names mentioned near the claim (empty list if none)
 - cited_year: the year cited (integer or null)
+- citation_markers: numbered citation anchors visible near the claim, expanded to integers.
+  Examples: [3] -> [3], [81-83] -> [81, 82, 83], [99,100] -> [99, 100].
+  Use [] for author-year citations without bracket numbers.
 - claim_type: one of the four types above
 
 Return ONLY a JSON object in this exact format:
@@ -46,6 +50,7 @@ Return ONLY a JSON object in this exact format:
       "claim_text": "...",
       "cited_authors": ["Smith", "Jones"],
       "cited_year": 2019,
+      "citation_markers": [12, 13],
       "claim_type": "factual_numeric"
     }
   ]
@@ -84,6 +89,47 @@ def _strip_fences(text: str) -> str:
         if stripped.endswith("```"):
             stripped = stripped[: stripped.rfind("```")].rstrip()
     return stripped
+
+
+_CITATION_BRACKET_RE = re.compile(r"\[([0-9,\-\s]+)\]")
+
+
+def _parse_citation_markers(raw_markers: object, claim_text: str) -> list[int]:
+    """Return sorted citation marker integers from JSON or bracketed claim text."""
+    markers: list[int] = []
+    if isinstance(raw_markers, list):
+        for item in raw_markers:
+            try:
+                marker = int(item)
+            except (TypeError, ValueError):
+                continue
+            if marker > 0:
+                markers.append(marker)
+    if markers:
+        return sorted(set(markers))
+
+    for match in _CITATION_BRACKET_RE.finditer(claim_text):
+        for part in match.group(1).split(","):
+            part = part.strip()
+            if not part:
+                continue
+            if "-" in part:
+                start_raw, end_raw = [p.strip() for p in part.split("-", 1)]
+                try:
+                    start = int(start_raw)
+                    end = int(end_raw)
+                except ValueError:
+                    continue
+                if 0 < start <= end and end - start <= 50:
+                    markers.extend(range(start, end + 1))
+            else:
+                try:
+                    marker = int(part)
+                except ValueError:
+                    continue
+                if marker > 0:
+                    markers.append(marker)
+    return sorted(set(markers))
 
 
 def _parse_cache_hit(usage: Usage) -> bool | None:
@@ -161,6 +207,9 @@ def extract_claims(
                     claim_type=str(raw["claim_type"])
                     if raw.get("claim_type")
                     else "factual_qualitative",  # type: ignore[arg-type]
+                    citation_markers=_parse_citation_markers(
+                        raw.get("citation_markers"), str(raw["claim_text"])
+                    ),
                 )
             )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:

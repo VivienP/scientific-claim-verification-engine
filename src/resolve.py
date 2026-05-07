@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import hashlib
 import time
 import uuid
 from pathlib import Path
@@ -15,113 +14,152 @@ from src.clients import crossref as _crossref
 from src.clients import pubmed as _pubmed
 from src.clients.openalex import search_paper
 from src.models import Claim, ProvenanceStep, ResolvedSource
+from src.resolve_utils import (
+    _NOT_FOUND,
+    _TITLE_MATCH_ACCEPT_THRESHOLD,
+    _best_bib_match,
+    _bibliography_title_match_score,
+    _build_crossref_query_from_bib,
+    _build_query,
+    _build_query_from_bib,
+    _hash,
+    _normalize_pmcid,
+    _source_from_bib_entry,
+)
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
-_NOT_FOUND = ResolvedSource(found=False, doi=None, title=None, abstract=None, similarity_score=None)
 
-
-def _hash(data: str) -> str:
-    return hashlib.sha256(data.encode()).hexdigest()
-
-
-def _build_query(claim: Claim) -> str:
-    parts: list[str] = (
-        claim.cited_authors[:3]
-        + ([str(claim.cited_year)] if claim.cited_year else [])
-        + claim.claim_text.split()[:5]
-    )
-    return " ".join(parts)
-
-
-def _normalize_surname(name: str) -> str:
-    return name.strip().lower().replace(".", "")
-
-
-def _bib_entry_match_score(claim: Claim, entry: BibEntry) -> int:
-    """Score a candidate bibliography entry against a claim.
-
-    Returns: 2 + author_overlap if year matches, 0 + author_overlap otherwise.
-    Returns 0 (no match) when there is no author overlap. Treats "et al." as
-    a wildcard equal to a single match.
-    """
-    claim_authors = {_normalize_surname(a) for a in claim.cited_authors if a}
-    entry_authors = {_normalize_surname(a) for a in entry.authors if a and a.lower() != "et al."}
-    if not claim_authors or not entry_authors:
-        return 0
-    overlap = len(claim_authors & entry_authors)
-    if overlap == 0:
-        return 0
-    year_bonus = 0
-    if claim.cited_year is not None and entry.year is not None:
-        if claim.cited_year == entry.year:
-            year_bonus = 2
-        elif abs(claim.cited_year - entry.year) <= 1:
-            year_bonus = 1
-    return year_bonus + overlap
-
-
-def _best_bib_match(claim: Claim, bibliography: dict[int, BibEntry]) -> BibEntry | None:
-    """Pick the bibliography entry that best matches a claim's cited authors+year."""
-    best: BibEntry | None = None
-    best_score = 0
-    for entry in bibliography.values():
-        score = _bib_entry_match_score(claim, entry)
-        if score > best_score:
-            best_score = score
-            best = entry
-    if best_score < 1:
-        return None
-    return best
-
-
-def _build_query_from_bib(entry: BibEntry, claim: Claim) -> str:
-    """Build a richer search query using bibliography metadata."""
-    parts: list[str] = []
-    if entry.title:
-        # Use first 8 title tokens to keep the query precise.
-        parts.extend(entry.title.split()[:8])
-    surnames = [a for a in entry.authors if a.lower() != "et al."][:3]
-    parts.extend(surnames)
-    if entry.year is not None:
-        parts.append(str(entry.year))
-    if not parts:
-        return _build_query(claim)
-    return " ".join(parts)
-
-
-def _enrich_abstract_via_pubmed(
+def _enrich_via_pubmed(
     source: ResolvedSource,
     *,
     db_path: Path | None,
 ) -> ResolvedSource:
-    """Fill in source.abstract from PubMed when upstream resolvers returned null.
+    """Populate pmcid and (if missing) abstract from PubMed via DOI->PMID->record.
 
-    Fires only when source is found, has a DOI, and has no abstract. Looks up
-    the PMID via DOI and fetches the PubMed-formatted abstract. Returns the
-    source unchanged on any failure path (caching layer in pubmed.py records
-    negatives so repeated lookups stay cheap).
+    Bug A fix (S1-P1-A): the previous `_enrich_abstract_via_pubmed` short-circuited
+    whenever CrossRef had any abstract, silently dropping the pmcid. PubMed often
+    has the pmcid even when CrossRef does not (NIH-deposit OA mirrors), and
+    propagating it unblocks the PMC fulltext path in `fetch_fulltext`. This
+    function:
+
+    * fires for any found source with a DOI that lacks either abstract OR pmcid;
+    * uses `find_pmid_by_doi` -> `fetch_record` (preserving the full record);
+    * preserves the existing abstract when CrossRef's is longer than PubMed's,
+      and always backfills pmcid when PubMed exposes one.
+
+    Returns source unchanged on any miss (caching layer keeps repeat lookups cheap).
     """
-    if not source.found or source.doi is None or source.abstract:
+    if not source.found or source.doi is None:
         return source
-    abstract = _pubmed.fetch_abstract_by_doi(source.doi, db_path=db_path)
-    if abstract is None:
+    if source.abstract and source.pmcid:
         return source
-    logger.info("pubmed_abstract_enriched", doi=source.doi, length=len(abstract))
-    return dataclasses.replace(source, abstract=abstract)
+    pmid = _pubmed.find_pmid_by_doi(source.doi, db_path=db_path)
+    if pmid is None:
+        return source
+    record = _pubmed.fetch_record(pmid, db_path=db_path)
+    if record is None:
+        return source
+    new_abstract = _pick_longer_abstract(source.abstract, record.abstract)
+    new_pmcid = source.pmcid or _normalize_pmcid(record.pmcid)
+    if new_abstract == source.abstract and new_pmcid == source.pmcid:
+        return source
+    logger.info(
+        "pubmed_record_enriched",
+        doi=source.doi,
+        pmid=pmid,
+        abstract_added=source.abstract is None and record.abstract is not None,
+        pmcid_added=source.pmcid is None and new_pmcid is not None,
+    )
+    return dataclasses.replace(source, abstract=new_abstract, pmcid=new_pmcid)
 
 
-def _resolve_via_bib_doi(bib_doi: str, *, db_path: Path | None) -> ResolvedSource:
+def _pick_longer_abstract(existing: str | None, candidate: str | None) -> str | None:
+    """Return whichever abstract is more informative (longer, prefers existing on ties)."""
+    if not existing:
+        return candidate
+    if not candidate:
+        return existing
+    return existing if len(existing) >= len(candidate) else candidate
+
+
+def _resolve_via_bib_doi(entry: BibEntry, *, db_path: Path | None) -> ResolvedSource:
     """Look up a bibliography-provided DOI directly via CrossRef.
 
     Bypasses the lossy author/year search when the bibliography already
     contains the canonical DOI. Returns _NOT_FOUND if the DOI cannot be
     resolved (CrossRef miss, network error, etc.).
     """
-    cf_source = _crossref.search_paper(bib_doi, db_path=db_path)
+    if entry.doi is None:
+        return _NOT_FOUND
+    cf_source = _crossref.fetch_work_by_doi(entry.doi, db_path=db_path)
     if cf_source.found:
-        return cf_source
-    return _NOT_FOUND
+        return dataclasses.replace(
+            cf_source,
+            pmcid=_normalize_pmcid(entry.pmcid) or cf_source.pmcid,
+            similarity_score=1.0,
+            title_match_score=1.0 if entry.title else cf_source.title_match_score,
+            resolution_low_confidence=False,
+        )
+    return _source_from_bib_entry(entry)
+
+
+def _resolve_via_bib_pmid(entry: BibEntry, *, db_path: Path | None) -> ResolvedSource:
+    if entry.pmid is None:
+        if entry.pmcid is not None:
+            return _source_from_bib_entry(entry)
+        return _NOT_FOUND
+    record = _pubmed.fetch_record(entry.pmid, db_path=db_path)
+    if record is None:
+        return _source_from_bib_entry(entry)
+    return _source_from_bib_entry(
+        entry,
+        abstract=record.abstract,
+        doi=record.doi,
+        pmcid=record.pmcid,
+    )
+
+
+def _resolve_via_bib_crossref_title(
+    entry: BibEntry, claim: Claim, *, db_path: Path | None
+) -> ResolvedSource:
+    if not entry.title:
+        return _NOT_FOUND
+    source = _crossref.search_paper(_build_crossref_query_from_bib(entry, claim), db_path=db_path)
+    if not source.found:
+        return _NOT_FOUND
+    title_score = _bibliography_title_match_score(entry.title, source.title)
+    if title_score is None or title_score < _TITLE_MATCH_ACCEPT_THRESHOLD:
+        logger.debug(
+            "crossref_title_rejected",
+            bib_number=entry.number,
+            title=source.title,
+            title_match_score=title_score,
+        )
+        return _NOT_FOUND
+    return dataclasses.replace(
+        source,
+        similarity_score=source.similarity_score if source.similarity_score is not None else 1.0,
+        title_match_score=title_score,
+        resolution_low_confidence=False,
+    )
+
+
+def _resolve_via_pubmed_title(entry: BibEntry, *, db_path: Path | None) -> ResolvedSource:
+    if not entry.title:
+        return _NOT_FOUND
+    pmid = _pubmed.find_pmid_by_title(entry.title, year=entry.year, db_path=db_path)
+    if pmid is None:
+        return _NOT_FOUND
+    record = _pubmed.fetch_record(pmid, db_path=db_path)
+    if record is None:
+        return _NOT_FOUND
+    return _source_from_bib_entry(
+        entry,
+        abstract=record.abstract,
+        doi=record.doi,
+        pmcid=record.pmcid,
+    )
 
 
 def resolve_citations(
@@ -136,11 +174,11 @@ def resolve_citations(
     When `bibliography` is provided, each claim is first matched to the
     best-fitting bibliography entry by author + year overlap. If a match
     exists and the bibliography has a DOI, that DOI is used directly via
-    CrossRef. Otherwise, a richer query is built from the bibliography's
-    title/authors/year before falling back to the existing OpenAlex search
-    + CrossRef fallback chain. The bibliography path activates per-reference
-    routing for multi-citation manuscripts where the extractor flattened
-    several cited refs into a single Claim.
+    CrossRef. Otherwise, strong bibliography-title CrossRef and PubMed
+    matches are tried before the existing OpenAlex search + CrossRef fallback
+    chain. The bibliography path activates per-reference routing for
+    multi-citation manuscripts where the extractor flattened several cited
+    refs into a single Claim.
 
     Returns a dict keyed by claim_id (entry present for EVERY claim, even unresolved).
     Returns one ProvenanceStep per claim (operation="resolve", model_id=None).
@@ -165,13 +203,40 @@ def resolve_citations(
         else:
             source = _NOT_FOUND
             if bib_match is not None and bib_match.doi:
-                source = _resolve_via_bib_doi(bib_match.doi, db_path=db_path)
+                source = _resolve_via_bib_doi(bib_match, db_path=db_path)
                 if source.found:
                     logger.info(
                         "resolve_via_bib_doi",
                         claim_id=claim.claim_id,
                         bib_number=bib_match.number,
                         doi=bib_match.doi,
+                    )
+            if not source.found and bib_match is not None and (bib_match.pmid or bib_match.pmcid):
+                source = _resolve_via_bib_pmid(bib_match, db_path=db_path)
+                if source.found:
+                    logger.info(
+                        "resolve_via_bib_pmid",
+                        claim_id=claim.claim_id,
+                        bib_number=bib_match.number,
+                        pmid=bib_match.pmid,
+                        pmcid=bib_match.pmcid,
+                    )
+            if not source.found and bib_match is not None and bib_match.title:
+                source = _resolve_via_bib_crossref_title(bib_match, claim, db_path=db_path)
+                if source.found:
+                    logger.info(
+                        "resolve_via_bib_crossref_title",
+                        claim_id=claim.claim_id,
+                        bib_number=bib_match.number,
+                        doi=source.doi,
+                    )
+            if not source.found and bib_match is not None and bib_match.title:
+                source = _resolve_via_pubmed_title(bib_match, db_path=db_path)
+                if source.found:
+                    logger.info(
+                        "resolve_via_pubmed_title",
+                        claim_id=claim.claim_id,
+                        bib_number=bib_match.number,
                     )
             if not source.found:
                 query = (
@@ -192,7 +257,7 @@ def resolve_citations(
                 logger.warning("retraction_detected", claim_id=claim.claim_id, doi=source.doi)
             source = dataclasses.replace(source, retraction_status=retracted)
 
-        source = _enrich_abstract_via_pubmed(source, db_path=db_path)
+        source = _enrich_via_pubmed(source, db_path=db_path)
 
         sources[claim.claim_id] = source
         steps.append(

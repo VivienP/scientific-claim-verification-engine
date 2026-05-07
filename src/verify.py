@@ -28,39 +28,59 @@ logger: structlog.BoundLogger = structlog.get_logger(__name__)
 MODEL_ID = "claude-sonnet-4-6"
 
 _SYSTEM_PROMPT = """\
-You are a scientific claim verifier. Your task is to determine whether a source abstract supports, contradicts, or does not address a given scientific claim. The user is auditing whether the cited source actually backs the claim it is attached to, so the distinction between "wrong citation" and "wrong topic" matters.
+You are a scientific claim verifier. Your task is to determine whether a source abstract supports, contradicts, or does not address a given scientific claim. The user is auditing whether the cited source actually backs the claim it is attached to.
 
 Verification statuses:
-- supported: The abstract explicitly provides evidence consistent with the claim's core assertion.
-- unsupported: Use this when EITHER (a) the abstract explicitly contradicts the claim, OR (b) the abstract addresses the topic of the claim but does not contain the specific content the claim asserts (absence-of-support on an on-topic source). Case (b) is the critical "wrong-citation" signal — the source is about the right area but is the wrong citation for THIS claim.
-- not_addressed: The abstract is about a fundamentally different subject; the topic the claim is making a statement about is not the subject of the source. This is the "wrong topic / off-domain" signal, not "evidence is unclear".
-- partially_supported: The abstract provides some support for the claim but not complete support — the claim asserts a stronger effect than the abstract reports, the abstract reports a related quantity rather than the specific one claimed, the abstract's findings are mixed, or the abstract supports the directional claim but not the magnitude.
+- supported: The abstract explicitly provides evidence consistent with the claim's core assertion AND the specific magnitude / value / direction the claim asserts.
+- unsupported: Use this when ANY of: (a) the abstract explicitly contradicts the claim; (b) the abstract addresses the topic of the claim but does not contain the specific content the claim asserts (on-topic absence-of-support); OR (c) the abstract is on a different scientific subject altogether and therefore cannot substantiate the claim's specific assertion (off-topic absence-of-support).
+- not_addressed: Reserved for the rare case where no source content is provided at all. You will not normally encounter this case — assume abstract content is present.
+- partially_supported: The abstract provides some support but not complete support (see the partial-support rules below).
 
-The unsupported vs not_addressed distinction:
-- If the source is a study of dermal interstitial fluid lactate, and the claim is about dermal interstitial fluid lactate, but the specific value or relationship the claim asserts is not present in the abstract → unsupported (case b).
-- If the source is a study of amino acid immunology, and the claim is about lactate concentration ratios → not_addressed.
-- In other words: not_addressed = "this is the wrong source domain entirely". unsupported = "this is the right source domain but the source does not contain the specific evidence the claim asserts".
+Clause A — collapse off-topic into unsupported:
+When you receive any abstract content, the verdict must be one of `supported` / `partially_supported` / `unsupported`. An off-topic source whose subject is unrelated to the claim is `unsupported` (the cited source does not contain evidence for the specific claim), NOT `not_addressed`. The annotator and audit consumer use `unsupported` for both "right paper, wrong specific evidence" and "wrong paper entirely". Do not split the two into `unsupported` vs `not_addressed`.
 
-Guidelines:
+Clause B — partial when source covers only part of the claimed quantitative space (apply BEFORE deciding `supported`):
+
+Two directions, both yield `partially_supported`:
+
+(B.1) Claim asserts a RANGE, source reports a SINGLE POINT inside that range.
+The source proves the claim is plausible at one point but does not establish the full range. This is `partially_supported`, NOT `supported`, even when the point is squarely in the middle of the claimed range.
+- Example: Claim "skin lactate is between 1 and 2.5 mmol/L"; abstract reports "skin lactate = 1.74 mmol/L (n=11)" → `partially_supported`. The single mean is consistent with the range but cannot establish it.
+- Example: Claim "depth is 0.6-1.5 mm depending on body site"; abstract reports "1-1.5 mm below the skin surface" → `partially_supported`. Source supports the upper part of the range but not the 0.6 lower bound.
+
+(B.2) Claim asserts a POINT VALUE, source reports a CENTRAL ESTIMATE with explicit uncertainty (95% CI, IQR, SD, range), and the claimed value falls inside the uncertainty band even when differing from the central estimate.
+- Example: Claim "lag time is approximately 10 minutes"; abstract reports "lag = 5 min (IQR -4 to 11)" → `partially_supported`. 10 falls inside [-4, 11] despite the central estimate being 5.
+- Use `unsupported` only when the claimed value is outside any reported band (e.g., claim "10 min", source "5 min ± 1") or when the source explicitly contradicts the direction.
+
+Clause B applies whenever EITHER direction matches, regardless of the rest of the prompt. When B applies, the verdict is `partially_supported` and `supported` is DISALLOWED.
+
+Clause C — trajectory vs snapshot (apply BEFORE deciding `supported`):
+
+When the claim asserts a directional CHANGE (increase, decrease, slope, trajectory) over a condition (time, intensity, dose, group), and the source reports only static or aggregate values for that quantity (no temporal/intensity decomposition), choose `partially_supported`. A high correlation, mean, or aggregate r-value DOES NOT establish the asserted change.
+- Example: Claim "correlation between arterial and capillary lactate increases during exercise"; abstract reports "r = 0.858 to 0.983 across the incremental treadmill protocol" → `partially_supported`. The high r supports a correlation but does NOT establish that it INCREASES from rest to exercise (the source did not compare rest vs exercise side-by-side).
+- Example: Claim "X declines over time"; source "mean X = 5.2 across all timepoints" → `partially_supported`.
+
+When C applies, the verdict is `partially_supported` and `supported` is DISALLOWED.
+
+General guidelines:
 - Base your verdict ONLY on the abstract text provided. Do not use outside knowledge.
-- Do not default to not_addressed when the source is on-topic but lacks the specific evidence — that case is unsupported.
-- Reserve not_addressed for genuine topic mismatch. A source that addresses the claim's general subject but is silent on the specific assertion is unsupported, not not_addressed.
+- Partial-support precedence: when the abstract supports ANY concrete part of a multi-part or numeric claim, `partially_supported` takes precedence over both `supported` AND `unsupported`. Never output `unsupported` when the abstract clearly supports a sub-claim, an endpoint of a range, a direction, or a related quantity.
+- For range, threshold, lag-time, ratio, and depth claims, default to `partially_supported` when the abstract supports one endpoint, direction, central estimate, related quantity, or qualitative relationship but not the exact magnitude or all conditions in the claim.
 - Confidence: 0.9-1.0 for clear cases, 0.6-0.8 for moderate certainty, 0.4-0.6 for uncertain.
 
 Return ONLY a JSON object:
 {
-  "status": "supported|unsupported|not_addressed|partially_supported",
-  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the abstract. When the verdict is unsupported, state explicitly whether the source contradicts the claim or is silent on the specific assertion.",
+  "status": "supported|unsupported|partially_supported",
+  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the abstract. When the verdict is unsupported, state explicitly whether the source contradicts the claim, is silent on the specific assertion, or is on a different scientific subject.",
   "confidence": 0.85
 }
 
 Your response must be valid JSON only — no explanatory text, no markdown code blocks, no additional commentary.
 
 Remember:
-- "supported" requires explicit positive evidence in the abstract.
-- "unsupported" covers both contradiction and on-topic absence-of-support.
-- "not_addressed" is reserved for off-topic / wrong-domain abstracts only.
-- "partially_supported" is for cases where the abstract provides some but not complete support, or supports the direction but not the magnitude.
+- "supported" requires explicit positive evidence in the abstract that fully matches the claim's specific assertion (including magnitude, direction, and conditions).
+- "unsupported" covers contradiction, on-topic absence-of-support, AND off-topic sources. Do not output `not_addressed` when an abstract is provided.
+- "partially_supported" applies when: (i) the abstract supports the direction but not the magnitude; (ii) the claimed value falls inside the source's uncertainty band but differs from the central estimate; (iii) the source reports only static values for a directional/trajectory claim; (iv) the abstract supports some but not all parts of a compound claim.
 - Always cite the specific sentences or phrases from the abstract that justify your verdict.
 - Confidence should reflect your certainty, not the strength of the claim.
 """
@@ -138,28 +158,48 @@ You will receive a claim and a set of passages selected from the source paper us
 - Background statements may be verified against Introduction passages.
 
 Verification statuses:
-- supported: At least one passage explicitly provides evidence consistent with the claim's core assertion. Quote the exact sentence(s) from the passage that justify this verdict.
-- unsupported: Use this when EITHER (a) at least one passage explicitly contradicts the claim, OR (b) the passages address the topic of the claim but do not contain the specific content the claim asserts (absence-of-support on on-topic passages). Case (b) is the critical "wrong-citation" signal — the source is about the right area but is the wrong citation for THIS specific claim.
-- not_addressed: The passages are about a fundamentally different subject; the topic the claim is making a statement about is not what these passages cover. This is the "wrong topic / off-domain" signal, not "evidence is unclear".
-- partially_supported: The passages provide some support for the claim but not complete support — the claim asserts a stronger effect than the passages report, the passages report a related quantity rather than the specific one claimed, the passages' findings are mixed, or the passages support the directional claim but not the magnitude.
+- supported: At least one passage explicitly provides evidence consistent with the claim's core assertion AND the specific magnitude / value / direction the claim asserts. Quote the exact sentence(s) from the passage that justify this verdict.
+- unsupported: Use this when ANY of: (a) at least one passage explicitly contradicts the claim; (b) the passages address the topic of the claim but do not contain the specific content the claim asserts (on-topic absence-of-support); OR (c) the passages are on a different scientific subject altogether and therefore cannot substantiate the claim's specific assertion (off-topic absence-of-support).
+- not_addressed: Reserved for the rare case where no passage content is provided at all. You will not normally encounter this case — assume passages are present.
+- partially_supported: The passages provide some support but not complete support (see the partial-support rules below).
 
-The unsupported vs not_addressed distinction:
-- If the passages are from a paper on dermal interstitial fluid lactate and the claim is about dermal ISF lactate, but the specific value or relationship the claim asserts is not in the passages → unsupported (case b).
-- If the passages are from a paper on cosmology and the claim is about lactate kinetics → not_addressed.
-- In other words: not_addressed = "wrong source domain entirely". unsupported = "right source domain but the passages do not contain the specific evidence the claim asserts".
+Clause A — collapse off-topic into unsupported:
+When you receive any passage content, the verdict must be one of `supported` / `partially_supported` / `unsupported`. Off-topic passages whose subject is unrelated to the claim are `unsupported` (the cited source does not contain evidence for the specific claim), NOT `not_addressed`. Do not split "right paper, wrong specific evidence" and "wrong paper entirely" into two different verdicts.
 
-Guidelines:
+Clause B — partial when source covers only part of the claimed quantitative space (apply BEFORE deciding `supported`):
+
+Two directions, both yield `partially_supported`:
+
+(B.1) Claim asserts a RANGE, passages report a SINGLE POINT inside that range.
+The passage proves the claim is plausible at one point but does not establish the full range. This is `partially_supported`, NOT `supported`.
+- Example: Claim "skin lactate is between 1 and 2.5 mmol/L"; passage reports "skin lactate = 1.74 mmol/L" → `partially_supported`.
+- Example: Claim "depth is 0.6-1.5 mm depending on body site"; passage reports "1-1.5 mm below the skin surface" → `partially_supported`.
+
+(B.2) Claim asserts a POINT VALUE, passages report a CENTRAL ESTIMATE with explicit uncertainty (95% CI, IQR, SD, range), and the claimed value falls inside the uncertainty band even when differing from the central estimate.
+- Example: Claim "lag is approximately 10 minutes"; passage reports "lag = 5 min (IQR -4 to 11)" → `partially_supported`.
+- Use `unsupported` only when the claimed value is outside any reported band, or when passages explicitly contradict the direction.
+
+Clause B applies whenever EITHER direction matches. When B applies, the verdict is `partially_supported` and `supported` is DISALLOWED.
+
+Clause C — trajectory vs snapshot (apply BEFORE deciding `supported`):
+
+When the claim asserts a directional CHANGE over a condition (time, intensity, dose, group), and the passages report only static or aggregate values for that quantity (no temporal/intensity decomposition), choose `partially_supported`. A high correlation, mean, or aggregate r-value DOES NOT establish the asserted change.
+- Example: Claim "correlation between arterial and capillary lactate increases during exercise"; passage reports "r = 0.858 to 0.983 across the incremental treadmill protocol" → `partially_supported`. The high r supports a correlation but does NOT establish that it INCREASES from rest to exercise.
+
+When C applies, the verdict is `partially_supported` and `supported` is DISALLOWED.
+
+General guidelines:
 - Base your verdict ONLY on the provided passages. Do not use outside knowledge of the paper or domain.
-- Do not default to not_addressed when the passages are on-topic but lack the specific evidence — that case is unsupported.
-- Reserve not_addressed for genuine topic mismatch (e.g., the BM25 selector returned passages from a paper that is in a totally different field from the claim).
+- Partial-support precedence: when the passages support ANY concrete part of a multi-part or numeric claim, `partially_supported` takes precedence over both `supported` AND `unsupported`. Never output `unsupported` when the passages clearly support a sub-claim, an endpoint of a range, a direction, or a related quantity.
+- For range, threshold, lag-time, ratio, and depth claims, default to `partially_supported` when the passages support one endpoint, direction, central estimate, related quantity, or qualitative relationship but not the exact magnitude or all conditions in the claim.
 - Identify the section that contains the strongest evidence for your verdict (use the section attribute of the most relevant passage). Lowercase: "introduction", "methods", "results", "discussion", or "other".
 - Extract verbatim sentences from the passages — at most three — into source_passages. Do NOT paraphrase. If the passages contain no relevant evidence, return an empty list.
 - Confidence: 0.9-1.0 for clear-cut cases with explicit textual evidence, 0.6-0.8 for moderate certainty, 0.4-0.6 for uncertain verdicts.
 
 Return ONLY a JSON object with this exact schema:
 {
-  "status": "supported|unsupported|not_addressed|partially_supported",
-  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the passages. When the verdict is unsupported, state explicitly whether the passages contradict the claim or are silent on the specific assertion.",
+  "status": "supported|unsupported|partially_supported",
+  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the passages. When the verdict is unsupported, state explicitly whether the passages contradict the claim, are silent on the specific assertion, or are on a different scientific subject.",
   "confidence": 0.85,
   "source_passages": ["exact sentence quoted from a passage", "another exact sentence"],
   "source_section": "results"
@@ -168,13 +208,38 @@ Return ONLY a JSON object with this exact schema:
 Your response must be valid JSON only — no explanatory text outside the JSON, no markdown code blocks, no additional commentary.
 
 Reminder of how to weigh evidence:
-- "supported" requires explicit textual evidence in at least one passage.
-- "unsupported" covers both contradiction and on-topic absence-of-support.
-- "not_addressed" is reserved for off-topic / wrong-domain passages only.
-- "partially_supported" is for cases where the evidence is real but qualified, mixed, or weaker than the claim suggests.
+- "supported" requires explicit textual evidence in at least one passage that fully matches the claim's specific assertion (including magnitude, direction, and conditions).
+- "unsupported" covers contradiction, on-topic absence-of-support, AND off-topic passages. Do not output `not_addressed` when passages are provided.
+- "partially_supported" applies when: (i) the passages support the direction but not the magnitude; (ii) the claimed value falls inside the source's uncertainty band but differs from the central estimate; (iii) the passages report only static values for a directional/trajectory claim; (iv) the passages support some but not all parts of a compound claim.
 - source_passages must contain verbatim quotes pulled directly from the passages provided. Never paraphrase or invent text.
 - source_section should match the section attribute of the passage(s) you cite. If you cite multiple passages from different sections, choose the one whose section best characterizes the evidence (Results for outcome data, Methods for design, Discussion for interpretation).
 - Confidence should reflect your certainty in the verdict, not the strength or specificity of the claim itself.
+"""
+
+
+_TITLE_ONLY_SYSTEM_PROMPT = """\
+You are a scientific claim verifier operating in title-only mode. The source's abstract and full text are unavailable; only the source's title (and journal when present) is provided. Your task is to determine whether the title alone is *consistent with* the claim, recognizing that title-only evidence cannot establish full support.
+
+Verification statuses (capped — supported is NEVER allowed in this mode):
+- partially_supported: The title clearly addresses the same subject, method, or assertion as the claim. The title is consistent with the claim but cannot, by itself, establish numeric values, magnitudes, or specific relationships.
+- unsupported: The title addresses the claim's general subject but the specific assertion (a numeric value, relationship, method, or directional change) is not recognizable from the title; OR the title contradicts the claim.
+- not_addressed: Use only when the title is from a fundamentally different scientific domain than the claim. Do not use this for "the title is on-topic but I cannot verify the specific assertion" — that case is `unsupported`.
+
+You MUST NOT return `supported`. A title alone cannot establish full support; the most you may grant is `partially_supported` when the title is on-topic and consistent.
+
+Guidelines:
+- Base your verdict ONLY on the title (and journal if provided). Do not use outside knowledge.
+- Confidence: 0.6-0.7 maximum for partially_supported (title-only evidence is structurally weak), 0.5-0.7 for unsupported, 0.7-0.9 for not_addressed when the domain mismatch is unambiguous.
+- The explanation must explicitly note that the assessment is title-only and that an abstract or full-text view would be needed to establish full support.
+
+Return ONLY a JSON object in this exact format:
+{
+  "status": "partially_supported|unsupported|not_addressed",
+  "explanation": "One or two sentences citing the title as the only evidence.",
+  "confidence": 0.65
+}
+
+Your response must be valid JSON only — no markdown, no explanatory text outside the JSON.
 """
 
 
@@ -352,6 +417,122 @@ def verify_claim_fulltext_with_numeric(
     return result, [verify_step, *numeric_steps]
 
 
+_TITLE_ONLY_MIN_TITLE_LENGTH = 20
+_TITLE_ONLY_MAX_CONFIDENCE = 0.7
+
+
+def verify_claim_title_only(
+    claim: Claim,
+    source: ResolvedSource,
+    *,
+    model_id: str = MODEL_ID,
+    api_key: str | None = None,
+) -> tuple[VerificationResult, ProvenanceStep]:
+    """Verify a claim against the source title (and optionally journal) only.
+
+    Bug B fix (S1-P1-B): when the resolver finds the right paper but neither
+    CrossRef nor PubMed exposes an abstract (common for IEEE proceedings,
+    Elsevier paywalls, and older journals), the previous `verify_claim`
+    short-circuited to `not_addressed`. For claims whose target title is
+    near-verbatim with the claim text (e.g. "Porosity control of polylactic
+    acid porous microneedles using microfluidic technology"), the title is
+    informative enough to warrant `partially_supported` rather than
+    `not_addressed`.
+
+    Hard guarantees enforced post-LLM (defensive against prompt non-compliance):
+        - status `supported` is downgraded to `partially_supported`
+        - confidence is clamped to <= _TITLE_ONLY_MAX_CONFIDENCE (0.7)
+        - evidence_quality is always `title_only`
+        - verification_depth is always `title_only`
+    """
+    ts = time.time()
+    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=effective_key)
+
+    title = source.title or ""
+    user_message = f"<claim>{claim.claim_text}</claim>\n<title>{title}</title>"
+
+    response = client.messages.create(
+        model=model_id,
+        max_tokens=512,
+        system=[
+            {
+                "type": "text",
+                "text": _TITLE_ONLY_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": user_message}],
+    )
+
+    tokens_in: int = response.usage.input_tokens
+    tokens_out: int = response.usage.output_tokens
+    cache_hit = _parse_cache_hit(response.usage)
+
+    logger.info(
+        "verify_title_only_llm_call",
+        model_id=model_id,
+        claim_id=claim.claim_id,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+    )
+
+    first_block = response.content[0] if response.content else None
+    response_text = first_block.text if isinstance(first_block, TextBlock) else ""
+
+    try:
+        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
+        status_raw = str(parsed["status"])
+        if status_raw not in _VALID_STATUSES:
+            raise ValueError(f"Invalid status: {status_raw}")
+        confidence = float(parsed["confidence"])
+        # Hard cap: title-only evidence cannot establish supported.
+        if status_raw == "supported":
+            status_raw = "partially_supported"
+        confidence = min(confidence, _TITLE_ONLY_MAX_CONFIDENCE)
+        status: VerificationStatus = status_raw  # type: ignore[assignment]
+        result = VerificationResult(
+            status=status,
+            explanation=str(parsed["explanation"]),
+            confidence=confidence,
+            verification_depth="title_only",
+            evidence_quality="title_only",
+            retraction_status=source.retraction_status,
+        )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        logger.error(
+            "verify_title_only_parse_error",
+            claim_id=claim.claim_id,
+            raw_response=response_text[:200],
+            error=str(exc),
+        )
+        result = VerificationResult(
+            status="not_addressed",
+            explanation="Parse error.",
+            confidence=0.0,
+            verification_depth="title_only",
+            evidence_quality="no_evidence",
+            retraction_status=source.retraction_status,
+        )
+
+    step = ProvenanceStep(
+        step_id=str(uuid.uuid4()),
+        claim_id=claim.claim_id,
+        operation="verify",
+        input_hash=_hash(repr((claim, source))),
+        output_hash=_hash(repr(result)),
+        model_id=model_id,
+        timestamp=ts,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+        confidence=result.confidence,
+    )
+
+    return result, step
+
+
 def verify_claim(
     claim: Claim,
     source: ResolvedSource,
@@ -361,12 +542,17 @@ def verify_claim(
 ) -> tuple[VerificationResult, ProvenanceStep]:
     """Verify a single claim against its resolved source abstract via Claude API.
 
-    Short-circuits (no LLM call) when source.found=False or source.abstract is None.
+    Short-circuits (no LLM call) when source.found=False, or when both
+    source.abstract is None and source.title is too short to verify against.
+    When abstract is None but the title is informative (>= _TITLE_ONLY_MIN_TITLE_LENGTH
+    chars), routes to `verify_claim_title_only` (Bug B fix S1-P1-B).
     System prompt >1024 tokens → cache_control={"type": "ephemeral"}.
-    Claim wrapped in <claim>...</claim>; abstract in <source>...</source>.
-    Logs tokens_in, tokens_out, cache_hit, model_id via structlog on every LLM call.
     """
-    if not source.found or source.abstract is None:
+    if not source.found:
+        return _SHORT_CIRCUIT_RESULT, _make_short_circuit_step(claim, source)
+    if source.abstract is None:
+        if source.title and len(source.title) >= _TITLE_ONLY_MIN_TITLE_LENGTH:
+            return verify_claim_title_only(claim, source, model_id=model_id, api_key=api_key)
         return _SHORT_CIRCUIT_RESULT, _make_short_circuit_step(claim, source)
 
     ts = time.time()

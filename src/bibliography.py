@@ -31,7 +31,10 @@ from dataclasses import dataclass, field
 
 _REFERENCES_HEADER_RE = re.compile(r"\bReferences\b", re.IGNORECASE)
 _ENTRY_NUMBER_RE = re.compile(r"^\s*\[(\d+)\]\s*$", re.MULTILINE)
-_DOI_RE = re.compile(r"doi:\s*(10\.\d{4,9}/\S+)", re.IGNORECASE)
+_DOI_FIELD_RE = re.compile(
+    r"doi:\s*(10\.\d{4,9}/.+?)(?=(?:\s+\(|\s+PMID\b|\s+PMC\b|\s*$))",
+    re.IGNORECASE | re.DOTALL,
+)
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 _PMID_RE = re.compile(r"\bPMID\s*:?\s*(\d+)", re.IGNORECASE)
 _PMCID_RE = re.compile(r"\bPMC(\d+)", re.IGNORECASE)
@@ -127,6 +130,15 @@ def _extract_journal(body: str, title: str) -> str:
     return journal.lstrip(": ").strip()
 
 
+def _extract_doi(body: str) -> str | None:
+    match = _DOI_FIELD_RE.search(body)
+    if not match:
+        return None
+    # PDF/plain-text exports sometimes wrap long DOI suffixes across lines.
+    doi = re.sub(r"\s+", "", match.group(1))
+    return doi.rstrip(".,;)")
+
+
 def parse_bibliography(text: str) -> dict[int, BibEntry]:
     """Parse the numbered References section out of `text`.
 
@@ -163,8 +175,7 @@ def parse_bibliography(text: str) -> dict[int, BibEntry]:
         year_match = _YEAR_RE.search(raw_block)
         year = int(year_match.group()) if year_match else None
 
-        doi_match = _DOI_RE.search(raw_block)
-        doi = doi_match.group(1).rstrip(".,;)") if doi_match else None
+        doi = _extract_doi(raw_block)
 
         pmid_match = _PMID_RE.search(raw_block)
         pmid = pmid_match.group(1) if pmid_match else None

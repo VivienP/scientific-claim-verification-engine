@@ -1,0 +1,286 @@
+{
+  "metadata": {
+    "new_anthropic_spend_usd": 0.0,
+    "abort_threshold_usd": 4.5,
+    "experiment_status": "not rerun; dependency installation was interrupted and bundled Python lacked anthropic/httpx/rank_bm25/tiktoken/pymupdf/pytest/ruff",
+    "static_ceiling": {
+      "perfect_resolver_only_agreement_ceiling": "at most 9/25 under this static recovery map (1 existing + 8 fully recoverable), not 20/25",
+      "claims_recoverable_after_primary_fix": [
+        "lactate_review_003",
+        "lactate_review_006",
+        "lactate_review_007",
+        "lactate_review_010",
+        "lactate_review_011",
+        "lactate_review_018",
+        "lactate_review_020",
+        "lactate_review_025"
+      ]
+    }
+  },
+  "rows": [
+    {
+      "claim_id": "lactate_review_001",
+      "expected_verdict": "unsupported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "citation_context_loss",
+      "next_blocker_after_primary_fix": "verifier_rubric_absence_as_unsupported",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "unsupported by cited sources requires absence-of-support judgment over refs [3,39]"
+    },
+    {
+      "claim_id": "lactate_review_002",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "old_proceedings_source_access_no_doi_or_abstract",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct Brooks 1986 source is a proceedings item; current pipeline has no bibliography-title/PMID path"
+    },
+    {
+      "claim_id": "lactate_review_003",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "benchmark_identifier_error_then_fulltext_fetch",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "verdicts JSON says DOI 10.1007/BF00382568, but bibliography/web identify Goodwin 2007 as DOI 10.1177/193229680700100414"
+    },
+    {
+      "claim_id": "lactate_review_004",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "citation_context_loss",
+      "next_blocker_after_primary_fix": "non_oa_williams_1992_and_multi_source_partiality",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "multi-citation range [81-83]; best evidence is Williams 1992, likely not reachable by current OA pipeline"
+    },
+    {
+      "claim_id": "lactate_review_005",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "citation_context_loss",
+      "next_blocker_after_primary_fix": "composite_multi_source_verification",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "three refs support sample-site effect but not device-effect subclaim; current verifier checks one source at a time"
+    },
+    {
+      "claim_id": "lactate_review_006",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "pmid_pmc_resolution_missing",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct source has PMCID PMC4306774 and abstract/full text supports the portable-analyzer claim"
+    },
+    {
+      "claim_id": "lactate_review_007",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "pmid_pmc_resolution_missing",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "same Bonaventura PMCID path as claim 006"
+    },
+    {
+      "claim_id": "lactate_review_008",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "source_evidence_weaker_than_claim_and_likely_partial",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "Heikenfeld source is about dermal ISF opportunity; current verifier would need calibrated partial-support behavior"
+    },
+    {
+      "claim_id": "lactate_review_009",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "fulltext_access_for_heikenfeld_and_specific_lag_evidence",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "same source family as claim 008; abstract-level evidence may not contain the 5-15 minute lactate lag"
+    },
+    {
+      "claim_id": "lactate_review_010",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "metadata_fulltext_retrieval_gap",
+      "next_blocker_after_primary_fix": "pubmed_abstract_not_ingested",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "resolved DOI is correct but CrossRef abstract is null; PubMed abstract exposes the control skin-lactate value"
+    },
+    {
+      "claim_id": "lactate_review_011",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "citation_context_loss",
+      "next_blocker_after_primary_fix": "multi_source_pubmed_abstract_ingestion",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "references [99,100] need bibliography parsing; PubMed abstracts can support a partial verdict"
+    },
+    {
+      "claim_id": "lactate_review_012",
+      "expected_verdict": "unsupported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "verifier_rubric_gap",
+      "next_blocker_after_primary_fix": "unsupported_by_absence_not_contradiction",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "expected unsupported because cited Jansson does not establish 5% turnover; current rubric maps absence to not_addressed"
+    },
+    {
+      "claim_id": "lactate_review_013",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "bmj_innovations_access_and_partiality",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct Ming 2022 source likely needs full text and a partial verdict, not just identifier repair"
+    },
+    {
+      "claim_id": "lactate_review_014",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "bibliography_title_missing_journal_metadata",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "Braverman reference lacks DOI/journal title in source export; resolver needs richer bibliography normalization"
+    },
+    {
+      "claim_id": "lactate_review_015",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "fulltext_unavailable_for_depth_specific_claim",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct Krogstad/Jansson family still fails in claim 016 with correct DOI because no abstract/full text is ingested"
+    },
+    {
+      "claim_id": "lactate_review_016",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "metadata_fulltext_retrieval_gap",
+      "next_blocker_after_primary_fix": "depth_relation_not_in_crossref_metadata",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct DOI is already resolved, but source abstract/full text is unavailable to current pipeline"
+    },
+    {
+      "claim_id": "lactate_review_017",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "citation_context_loss",
+      "next_blocker_after_primary_fix": "old_multi_source_muscle_lactate_access",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "references [70-73] are older mixed DOI/no-DOI exercise physiology papers; current single-source verifier cannot aggregate them"
+    },
+    {
+      "claim_id": "lactate_review_018",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "citation_context_loss",
+      "next_blocker_after_primary_fix": "none",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct source 10.1186/s41232-017-0042-9 is open access and has relevant permeability text"
+    },
+    {
+      "claim_id": "lactate_review_019",
+      "expected_verdict": "unsupported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "unsupported_threshold_requires_rubric_or_external_definition",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "Forsythe source is treatment-focused; current verifier needs explicit contradiction to emit unsupported"
+    },
+    {
+      "claim_id": "lactate_review_020",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "citation_context_loss",
+      "next_blocker_after_primary_fix": "none",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct Kim 2016 source is PMC open access and states plasma glucose is about 11% higher than whole blood"
+    },
+    {
+      "claim_id": "lactate_review_021",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "non_oa_williams_1992_and_partial_verdict",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "same Williams 1992 source as claim 004; source access and partiality both remain"
+    },
+    {
+      "claim_id": "lactate_review_022",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "partially_supported",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "wiley_fulltext_access_and_overbroad_claim",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct Wiley review may support dimensions but current verifier already chose partial on a related microneedle source"
+    },
+    {
+      "claim_id": "lactate_review_024",
+      "expected_verdict": "supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "ieee_abstract_or_fulltext_not_available_to_verifier",
+      "fully_recoverable_static_assessment": "N",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "correct IEEE title matches claim but current verifier does not use titles as evidence"
+    },
+    {
+      "claim_id": "lactate_review_025",
+      "expected_verdict": "partially_supported",
+      "pipeline_verdict": "not_addressed",
+      "primary_cause": "resolver_wrong_source",
+      "next_blocker_after_primary_fix": "abstract_enough_but_claim_is_glucose_not_lactate_wedge",
+      "fully_recoverable_static_assessment": "Y",
+      "existing_verifier_rerun_with_correct_identifier": "not_run_no_project_deps_or_anthropic_runtime",
+      "oracle_passage_verifier_rerun": "not_run_no_project_deps_or_anthropic_runtime",
+      "assessment_basis": "ScienceDirect abstract reports 10 +/- 2 minute ISF/plasma glucose delay; this is recoverable after correct DOI"
+    }
+  ]
+}

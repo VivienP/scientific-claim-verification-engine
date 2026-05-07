@@ -20,6 +20,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
+from src.bibliography import parse_bibliography
 from src.bm25_selector import select_passages
 from src.chunker import chunk_paper
 from src.extract import extract_claims
@@ -52,7 +53,8 @@ def main() -> None:
     all_steps.append(extract_step)
     print(f"Extracted {len(claims)} claims.")
 
-    sources, resolve_steps = resolve_citations(claims)
+    bibliography = parse_bibliography(text)
+    sources, resolve_steps = resolve_citations(claims, bibliography=bibliography)
     all_steps.extend(resolve_steps)
 
     results = {}

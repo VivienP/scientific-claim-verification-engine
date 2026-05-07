@@ -15,6 +15,7 @@ def _make_claim(
     cited_authors: list[str] | None = None,
     cited_year: int | None = 2020,
     claim_text: str = "Some claim about X.",
+    citation_markers: list[int] | None = None,
 ) -> Claim:
     return Claim(
         claim_id=claim_id,
@@ -22,6 +23,7 @@ def _make_claim(
         cited_authors=cited_authors if cited_authors is not None else ["Smith"],
         cited_year=cited_year,
         claim_type="factual_qualitative",
+        citation_markers=citation_markers or [],
     )
 
 
@@ -97,28 +99,94 @@ class TestPhase1ResolveBehavior:
         assert sources["c1"].retraction_status is False
 
 
-class TestPubmedAbstractEnrichment:
-    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+class TestPubmedRecordEnrichment:
+    """Bug A fix (S1-P1-A): enrich both abstract AND pmcid via PubMed record.
+
+    The previous `_enrich_abstract_via_pubmed` skipped when CrossRef had any
+    abstract, silently dropping the pmcid even when PubMed had it. This
+    blocked claim 003 (Goodwin) and claim 020 (Kotwal) from reaching the
+    PMC fulltext path. The fix:
+      - drops the `or source.abstract` early-return guard
+      - uses find_pmid_by_doi -> fetch_record (preserving the full record)
+      - propagates pmcid AND abstract (preserving longer existing abstract)
+    """
+
+    @staticmethod
+    def _record(
+        *,
+        pmid: str = "12345",
+        abstract: str | None = "PubMed abstract about lactate kinetics.",
+        doi: str | None = "10.1/x",
+        pmcid: str | None = "PMC123",
+    ) -> object:
+        from src.clients.pubmed import PubMedRecord
+
+        return PubMedRecord(pmid=pmid, abstract=abstract, doi=doi, pmcid=pmcid)
+
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve._pubmed.find_pmid_by_doi", return_value="12345")
     @patch("src.resolve._crossref.check_retraction", return_value=False)
     @patch("src.resolve.search_paper")
-    def test_enriches_when_doi_present_and_abstract_missing(
-        self, mock_oa: MagicMock, mock_retr: MagicMock, mock_pubmed: MagicMock
+    def test_enriches_abstract_and_pmcid_when_both_missing(
+        self,
+        mock_oa: MagicMock,
+        mock_retr: MagicMock,
+        mock_pmid: MagicMock,
+        mock_record: MagicMock,
     ) -> None:
         mock_oa.return_value = ResolvedSource(
             found=True, doi="10.1/x", title="T", abstract=None, similarity_score=0.9
         )
-        mock_pubmed.return_value = "PubMed-fetched abstract about lactate kinetics."
+        mock_record.return_value = self._record(abstract="PubMed-fetched abstract.", pmcid="PMC123")
         from src.resolve import resolve_citations
 
         sources, _ = resolve_citations([_make_claim("c1")])
-        mock_pubmed.assert_called_once_with("10.1/x", db_path=None)
-        assert sources["c1"].abstract == "PubMed-fetched abstract about lactate kinetics."
 
-    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+        mock_pmid.assert_called_once_with("10.1/x", db_path=None)
+        mock_record.assert_called_once_with("12345", db_path=None)
+        assert sources["c1"].abstract == "PubMed-fetched abstract."
+        assert sources["c1"].pmcid == "PMC123"
+
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve._pubmed.find_pmid_by_doi", return_value="12345")
     @patch("src.resolve._crossref.check_retraction", return_value=False)
     @patch("src.resolve.search_paper")
-    def test_skipped_when_abstract_already_present(
-        self, mock_oa: MagicMock, mock_retr: MagicMock, mock_pubmed: MagicMock
+    def test_enriches_pmcid_when_abstract_already_present(
+        self,
+        mock_oa: MagicMock,
+        mock_retr: MagicMock,
+        mock_pmid: MagicMock,
+        mock_record: MagicMock,
+    ) -> None:
+        # CrossRef-with-abstract-no-pmcid: the common Bug A case (claim 003, 020).
+        mock_oa.return_value = ResolvedSource(
+            found=True,
+            doi="10.1/x",
+            title="T",
+            abstract="CrossRef abstract is here and is reasonably detailed.",
+            similarity_score=0.9,
+        )
+        mock_record.return_value = self._record(abstract="Shorter PubMed abstract.", pmcid="PMC456")
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+
+        mock_pmid.assert_called_once()
+        mock_record.assert_called_once()
+        # Existing CrossRef abstract preserved (longer); pmcid newly populated.
+        assert sources["c1"].abstract == "CrossRef abstract is here and is reasonably detailed."
+        assert sources["c1"].pmcid == "PMC456"
+
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve._pubmed.find_pmid_by_doi")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve.search_paper")
+    def test_skipped_when_already_complete(
+        self,
+        mock_oa: MagicMock,
+        mock_retr: MagicMock,
+        mock_pmid: MagicMock,
+        mock_record: MagicMock,
     ) -> None:
         mock_oa.return_value = ResolvedSource(
             found=True,
@@ -126,52 +194,94 @@ class TestPubmedAbstractEnrichment:
             title="T",
             abstract="Already have one.",
             similarity_score=0.9,
+            pmcid="PMC789",
         )
         from src.resolve import resolve_citations
 
         sources, _ = resolve_citations([_make_claim("c1")])
-        mock_pubmed.assert_not_called()
-        assert sources["c1"].abstract == "Already have one."
 
-    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+        mock_pmid.assert_not_called()
+        mock_record.assert_not_called()
+        assert sources["c1"].abstract == "Already have one."
+        assert sources["c1"].pmcid == "PMC789"
+
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve._pubmed.find_pmid_by_doi")
     @patch("src.resolve._crossref.search_paper")
     @patch("src.resolve.search_paper")
     def test_skipped_when_source_not_found(
-        self, mock_oa: MagicMock, mock_cf: MagicMock, mock_pubmed: MagicMock
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_pmid: MagicMock,
+        mock_record: MagicMock,
     ) -> None:
         mock_oa.return_value = ResolvedSource(False, None, None, None, None)
         mock_cf.return_value = ResolvedSource(False, None, None, None, None)
         from src.resolve import resolve_citations
 
         resolve_citations([_make_claim("c1")])
-        mock_pubmed.assert_not_called()
 
-    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+        mock_pmid.assert_not_called()
+        mock_record.assert_not_called()
+
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve._pubmed.find_pmid_by_doi", return_value=None)
     @patch("src.resolve._crossref.check_retraction", return_value=False)
     @patch("src.resolve.search_paper")
     def test_pubmed_miss_leaves_source_unchanged(
-        self, mock_oa: MagicMock, mock_retr: MagicMock, mock_pubmed: MagicMock
+        self,
+        mock_oa: MagicMock,
+        mock_retr: MagicMock,
+        mock_pmid: MagicMock,
+        mock_record: MagicMock,
     ) -> None:
         mock_oa.return_value = ResolvedSource(
             found=True, doi="10.1/x", title="T", abstract=None, similarity_score=0.9
         )
-        mock_pubmed.return_value = None
         from src.resolve import resolve_citations
 
         sources, _ = resolve_citations([_make_claim("c1")])
-        mock_pubmed.assert_called_once()
+
+        mock_pmid.assert_called_once()
+        mock_record.assert_not_called()
         assert sources["c1"].found is True
         assert sources["c1"].abstract is None
+        assert sources["c1"].pmcid is None
+
+    @patch("src.resolve._pubmed.fetch_record", return_value=None)
+    @patch("src.resolve._pubmed.find_pmid_by_doi", return_value="12345")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve.search_paper")
+    def test_pubmed_record_miss_leaves_source_unchanged(
+        self,
+        mock_oa: MagicMock,
+        mock_retr: MagicMock,
+        mock_pmid: MagicMock,
+        mock_record: MagicMock,
+    ) -> None:
+        # PMID resolves but fetch_record returns None (e.g., abstract too short).
+        mock_oa.return_value = ResolvedSource(
+            found=True, doi="10.1/x", title="T", abstract=None, similarity_score=0.9
+        )
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+
+        mock_pmid.assert_called_once()
+        mock_record.assert_called_once()
+        assert sources["c1"].abstract is None
+        assert sources["c1"].pmcid is None
 
 
 class TestBibliographyAwareResolve:
     @patch("src.resolve._crossref.check_retraction", return_value=False)
-    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve._crossref.fetch_work_by_doi")
     @patch("src.resolve.search_paper")
     def test_uses_bib_doi_directly_when_available(
         self,
         mock_oa: MagicMock,
-        mock_cf: MagicMock,
+        mock_fetch_doi: MagicMock,
         mock_retr: MagicMock,
     ) -> None:
         from src.bibliography import BibEntry
@@ -187,7 +297,7 @@ class TestBibliographyAwareResolve:
                 doi="10.1177/193229680700100414",
             )
         }
-        mock_cf.return_value = ResolvedSource(
+        mock_fetch_doi.return_value = ResolvedSource(
             found=True,
             doi="10.1177/193229680700100414",
             title="Blood lactate measurements",
@@ -199,15 +309,444 @@ class TestBibliographyAwareResolve:
 
         # Bib DOI path uses CrossRef by DOI; OpenAlex query path is bypassed.
         mock_oa.assert_not_called()
-        mock_cf.assert_called_once_with("10.1177/193229680700100414", db_path=None)
+        mock_fetch_doi.assert_called_once_with("10.1177/193229680700100414", db_path=None)
         assert sources["c1"].doi == "10.1177/193229680700100414"
 
     @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.fetch_work_by_doi")
+    @patch("src.resolve.search_paper")
+    def test_bib_doi_fallback_keeps_authoritative_doi_when_crossref_misses(
+        self,
+        mock_oa: MagicMock,
+        mock_fetch_doi: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            21: BibEntry(
+                number=21,
+                raw="...",
+                authors=["Sarabi", "Nakhjavani", "Tasoglu"],
+                title="3D-Printed Microneedles for Point-of-Care Biosensing Applications",
+                year=2022,
+                doi="10.3390/mi13071099",
+            )
+        }
+        mock_fetch_doi.return_value = ResolvedSource(False, None, None, None, None)
+        claim = _make_claim(
+            "c1",
+            cited_authors=["Rezapour Sarabi", "Akbari Nakhjavani", "Tasoglu"],
+            cited_year=2022,
+            citation_markers=[21],
+        )
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        assert sources["c1"].found is True
+        assert sources["c1"].doi == "10.3390/mi13071099"
+        assert (
+            sources["c1"].title
+            == "3D-Printed Microneedles for Point-of-Care Biosensing Applications"
+        )
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.fetch_work_by_doi")
+    @patch("src.resolve.search_paper")
+    def test_citation_marker_selects_bibliography_entry_before_author_year(
+        self,
+        mock_oa: MagicMock,
+        mock_fetch_doi: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            20: BibEntry(
+                number=20,
+                raw="...",
+                authors=["Smith"],
+                title="Wrong same-author paper",
+                year=2022,
+                doi="10.1/wrong",
+            ),
+            21: BibEntry(
+                number=21,
+                raw="...",
+                authors=["Smith"],
+                title="Right marker paper",
+                year=2022,
+                doi="10.1/right",
+            ),
+        }
+        mock_fetch_doi.return_value = ResolvedSource(
+            found=True,
+            doi="10.1/right",
+            title="Right marker paper",
+            abstract=None,
+            similarity_score=1.0,
+        )
+        claim = _make_claim(
+            "c1",
+            cited_authors=["Smith"],
+            cited_year=2022,
+            citation_markers=[21],
+        )
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_fetch_doi.assert_called_once_with("10.1/right", db_path=None)
+        assert sources["c1"].doi == "10.1/right"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve.search_paper")
+    def test_uses_bib_pmid_directly_when_available(
+        self,
+        mock_oa: MagicMock,
+        mock_pubmed_record: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.clients.pubmed import PubMedRecord
+        from src.resolve import resolve_citations
+
+        bib = {
+            93: BibEntry(
+                number=93,
+                raw="...",
+                authors=["Bonaventura"],
+                title="Reliability and Accuracy of Six Hand-Held Blood Lactate Analysers",
+                year=2015,
+                pmid="25729309",
+                pmcid="PMC4306774",
+            )
+        }
+        mock_pubmed_record.return_value = PubMedRecord(
+            pmid="25729309",
+            abstract="Six hand-held blood lactate analysers were tested.",
+            doi=None,
+            pmcid="PMC4306774",
+        )
+        claim = _make_claim(
+            "c1",
+            cited_authors=["Bonaventura"],
+            cited_year=2015,
+            citation_markers=[93],
+        )
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        mock_pubmed_record.assert_called_once_with("25729309", db_path=None)
+        assert sources["c1"].found is True
+        assert sources["c1"].abstract == "Six hand-held blood lactate analysers were tested."
+        assert sources["c1"].pmcid == "PMC4306774"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve.search_paper")
+    def test_uses_bib_pmcid_without_pmid_when_available(
+        self,
+        mock_oa: MagicMock,
+        mock_pubmed_record: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            93: BibEntry(
+                number=93,
+                raw="...",
+                authors=["Bonaventura"],
+                title="Reliability and Accuracy of Six Hand-Held Blood Lactate Analysers",
+                year=2015,
+                pmcid="PMC4306774",
+            )
+        }
+        claim = _make_claim(
+            "c1",
+            cited_authors=["Bonaventura"],
+            cited_year=2015,
+            citation_markers=[93],
+        )
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        mock_pubmed_record.assert_not_called()
+        assert sources["c1"].found is True
+        assert sources["c1"].pmcid == "PMC4306774"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._pubmed.find_pmid_by_title")
     @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_uses_crossref_title_before_pubmed_when_bib_has_no_doi(
+        self,
+        mock_oa: MagicMock,
+        mock_crossref_title: MagicMock,
+        mock_find_pmid: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            52: BibEntry(
+                number=52,
+                raw="...",
+                authors=["Forsythe", "Schmidt"],
+                title="Sodium bicarbonate for the treatment of lactic acidosis",
+                year=2000,
+            )
+        }
+        mock_crossref_title.return_value = ResolvedSource(
+            found=True,
+            doi="10.1378/chest.117.1.260",
+            title="Sodium Bicarbonate for the Treatment of Lactic Acidosis",
+            abstract=None,
+            similarity_score=None,
+        )
+        claim = _make_claim("c1", cited_authors=["Forsythe", "Schmidt"], cited_year=2000)
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        mock_find_pmid.assert_not_called()
+        assert sources["c1"].found is True
+        assert sources["c1"].doi == "10.1378/chest.117.1.260"
+        assert sources["c1"].title_match_score == 1.0
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve._pubmed.find_pmid_by_title")
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_uses_pubmed_title_before_openalex_when_crossref_title_misses(
+        self,
+        mock_oa: MagicMock,
+        mock_crossref_title: MagicMock,
+        mock_find_pmid: MagicMock,
+        mock_pubmed_record: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.clients.pubmed import PubMedRecord
+        from src.resolve import resolve_citations
+
+        bib = {
+            93: BibEntry(
+                number=93,
+                raw="...",
+                authors=["Bonaventura"],
+                title="Reliability and Accuracy of Six Hand-Held Blood Lactate Analysers",
+                year=2015,
+            )
+        }
+        mock_crossref_title.return_value = ResolvedSource(False, None, None, None, None)
+        mock_find_pmid.return_value = "25729309"
+        mock_pubmed_record.return_value = PubMedRecord(
+            pmid="25729309",
+            abstract="Six hand-held blood lactate analysers were tested.",
+            doi=None,
+            pmcid="PMC4306774",
+        )
+        claim = _make_claim(
+            "c1",
+            cited_authors=["Bonaventura"],
+            cited_year=2015,
+            citation_markers=[93],
+        )
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        mock_crossref_title.assert_called_once()
+        mock_find_pmid.assert_called_once_with(
+            "Reliability and Accuracy of Six Hand-Held Blood Lactate Analysers",
+            year=2015,
+            db_path=None,
+        )
+        assert sources["c1"].found is True
+        assert sources["c1"].abstract == "Six hand-held blood lactate analysers were tested."
+        assert sources["c1"].pmcid == "PMC4306774"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._pubmed.find_pmid_by_title", return_value=None)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_rejects_crossref_title_match_when_bib_title_is_too_generic(
+        self,
+        mock_oa: MagicMock,
+        mock_crossref_title: MagicMock,
+        mock_find_pmid: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            104: BibEntry(
+                number=104,
+                raw="...",
+                authors=["Braverman"],
+                title="The cutaneous microcirculation",
+                year=2000,
+            )
+        }
+        mock_crossref_title.return_value = ResolvedSource(
+            found=True,
+            doi="10.3109/10739689709146797",
+            title="The Cutaneous Microcirculation: Ultrastructure and Microanatomical Organization",
+            abstract=None,
+            similarity_score=None,
+        )
+        mock_oa.return_value = ResolvedSource(
+            found=True,
+            doi="10.1/openalex",
+            title="OpenAlex fallback",
+            abstract=None,
+            similarity_score=0.8,
+        )
+        claim = _make_claim("c1", cited_authors=["Braverman"], cited_year=2000)
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_crossref_title.assert_called_once()
+        mock_find_pmid.assert_called_once()
+        mock_oa.assert_called_once()
+        assert sources["c1"].doi == "10.1/openalex"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._pubmed.find_pmid_by_title")
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_accepts_exact_crossref_match_for_short_bibliography_title(
+        self,
+        mock_oa: MagicMock,
+        mock_crossref_title: MagicMock,
+        mock_find_pmid: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            104: BibEntry(
+                number=104,
+                raw="...",
+                authors=["Braverman"],
+                title="The cutaneous microcirculation",
+                year=2000,
+            )
+        }
+        mock_crossref_title.return_value = ResolvedSource(
+            found=True,
+            doi="10.1046/j.1087-0024.2000.00010.x",
+            title="The Cutaneous Microcirculation",
+            abstract=None,
+            similarity_score=None,
+        )
+        mock_find_pmid.return_value = None
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+        claim = _make_claim("c1", cited_authors=["Braverman"], cited_year=2000)
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        mock_find_pmid.assert_not_called()
+        assert sources["c1"].doi == "10.1046/j.1087-0024.2000.00010.x"
+        assert sources["c1"].title_match_score == 1.0
+
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve._pubmed.find_pmid_by_title", return_value=None)
+    @patch("src.resolve.search_paper")
+    def test_crossref_title_query_uses_complete_bibliography_title(
+        self,
+        mock_oa: MagicMock,
+        mock_pubmed_title: MagicMock,
+        mock_crossref_title: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            102: BibEntry(
+                number=102,
+                raw="...",
+                authors=["Ming"],
+                title=(
+                    "Real-time continuous measurement of lactate through a minimally "
+                    "invasive microneedle patch: a phase I clinical study"
+                ),
+                year=2022,
+            )
+        }
+        mock_crossref_title.return_value = ResolvedSource(False, None, None, None, None)
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+        claim = _make_claim("c1", cited_authors=["Ming"], cited_year=2022)
+
+        resolve_citations([claim], bibliography=bib)
+
+        called_queries = [call.args[0] for call in mock_crossref_title.call_args_list]
+        assert any("phase" in query for query in called_queries)
+        assert any("clinical" in query for query in called_queries)
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._pubmed.fetch_record")
+    @patch("src.resolve._pubmed.find_pmid_by_title")
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_pubmed_title_metadata_populates_doi_when_available(
+        self,
+        mock_oa: MagicMock,
+        mock_crossref_title: MagicMock,
+        mock_find_pmid: MagicMock,
+        mock_pubmed_record: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.clients.pubmed import PubMedRecord
+        from src.resolve import resolve_citations
+
+        bib = {
+            3: BibEntry(
+                number=3,
+                raw="...",
+                authors=["Goodwin"],
+                title="Blood lactate measurements and analysis during exercise",
+                year=2007,
+            )
+        }
+        mock_crossref_title.return_value = ResolvedSource(False, None, None, None, None)
+        mock_find_pmid.return_value = "19885119"
+        mock_pubmed_record.return_value = PubMedRecord(
+            pmid="19885119",
+            abstract="The whole-blood-to-plasma lactate ratio varies from 63% to 81%.",
+            doi="10.1177/193229680700100414",
+            pmcid="PMC2769631",
+        )
+        claim = _make_claim("c1", cited_authors=["Goodwin"], cited_year=2007, citation_markers=[3])
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        assert sources["c1"].doi == "10.1177/193229680700100414"
+        assert sources["c1"].pmcid == "PMC2769631"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve._pubmed.find_pmid_by_title", return_value=None)
     @patch("src.resolve.search_paper")
     def test_falls_back_to_richer_query_when_bib_has_no_doi(
         self,
         mock_oa: MagicMock,
+        mock_pubmed_title: MagicMock,
         mock_cf: MagicMock,
         mock_retr: MagicMock,
     ) -> None:
@@ -231,6 +770,7 @@ class TestBibliographyAwareResolve:
             abstract=None,
             similarity_score=0.9,
         )
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
         claim = _make_claim("c1", cited_authors=["Williams"], cited_year=1992)
         sources, _ = resolve_citations([claim], bibliography=bib)
 
@@ -244,10 +784,12 @@ class TestBibliographyAwareResolve:
 
     @patch("src.resolve._crossref.check_retraction", return_value=False)
     @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve._pubmed.find_pmid_by_title", return_value=None)
     @patch("src.resolve.search_paper")
     def test_yearless_claim_with_bib_match_no_longer_skipped(
         self,
         mock_oa: MagicMock,
+        mock_pubmed_title: MagicMock,
         mock_cf: MagicMock,
         mock_retr: MagicMock,
     ) -> None:
@@ -267,6 +809,7 @@ class TestBibliographyAwareResolve:
         mock_oa.return_value = ResolvedSource(
             found=True, doi="10.x/y", title="...", abstract=None, similarity_score=0.8
         )
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
         # Claim has cited_year=None — without bib it would be skipped.
         claim = _make_claim("c1", cited_authors=["Pösö"], cited_year=None)
         sources, _ = resolve_citations([claim], bibliography=bib)

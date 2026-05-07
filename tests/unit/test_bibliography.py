@@ -81,6 +81,18 @@ class TestParseBibliography:
         entries = parse_bibliography(_SAMPLE)
         assert entries[4].doi == "10.2165/00007256-198603010-00003"
 
+    def test_line_wrapped_doi_extraction(self) -> None:
+        text = (
+            "References\n"
+            "[23]\n"
+            "Boyu Qin et al. 'Porosity control of polylactic acid porous microneedles "
+            "using microfluidic technology'. In: 2022 IEEE CPMT Symposium Japan "
+            "(2022), pp. 127-130. doi: 10.1109/ICSJ55786.\n"
+            "2022.10034733 (cited on page 1).\n"
+        )
+        entries = parse_bibliography(text)
+        assert entries[23].doi == "10.1109/ICSJ55786.2022.10034733"
+
     def test_doi_none_when_absent(self) -> None:
         entries = parse_bibliography(_SAMPLE)
         assert entries[3].doi is None

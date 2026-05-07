@@ -1,4 +1,4 @@
-Status: scaffold complete, ground-truth dataset (reference_paper_v1.json) pending.
+Status: scaffold complete; verdicts track populated (`reference_paper_v1_verdicts.json`); recall track (`reference_paper_v1.json`) pending.
 
 # End-to-end benchmark — Phase A artifact
 
@@ -6,13 +6,21 @@ This directory holds the hand-annotated ground truth used to measure the full
 pipeline (extract → resolve → verify) on real content. It complements the
 SciFact oracle eval, which only measures the verifier in isolation.
 
+## Two distinct measurement tracks
+
+Both tracks annotate the same source paper but target different metrics:
+
+- **Verdicts track** (`reference_paper_v1_verdicts.json`): verdict agreement against domain-expert annotations. Each entry carries an `expected_verdict` (`supported | partially_supported | unsupported | not_addressed`), a one-sentence rationale, plus `is_primary_source`, `primary_source_doi`, `expected_full_text_available`, `annotation_notes`, and a `recommended_fix` for unsupported / partially_supported claims. Used to score the end-to-end pipeline on the verdict produced for each claim. Populated 2026-05-07 with 25 claims from the 2023 lactate ISF review (Vivien Perrelle, PKvitality).
+- **Recall track** (`reference_paper_v1.json`, scaffolded but not yet populated): extraction recall + DOI resolution accuracy, scored against `gt_claim_id` / `ground_truth_doi` ground truth via `scripts/measure_e2e_recall.py`. Schema documented in `schema.py` and `reference_paper_v1.template.json`.
+
 ## Files
 
-- `schema.py` — typed dataclasses + JSON validator for reference paper annotations
-- `reference_paper_v1.template.json` — annotation template with field-by-field guide
-- `reference_paper_v1.json` — **NOT YET CREATED.** Vivien's annotation of the 2023 lactate/ISF review goes here
+- `reference_paper_v1_verdicts.json` — **POPULATED.** 25 hand-labeled verdict annotations from Vivien (verdicts track)
+- `schema.py` — typed dataclasses + JSON validator for the recall track
+- `reference_paper_v1.template.json` — annotation template for the recall track
+- `reference_paper_v1.json` — **NOT YET CREATED.** Recall-track annotation goes here
 - `source_texts/` — plain-text exports of source manuscripts (kept out of git for size)
-- `results/` — output JSONs from `scripts/measure_e2e_recall.py` (`baseline_pre_fixes.json`, etc.)
+- `results/` — output JSONs from `scripts/measure_e2e_recall.py` (`baseline_pre_fixes.json`, etc.) and from the verdicts track measurement
 
 ## How to annotate (step-by-step)
 

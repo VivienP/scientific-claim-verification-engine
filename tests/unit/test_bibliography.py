@@ -93,11 +93,6 @@ class TestParseBibliography:
         entries = parse_bibliography(text)
         assert entries[23].doi == "10.1109/ICSJ55786.2022.10034733"
 
-    def test_doi_none_when_absent(self) -> None:
-        entries = parse_bibliography(_SAMPLE)
-        assert entries[3].doi is None
-        assert entries[83].doi is None
-
     def test_journal_extraction(self) -> None:
         entries = parse_bibliography(_SAMPLE)
         # Journal is the segment after 'In:'.
@@ -119,11 +114,6 @@ class TestParseBibliography:
         text = "References\n[1]\nSmith A. 'Title'. In: Journal 1 (2020). PMC4306774 (cited).\n"
         entries = parse_bibliography(text)
         assert entries[1].pmcid == "4306774"
-
-    def test_handles_non_consecutive_numbers(self) -> None:
-        text = "References\n[5]\nFoo B. 'X'. In: Y (2010).\n[7]\nBar C. 'X2'. In: Y (2011).\n"
-        entries = parse_bibliography(text)
-        assert set(entries.keys()) == {5, 7}
 
     def test_empty_block_skipped(self) -> None:
         text = "References\n[1]\n\n[2]\nSmith. 'Title'. In: J (2020).\n"

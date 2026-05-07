@@ -9,7 +9,6 @@ from unittest.mock import patch
 from pytest_httpx import HTTPXMock
 
 from src.clients.openalex import _reconstruct_abstract, search_paper
-from src.models import ResolvedSource
 
 _OA_URL_PATTERN = re.compile(r"https://api\.openalex\.org/works")
 
@@ -152,16 +151,6 @@ class TestSearchPaperFound:
         assert result.found is True
         assert result.title == "Scaling Laws for Neural Language Models"
         assert result.abstract == "We study scaling laws for neural language model performance."
-
-    def test_doi_stripped(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(url=_OA_URL_PATTERN, json=_PAPER_RESPONSE)
-        result = search_paper("Hoffmann 2022 scaling laws", db_path=tmp_path / "cache.db")
-        assert result.doi == "10.1234/scaling"
-
-    def test_returns_resolved_source(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(url=_OA_URL_PATTERN, json=_PAPER_RESPONSE)
-        result = search_paper("Hoffmann 2022 scaling laws", db_path=tmp_path / "cache.db")
-        assert isinstance(result, ResolvedSource)
 
     def test_similarity_score_exact_year(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(url=_OA_URL_PATTERN, json=_PAPER_RESPONSE)

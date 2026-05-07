@@ -3,7 +3,7 @@
 Hand-labeled benchmark (Vivien Perrelle, domain expert) vs. the current extract → resolve → fetch_fulltext → chunk → select → verify pipeline (`claude-sonnet-4-6`).
 
 - Source: PERRELLE 2023 lactate ISF review (25 claims).
-- Pipeline cost: $0.371 for the full run.
+- Pipeline cost: $0.535 for the full run.
 - **Headline: agreement = 16/25 (64.0%).** Read the diagnostic and caveats sections before drawing conclusions — the dominant first blocker is resolution, and the verifier rubric is abstention-biased on absence-of-support cases.
 
 - **Oracle verifier ceiling**: 5/21 (23.8%) when the verifier is given the abstract of the audited primary source rather than whatever the resolver retrieved. Quantifies the residual gap that remains after a resolver fix lands.

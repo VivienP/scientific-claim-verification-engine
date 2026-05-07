@@ -295,7 +295,10 @@ def verify_claim_fulltext(
 
     response = client.messages.create(
         model=model_id,
-        max_tokens=1024,
+        # max_tokens=2048: full-text verifier may quote up to 3 source_passages
+        # plus a multi-sentence explanation. Observed parse errors on claim 003
+        # were caused by truncated JSON when 1024 was insufficient.
+        max_tokens=2048,
         system=[
             {
                 "type": "text",
@@ -420,6 +423,201 @@ def verify_claim_fulltext_with_numeric(
 
 _TITLE_ONLY_MIN_TITLE_LENGTH = 20
 _TITLE_ONLY_MAX_CONFIDENCE = 0.7
+
+_CITING_CONTEXT_WINDOW_CHARS = 600
+_CITING_CONTEXT_MAX_CONFIDENCE = 0.6  # weaker than title-only: internal consistency only
+
+_CITING_CONTEXT_SYSTEM_PROMPT = """\
+You are auditing a scientific paper for INTERNAL CONSISTENCY between a claim and the citing paper's own treatment of a cited reference. The cited source cannot be independently retrieved. You are NOT verifying the claim against the cited source itself; you are checking whether the citing paper's surrounding text is consistent with the claim being attributed to that citation.
+
+This is structurally weaker evidence than abstract / title / fulltext verification. You MUST NOT return `supported`.
+
+Decision rule (apply LITERALLY):
+
+(A) If the surrounding citing-paper text contains the claim's assertion (verbatim, paraphrased, or numerically equivalent) AND attributes it to the cited reference (via citation marker like [30], author name like "Brooks", year, or "et al."), choose `partially_supported`. This is the canonical internal-consistency signal: the citing author has placed the citation as supporting the assertion. Independent verification of the cited source remains pending, which is exactly why the verdict is partial rather than supported.
+
+(B) If the surrounding text MENTIONS the cited reference (citation marker, author name) but in support of a DIFFERENT assertion than the claim, choose `unsupported`.
+
+(C) If the surrounding text actively CONTRADICTS the claim's assertion, choose `unsupported`.
+
+(D) If the cited reference does not appear in the surrounding text at all, AND the assertion is also absent, choose `not_addressed`.
+
+Examples:
+- Claim: "lag time is 5-15 min". Context: "the blood-ISF lag time is 5 to 15 min [30]." → `partially_supported` (rule A: claim verbatim, citation attributed).
+- Claim: "X causes Y". Context: "Z showed that A causes B [30]". → `unsupported` (rule B: ref attributed to a different claim).
+- Claim: "lag is 5-15 min". Context: "[30] reports a 30-min lag, contradicting earlier work." → `unsupported` (rule C: contradicts).
+- Claim: "lag is 5-15 min". Context: a paragraph about sweat sensors with no [30] mention. → `not_addressed`.
+
+Guidelines:
+- Base your verdict ONLY on the provided claim, citation reference, and surrounding text.
+- Do NOT use outside knowledge of the cited source.
+- The verdict turns on internal consistency, NOT on whether the citing paper's claim is biologically true.
+- Confidence: 0.4-0.6 maximum (capped — internal consistency is structurally weaker evidence).
+
+Return ONLY a JSON object:
+{
+  "status": "partially_supported|unsupported|not_addressed",
+  "explanation": "One or two sentences. Cite the matching context phrase or the absence thereof. Include the phrase 'internal-consistency'.",
+  "confidence": 0.5
+}
+
+Your response must be valid JSON only — no markdown, no explanatory text outside the JSON.
+"""
+
+
+def _extract_citing_context_window(
+    text: str,
+    claim_text: str,
+    *,
+    window_chars: int = _CITING_CONTEXT_WINDOW_CHARS,
+) -> str:
+    """Locate the claim within the citing paper text and return a ±window slice.
+
+    Searches for the first ~80 chars of the claim text. Falls back to the
+    full text (truncated to 2x window) if the claim is not found.
+    """
+    needle = claim_text[:80].strip()
+    if not needle:
+        return text[: 2 * window_chars]
+    idx = text.find(needle)
+    if idx < 0:
+        # Try a shorter prefix
+        short = claim_text[:40].strip()
+        idx = text.find(short) if short else -1
+    if idx < 0:
+        return text[: 2 * window_chars]
+    start = max(0, idx - window_chars)
+    end = min(len(text), idx + len(claim_text) + window_chars)
+    return text[start:end]
+
+
+def verify_claim_citing_context(
+    claim: Claim,
+    source: ResolvedSource,
+    citing_paper_text: str,
+    *,
+    model_id: str = MODEL_ID,
+    api_key: str | None = None,
+) -> tuple[VerificationResult, ProvenanceStep]:
+    """Verify a claim against the citing paper's own internal context.
+
+    S3-P1 last-resort verifier: when the cited source cannot be retrieved
+    (Layers 1-4 failed — no abstract, no full text, no informative title),
+    check whether the citing paper's own surrounding text is consistent with
+    the claim being attributed to the citation. This is internal-consistency
+    evidence, NOT third-party verification — and is capped at
+    `partially_supported` accordingly.
+
+    The prompt explicitly tells the LLM that supported is forbidden; a
+    deterministic post-LLM guard re-applies the cap so prompt non-compliance
+    cannot leak `supported` verdicts.
+
+    Returns a `VerificationResult` with:
+        verification_depth = "citing_paper_context"
+        evidence_quality   = "citing_paper_context"
+        confidence         <= _CITING_CONTEXT_MAX_CONFIDENCE
+    The explanation is prefixed with "[Internal-consistency only]" so the
+    Medical Writer audit consumer sees the contract distinction at a glance.
+    """
+    ts = time.time()
+    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=effective_key)
+
+    citation_label = ", ".join(claim.cited_authors) or "(unattributed)"
+    if claim.cited_year is not None:
+        citation_label = f"{citation_label} ({claim.cited_year})"
+    context = _extract_citing_context_window(citing_paper_text, claim.claim_text)
+    user_message = (
+        f"<claim>{claim.claim_text}</claim>\n"
+        f"<cited_reference>{citation_label}</cited_reference>\n"
+        f"<citing_paper_context>{context}</citing_paper_context>"
+    )
+
+    response = client.messages.create(
+        model=model_id,
+        max_tokens=512,
+        system=[
+            {
+                "type": "text",
+                "text": _CITING_CONTEXT_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": user_message}],
+    )
+
+    tokens_in: int = response.usage.input_tokens
+    tokens_out: int = response.usage.output_tokens
+    cache_hit = _parse_cache_hit(response.usage)
+
+    logger.info(
+        "verify_citing_context_llm_call",
+        model_id=model_id,
+        claim_id=claim.claim_id,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+    )
+
+    first_block = response.content[0] if response.content else None
+    response_text = first_block.text if isinstance(first_block, TextBlock) else ""
+
+    try:
+        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
+        status_raw = str(parsed["status"])
+        if status_raw not in _VALID_STATUSES:
+            raise ValueError(f"Invalid status: {status_raw}")
+        confidence = float(parsed["confidence"])
+        # Hard cap: internal consistency cannot establish supported.
+        if status_raw == "supported":
+            status_raw = "partially_supported"
+        confidence = min(confidence, _CITING_CONTEXT_MAX_CONFIDENCE)
+        status: VerificationStatus = status_raw  # type: ignore[assignment]
+        raw_explanation = str(parsed["explanation"])
+        explanation = (
+            raw_explanation
+            if "internal-consistency" in raw_explanation.lower()
+            else f"[Internal-consistency only] {raw_explanation}"
+        )
+        result = VerificationResult(
+            status=status,
+            explanation=explanation,
+            confidence=confidence,
+            verification_depth="citing_paper_context",
+            evidence_quality="citing_paper_context",
+            retraction_status=source.retraction_status,
+        )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        logger.error(
+            "verify_citing_context_parse_error",
+            claim_id=claim.claim_id,
+            raw_response=response_text[:200],
+            error=str(exc),
+        )
+        result = VerificationResult(
+            status="not_addressed",
+            explanation="Parse error.",
+            confidence=0.0,
+            verification_depth="citing_paper_context",
+            evidence_quality="no_evidence",
+            retraction_status=source.retraction_status,
+        )
+
+    step = ProvenanceStep(
+        step_id=str(uuid.uuid4()),
+        claim_id=claim.claim_id,
+        operation="verify",
+        input_hash=_hash(repr((claim, source, len(citing_paper_text)))),
+        output_hash=_hash(repr(result)),
+        model_id=model_id,
+        timestamp=ts,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+        confidence=result.confidence,
+    )
+
+    return result, step
 
 
 def _aggregate_multi_source_verdicts(

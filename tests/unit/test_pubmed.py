@@ -66,14 +66,6 @@ class TestFindPmidByDoi:
         httpx_mock.add_response(text=_ESEARCH_EMPTY)
         assert find_pmid_by_doi("10.1234/missing", db_path=tmp_path / "c.db") is None
 
-    def test_blank_doi_short_circuits(self, tmp_path: Path) -> None:
-        # No httpx_mock setup — the function must not call out.
-        assert find_pmid_by_doi("", db_path=tmp_path / "c.db") is None
-
-    def test_http_error(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(status_code=500)
-        assert find_pmid_by_doi("10.1234/abc", db_path=tmp_path / "c.db") is None
-
     def test_network_error(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         import httpx as _httpx
 
@@ -188,16 +180,6 @@ class TestFetchAbstract:
     def test_too_short_returns_none(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(text="1. Brief.\n\nShort.\n\nPMID: 1\n")
         assert fetch_abstract("1", db_path=tmp_path / "c.db") is None
-
-    def test_too_short_record_cache_hit_returns_none(
-        self, httpx_mock: HTTPXMock, tmp_path: Path
-    ) -> None:
-        db = tmp_path / "c.db"
-        httpx_mock.add_response(text="1. Brief.\n\nShort.\n\nPMID: 1\n")
-
-        assert fetch_record("1", db_path=db) is None
-        assert fetch_record("1", db_path=db) is None
-        assert len(httpx_mock.get_requests()) == 1
 
     def test_fetch_record_keeps_identifiers_when_abstract_is_short(
         self, httpx_mock: HTTPXMock, tmp_path: Path

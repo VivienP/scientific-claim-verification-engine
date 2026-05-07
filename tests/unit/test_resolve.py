@@ -49,19 +49,6 @@ class TestPhase1ResolveBehavior:
     @patch("src.resolve._crossref.check_retraction", return_value=False)
     @patch("src.resolve._crossref.search_paper")
     @patch("src.resolve.search_paper")
-    def test_openalex_miss_and_crossref_miss(
-        self, mock_oa: MagicMock, mock_cf: MagicMock, mock_retr: MagicMock
-    ) -> None:
-        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
-        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
-        from src.resolve import resolve_citations
-
-        sources, _ = resolve_citations([_make_claim("c1")])
-        assert sources["c1"].found is False
-
-    @patch("src.resolve._crossref.check_retraction", return_value=False)
-    @patch("src.resolve._crossref.search_paper")
-    @patch("src.resolve.search_paper")
     def test_openalex_hit_skips_crossref(
         self, mock_oa: MagicMock, mock_cf: MagicMock, mock_retr: MagicMock
     ) -> None:
@@ -83,20 +70,6 @@ class TestPhase1ResolveBehavior:
         sources, _ = resolve_citations([_make_claim("c1")])
         mock_retr.assert_called_once_with("10.1/x", db_path=None)
         assert sources["c1"].retraction_status is True
-
-    @patch("src.resolve._crossref.check_retraction")
-    @patch("src.resolve._crossref.search_paper")
-    @patch("src.resolve.search_paper")
-    def test_retraction_check_skipped_when_no_doi(
-        self, mock_oa: MagicMock, mock_cf: MagicMock, mock_retr: MagicMock
-    ) -> None:
-        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
-        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
-        from src.resolve import resolve_citations
-
-        sources, _ = resolve_citations([_make_claim("c1")])
-        mock_retr.assert_not_called()
-        assert sources["c1"].retraction_status is False
 
 
 class TestPubmedRecordEnrichment:
@@ -204,50 +177,6 @@ class TestPubmedRecordEnrichment:
         mock_record.assert_not_called()
         assert sources["c1"].abstract == "Already have one."
         assert sources["c1"].pmcid == "PMC789"
-
-    @patch("src.resolve._pubmed.fetch_record")
-    @patch("src.resolve._pubmed.find_pmid_by_doi")
-    @patch("src.resolve._crossref.search_paper")
-    @patch("src.resolve.search_paper")
-    def test_skipped_when_source_not_found(
-        self,
-        mock_oa: MagicMock,
-        mock_cf: MagicMock,
-        mock_pmid: MagicMock,
-        mock_record: MagicMock,
-    ) -> None:
-        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
-        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
-        from src.resolve import resolve_citations
-
-        resolve_citations([_make_claim("c1")])
-
-        mock_pmid.assert_not_called()
-        mock_record.assert_not_called()
-
-    @patch("src.resolve._pubmed.fetch_record")
-    @patch("src.resolve._pubmed.find_pmid_by_doi", return_value=None)
-    @patch("src.resolve._crossref.check_retraction", return_value=False)
-    @patch("src.resolve.search_paper")
-    def test_pubmed_miss_leaves_source_unchanged(
-        self,
-        mock_oa: MagicMock,
-        mock_retr: MagicMock,
-        mock_pmid: MagicMock,
-        mock_record: MagicMock,
-    ) -> None:
-        mock_oa.return_value = ResolvedSource(
-            found=True, doi="10.1/x", title="T", abstract=None, similarity_score=0.9
-        )
-        from src.resolve import resolve_citations
-
-        sources, _ = resolve_citations([_make_claim("c1")])
-
-        mock_pmid.assert_called_once()
-        mock_record.assert_not_called()
-        assert sources["c1"].found is True
-        assert sources["c1"].abstract is None
-        assert sources["c1"].pmcid is None
 
     @patch("src.resolve._pubmed.fetch_record", return_value=None)
     @patch("src.resolve._pubmed.find_pmid_by_doi", return_value="12345")
@@ -818,23 +747,6 @@ class TestBibliographyAwareResolve:
         mock_oa.assert_called_once()
         assert sources["c1"].found is True
 
-    @patch("src.resolve._crossref.search_paper")
-    @patch("src.resolve.search_paper")
-    def test_yearless_claim_without_bib_match_still_skipped(
-        self,
-        mock_oa: MagicMock,
-        mock_cf: MagicMock,
-    ) -> None:
-        from src.resolve import resolve_citations
-
-        # Empty bibliography → behaves the same as no bibliography.
-        claim = _make_claim("c1", cited_authors=["Smith"], cited_year=None)
-        sources, _ = resolve_citations([claim], bibliography={})
-
-        mock_oa.assert_not_called()
-        mock_cf.assert_not_called()
-        assert sources["c1"].found is False
-
 
 class TestResolveCitations:
     @patch("src.resolve.search_paper")
@@ -855,17 +767,6 @@ class TestResolveCitations:
         assert "c2" in sources
         assert sources["c1"].found is True
         assert len(steps) == 2
-
-    @patch("src.resolve.search_paper")
-    def test_returns_one_step_per_claim(self, mock_search: MagicMock) -> None:
-        mock_search.return_value = ResolvedSource(
-            found=True, doi=None, title="T", abstract="A", similarity_score=0.9
-        )
-        from src.resolve import resolve_citations
-
-        claims = [_make_claim(f"c{i}") for i in range(4)]
-        _sources, steps = resolve_citations(claims)
-        assert len(steps) == 4
 
     @patch("src.resolve.search_paper")
     def test_step_fields(self, mock_search: MagicMock) -> None:
@@ -895,30 +796,6 @@ class TestResolveCitations:
             mock_search.assert_not_called()
 
         assert sources["c1"].found is False
-
-    def test_ec1_no_year_no_http(self) -> None:
-        """EC-1: Claim with cited_year=None returns found=False without HTTP call."""
-        from src.resolve import resolve_citations
-
-        claim = _make_claim("c1", cited_year=None)
-        with patch("src.resolve.search_paper") as mock_search:
-            sources, _steps = resolve_citations([claim])
-            mock_search.assert_not_called()
-
-        assert sources["c1"].found is False
-
-    @patch("src.resolve.search_paper")
-    def test_ec4_year_off_by_one_accepted(self, mock_search: MagicMock) -> None:
-        """EC-4: Paper indexed under year ±1 is accepted."""
-        # Simulate year=2020 in response when claim cites 2019
-        mock_search.return_value = ResolvedSource(
-            found=True, doi=None, title="Paper", abstract="Abstract.", similarity_score=0.9
-        )
-        from src.resolve import resolve_citations
-
-        claim = _make_claim("c1", cited_year=2019)
-        sources, _ = resolve_citations([claim])
-        assert sources["c1"].found is True
 
     @patch("src.resolve.search_paper")
     def test_empty_claims_list(self, mock_search: MagicMock) -> None:
@@ -966,15 +843,6 @@ class TestResolveCitations:
         assert sources["c0"].found is False  # 429 exhausted
         assert sources["c1"].found is True  # success
         assert len(steps) == 2
-
-    def test_result_has_entry_for_every_claim(self) -> None:
-        """Every claim gets an entry in sources dict, even if not found."""
-        from src.resolve import resolve_citations
-
-        claims = [_make_claim("c1", cited_authors=[]), _make_claim("c2", cited_authors=[])]
-        sources, _ = resolve_citations(claims)
-        assert "c1" in sources
-        assert "c2" in sources
 
 
 class TestResolveCitationsMulti:

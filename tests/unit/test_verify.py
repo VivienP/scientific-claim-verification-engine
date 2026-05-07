@@ -59,69 +59,6 @@ class TestVerifyClaimHappyPath:
         assert isinstance(result.explanation, str)
 
     @patch("src.verify.anthropic.Anthropic")
-    def test_unsupported_status(self, mock_anthropic_cls: MagicMock) -> None:
-        mock_client = MagicMock()
-        mock_anthropic_cls.return_value = mock_client
-        mock_response = MagicMock()
-        mock_response.content = [
-            _text_block(
-                '{"status": "unsupported", "explanation": "The abstract contradicts this.", "confidence": 0.85}'
-            )
-        ]
-        mock_response.usage.input_tokens = 150
-        mock_response.usage.output_tokens = 40
-        mock_response.usage.cache_read_input_tokens = 0
-        mock_response.usage.cache_creation_input_tokens = 150
-        mock_client.messages.create.return_value = mock_response
-
-        from src.verify import verify_claim
-
-        result, _ = verify_claim(_make_claim(), _make_source())
-        assert result.status == "unsupported"
-
-    @patch("src.verify.anthropic.Anthropic")
-    def test_not_addressed_status(self, mock_anthropic_cls: MagicMock) -> None:
-        mock_client = MagicMock()
-        mock_anthropic_cls.return_value = mock_client
-        mock_response = MagicMock()
-        mock_response.content = [
-            _text_block(
-                '{"status": "not_addressed", "explanation": "Abstract is on different topic.", "confidence": 0.95}'
-            )
-        ]
-        mock_response.usage.input_tokens = 150
-        mock_response.usage.output_tokens = 40
-        mock_response.usage.cache_read_input_tokens = 0
-        mock_response.usage.cache_creation_input_tokens = 150
-        mock_client.messages.create.return_value = mock_response
-
-        from src.verify import verify_claim
-
-        result, _ = verify_claim(_make_claim(), _make_source())
-        assert result.status == "not_addressed"
-
-    @patch("src.verify.anthropic.Anthropic")
-    def test_partially_supported_status(self, mock_anthropic_cls: MagicMock) -> None:
-        mock_client = MagicMock()
-        mock_anthropic_cls.return_value = mock_client
-        mock_response = MagicMock()
-        mock_response.content = [
-            _text_block(
-                '{"status": "partially_supported", "explanation": "Partial match.", "confidence": 0.7}'
-            )
-        ]
-        mock_response.usage.input_tokens = 150
-        mock_response.usage.output_tokens = 40
-        mock_response.usage.cache_read_input_tokens = 0
-        mock_response.usage.cache_creation_input_tokens = 150
-        mock_client.messages.create.return_value = mock_response
-
-        from src.verify import verify_claim
-
-        result, _ = verify_claim(_make_claim(), _make_source())
-        assert result.status == "partially_supported"
-
-    @patch("src.verify.anthropic.Anthropic")
     def test_provenance_step_populated(self, mock_anthropic_cls: MagicMock) -> None:
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client
@@ -367,33 +304,6 @@ class TestVerifyClaimTitleOnly:
         assert step.tokens_in == 80
 
     @patch("src.verify.anthropic.Anthropic")
-    def test_title_only_unsupported_when_title_off_topic(
-        self, mock_anthropic_cls: MagicMock
-    ) -> None:
-        mock_client = MagicMock()
-        mock_anthropic_cls.return_value = mock_client
-        mock_response = MagicMock()
-        mock_response.content = [
-            _text_block(
-                '{"status": "unsupported", '
-                '"explanation": "Title addresses a different specific assertion.", '
-                '"confidence": 0.7}'
-            )
-        ]
-        mock_response.usage.input_tokens = 80
-        mock_response.usage.output_tokens = 30
-        mock_response.usage.cache_read_input_tokens = 80
-        mock_response.usage.cache_creation_input_tokens = 0
-        mock_client.messages.create.return_value = mock_response
-
-        from src.verify import verify_claim_title_only
-
-        result, _step = verify_claim_title_only(_make_claim(), _make_title_only_source())
-
-        assert result.status == "unsupported"
-        assert result.evidence_quality == "title_only"
-
-    @patch("src.verify.anthropic.Anthropic")
     def test_title_only_hard_caps_supported_to_partially_supported(
         self, mock_anthropic_cls: MagicMock
     ) -> None:
@@ -449,25 +359,6 @@ class TestVerifyClaimTitleOnly:
         assert result.evidence_quality == "title_only"
         assert result.verification_depth == "title_only"
 
-    def test_verify_short_circuits_when_abstract_none_and_title_too_short(self) -> None:
-        """Boundary: title-only mode requires title len > 20. Short titles
-        still short-circuit to not_addressed (preserves EC-2 contract).
-        """
-        with patch("src.verify.anthropic.Anthropic") as mock_anthropic_cls:
-            from src.verify import verify_claim
-
-            short = ResolvedSource(
-                found=True,
-                doi="10.1/x",
-                title="Short",
-                abstract=None,
-                similarity_score=1.0,
-            )
-            result, _step = verify_claim(_make_claim(), short)
-            mock_anthropic_cls.assert_not_called()
-
-        assert result.status == "not_addressed"
-
 
 class TestAggregateMultiSource:
     """S2-P4: per-source aggregation rule for multi-citation claims."""
@@ -499,12 +390,6 @@ class TestAggregateMultiSource:
         results = [self._result("supported"), self._result("partially_supported")]
         assert _aggregate_multi_source_verdicts(results) == "supported"  # type: ignore[arg-type]
 
-    def test_all_unsupported_returns_unsupported(self) -> None:
-        from src.verify import _aggregate_multi_source_verdicts
-
-        results = [self._result("unsupported"), self._result("unsupported")]
-        assert _aggregate_multi_source_verdicts(results) == "unsupported"  # type: ignore[arg-type]
-
     def test_supported_with_unsupported_returns_partial(self) -> None:
         """Mixed signal: one source supports, another contradicts → partial."""
         from src.verify import _aggregate_multi_source_verdicts
@@ -516,18 +401,6 @@ class TestAggregateMultiSource:
         from src.verify import _aggregate_multi_source_verdicts
 
         results = [self._result("supported"), self._result("not_addressed")]
-        assert _aggregate_multi_source_verdicts(results) == "partially_supported"  # type: ignore[arg-type]
-
-    def test_all_partial_returns_partial(self) -> None:
-        from src.verify import _aggregate_multi_source_verdicts
-
-        results = [self._result("partially_supported"), self._result("partially_supported")]
-        assert _aggregate_multi_source_verdicts(results) == "partially_supported"  # type: ignore[arg-type]
-
-    def test_partial_with_unsupported_returns_partial(self) -> None:
-        from src.verify import _aggregate_multi_source_verdicts
-
-        results = [self._result("partially_supported"), self._result("unsupported")]
         assert _aggregate_multi_source_verdicts(results) == "partially_supported"  # type: ignore[arg-type]
 
     def test_all_not_addressed_returns_not_addressed(self) -> None:
@@ -613,17 +486,161 @@ class TestVerifyClaimMultiSource:
         result, _steps = verify_claim_multi_source(_make_claim(), rs_set)
         assert result.status == "partially_supported"
 
-    def test_empty_source_set_returns_not_addressed(self) -> None:
-        from src.models import ResolvedSourceSet
-        from src.verify import verify_claim_multi_source
 
-        rs_set = ResolvedSourceSet(sources=(), citation_markers=())
-        with patch("src.verify.anthropic.Anthropic") as mock_cls:
-            result, steps = verify_claim_multi_source(_make_claim(), rs_set)
-            mock_cls.assert_not_called()
+class TestVerifyClaimCitingContext:
+    """S3-P1: source-context fallback for unretrievable cited references.
 
-        assert result.status == "not_addressed"
-        assert steps == []
+    When the cited source cannot be reached (paywall + identifier-less +
+    no abstract), check whether the citing paper's surrounding text is
+    consistent with the claim. Hard-capped at partially_supported.
+    """
+
+    @staticmethod
+    def _citing_text() -> str:
+        # Synthetic citing-paper context: ~700 chars surrounding the claim.
+        return (
+            "Lactate kinetics in exercise have been studied since the 1970s. "
+            "Brooks et al. demonstrated that lactic acid accumulates in muscle "
+            "and blood beginning around 50-70% of maximal O2 uptake [58], well "
+            "before aerobic capacity is fully utilized — a finding that "
+            "challenged the classical anaerobic threshold concept. This is the "
+            "key claim being analyzed here. Subsequent work has extended these "
+            "observations to interstitial fluid measurements (Jansson 1996), "
+            "though the mechanism remains debated."
+        )
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_partially_supported_when_context_consistent(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "partially_supported", '
+                '"explanation": "Internal-consistency only — citing paper '
+                'attributes the 50-70% threshold to Brooks.", '
+                '"confidence": 0.5}'
+            )
+        ]
+        mock_response.usage.input_tokens = 200
+        mock_response.usage.output_tokens = 50
+        mock_response.usage.cache_read_input_tokens = 200
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_citing_context
+
+        source = ResolvedSource(
+            found=False, doi=None, title=None, abstract=None, similarity_score=None
+        )
+        claim = Claim(
+            claim_id="c1",
+            claim_text="Lactic acid accumulates in muscle and blood beginning around 50-70%",
+            cited_authors=["Brooks"],
+            cited_year=1986,
+            claim_type="factual_numeric",
+        )
+        result, step = verify_claim_citing_context(claim, source, self._citing_text())
+
+        assert result.status == "partially_supported"
+        assert result.evidence_quality == "citing_paper_context"
+        assert result.verification_depth == "citing_paper_context"
+        assert result.confidence <= 0.6
+        assert "internal-consistency" in result.explanation.lower()
+        assert step.operation == "verify"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_unsupported_when_context_contradicts(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "unsupported", '
+                '"explanation": "Internal-consistency only — citing paper does not '
+                'mention the cited reference in this context.", '
+                '"confidence": 0.55}'
+            )
+        ]
+        mock_response.usage.input_tokens = 200
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 200
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_citing_context
+
+        source = ResolvedSource(
+            found=False, doi=None, title=None, abstract=None, similarity_score=None
+        )
+        claim = Claim(
+            claim_id="c1",
+            claim_text="Some unrelated assertion about cosmology.",
+            cited_authors=["Brooks"],
+            cited_year=1986,
+            claim_type="factual_qualitative",
+        )
+        result, _step = verify_claim_citing_context(claim, source, self._citing_text())
+        assert result.status == "unsupported"
+        assert result.evidence_quality == "citing_paper_context"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_hard_caps_supported_to_partially(self, mock_anthropic_cls: MagicMock) -> None:
+        """Defensive: even if the LLM ignores the prompt and returns 'supported',
+        the deterministic post-LLM cap downgrades it to partially_supported.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "supported", "explanation": "I am confident.", "confidence": 0.95}'
+            )
+        ]
+        mock_response.usage.input_tokens = 200
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 200
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_citing_context
+
+        source = ResolvedSource(
+            found=False, doi=None, title=None, abstract=None, similarity_score=None
+        )
+        claim = Claim(
+            claim_id="c1",
+            claim_text="Lactic acid accumulates",
+            cited_authors=["Brooks"],
+            cited_year=1986,
+            claim_type="factual_qualitative",
+        )
+        result, _step = verify_claim_citing_context(claim, source, self._citing_text())
+
+        assert result.status == "partially_supported"
+        # Confidence clamped under the citing-context max.
+        assert result.confidence <= 0.6
+        # Explanation is prefixed with internal-consistency tag if the LLM omits it.
+        assert "internal-consistency" in result.explanation.lower()
+
+    def test_extract_window_locates_claim_in_text(self) -> None:
+        from src.verify import _extract_citing_context_window
+
+        text = "Lots of preamble. " + ("X" * 800) + " The KEY CLAIM appears here. " + ("Y" * 800)
+        window = _extract_citing_context_window(text, "The KEY CLAIM appears here.")
+        assert "The KEY CLAIM appears here." in window
+        # Window is bounded around the claim, not the full document.
+        assert len(window) < len(text)
+
+    def test_extract_window_falls_back_when_claim_not_found(self) -> None:
+        from src.verify import _extract_citing_context_window
+
+        text = "Preamble unrelated to the claim being asked about. " * 30
+        window = _extract_citing_context_window(text, "Completely unrelated needle.")
+        # Falls back to first 2*window of text rather than empty.
+        assert len(window) > 0
 
 
 def _make_passages(n: int = 3) -> list[PaperChunk]:

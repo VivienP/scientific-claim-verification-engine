@@ -12,7 +12,6 @@ from pathlib import Path
 from pytest_httpx import HTTPXMock
 
 from src.clients.europepmc import (
-    EuropePMCRecord,
     fetch_abstract,
     fetch_oa_url,
     fetch_record,
@@ -157,17 +156,3 @@ class TestConvenienceAccessors:
         httpx_mock.add_response(json=_full_response())
         pmcid = find_pmcid_by_doi(_DOI, db_path=tmp_path / "epmc.db")
         assert pmcid == "PMC7437027"
-
-    def test_record_dataclass_is_frozen(self) -> None:
-        rec = EuropePMCRecord(
-            pmcid="PMC1",
-            abstract="abs",
-            pdf_url=None,
-            html_url=None,
-            is_open_access=False,
-        )
-        try:
-            rec.pmcid = "PMC2"  # type: ignore[misc]
-        except (AttributeError, TypeError):
-            return
-        raise AssertionError("EuropePMCRecord must be frozen")

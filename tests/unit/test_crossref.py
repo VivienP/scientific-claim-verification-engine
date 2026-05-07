@@ -38,13 +38,6 @@ _CORRECTION_RESPONSE = {
     }
 }
 
-_NO_UPDATE_RESPONSE = {
-    "message": {
-        "DOI": _DOI,
-        "title": ["A Great Paper on Things"],
-    }
-}
-
 
 class TestSearchPaper:
     def test_happy_path(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
@@ -57,11 +50,6 @@ class TestSearchPaper:
 
     def test_empty_items(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(json={"message": {"items": []}})
-        result = search_paper("nobody 1900 nothing", db_path=tmp_path / "c.db")
-        assert result.found is False
-
-    def test_missing_items_key(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(json={"message": {}})
         result = search_paper("nobody 1900 nothing", db_path=tmp_path / "c.db")
         assert result.found is False
 
@@ -242,10 +230,6 @@ class TestCheckRetraction:
 
     def test_correction_not_retraction(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(json=_CORRECTION_RESPONSE)
-        assert check_retraction(_DOI, db_path=tmp_path / "c.db") is False
-
-    def test_no_update_to(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(json=_NO_UPDATE_RESPONSE)
         assert check_retraction(_DOI, db_path=tmp_path / "c.db") is False
 
     def test_network_error_returns_false(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:

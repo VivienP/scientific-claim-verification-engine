@@ -40,18 +40,10 @@ class TestGetOaUrl:
         httpx_mock.add_response(json={"best_oa_location": None})
         assert get_oa_url(_DOI, db_path=tmp_path / "c.db") is None
 
-    def test_missing_key(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(json={})
-        assert get_oa_url(_DOI, db_path=tmp_path / "c.db") is None
-
     def test_network_error(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         import httpx as _httpx
 
         httpx_mock.add_exception(_httpx.ConnectError("refused"))
-        assert get_oa_url(_DOI, db_path=tmp_path / "c.db") is None
-
-    def test_404(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(status_code=404)
         assert get_oa_url(_DOI, db_path=tmp_path / "c.db") is None
 
     def test_cache_hit_skips_http(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:

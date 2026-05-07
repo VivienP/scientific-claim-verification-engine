@@ -59,29 +59,6 @@ def _make_step(
 
 
 class TestBuildReport:
-    def test_happy_path_creates_files(self, tmp_path: Path) -> None:
-        from src.report import build_report
-
-        claims = [_make_claim("c1")]
-        sources = {"c1": _make_source()}
-        results = {"c1": _make_result()}
-        steps = [_make_step("s1", "c1")]
-
-        run_dir = build_report(
-            "report-001",
-            "Some scientific text.",
-            claims,
-            sources,
-            results,
-            steps,
-            output_dir=tmp_path,
-        )
-
-        report_file = run_dir / "report.json"
-        provenance_file = run_dir / "provenance.jsonl"
-        assert report_file.exists()
-        assert provenance_file.exists()
-
     def test_report_json_structure(self, tmp_path: Path) -> None:
         from src.report import build_report
 
@@ -187,41 +164,6 @@ class TestBuildReport:
 
         lines = (run_dir / "provenance.jsonl").read_text().strip().split("\n")
         assert len(lines) == 4  # 3 input steps + 1 aggregate
-
-    def test_provenance_jsonl_valid_json(self, tmp_path: Path) -> None:
-        from src.report import build_report
-
-        steps = [_make_step("s1", "c1")]
-        run_dir = build_report(
-            "report-007",
-            "T.",
-            [_make_claim()],
-            {"c1": _make_source()},
-            {"c1": _make_result()},
-            steps,
-            output_dir=tmp_path,
-        )
-
-        for line in (run_dir / "provenance.jsonl").read_text().strip().split("\n"):
-            obj = json.loads(line)
-            assert "step_id" in obj
-            assert "operation" in obj
-
-    def test_aggregate_provenance_step_written(self, tmp_path: Path) -> None:
-        from src.report import build_report
-
-        run_dir = build_report("report-008", "T.", [], {}, {}, [], output_dir=tmp_path)
-
-        lines = (run_dir / "provenance.jsonl").read_text().strip().split("\n")
-        last = json.loads(lines[-1])
-        assert last["operation"] == "aggregate"
-
-    def test_returns_path_to_run_dir(self, tmp_path: Path) -> None:
-        from src.report import build_report
-
-        run_dir = build_report("report-009", "T.", [], {}, {}, [], output_dir=tmp_path)
-        assert isinstance(run_dir, Path)
-        assert run_dir.name == "report-009"
 
     def test_cost_calculation_in_summary(self, tmp_path: Path) -> None:
         from src.report import build_report

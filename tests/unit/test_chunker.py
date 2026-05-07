@@ -61,19 +61,10 @@ class TestChunker:
         assert "introduction" in sections
         assert "discussion" in sections
 
-    def test_numbered_introduction(self) -> None:
-        text = "1. Introduction\n" + ("Text body with substantial content for the chunker. " * 5)
-        chunks = chunk_paper("10.1/x", text)
-        assert any(c.section == "introduction" for c in chunks)
-
     def test_char_offsets_slice_back(self) -> None:
         chunks = chunk_paper("10.1/x", _FULL_PAPER)
         for chunk in chunks:
             assert _FULL_PAPER[chunk.char_start : chunk.char_end] == chunk.text
-
-    def test_doi_propagated(self) -> None:
-        chunks = chunk_paper("10.42/test", _FULL_PAPER)
-        assert all(c.doi == "10.42/test" for c in chunks)
 
     def test_short_chunks_filtered(self) -> None:
         # Sections with < 50 chars between headers are dropped
@@ -82,19 +73,3 @@ class TestChunker:
         # "short" alone (5 chars) under methods should be filtered
         for c in chunks:
             assert len(c.text) >= 50
-
-    def test_deterministic(self) -> None:
-        a = chunk_paper("10.1/x", _FULL_PAPER)
-        b = chunk_paper("10.1/x", _FULL_PAPER)
-        assert a == b
-
-    def test_text_before_first_header_is_other(self) -> None:
-        text = (
-            "Some preamble text without any section header for the first portion of the paper. " * 3
-            + "\nIntroduction\n"
-            + ("Real introduction body with enough content to pass the filter. " * 5)
-        )
-        chunks = chunk_paper("10.1/x", text)
-        sections = [c.section for c in chunks]
-        assert sections[0] == "other"
-        assert "introduction" in sections

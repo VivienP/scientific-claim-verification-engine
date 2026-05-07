@@ -12,6 +12,8 @@ one verdict per cited claim, with full provenance. The current scope is
 deliberately conservative: this is an honest evidence-grounding verifier, not
 a broad automatic inconsistency detector.
 
+**First hand-labeled full-pipeline benchmark** ([`eval/e2e/`](eval/e2e/reference_paper_v1_results.md)): 1/25 (4%) verdict agreement on 25 cited claims from a domain-expert-annotated lactate ISF literature review (Perrelle 2023). The dominant failure mode is resolver retrieval — 3/15 correct DOIs against ground truth — while the verifier itself returns honest `not_addressed` on irrelevant retrieved sources. The benchmark experimentally validates that resolver fixes are higher leverage than verifier fixes on bibliography-cited content.
+
 ## Related Work
 
 [Valsci](https://github.com/bricee98/Valsci) ([Brice et al. 2025, BMC Bioinformatics](https://link.springer.com/article/10.1186/s12859-025-06159-4)) is an open-source, self-hostable scientific claim verifier with Semantic Scholar grounding, targeting large-batch literature verification with bibliometric scoring. This project differs in focus: (i) cited-source auditing of AI-agent outputs rather than literature corpora, (ii) a structured per-claim audit trail with full provenance, and (iii) deterministic retrieval and numeric checks separated from probabilistic LLM verification.
@@ -134,7 +136,7 @@ Data models are frozen dataclasses in `src/models.py`: `Claim`,
 
 Verifier-component F1 = 0.94 on SciFact dev (oracle inputs)
 
-*Full-pipeline F1 against hand-labeled real documents is in progress — see `eval/e2e/`.*
+*Full-pipeline verdict agreement on the first hand-labeled benchmark: **1/25 (4%)** on 25 cited claims from Perrelle 2023 (lactate ISF literature review, domain-expert-annotated). Macro-F1 across 4 verdict classes: 0.05. The dominant failure mode is resolver retrieval (3/15 correct DOIs); the verifier behaves correctly when given the right source. Confusion matrix and per-claim breakdown in [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md).*
 
 `scripts/eval_scifact.py` builds oracle claims and oracle abstract sources,
 bypassing extraction, resolution, retrieval, and BM25. It does not measure the

@@ -32,6 +32,7 @@ class TestFetchFulltext:
         with (
             patch("src.fetch_fulltext.pdf.download_and_extract") as mock_pdf,
             patch("src.fetch_fulltext.pmc.fetch_fulltext") as mock_pmc,
+            patch("src.fetch_fulltext.europepmc.fetch_oa_url") as mock_epmc,
             patch("src.fetch_fulltext.unpaywall.get_oa_url") as mock_unp,
         ):
             text, method = fetch_fulltext(_src(doi=None), db_path=tmp_path / "c.db")
@@ -39,6 +40,7 @@ class TestFetchFulltext:
             assert method == "abstract_fallback"
             mock_pdf.assert_not_called()
             mock_pmc.assert_not_called()
+            mock_epmc.assert_not_called()
             mock_unp.assert_not_called()
 
     def test_oa_url_path(self, tmp_path: Path) -> None:
@@ -78,6 +80,7 @@ class TestFetchFulltext:
             patch(
                 "src.fetch_fulltext.pdf.download_and_extract", return_value="up text"
             ) as mock_pdf,
+            patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None) as mock_epmc,
             patch(
                 "src.fetch_fulltext.unpaywall.get_oa_url", return_value="https://x/p.pdf"
             ) as mock_unp,
@@ -85,6 +88,7 @@ class TestFetchFulltext:
             text, method = fetch_fulltext(_src(), db_path=tmp_path / "c.db")
             assert text == "up text"
             assert method == "unpaywall_pdf"
+            mock_epmc.assert_called_once()
             mock_unp.assert_called_once()
             mock_pdf.assert_called_once()
 
@@ -94,6 +98,7 @@ class TestFetchFulltext:
                 "src.fetch_fulltext.pdf.download_and_extract", return_value="up text"
             ) as mock_pdf,
             patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None) as mock_pmc,
+            patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None) as mock_epmc,
             patch(
                 "src.fetch_fulltext.unpaywall.get_oa_url", return_value="https://x/p.pdf"
             ) as mock_unp,
@@ -105,13 +110,69 @@ class TestFetchFulltext:
             assert text == "up text"
             assert method == "unpaywall_pdf"
             mock_pmc.assert_called_once()
+            mock_epmc.assert_called_once()
             mock_unp.assert_called_once()
             mock_pdf.assert_called_once()
+
+    def test_europepmc_pdf_path_when_pmc_misses(self, tmp_path: Path) -> None:
+        """S2-P1: Europe PMC step fires between PMC and Unpaywall when source
+        has a DOI, no oa_url, and PMC fulltext lookup fails. Confirmed by the
+        OA discovery probe: claim 005 (Raa) and 022 (Ventrelli) both have
+        Europe PMC OA URLs that Unpaywall does not always surface.
+        """
+        with (
+            patch(
+                "src.fetch_fulltext.pdf.download_and_extract", return_value="epmc text"
+            ) as mock_pdf,
+            patch(
+                "src.fetch_fulltext.europepmc.fetch_oa_url",
+                return_value="https://europepmc.org/articles/PMC7437027/pdf",
+            ) as mock_epmc,
+            patch("src.fetch_fulltext.unpaywall.get_oa_url") as mock_unp,
+        ):
+            text, method = fetch_fulltext(
+                _src(doi="10.1186/s13049-020-00776-z"),
+                db_path=tmp_path / "c.db",
+            )
+            assert text == "epmc text"
+            assert method == "europepmc_pdf"
+            mock_epmc.assert_called_once()
+            mock_pdf.assert_called_once_with(
+                "https://europepmc.org/articles/PMC7437027/pdf",
+                db_path=tmp_path / "c.db",
+            )
+            # Unpaywall is skipped when Europe PMC succeeds.
+            mock_unp.assert_not_called()
+
+    def test_europepmc_failure_falls_through_to_unpaywall(self, tmp_path: Path) -> None:
+        """When Europe PMC returns no URL, fall through to Unpaywall.
+        Also covers the case where Europe PMC returns a URL but PDF download
+        fails (Europe PMC's URL might 403, Unpaywall is the next chance).
+        """
+        with (
+            patch(
+                "src.fetch_fulltext.pdf.download_and_extract",
+                side_effect=[None, "up text"],  # epmc fails, unpaywall succeeds
+            ),
+            patch(
+                "src.fetch_fulltext.europepmc.fetch_oa_url",
+                return_value="https://europepmc.org/dud.pdf",
+            ),
+            patch(
+                "src.fetch_fulltext.unpaywall.get_oa_url",
+                return_value="https://publisher.com/p.pdf",
+            ) as mock_unp,
+        ):
+            text, method = fetch_fulltext(_src(), db_path=tmp_path / "c.db")
+            assert text == "up text"
+            assert method == "unpaywall_pdf"
+            mock_unp.assert_called_once()
 
     def test_all_fail(self, tmp_path: Path) -> None:
         with (
             patch("src.fetch_fulltext.pdf.download_and_extract", return_value=None),
             patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None),
+            patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None),
             patch("src.fetch_fulltext.unpaywall.get_oa_url", return_value=None),
         ):
             text, method = fetch_fulltext(

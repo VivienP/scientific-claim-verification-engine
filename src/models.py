@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
@@ -55,6 +56,49 @@ class ResolvedSource:
     oa_url: str | None = None
     pmcid: str | None = None
     retraction_status: bool = False
+
+
+_NOT_FOUND_SOURCE = ResolvedSource(
+    found=False, doi=None, title=None, abstract=None, similarity_score=None
+)
+
+
+@dataclass(frozen=True)
+class ResolvedSourceSet:
+    """A set of ResolvedSource entries for a multi-citation claim.
+
+    S2-P4: claims with `[81-83]` or `[99, 100]` reference multiple bibliography
+    entries that may individually support, contradict, or fail to address the
+    claim. The verifier needs all of them to aggregate honestly. The single
+    `ResolvedSource` API is preserved through `.primary()` for backward compat,
+    so the existing benchmark runner and `examples/sample_run.py` keep working.
+    """
+
+    sources: tuple[ResolvedSource, ...]
+    citation_markers: tuple[int, ...]
+
+    def primary(self) -> ResolvedSource:
+        """Highest-confidence resolved source, or `_NOT_FOUND_SOURCE` when empty.
+
+        Selection order: prefer found entries; among those, prefer the highest
+        title_match_score. Used by callers expecting a single ResolvedSource.
+        """
+        if not self.sources:
+            return _NOT_FOUND_SOURCE
+        return max(
+            self.sources,
+            key=lambda s: (s.found, s.title_match_score or 0.0, s.similarity_score or 0.0),
+        )
+
+    def found_sources(self) -> tuple[ResolvedSource, ...]:
+        """All resolved entries with `found=True`. Empty tuple if none resolved."""
+        return tuple(s for s in self.sources if s.found)
+
+    def __iter__(self) -> Iterator[ResolvedSource]:
+        return iter(self.sources)
+
+    def __len__(self) -> int:
+        return len(self.sources)
 
 
 @dataclass(frozen=True)

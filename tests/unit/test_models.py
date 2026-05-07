@@ -105,6 +105,78 @@ class TestResolvedSource:
             source.found = True  # type: ignore[misc]
 
 
+class TestResolvedSourceSet:
+    """S2-P4: ResolvedSourceSet wraps multi-citation resolution results."""
+
+    @staticmethod
+    def _src(
+        *,
+        found: bool = True,
+        doi: str | None = "10.1/x",
+        title_match: float | None = 1.0,
+    ) -> ResolvedSource:
+        return ResolvedSource(
+            found=found,
+            doi=doi,
+            title="t" if found else None,
+            abstract="a" if found else None,
+            similarity_score=1.0 if found else None,
+            title_match_score=title_match,
+        )
+
+    def test_primary_picks_highest_title_match(self) -> None:
+        from src.models import ResolvedSourceSet
+
+        weak = self._src(doi="10.1/weak", title_match=0.3)
+        strong = self._src(doi="10.1/strong", title_match=0.95)
+        rs_set = ResolvedSourceSet(sources=(weak, strong), citation_markers=(81, 82))
+        assert rs_set.primary().doi == "10.1/strong"
+
+    def test_primary_prefers_found_over_unfound(self) -> None:
+        from src.models import ResolvedSourceSet
+
+        unfound = self._src(found=False, doi=None, title_match=None)
+        found = self._src(doi="10.1/y", title_match=0.5)
+        rs_set = ResolvedSourceSet(sources=(unfound, found), citation_markers=(1, 2))
+        assert rs_set.primary().doi == "10.1/y"
+
+    def test_primary_returns_not_found_on_empty(self) -> None:
+        from src.models import ResolvedSourceSet
+
+        rs_set = ResolvedSourceSet(sources=(), citation_markers=())
+        primary = rs_set.primary()
+        assert primary.found is False
+        assert primary.doi is None
+
+    def test_found_sources_filters_unresolved(self) -> None:
+        from src.models import ResolvedSourceSet
+
+        a = self._src(doi="10.1/a")
+        b = self._src(found=False, doi=None)
+        c = self._src(doi="10.1/c")
+        rs_set = ResolvedSourceSet(sources=(a, b, c), citation_markers=(1, 2, 3))
+        found = rs_set.found_sources()
+        assert len(found) == 2
+        assert {s.doi for s in found} == {"10.1/a", "10.1/c"}
+
+    def test_iteration_yields_all_sources(self) -> None:
+        from src.models import ResolvedSourceSet
+
+        a = self._src(doi="10.1/a")
+        b = self._src(doi="10.1/b")
+        rs_set = ResolvedSourceSet(sources=(a, b), citation_markers=(1, 2))
+        dois = [s.doi for s in rs_set]
+        assert dois == ["10.1/a", "10.1/b"]
+        assert len(rs_set) == 2
+
+    def test_set_is_frozen(self) -> None:
+        from src.models import ResolvedSourceSet
+
+        rs_set = ResolvedSourceSet(sources=(self._src(),), citation_markers=(1,))
+        with pytest.raises((AttributeError, TypeError)):
+            rs_set.sources = ()  # type: ignore[misc]
+
+
 class TestVerificationResult:
     def test_verification_result_fields(self) -> None:
         result = VerificationResult(

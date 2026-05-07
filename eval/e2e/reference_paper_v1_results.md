@@ -3,8 +3,8 @@
 Hand-labeled benchmark (Vivien Perrelle, domain expert) vs. the current extract → resolve → fetch_fulltext → chunk → select → verify pipeline (`claude-sonnet-4-6`).
 
 - Source: PERRELLE 2023 lactate ISF review (25 claims).
-- Pipeline cost: $0.321 for the full run.
-- **Headline: agreement = 12/25 (48.0%).** Read the diagnostic and caveats sections before drawing conclusions — the dominant first blocker is resolution, and the verifier rubric is abstention-biased on absence-of-support cases.
+- Pipeline cost: $0.371 for the full run.
+- **Headline: agreement = 16/25 (64.0%).** Read the diagnostic and caveats sections before drawing conclusions — the dominant first blocker is resolution, and the verifier rubric is abstention-biased on absence-of-support cases.
 
 - **Oracle verifier ceiling**: 5/21 (23.8%) when the verifier is given the abstract of the audited primary source rather than whatever the resolver retrieved. Quantifies the residual gap that remains after a resolver fix lands.
 
@@ -14,23 +14,23 @@ Rows = expected (Vivien). Columns = pipeline output.
 
 |                       | pipeline: supported | pipeline: partially_supported | pipeline: unsupported | pipeline: not_addressed | row total |
 |---|---|---|---|---|---|
-| **expected: supported** | 4 | 3 | 3 | 0 | 10 |
-| **expected: partially_supported** | 2 | 5 | 5 | 0 | 12 |
+| **expected: supported** | 4 | 4 | 2 | 0 | 10 |
+| **expected: partially_supported** | 0 | 9 | 3 | 0 | 12 |
 | **expected: unsupported** | 0 | 0 | 3 | 0 | 3 |
 | **expected: not_addressed** | 0 | 0 | 0 | 0 | 0 |
-| **column total** | 6 | 8 | 11 | 0 | 25 |
+| **column total** | 4 | 13 | 8 | 0 | 25 |
 
 ## Per-class metrics
 
 | class | precision | recall | F1 | support (expected) | predictions |
 |---|---|---|---|---|---|
-| supported | 0.67 | 0.40 | 0.50 | 10 | 6 |
-| partially_supported | 0.62 | 0.42 | 0.50 | 12 | 8 |
-| unsupported | 0.27 | 1.00 | 0.43 | 3 | 11 |
+| supported | 1.00 | 0.40 | 0.57 | 10 | 4 |
+| partially_supported | 0.69 | 0.75 | 0.72 | 12 | 13 |
+| unsupported | 0.38 | 1.00 | 0.55 | 3 | 8 |
 | not_addressed | 0.00 | 0.00 | 0.00 | 0 | 0 |
 
-**Overall accuracy: 48.00% (12/25)**
-**Macro-F1 (unweighted across 4 classes): 0.36**
+**Overall accuracy: 64.00% (16/25)**
+**Macro-F1 (unweighted across 4 classes): 0.46**
 
 ## Diagnostic: where the pipeline breaks
 
@@ -38,8 +38,8 @@ The dominant first blocker is **resolver returning the wrong paper** (or no pape
 
 - **Resolution found a paper**: 25/25 claims. The remaining 0 returned `found=False` from Semantic Scholar / OpenAlex / CrossRef.
 - **Resolution returned the *correct* paper** (DOI matches the audited `primary_source_doi`): 17/21 on the subset where a DOI ground truth exists. The other resolutions returned papers that are entirely off-topic (e.g., claim 003 on Goodwin 2007 lactate ratios resolved to *Amino acids and immune function*).
-- **Full-text fetched via OA URL**: 0/25 claims. PDFs were successfully extracted and chunked, but on the wrong source for most claims, so the BM25 selector found no relevant passage.
-- **`passage_found` retrieval status**: 8/25 claims. Even when a passage was selected, the verifier returned `not_addressed` because the passage discussed an unrelated topic.
+- **Full-text fetched via OA URL**: 5/25 claims. PDFs were successfully extracted and chunked, but on the wrong source for most claims, so the BM25 selector found no relevant passage.
+- **`passage_found` retrieval status**: 4/25 claims. Even when a passage was selected, the verifier returned `not_addressed` because the passage discussed an unrelated topic.
 
 The verifier returns `not_addressed` on irrelevant retrieved sources rather than hallucinating support — desired behavior on bad inputs. But the prompt at [src/verify.py:41](../../src/verify.py) and [src/verify.py:142](../../src/verify.py) explicitly instructs the model to "err toward `not_addressed`" when evidence is short, general, insufficient, or off-topic. That is correct on irrelevant retrievals; it suppresses `unsupported` verdicts when the cited source addresses the topic but does not actually support the specific claim (claims 001, 012, 019 in this benchmark). The oracle experiment below quantifies this gap.
 
@@ -69,7 +69,7 @@ Question: if the resolver had returned the correct paper, what verdict would the
 
 Method: build an oracle `ResolvedSource` per claim using the abstract of the audited primary source (fetched via PubMed by DOI/PMID, with CrossRef as fallback), then run `verify_claim()` (abstract-only path) on the (claim, oracle_abstract) pair. Skip claims with `primary_source_doi=N/A` or where neither PubMed nor CrossRef returns a relevant abstract.
 
-Result: 5/21 oracle agreements (23.8% when attempted). Across the full 25-claim benchmark this is 5/25 (20.0%) — a 0.4× improvement over the current 1/25 baseline driven by giving the verifier the right source.
+Result: 5/21 oracle agreements (23.8% when attempted). Across the full 25-claim benchmark this is 5/25 (20.0%) — a 0.3× improvement over the current 1/25 baseline driven by giving the verifier the right source.
 
 Failure mode breakdown of the residual gap (oracle disagreements):
 
@@ -85,11 +85,11 @@ The dominant residual gap is the verifier returning `not_addressed` when the sou
 
 | claim_id | claim_text (truncated) | expected | pipeline | oracle | agree (pipeline) | brief note |
 |---|---|---|---|---|---|---|
-| lactate_review_001 | Blood contains approximately 100 times more l-lactate than … | unsupported | unsupported | — | Y | match |
+| lactate_review_001 | Blood contains approximately 100 times more l-lactate than … | unsupported | unsupported | — | Y | full text unavailable; verifier scored on abstract |
 | lactate_review_002 | Lactic acid accumulates in contracting muscle and blood, be… | supported | unsupported | not_addressed | N | resolver: wrong paper (got Lactate production under fully aerobic …) |
 | lactate_review_003 | The whole blood-plasma lactate concentration ratio might va… | supported | partially_supported | partially_supported | N | verifier: quoted_passage |
-| lactate_review_004 | [La−]pla is around 1.5 times higher than whole [La−]blo at … | partially_supported | unsupported | unsupported | N | resolver: wrong paper (got Lactate transport in red blood cells by…) |
-| lactate_review_005 | Capillary plasma lactate concentration and hand-held point-… | partially_supported | supported | partially_supported | N | resolver: wrong paper (got Comparison of capillary and arterial la…) |
+| lactate_review_004 | [La−]pla is around 1.5 times higher than whole [La−]blo at … | partially_supported | partially_supported | unsupported | Y | resolver: wrong paper (got Distribution of lactate between red blo…) |
+| lactate_review_005 | Capillary plasma lactate concentration and hand-held point-… | partially_supported | partially_supported | partially_supported | Y | resolver: wrong paper (got Comparison of capillary and arterial la…) |
 | lactate_review_006 | For all five portable analyzers, the analytical error withi… | supported | supported | supported | Y | match |
 | lactate_review_007 | The devices' reliability was generally lower than 0.5 mM fo… | supported | supported | supported | Y | match |
 | lactate_review_008 | Lactate ISF concentration has a nearly 1:1 ratio correlatio… | partially_supported | unsupported | not_addressed | N | full text unavailable; verifier scored on abstract |
@@ -97,14 +97,14 @@ The dominant residual gap is the verifier returning `not_addressed` when the sou
 | lactate_review_010 | In healthy people, skin lactate concentration at rest is be… | partially_supported | partially_supported | supported | Y | full text unavailable; verifier scored on abstract |
 | lactate_review_011 | Resting dermal [La−]ISF is on average about 30% higher than… | partially_supported | unsupported | unsupported | N | full text unavailable; verifier scored on abstract |
 | lactate_review_012 | Skin contributes about 5% at rest to the whole-body lactate… | unsupported | unsupported | — | Y | full text unavailable; verifier scored on abstract |
-| lactate_review_013 | Recent non-commercialized microneedle-based lactate biosens… | partially_supported | partially_supported | unsupported | Y | match |
+| lactate_review_013 | Recent non-commercialized microneedle-based lactate biosens… | partially_supported | partially_supported | unsupported | Y | full text unavailable; verifier scored on abstract |
 | lactate_review_014 | The subcutaneous depth of the capillary plexus varies betwe… | partially_supported | partially_supported | unsupported | Y | full text unavailable; verifier scored on abstract |
 | lactate_review_015 | Krogstad et al. suggest a possible negative linear relation… | partially_supported | unsupported | not_addressed | N | full text unavailable; verifier scored on abstract |
-| lactate_review_016 | Dermal ISF lactate concentration depends on catheter depth … | partially_supported | unsupported | not_addressed | N | full text unavailable; verifier scored on abstract |
-| lactate_review_017 | Active muscle lactate concentration presents similar patter… | supported | unsupported | not_addressed | N | resolver: wrong paper (got Muscle metabolites, force, and perceive…) |
-| lactate_review_018 | Pores of continuous capillary lining only allow small solut… | partially_supported | supported | unsupported | N | verifier: quoted_passage |
+| lactate_review_016 | Dermal ISF lactate concentration depends on catheter depth … | partially_supported | partially_supported | not_addressed | Y | full text unavailable; verifier scored on abstract |
+| lactate_review_017 | Active muscle lactate concentration presents similar patter… | supported | partially_supported | not_addressed | N | resolver: wrong paper (got Blood Lactate) |
+| lactate_review_018 | Pores of continuous capillary lining only allow small solut… | partially_supported | partially_supported | unsupported | Y | full text unavailable; verifier scored on abstract |
 | lactate_review_019 | Lactic acidosis is defined as a blood lactate concentration… | unsupported | unsupported | unsupported | Y | full text unavailable; verifier scored on abstract |
-| lactate_review_020 | Plasma glucose values are about 10%–15% higher than whole b… | supported | supported | not_addressed | Y | match |
+| lactate_review_020 | Plasma glucose values are about 10%–15% higher than whole b… | supported | supported | not_addressed | Y | full text unavailable; verifier scored on abstract |
 | lactate_review_021 | Correlation between arterial and capillary lactate increase… | partially_supported | partially_supported | supported | Y | full text unavailable; verifier scored on abstract |
 | lactate_review_022 | Microneedles have a small dimension of less than 1 mm in le… | supported | partially_supported | partially_supported | N | full text unavailable; verifier scored on abstract |
 | lactate_review_023 | 3D printing has emerged as a promising technique for fabric… | supported | supported | supported | Y | match |

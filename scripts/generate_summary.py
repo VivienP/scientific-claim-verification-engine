@@ -6,6 +6,7 @@ Reads each tool's report.json, extracts the summary block, and writes:
 
 No numbers are hand-typed. Run after every benchmark re-run.
 """
+
 from __future__ import annotations
 
 import json
@@ -65,11 +66,21 @@ SEP = "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
 
 def build_table() -> tuple[str, dict[str, float]]:
     summaries = [(label, _load(slug)) for slug, label in TOOLS]
-    totals: dict[str, float] = {k: 0.0 for k in [
-        "total_claims", "supported", "partially_supported", "unsupported",
-        "not_addressed", "fulltext_verified", "retracted_sources",
-        "numeric_checks_run", "numeric_inconsistencies_flagged", "total_cost_usd",
-    ]}
+    totals: dict[str, float] = {
+        k: 0.0
+        for k in [
+            "total_claims",
+            "supported",
+            "partially_supported",
+            "unsupported",
+            "not_addressed",
+            "fulltext_verified",
+            "retracted_sources",
+            "numeric_checks_run",
+            "numeric_inconsistencies_flagged",
+            "total_cost_usd",
+        ]
+    }
     for _, s in summaries:
         for k in totals:
             totals[k] += s.get(k, 0)
@@ -78,7 +89,8 @@ def build_table() -> tuple[str, dict[str, float]]:
     weighted_cfr = (
         sum(_load(slug)["citation_found_rate"] * _load(slug)["total_claims"] for slug, _ in TOOLS)
         / total_claims
-        if total_claims else 0.0
+        if total_claims
+        else 0.0
     )
 
     total_row = (
@@ -102,9 +114,9 @@ def build_table() -> tuple[str, dict[str, float]]:
 
 
 def write_summary(table: str) -> None:
-    canary_s = json.loads(
-        (BASE.parent / "canary" / "report.json").read_text(encoding="utf-8")
-    )["summary"]
+    canary_s = json.loads((BASE.parent / "canary" / "report.json").read_text(encoding="utf-8"))[
+        "summary"
+    ]
     canary_row = _make_row("Canary suite", canary_s)
 
     content = f"""# Real-Tool Benchmark Summary

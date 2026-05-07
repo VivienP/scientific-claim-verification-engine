@@ -6,6 +6,7 @@ for each tool row and the Total row.
 
 Exit 0 on agreement (silent). Exit 1 on any mismatch (prints a diff).
 """
+
 from __future__ import annotations
 
 import re
@@ -122,9 +123,7 @@ def main() -> int:
                 continue
 
             if s_int != r_int:
-                mismatches.append(
-                    f"tool={label!r} col={col!r}: SUMMARY={s_int} README={r_int}"
-                )
+                mismatches.append(f"tool={label!r} col={col!r}: SUMMARY={s_int} README={r_int}")
 
     if mismatches:
         print("ALIGNMENT FAILURE — mismatches between SUMMARY.md and README.md:")

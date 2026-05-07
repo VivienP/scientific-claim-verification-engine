@@ -975,3 +975,170 @@ class TestResolveCitations:
         sources, _ = resolve_citations(claims)
         assert "c1" in sources
         assert "c2" in sources
+
+
+class TestResolveCitationsMulti:
+    """S2-P4: multi-source resolution returns one ResolvedSourceSet per claim."""
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.fetch_work_by_doi")
+    @patch("src.resolve.search_paper")
+    def test_multi_citation_claim_resolves_each_marker_independently(
+        self,
+        mock_oa: MagicMock,
+        mock_fetch_doi: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations_multi
+
+        bib = {
+            81: BibEntry(
+                number=81,
+                raw="...",
+                authors=["Posso"],
+                title="Equine MCT lactate transport",
+                year=1995,
+                doi="10.1/p1",
+            ),
+            82: BibEntry(
+                number=82,
+                raw="...",
+                authors=["Koho"],
+                title="Horse RBC lactate kinetics",
+                year=2002,
+                doi="10.1/p2",
+            ),
+            83: BibEntry(
+                number=83,
+                raw="...",
+                authors=["Williams"],
+                title="Capillary vs arterial sampling",
+                year=1992,
+                doi="10.1/p3",
+            ),
+        }
+        mock_fetch_doi.side_effect = [
+            ResolvedSource(True, "10.1/p1", "Equine MCT lactate transport", "abs1", 1.0),
+            ResolvedSource(True, "10.1/p2", "Horse RBC lactate kinetics", "abs2", 1.0),
+            ResolvedSource(True, "10.1/p3", "Capillary vs arterial sampling", "abs3", 1.0),
+        ]
+        claim = _make_claim(
+            "c1",
+            cited_authors=["Posso", "Koho", "Williams"],
+            cited_year=None,
+            citation_markers=[81, 82, 83],
+        )
+
+        sets, steps = resolve_citations_multi([claim], bibliography=bib)
+
+        rs_set = sets["c1"]
+        assert len(rs_set) == 3
+        assert rs_set.citation_markers == (81, 82, 83)
+        assert {s.doi for s in rs_set} == {"10.1/p1", "10.1/p2", "10.1/p3"}
+        # OpenAlex fallback should NOT have been called when all markers had DOIs.
+        mock_oa.assert_not_called()
+        assert len(steps) == 1
+        assert steps[0].operation == "resolve"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_no_markers_falls_back_to_single_source(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.resolve import resolve_citations_multi
+
+        mock_oa.return_value = ResolvedSource(True, "10.1/x", "T", "abs", 1.0)
+        claim = _make_claim("c1", cited_authors=["Smith"], cited_year=2020, citation_markers=[])
+
+        sets, steps = resolve_citations_multi([claim])
+
+        rs_set = sets["c1"]
+        assert len(rs_set) == 1
+        assert rs_set.primary().doi == "10.1/x"
+        assert len(steps) == 1
+
+    @patch("src.resolve._pubmed.find_pmid_by_title", return_value=None)
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.fetch_work_by_doi")
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_partial_marker_misses_yield_unfound_entries(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_fetch_doi: MagicMock,
+        mock_retr: MagicMock,
+        mock_pubmed_title: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations_multi
+
+        bib = {
+            70: BibEntry(
+                number=70,
+                raw="...",
+                authors=["Loellgen"],
+                title="Muscle metabolites",
+                year=1980,
+                doi=None,
+                pmid=None,
+                pmcid=None,
+            ),
+            71: BibEntry(
+                number=71,
+                raw="...",
+                authors=["Graham"],
+                title="Pedal rate study",
+                year=1984,
+                doi="10.1/g",
+            ),
+        }
+        mock_fetch_doi.return_value = ResolvedSource(True, "10.1/g", "Pedal rate study", "abs", 1.0)
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+
+        claim = _make_claim(
+            "c1",
+            cited_authors=["Loellgen", "Graham"],
+            cited_year=None,
+            citation_markers=[70, 71],
+        )
+        sets, _ = resolve_citations_multi([claim], bibliography=bib)
+
+        rs_set = sets["c1"]
+        assert len(rs_set) == 2
+        # Loellgen has no identifiers and pubmed title search is mocked to miss;
+        # OpenAlex / CrossRef searches both miss → unfound. Graham resolves via bib DOI.
+        found = rs_set.found_sources()
+        assert len(found) == 1
+        assert found[0].doi == "10.1/g"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_set_primary_matches_legacy_resolve_for_single_marker(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        """Backward-compat invariant: a single-marker claim's `.primary()` must
+        yield the same ResolvedSource as the legacy `resolve_citations` API.
+        """
+        from src.resolve import resolve_citations, resolve_citations_multi
+
+        mock_oa.return_value = ResolvedSource(True, "10.1/x", "T", "abs", 1.0)
+        claim = _make_claim("c1", cited_authors=["Smith"], cited_year=2020)
+
+        legacy_sources, _ = resolve_citations([claim])
+        new_sets, _ = resolve_citations_multi([claim])
+
+        # Comparable on the fields callers care about
+        assert legacy_sources["c1"].doi == new_sets["c1"].primary().doi
+        assert legacy_sources["c1"].title == new_sets["c1"].primary().title
+        assert legacy_sources["c1"].abstract == new_sets["c1"].primary().abstract

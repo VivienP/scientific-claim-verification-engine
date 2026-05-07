@@ -469,6 +469,163 @@ class TestVerifyClaimTitleOnly:
         assert result.status == "not_addressed"
 
 
+class TestAggregateMultiSource:
+    """S2-P4: per-source aggregation rule for multi-citation claims."""
+
+    @staticmethod
+    def _result(status: str, confidence: float = 0.8) -> object:
+        from src.models import VerificationResult
+
+        return VerificationResult(
+            status=status,  # type: ignore[arg-type]
+            explanation="",
+            confidence=confidence,
+        )
+
+    def test_empty_returns_not_addressed(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        assert _aggregate_multi_source_verdicts([]) == "not_addressed"
+
+    def test_all_supported_returns_supported(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("supported"), self._result("supported")]
+        assert _aggregate_multi_source_verdicts(results) == "supported"  # type: ignore[arg-type]
+
+    def test_supported_with_partial_returns_supported(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("supported"), self._result("partially_supported")]
+        assert _aggregate_multi_source_verdicts(results) == "supported"  # type: ignore[arg-type]
+
+    def test_all_unsupported_returns_unsupported(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("unsupported"), self._result("unsupported")]
+        assert _aggregate_multi_source_verdicts(results) == "unsupported"  # type: ignore[arg-type]
+
+    def test_supported_with_unsupported_returns_partial(self) -> None:
+        """Mixed signal: one source supports, another contradicts → partial."""
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("supported"), self._result("unsupported")]
+        assert _aggregate_multi_source_verdicts(results) == "partially_supported"  # type: ignore[arg-type]
+
+    def test_supported_with_not_addressed_returns_partial(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("supported"), self._result("not_addressed")]
+        assert _aggregate_multi_source_verdicts(results) == "partially_supported"  # type: ignore[arg-type]
+
+    def test_all_partial_returns_partial(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("partially_supported"), self._result("partially_supported")]
+        assert _aggregate_multi_source_verdicts(results) == "partially_supported"  # type: ignore[arg-type]
+
+    def test_partial_with_unsupported_returns_partial(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("partially_supported"), self._result("unsupported")]
+        assert _aggregate_multi_source_verdicts(results) == "partially_supported"  # type: ignore[arg-type]
+
+    def test_all_not_addressed_returns_not_addressed(self) -> None:
+        from src.verify import _aggregate_multi_source_verdicts
+
+        results = [self._result("not_addressed"), self._result("not_addressed")]
+        assert _aggregate_multi_source_verdicts(results) == "not_addressed"  # type: ignore[arg-type]
+
+
+class TestVerifyClaimMultiSource:
+    """S2-P4: end-to-end verify against ResolvedSourceSet."""
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_aggregates_two_supported_sources(self, mock_anthropic_cls: MagicMock) -> None:
+        from src.models import ResolvedSourceSet
+        from src.verify import verify_claim_multi_source
+
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block('{"status": "supported", "explanation": "Matches.", "confidence": 0.9}')
+        ]
+        mock_response.usage.input_tokens = 100
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 100
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        s1 = ResolvedSource(
+            found=True, doi="10.1/a", title="A", abstract="abstract A", similarity_score=1.0
+        )
+        s2 = ResolvedSource(
+            found=True, doi="10.1/b", title="B", abstract="abstract B", similarity_score=1.0
+        )
+        rs_set = ResolvedSourceSet(sources=(s1, s2), citation_markers=(81, 82))
+
+        result, steps = verify_claim_multi_source(_make_claim(), rs_set)
+
+        assert result.status == "supported"
+        assert len(steps) == 2  # one verify call per source
+        assert "[10.1/a] supported" in result.explanation
+        assert "[10.1/b] supported" in result.explanation
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_aggregates_mixed_verdicts_to_partial(self, mock_anthropic_cls: MagicMock) -> None:
+        from src.models import ResolvedSourceSet
+        from src.verify import verify_claim_multi_source
+
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        # First source supports; second is unsupported.
+        responses = [
+            MagicMock(),
+            MagicMock(),
+        ]
+        responses[0].content = [
+            _text_block('{"status": "supported", "explanation": "OK.", "confidence": 0.9}')
+        ]
+        responses[0].usage.input_tokens = 100
+        responses[0].usage.output_tokens = 30
+        responses[0].usage.cache_read_input_tokens = 100
+        responses[0].usage.cache_creation_input_tokens = 0
+        responses[1].content = [
+            _text_block(
+                '{"status": "unsupported", "explanation": "Off-topic.", "confidence": 0.85}'
+            )
+        ]
+        responses[1].usage.input_tokens = 100
+        responses[1].usage.output_tokens = 30
+        responses[1].usage.cache_read_input_tokens = 100
+        responses[1].usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.side_effect = responses
+
+        s1 = ResolvedSource(
+            found=True, doi="10.1/a", title="A", abstract="abs", similarity_score=1.0
+        )
+        s2 = ResolvedSource(
+            found=True, doi="10.1/b", title="B", abstract="abs", similarity_score=1.0
+        )
+        rs_set = ResolvedSourceSet(sources=(s1, s2), citation_markers=(81, 82))
+
+        result, _steps = verify_claim_multi_source(_make_claim(), rs_set)
+        assert result.status == "partially_supported"
+
+    def test_empty_source_set_returns_not_addressed(self) -> None:
+        from src.models import ResolvedSourceSet
+        from src.verify import verify_claim_multi_source
+
+        rs_set = ResolvedSourceSet(sources=(), citation_markers=())
+        with patch("src.verify.anthropic.Anthropic") as mock_cls:
+            result, steps = verify_claim_multi_source(_make_claim(), rs_set)
+            mock_cls.assert_not_called()
+
+        assert result.status == "not_addressed"
+        assert steps == []
+
+
 def _make_passages(n: int = 3) -> list[PaperChunk]:
     return [
         PaperChunk(

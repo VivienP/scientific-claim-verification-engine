@@ -11,9 +11,10 @@ import structlog
 
 from src.bibliography import BibEntry
 from src.clients import crossref as _crossref
+from src.clients import europepmc as _europepmc
 from src.clients import pubmed as _pubmed
 from src.clients.openalex import search_paper
-from src.models import Claim, ProvenanceStep, ResolvedSource
+from src.models import Claim, ProvenanceStep, ResolvedSource, ResolvedSourceSet
 from src.resolve_utils import (
     _NOT_FOUND,
     _TITLE_MATCH_ACCEPT_THRESHOLD,
@@ -81,6 +82,58 @@ def _pick_longer_abstract(existing: str | None, candidate: str | None) -> str | 
     if not candidate:
         return existing
     return existing if len(existing) >= len(candidate) else candidate
+
+
+def _enrich_via_europepmc(
+    source: ResolvedSource,
+    *,
+    db_path: Path | None,
+) -> ResolvedSource:
+    """Fill abstract / pmcid / oa_url gaps from Europe PMC.
+
+    S2-P1: Europe PMC indexes biomedical OA mirrors that NCBI sometimes misses
+    and exposes abstracts through `abstractText` even when CrossRef returns
+    null. The S2-P0 OA discovery probe confirmed 100 % abstract coverage and
+    50 % OA URL coverage on a paywall-heavy benchmark sample.
+
+    Fires only when at least one of (abstract, pmcid, oa_url) is still missing
+    after `_enrich_via_pubmed`. Existing values are preserved on conflict
+    (longer abstract wins; pmcid / oa_url are filled only when None).
+
+    Returns source unchanged on any miss.
+    """
+    if not source.found or source.doi is None:
+        return source
+    if source.abstract and source.pmcid and source.oa_url:
+        return source
+    record = _europepmc.fetch_record(source.doi, db_path=db_path)
+    if record is None:
+        return source
+
+    new_abstract = _pick_longer_abstract(source.abstract, record.abstract)
+    new_pmcid = source.pmcid or record.pmcid
+    new_oa_url = source.oa_url or record.pdf_url or record.html_url
+
+    if (
+        new_abstract == source.abstract
+        and new_pmcid == source.pmcid
+        and new_oa_url == source.oa_url
+    ):
+        return source
+
+    logger.info(
+        "europepmc_enriched",
+        doi=source.doi,
+        abstract_added=source.abstract is None and record.abstract is not None,
+        pmcid_added=source.pmcid is None and new_pmcid is not None,
+        oa_url_added=source.oa_url is None and new_oa_url is not None,
+    )
+    return dataclasses.replace(
+        source,
+        abstract=new_abstract,
+        pmcid=new_pmcid,
+        oa_url=new_oa_url,
+    )
 
 
 def _resolve_via_bib_doi(entry: BibEntry, *, db_path: Path | None) -> ResolvedSource:
@@ -160,6 +213,130 @@ def _resolve_via_pubmed_title(entry: BibEntry, *, db_path: Path | None) -> Resol
         doi=record.doi,
         pmcid=record.pmcid,
     )
+
+
+def _resolve_for_bib_entry(
+    bib_entry: BibEntry,
+    claim: Claim,
+    *,
+    api_key: str | None,
+    db_path: Path | None,
+) -> ResolvedSource:
+    """Run the full per-entry resolution + enrichment chain for one bibliography ref.
+
+    S2-P4 helper: each entry in a multi-citation `[81-83]` claim is resolved
+    independently through the same DOI -> PMID -> Title -> OpenAlex chain that
+    `resolve_citations` runs inline for single-marker claims. Enrichments
+    (PubMed record, Europe PMC) and the retraction check are applied per-entry.
+    Returns `_NOT_FOUND` when every step misses.
+    """
+    source = _NOT_FOUND
+    if bib_entry.doi:
+        source = _resolve_via_bib_doi(bib_entry, db_path=db_path)
+    if not source.found and (bib_entry.pmid or bib_entry.pmcid):
+        source = _resolve_via_bib_pmid(bib_entry, db_path=db_path)
+    if not source.found and bib_entry.title:
+        source = _resolve_via_bib_crossref_title(bib_entry, claim, db_path=db_path)
+    if not source.found and bib_entry.title:
+        source = _resolve_via_pubmed_title(bib_entry, db_path=db_path)
+    if not source.found:
+        query = _build_query_from_bib(bib_entry, claim)
+        source = search_paper(query, api_key=api_key, db_path=db_path)
+        if not source.found:
+            cf_source = _crossref.search_paper(query, db_path=db_path)
+            if cf_source.found:
+                source = cf_source
+
+    if source.doi is not None:
+        retracted = _crossref.check_retraction(source.doi, db_path=db_path)
+        source = dataclasses.replace(source, retraction_status=retracted)
+
+    source = _enrich_via_pubmed(source, db_path=db_path)
+    source = _enrich_via_europepmc(source, db_path=db_path)
+    return source
+
+
+def resolve_citations_multi(
+    claims: list[Claim],
+    *,
+    api_key: str | None = None,
+    db_path: Path | None = None,
+    bibliography: dict[int, BibEntry] | None = None,
+) -> tuple[dict[str, ResolvedSourceSet], list[ProvenanceStep]]:
+    """Resolve every bibliography marker on each claim into a ResolvedSourceSet.
+
+    For multi-citation claims `[81-83]` or `[99, 100]`, this resolves each
+    bibliography marker independently (via `_resolve_for_bib_entry`). Single-
+    citation or markerless claims fall back to the same chain as
+    `resolve_citations` and yield a 1-element set.
+
+    Used by the benchmark runner when `len(claim.citation_markers) > 1`. The
+    primary single-source API (`resolve_citations`) is unchanged.
+
+    Returns one ProvenanceStep per claim (operation="resolve"). When a multi-
+    citation claim is processed, the step's `output_hash` covers the full
+    set so re-runs can detect changes in any constituent source.
+    """
+    sets: dict[str, ResolvedSourceSet] = {}
+    steps: list[ProvenanceStep] = []
+
+    for claim in claims:
+        ts = time.time()
+        markers = list(claim.citation_markers)
+        per_marker_sources: list[ResolvedSource] = []
+
+        if bibliography and markers:
+            for marker in markers:
+                entry = bibliography.get(marker)
+                if entry is None:
+                    continue
+                source = _resolve_for_bib_entry(entry, claim, api_key=api_key, db_path=db_path)
+                per_marker_sources.append(source)
+                logger.debug(
+                    "multi_resolve_marker",
+                    claim_id=claim.claim_id,
+                    marker=marker,
+                    found=source.found,
+                    doi=source.doi,
+                )
+
+        if not per_marker_sources:
+            # No bibliography or no resolvable markers: fall back to single-source
+            # via the existing resolve_citations path so semantics align with
+            # the legacy primary-source API.
+            singles, single_steps = resolve_citations(
+                [claim], api_key=api_key, db_path=db_path, bibliography=bibliography
+            )
+            per_marker_sources = [singles[claim.claim_id]]
+            steps.extend(single_steps)
+            sets[claim.claim_id] = ResolvedSourceSet(
+                sources=tuple(per_marker_sources),
+                citation_markers=tuple(markers),
+            )
+            continue
+
+        rs_set = ResolvedSourceSet(
+            sources=tuple(per_marker_sources),
+            citation_markers=tuple(markers),
+        )
+        sets[claim.claim_id] = rs_set
+        steps.append(
+            ProvenanceStep(
+                step_id=str(uuid.uuid4()),
+                claim_id=claim.claim_id,
+                operation="resolve",
+                input_hash=_hash(repr(claim)),
+                output_hash=_hash(repr(rs_set)),
+                model_id=None,
+                timestamp=ts,
+                tokens_in=None,
+                tokens_out=None,
+                cache_hit=None,
+                confidence=rs_set.primary().similarity_score,
+            )
+        )
+
+    return sets, steps
 
 
 def resolve_citations(
@@ -258,6 +435,7 @@ def resolve_citations(
             source = dataclasses.replace(source, retraction_status=retracted)
 
         source = _enrich_via_pubmed(source, db_path=db_path)
+        source = _enrich_via_europepmc(source, db_path=db_path)
 
         sources[claim.claim_id] = source
         steps.append(

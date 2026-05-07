@@ -164,6 +164,135 @@ class TestPubmedAbstractEnrichment:
         assert sources["c1"].abstract is None
 
 
+class TestBibliographyAwareResolve:
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_uses_bib_doi_directly_when_available(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            3: BibEntry(
+                number=3,
+                raw="...",
+                authors=["Goodwin"],
+                title="Blood lactate measurements",
+                year=2007,
+                doi="10.1177/193229680700100414",
+            )
+        }
+        mock_cf.return_value = ResolvedSource(
+            found=True,
+            doi="10.1177/193229680700100414",
+            title="Blood lactate measurements",
+            abstract="The whole-blood-to-plasma ratio varies 63-81%.",
+            similarity_score=1.0,
+        )
+        claim = _make_claim("c1", cited_authors=["Goodwin"], cited_year=2007)
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        # Bib DOI path uses CrossRef by DOI; OpenAlex query path is bypassed.
+        mock_oa.assert_not_called()
+        mock_cf.assert_called_once_with("10.1177/193229680700100414", db_path=None)
+        assert sources["c1"].doi == "10.1177/193229680700100414"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_falls_back_to_richer_query_when_bib_has_no_doi(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            83: BibEntry(
+                number=83,
+                raw="...",
+                authors=["Williams", "Armstrong", "Kirby"],
+                title="The influence of the site of sampling",
+                year=1992,
+                doi=None,
+            )
+        }
+        mock_oa.return_value = ResolvedSource(
+            found=True,
+            doi="10.1080/sample",
+            title="...",
+            abstract=None,
+            similarity_score=0.9,
+        )
+        claim = _make_claim("c1", cited_authors=["Williams"], cited_year=1992)
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_called_once()
+        # The query passed to search_paper should include bibliography title tokens
+        called_query = mock_oa.call_args.args[0]
+        assert "influence" in called_query.lower()
+        assert "Williams" in called_query
+        assert "1992" in called_query
+        assert sources["c1"].found is True
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_yearless_claim_with_bib_match_no_longer_skipped(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            81: BibEntry(
+                number=81,
+                raw="...",
+                authors=["Pösö"],
+                title="Distribution of lactate",
+                year=1995,
+                doi=None,
+            )
+        }
+        mock_oa.return_value = ResolvedSource(
+            found=True, doi="10.x/y", title="...", abstract=None, similarity_score=0.8
+        )
+        # Claim has cited_year=None — without bib it would be skipped.
+        claim = _make_claim("c1", cited_authors=["Pösö"], cited_year=None)
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        # Bib match enables resolution despite missing year on the claim.
+        mock_oa.assert_called_once()
+        assert sources["c1"].found is True
+
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_yearless_claim_without_bib_match_still_skipped(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+    ) -> None:
+        from src.resolve import resolve_citations
+
+        # Empty bibliography → behaves the same as no bibliography.
+        claim = _make_claim("c1", cited_authors=["Smith"], cited_year=None)
+        sources, _ = resolve_citations([claim], bibliography={})
+
+        mock_oa.assert_not_called()
+        mock_cf.assert_not_called()
+        assert sources["c1"].found is False
+
+
 class TestResolveCitations:
     @patch("src.resolve.search_paper")
     def test_happy_path(self, mock_search: MagicMock) -> None:

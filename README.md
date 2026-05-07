@@ -12,7 +12,7 @@ one verdict per cited claim, with full provenance. The current scope is
 deliberately conservative: this is an honest evidence-grounding verifier, not
 a broad automatic inconsistency detector.
 
-**First hand-labeled full-pipeline benchmark** ([`eval/e2e/`](eval/e2e/reference_paper_v1_results.md)): 2/25 (8%) verdict agreement on 25 cited claims from a domain-expert-annotated lactate ISF literature review (Perrelle 2023). The dominant first blocker is resolver retrieval (3/15 correct DOIs against the audited ground truth). An oracle experiment (verifier given the audited source abstract directly, bypassing the resolver) reaches 5/21 = 24%. The verifier rubric was extended to distinguish on-topic absence-of-support from off-topic `not_addressed`, which unlocked the regulatory-critical claim 019 (lactic acidosis threshold) where the verifier now correctly reports `unsupported`. Remaining gaps are bibliography parsing for multi-citation anchors and multi-source aggregation; the realistic combined-fix ceiling is in the 16–20/25 range. See [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md) for the full diagnostic.
+**First hand-labeled full-pipeline benchmark** ([`eval/e2e/`](eval/e2e/reference_paper_v1_results.md)): 4/25 (16%) verdict agreement on 25 cited claims from a domain-expert-annotated lactate ISF literature review (Perrelle 2023). The dominant first blocker is resolver retrieval (4/21 correct DOIs against the audited ground truth). An oracle experiment (verifier given the audited source abstract directly, bypassing the resolver) reaches 5/21 = 24%. Two structural fixes have landed: (i) a bibliography parser that routes multi-citation anchors via title-token + author + year queries (closed half the gap from the prior 2/25 baseline), and (ii) a verifier rubric extension distinguishing on-topic absence-of-support from off-topic `not_addressed` (unlocked claim 019 — the regulatory-critical lactic acidosis threshold — which now correctly reports `unsupported`). Remaining gaps are multi-source aggregation across `[N1-N3]` ranges and access to non-OA sources; the realistic combined-fix ceiling is in the 16–20/25 range. See [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md) for the full diagnostic.
 
 ## Related Work
 
@@ -97,8 +97,10 @@ python scripts/show_report.py
 ```text
 input text
   -> extract_claims()              # LLM: citation-anchored claims
-  -> resolve_citations()           # OpenAlex + CrossRef fallback
-  -> fetch_fulltext()              # OA URL -> PMC -> Unpaywall -> abstract fallback
+  -> parse_bibliography()          # numbered references (if present in source)
+  -> resolve_citations()           # bib DOI -> CrossRef direct; else richer query
+                                   # fallback chain: OpenAlex -> CrossRef
+  -> fetch_fulltext()              # OA URL -> PMC -> Unpaywall -> PubMed abstract
   -> chunk_paper()                 # deterministic IMRAD section chunks
   -> select_passages()             # BM25; empty when no lexical passage match
   -> verify_claim_fulltext()       # LLM verifier over selected passages or abstract
@@ -136,7 +138,7 @@ Data models are frozen dataclasses in `src/models.py`: `Claim`,
 
 Verifier-component F1 = 0.94 on SciFact dev (oracle inputs). Note: the SciFact eval at [`scripts/eval_scifact.py:184`](scripts/eval_scifact.py) collapses `partially_supported` into `supported` to match SciFact's 3-class label set, so this F1 measures binary support/contradict on oracle abstracts and does not measure how the verifier handles the partial class.
 
-*Full-pipeline verdict agreement on the first hand-labeled benchmark: **2/25 (8%)** on 25 cited claims from Perrelle 2023 (lactate ISF literature review, domain-expert-annotated). Macro-F1 across 4 verdict classes: 0.17. The dominant first blocker is resolver retrieval (3/15 correct DOIs against the audited ground truth). An oracle verifier experiment — feeding the verifier the audited source abstract directly via PubMed — reaches 5/21 (24%). The verifier rubric was extended in [src/verify.py](src/verify.py) to separate on-topic absence-of-support (`unsupported`) from off-topic mismatch (`not_addressed`); this unlocked the regulatory-critical lactic acidosis threshold claim. Bibliography parsing for multi-citation anchors and multi-source aggregation are the remaining structural gaps. Confusion matrix, per-claim breakdown, oracle results, and recovery-ceiling analysis in [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md).*
+*Full-pipeline verdict agreement on the first hand-labeled benchmark: **4/25 (16%)** on 25 cited claims from Perrelle 2023 (lactate ISF literature review, domain-expert-annotated). Macro-F1 across 4 verdict classes: 0.12. The dominant first blocker is resolver retrieval (4/21 correct DOIs against the audited ground truth). An oracle verifier experiment — feeding the verifier the audited source abstract directly via PubMed — reaches 5/21 (24%). The bibliography parser at [src/bibliography.py](src/bibliography.py) routes multi-citation anchors via title-token + author + year queries when the source has a numbered References section, doubling the agreement rate from a 2/25 prior baseline. The verifier rubric was extended in [src/verify.py](src/verify.py) to separate on-topic absence-of-support (`unsupported`) from off-topic mismatch (`not_addressed`); this unlocked the regulatory-critical lactic acidosis threshold claim. Multi-source aggregation across `[N1-N3]` ranges and access to non-OA sources are the remaining structural gaps. Confusion matrix, per-claim breakdown, oracle results, and recovery-ceiling analysis in [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md).*
 
 `scripts/eval_scifact.py` builds oracle claims and oracle abstract sources,
 bypassing extraction, resolution, retrieval, and BM25. It does not measure the

@@ -28,7 +28,54 @@
       "supported": 10,
       "partially_supported": 12
     },
-    "purpose": "Hand-labeled full-pipeline benchmark: measures verdict agreement between the extract -> resolve -> fetch_fulltext -> verify pipeline and a domain-expert annotation. Complements reference_paper_v1.json (which targets extraction recall + DOI accuracy, separate scaffolding)."
+    "purpose": "Hand-labeled full-pipeline benchmark: measures verdict agreement between the extract -> resolve -> fetch_fulltext -> verify pipeline and a domain-expert annotation. Complements reference_paper_v1.json (which targets extraction recall + DOI accuracy, separate scaffolding).",
+    "audit_log": [
+      {
+        "date": "2026-05-07",
+        "scope": "primary_source_doi field, all 25 entries",
+        "method": "Cross-checked each annotated DOI against the journal/publisher of the cited reference in the source bibliography (eval/e2e/source_texts/review_2023_lactate_isf.txt).",
+        "corrections": [
+          {
+            "claim_id": "lactate_review_003",
+            "field": "primary_source_doi",
+            "before": "10.1007/BF00382568",
+            "after": "10.1177/193229680700100414",
+            "reason": "The 10.1007 prefix is Springer; the cited paper (Goodwin et al. 2007, 'Blood lactate measurements and analysis during exercise: a guide for clinicians') was published in Journal of Diabetes Science and Technology 1.4 (2007), 558-569 — a SAGE journal with prefix 10.1177. The corrected DOI follows the SAGE article identifier convention for that issue."
+          }
+        ],
+        "flags": [
+          {
+            "claim_id": "lactate_review_002",
+            "field": "primary_source_doi",
+            "value": "10.1249/00005768-198606000-00003",
+            "concern": "The 10.1249 prefix is Lippincott Williams & Wilkins (Medicine & Science in Sports & Exercise). The cited paper (bibliography ref [58], Brooks 1986 'Lactate production under fully aerobic conditions: the lactate shuttle during rest and exercise') was published in Federation Proceedings 45.13, which generally has no Crossref DOI. The annotated DOI may correspond to a different Brooks paper (possibly bibliography ref [69], Brooks 1985 in Med Sci Sports Exerc). Left unchanged pending verification of which Brooks paper Vivien intended."
+          }
+        ],
+        "verified_consistent": [
+          "lactate_review_004 (10.1080 = T&F, J Sports Sci)",
+          "lactate_review_005 (10.1186 = BMC, Scand J Trauma Resusc Emerg Med)",
+          "lactate_review_006 (PMID 25729309, no Crossref DOI)",
+          "lactate_review_007 (PMID 25729309, no Crossref DOI)",
+          "lactate_review_008 (10.1038/s41587 = Nature Biotech)",
+          "lactate_review_009 (10.1038/s41587 = Nature Biotech)",
+          "lactate_review_010 (10.1212 = AAN, Neurology)",
+          "lactate_review_011 (10.1212 = AAN, Neurology)",
+          "lactate_review_013 (10.1136 = BMJ, BMJ Innovations)",
+          "lactate_review_014 (10.1046 = Wiley, JID Symposium Proc)",
+          "lactate_review_015 (10.1152 = APS, Am J Physiol)",
+          "lactate_review_016 (10.1152 = APS, Am J Physiol)",
+          "lactate_review_017 (mixed multi-source, primary DOIs match journals)",
+          "lactate_review_018 (10.1186 = BMC, Inflammation and Regeneration)",
+          "lactate_review_019 (10.1378 = ACCP, Chest)",
+          "lactate_review_020 (10.4103 = Medknow, Indian J Endocrinol Metab)",
+          "lactate_review_021 (10.1080 = T&F, J Sports Sci)",
+          "lactate_review_022 (10.1002/adhm = Wiley, Adv Healthcare Mater)",
+          "lactate_review_023 (10.3390 = MDPI, Micromachines)",
+          "lactate_review_024 (10.1109 = IEEE, ICSJ)",
+          "lactate_review_025 (10.1016/j.bspc = Elsevier, Biomed Signal Process Control)"
+        ]
+      }
+    ]
   },
   "claims": [
     {
@@ -80,7 +127,7 @@
       "expected_verdict": "supported",
       "expected_verdict_rationale": "Goodwin 2007 explicitly states that the ratio of whole-blood to plasma lactate concentration is expected to vary from approximately 63% (at 55% hematocrit) to 81% (at 25% hematocrit).",
       "is_primary_source": false,
-      "primary_source_doi": "10.1007/BF00382568",
+      "primary_source_doi": "10.1177/193229680700100414",
       "expected_full_text_available": true,
       "annotation_notes": "This literature review identifies hematocrit as the primary driver for the variation in the whole blood-plasma ratio (63-81%) and notes that lactate distribution is also influenced by water content corrections.",
       "recommended_fix": null

@@ -12,7 +12,7 @@ one verdict per cited claim, with full provenance. The current scope is
 deliberately conservative: this is an honest evidence-grounding verifier, not
 a broad automatic inconsistency detector.
 
-**First hand-labeled full-pipeline benchmark** ([`eval/e2e/`](eval/e2e/reference_paper_v1_results.md)): 1/25 (4%) verdict agreement on 25 cited claims from a domain-expert-annotated lactate ISF literature review (Perrelle 2023). The dominant failure mode is resolver retrieval — 3/15 correct DOIs against ground truth — while the verifier itself returns honest `not_addressed` on irrelevant retrieved sources. The benchmark experimentally validates that resolver fixes are higher leverage than verifier fixes on bibliography-cited content.
+**First hand-labeled full-pipeline benchmark** ([`eval/e2e/`](eval/e2e/reference_paper_v1_results.md)): 1/25 (4%) verdict agreement on 25 cited claims from a domain-expert-annotated lactate ISF literature review (Perrelle 2023). The dominant first blocker is resolver retrieval (3/15 correct DOIs against the audited ground truth). The verifier returns `not_addressed` on irrelevant retrievals — correct on bad inputs but not yet tested on absence-of-support cases, which require a downstream rubric extension. A resolver-only fix caps benchmark agreement at ~9/25; the realistic combined-fix ceiling (bibliography parsing + PubMed/PMC fallback + multi-source aggregation + verifier rubric extension) is in the 16–20/25 range. See [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md) for the full diagnostic.
 
 ## Related Work
 
@@ -134,9 +134,9 @@ Data models are frozen dataclasses in `src/models.py`: `Claim`,
 
 ## Evaluation
 
-Verifier-component F1 = 0.94 on SciFact dev (oracle inputs)
+Verifier-component F1 = 0.94 on SciFact dev (oracle inputs). Note: the SciFact eval at [`scripts/eval_scifact.py:184`](scripts/eval_scifact.py) collapses `partially_supported` into `supported` to match SciFact's 3-class label set, so this F1 measures binary support/contradict on oracle abstracts and does not measure how the verifier handles the partial class.
 
-*Full-pipeline verdict agreement on the first hand-labeled benchmark: **1/25 (4%)** on 25 cited claims from Perrelle 2023 (lactate ISF literature review, domain-expert-annotated). Macro-F1 across 4 verdict classes: 0.05. The dominant failure mode is resolver retrieval (3/15 correct DOIs); the verifier behaves correctly when given the right source. Confusion matrix and per-claim breakdown in [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md).*
+*Full-pipeline verdict agreement on the first hand-labeled benchmark: **1/25 (4%)** on 25 cited claims from Perrelle 2023 (lactate ISF literature review, domain-expert-annotated). Macro-F1 across 4 verdict classes: 0.05. The dominant first blocker is resolver retrieval (3/15 correct DOIs against the audited ground truth); the verifier returns `not_addressed` on irrelevant retrievals (correct behavior on bad inputs) but the rubric for `unsupported`-by-absence is a separate downstream issue. Confusion matrix, per-claim breakdown, and recovery-ceiling analysis in [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md).*
 
 `scripts/eval_scifact.py` builds oracle claims and oracle abstract sources,
 bypassing extraction, resolution, retrieval, and BM25. It does not measure the

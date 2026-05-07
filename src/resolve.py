@@ -11,6 +11,7 @@ from pathlib import Path
 import structlog
 
 from src.clients import crossref as _crossref
+from src.clients import pubmed as _pubmed
 from src.clients.openalex import search_paper
 from src.models import Claim, ProvenanceStep, ResolvedSource
 
@@ -30,6 +31,27 @@ def _build_query(claim: Claim) -> str:
         + claim.claim_text.split()[:5]
     )
     return " ".join(parts)
+
+
+def _enrich_abstract_via_pubmed(
+    source: ResolvedSource,
+    *,
+    db_path: Path | None,
+) -> ResolvedSource:
+    """Fill in source.abstract from PubMed when upstream resolvers returned null.
+
+    Fires only when source is found, has a DOI, and has no abstract. Looks up
+    the PMID via DOI and fetches the PubMed-formatted abstract. Returns the
+    source unchanged on any failure path (caching layer in pubmed.py records
+    negatives so repeated lookups stay cheap).
+    """
+    if not source.found or source.doi is None or source.abstract:
+        return source
+    abstract = _pubmed.fetch_abstract_by_doi(source.doi, db_path=db_path)
+    if abstract is None:
+        return source
+    logger.info("pubmed_abstract_enriched", doi=source.doi, length=len(abstract))
+    return dataclasses.replace(source, abstract=abstract)
 
 
 def resolve_citations(
@@ -66,6 +88,8 @@ def resolve_citations(
             if retracted:
                 logger.warning("retraction_detected", claim_id=claim.claim_id, doi=source.doi)
             source = dataclasses.replace(source, retraction_status=retracted)
+
+        source = _enrich_abstract_via_pubmed(source, db_path=db_path)
 
         sources[claim.claim_id] = source
         steps.append(

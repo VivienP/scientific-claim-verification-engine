@@ -97,6 +97,73 @@ class TestPhase1ResolveBehavior:
         assert sources["c1"].retraction_status is False
 
 
+class TestPubmedAbstractEnrichment:
+    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve.search_paper")
+    def test_enriches_when_doi_present_and_abstract_missing(
+        self, mock_oa: MagicMock, mock_retr: MagicMock, mock_pubmed: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(
+            found=True, doi="10.1/x", title="T", abstract=None, similarity_score=0.9
+        )
+        mock_pubmed.return_value = "PubMed-fetched abstract about lactate kinetics."
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+        mock_pubmed.assert_called_once_with("10.1/x", db_path=None)
+        assert sources["c1"].abstract == "PubMed-fetched abstract about lactate kinetics."
+
+    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve.search_paper")
+    def test_skipped_when_abstract_already_present(
+        self, mock_oa: MagicMock, mock_retr: MagicMock, mock_pubmed: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(
+            found=True,
+            doi="10.1/x",
+            title="T",
+            abstract="Already have one.",
+            similarity_score=0.9,
+        )
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+        mock_pubmed.assert_not_called()
+        assert sources["c1"].abstract == "Already have one."
+
+    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_skipped_when_source_not_found(
+        self, mock_oa: MagicMock, mock_cf: MagicMock, mock_pubmed: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+        from src.resolve import resolve_citations
+
+        resolve_citations([_make_claim("c1")])
+        mock_pubmed.assert_not_called()
+
+    @patch("src.resolve._pubmed.fetch_abstract_by_doi")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve.search_paper")
+    def test_pubmed_miss_leaves_source_unchanged(
+        self, mock_oa: MagicMock, mock_retr: MagicMock, mock_pubmed: MagicMock
+    ) -> None:
+        mock_oa.return_value = ResolvedSource(
+            found=True, doi="10.1/x", title="T", abstract=None, similarity_score=0.9
+        )
+        mock_pubmed.return_value = None
+        from src.resolve import resolve_citations
+
+        sources, _ = resolve_citations([_make_claim("c1")])
+        mock_pubmed.assert_called_once()
+        assert sources["c1"].found is True
+        assert sources["c1"].abstract is None
+
+
 class TestResolveCitations:
     @patch("src.resolve.search_paper")
     def test_happy_path(self, mock_search: MagicMock) -> None:

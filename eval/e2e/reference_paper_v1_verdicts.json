@@ -12,6 +12,8 @@
     "annotator": "Vivien Perrelle (domain expert)",
     "annotation_date": "2026-05-07",
     "n_claims": 25,
+    "license": "MIT",
+    "citation": "Perrelle, V. (2023). Exploring Activity-Induced Lactate Pharmacokinetics: Implications for Minimally-Invasive Monitoring. De Vinci Innovation Center.",
     "schema_extensions": [
       "is_primary_source",
       "primary_source_doi",

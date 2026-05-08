@@ -1,0 +1,774 @@
+{
+  "report_id": "5ebdee2a-c5a3-406e-b6ab-5bf4e3c80134",
+  "timestamp": 1778251191.9593923,
+  "input_text": "Valsci: an open-source, self-hostable literature review utility for automated large-batch scientific claim verification using large language models\n\nBrice Edelman1 and Jeffrey Skolnick1*\n1 Georgia Tech Center for the Study of Systems Biology, Atlanta, GA, USA\n*Correspondence: skolnick@gatech.edu\n\nEdelman and Skolnick BMC Bioinformatics (2025) 26:140\nhttps://doi.org/10.1186/s12859-025-06159-4\n\nAbstract\n\nBackground: The exponential growth of scientific publications poses a formidable challenge for researchers seeking to validate emerging hypotheses or synthesize existing evidence. In this paper, we introduce Valsci, an open-source, self-hostable utility that automates large-batch scientific claim verification using any OpenAI-compatible large language model. Valsci unites retrieval-augmented generation with structured bibliometric scoring and chain-of-thought prompting, enabling users to efficiently search, evaluate, and summarize evidence from the Semantic Scholar database and other academic sources. Unlike conventional standalone LLMs, which often suffer from hallucinations and unreliable citations, Valsci grounds its analyses in verifiable published findings. A guided prompt-flow approach is employed to generate query expansions, retrieve relevant excerpts, and synthesize coherent, evidence-based reports.\n\nResults: Preliminary evaluations across claims from the SciFact benchmark dataset reveal that Valsci significantly outperforms base GPT-4o outputs in citation hallucination rate while maintaining a low misclassification rate. The system is highly scalable, processing hundreds of claims per hour through asynchronous parallelization.\n\nConclusions: By providing an open and transparent platform for large-batch literature verification, Valsci substantially lowers the barrier to comprehensive evidence-based reviews and fosters a more reproducible research ecosystem.\n\nKeywords: Claim verification, Large language models, Retrieval-augmented generation, Bibliometric scoring, Chain-of-Thought, Open-source, Batch processing, Bioinformatics\n\nBackground\n\nThe exponential increase in scientific literature in recent years has both democratized knowledge and introduced formidable bottlenecks in evidence-based research [12]. Researchers, particularly in fields such as bioinformatics and biomedical sciences, routinely confront the challenge of rapidly verifying new hypotheses or large sets of model-generated predictions. Classical approaches to literature review require manually searching, extracting, and synthesizing evidence, and can be slow, labor-intensive, and prone to human error [2]. The urgency of generating accurate, real-time insights has thus sparked intense interest in automating, scaling, and streamlining the claim verification process.\n\nScientific claim verification—the specific task of assessing the accuracy and validity of statements based on evidence extracted from existing literature—is central to this process of literature review, and therefore to advancing knowledge while safeguarding research quality and reproducibility. Its importance lies in preventing the spread of misinformation, enhancing trust in published findings, and enabling rapid, evidence-informed decision-making in research and clinical settings.\n\nThe rise of AI-assisted literature analysis & current gaps\n\nRecent advancements in large language models (LLMs) have transformed various domains of natural language processing (NLP), from machine translation to summarization. Yet, when deployed as stand-alone tools for scientific claim verification, LLMs often struggle with hallucinations—fabricating data or citing non-existent sources—thereby undermining their utility as reliable evidence synthesizers [6]. Many commercial platforms, such as Scite [10], Elicit, and Consensus, have integrated NLP-based capabilities to expedite literature retrieval and summarization. However, these proprietary solutions typically operate as \"black boxes\" and impose financial or usage constraints, making them suboptimal for large-scale or highly specialized academic applications.\n\nExisting open-source tools have made important strides toward transparent, reproducible literature analysis. For instance, some employ retrieval-augmented generation (RAG) to ensure that LLM outputs are grounded in texts scraped from academic repositories [8]. Others provide user-friendly environments to rank or cluster abstracts based on relevance to predefined queries. Yet, most of these frameworks either lack end-to-end pipelines—requiring users to manually feed abstracts—or cannot efficiently handle large numbers of claims concurrently. As a result, researchers aiming for high-throughput verification continue to face a patchwork of partial solutions.\n\nValsci: an end-to-end solution\n\nIn response to these limitations, we present Valsci, an open-source and fully self-hostable utility for automated scientific claim verification at scale. The source code for Valsci is distributed under the June 29, 2007 Version 3 GNU General Public License. The system is built around four core principles:\n\n- Retrieval-Augmented Generation (RAG): Valsci seamlessly integrates with the Semantic Scholar database [7, 9] to fetch relevant abstracts and full texts, ensuring its output remains anchored in verifiable sources rather than the LLM's parametric memory.\n\n- Structured Bibliometric Scoring: In addition to relevance, Valsci incorporates an author's H-index [5], citation counts, and estimated journal impact into an overall evidence score, providing a more nuanced view of source credibility.\n\n- Guided Prompt Flow and Chain-of-Thought (CoT): Valsci uses specialized prompts to not only refine search queries but also systematically organize retrieved evidence into comprehensive and transparent verification reports. This approach mitigates the risk of hallucinations by requiring the LLM to cite and assess real, validated excerpts.\n\n- High-Throughput, Asynchronous Execution: Designed for large-batch tasks, Valsci employs asynchronous parallelization in Python to manage network requests, token usage, and inference calls concurrently. With typical resource settings, the system can process hundreds of claims per hour—far outpacing both manual human reviewers and single-threaded open-source tools.\n\nContributions and significance\n\nThis work aims to advance automated literature verification by offering a robust, transparent, and scalable alternative to proprietary solutions. We show that Valsci not only lowers the misclassification rate for scientific claims compared to direct outputs from base language models, but also successfully eliminates citation hallucinations. Additionally, it offers a speed increase of over thirty times under reasonable API rate limits compared to manual review by undergraduate researchers. By coupling an open-source, modular design with flexible integration options for LLM backends, Valsci empowers researchers to streamline large-scale systematic reviews, meta-analyses, and high-throughput validation of computational predictions.\n\nRelated work\n\nThe growing complexity and volume of scientific literature have driven the development of AI-assisted tools for claim verification, literature review, and citation analysis. While many systems now integrate large language models (LLMs) with bibliographic databases, existing approaches remain constrained in scalability, cost, transparency, and automation. Valsci differs by being fully open-source, self-hostable, and designed for high-throughput, large-batch claim verification. It combines retrieval-augmented generation (RAG) with structured bibliometric scoring and guided chain-of-thought (CoT) reasoning [15], offering an end-to-end, adaptable alternative to proprietary and academic solutions.\n\nIn the NLP community, claim verification is often formalized as a classification or natural language inference (NLI) task, in which claims are evaluated against retrieved evidence, producing judgments such as supported, refuted, or inconclusive [3, 11]. State-of-the-art solutions typically integrate retrieval systems with neural inference models; however, comprehensive and scalable end-to-end open-source implementations remain limited.\n\nClosed-Source Tools One of the earliest AI-driven citation analysis tools, Scite, classifies citations as supporting, contradicting, or mentioning a referenced claim from a particular academic work. By extracting citation context, it provides a useful measure of how a study is discussed in the literature. However, Scite does not actively retrieve or analyze new sources; rather, it depends on existing citation networks. This approach limits its utility for claims that require comprehensive evidence synthesis from the broader scientific corpus. Unlike Scite, Valsci dynamically searches for relevant literature, extracts supporting text, and evaluates the claim through structured analysis, ensuring that verification is based on the strongest available evidence rather than pre-existing citation relationships.\n\nClosed-source LLM-assisted literature review tools such as Elicit and Consensus aim to automate evidence retrieval and synthesis but remain black-box systems with unclear weighting of retrieved sources. Elicit allows users to search for relevant literature and extract key findings but imposes constraints on how many papers can be processed, with a \"Pro\" plan allowing only 1,200 papers per year. Consensus, built on the same Semantic Scholar database as Valsci, offers a \"Pro Analysis\" feature that provides structured evidence summaries, though the exact methodology behind its synthesis remains opaque. Both tools are subscription-based, limiting accessibility and transparency. Valsci, by contrast, is both open-source and allows unrestricted batch processing at no cost, making it more suitable for large-scale systematic reviews and high-volume research workflows.\n\nOpen-Source Tools Unlike these proprietary systems, open-source solutions such as LitLLM and LLAssist provide more transparent AI-assisted literature analysis. LitLLM applies retrieval-augmented generation (RAG) to ensure that LLM-generated summaries are grounded in retrieved texts, reducing the risk of hallucination [1]. However, it requires users to manually provide abstracts for input, rather than performing active literature searches. LLAssist takes a batch of abstracts and ranks them by relevance to a predefined research question but does not automatically search for or retrieve relevant papers [4].\n\nOther open-source solutions include systems such as MultiVerS [14], which focus on document-level fact-checking in controlled scientific contexts and rely on specialized model training (i.e. resource-intensive, domain-specific fine-tuning) for tasks like annotating SciFact claims. Consequently, these systems are less generalizable to arbitrary domains and lack the end-to-end automation needed for large-scale claim verification across diverse scientific fields.\n\nThese tools serve as useful components for systematic review workflows but do not provide a fully automated end-to-end pipeline. Valsci extends beyond retrieval and ranking by autonomously handling search, evaluation, bibliometric scoring, and final synthesis into structured claim verification reports.\n\nFocus on Scalability A critical distinction between Valsci and these alternatives is its ability to process large batches of claims efficiently. Existing retrieval-based systems, whether open-source or commercial, generally handle claims sequentially or within limited pre-configured batch sizes. Valsci, leveraging asynchronous parallelization of network requests, can simultaneously process as many claims as the throughput of the configured LLM providing endpoint supports. This scalability is particularly valuable for research fields requiring high-throughput verification, such as bioinformatics and clinical guideline assessments, where researchers often need to verify thousands of claims derived from computational models.\n\nWhile existing AI-driven literature tools have made notable strides, none provide an open, self-hostable, end-to-end claim verification system that integrates retrieval, evaluation, bibliometric scoring, and structured synthesis into a single pipeline. Valsci fills this gap by offering an adaptable and scalable solution that is not only more cost-effective but also ensures transparency and reproducibility in AI-assisted scientific verification.\n\nImplementation\n\nThe claim verification process begins with query generation, where an LLM is employed to transform a claim into multiple well-structured search queries optimized for literature retrieval. Instead of relying on simple keyword extraction, Valsci employs a strategic query expansion prompt designed to maximize the likelihood that relevant literature entries are captured by the search. This involves incorporating synonyms, alternative phrasing, and mechanistic decompositions to ensure a diverse set of relevant papers is retrieved. Additionally, the system deliberately constructs queries that target both supporting and refuting evidence, ensuring that the retrieved literature provides a balanced assessment of the claim. Queries are tailored to match the search conventions of Semantic Scholar and other academic search engines, improving retrieval efficiency across multiple disciplines. The prompt used to perform this expansion is available in Appendix A. The information flow through Valsci's modular data processing structure is depicted in Fig. 1 below.\n\nOnce queries are generated, Valsci executes them against the free Semantic Scholar Search API to obtain a corpus of potentially relevant papers. The response from the API includes the unique identifier of academic works in the Semantic Scholar Database, which is locally hosted within Valsci for fast retrieval without additional API calls. Valsci includes a utility allowing the user to download the full Semantic Scholar database as part of the system setup. The pattern of leveraging the Semantic Scholar API for relevance search in combination with Valsci's indexing utility for fast retrieval of texts from the local database is what makes effective retrieval augmented generation (RAG) against such a large corpus of data possible.\n\nTo maximize access to full-text sources, the system first attempts to retrieve the work from the local Semantic Scholar Open Research Corpus (S2ORC), which contains full-text versions of millions of academic papers. By prioritizing full-text retrieval, Valsci increases the likelihood of retrieving detailed excerpts rather than relying solely on abstracts. However, to simultaneously ensure that the breadth of literature coverage is not unnecessarily limited, abstracts are still used as a fallback if the full text is not available. The retrieval engine employs deduplication techniques through an LLM call to prevent redundant papers from being analyzed multiple times. With default settings of five generated queries and a cap of up to five papers retrieved per query, the standard retrieval process typically yields between 10 and 20 papers per claim, although this configuration is adjustable based on computational resources and research requirements.\n\nFollowing retrieval, each paper undergoes content extraction and relevance analysis to identify key excerpts that pertain to the claim under investigation. Using a structured LLM prompt, Valsci isolates directly relevant statements, mechanistic explanations, and empirical findings that either support or contradict the claim. These excerpts are extracted verbatim, preserving critical context, including statistical findings and methodological details. The verbatim excerpts are also paired with an explanation to provide relevant context or rationale for the excerpt's inclusion in the final analysis. The relevance of each excerpt is then assessed using a confidence score ranging from 0 to 1, ensuring that only evidence that could reasonably be considered potentially relevant is considered in later synthesis stages. If a paper is determined to have no relevance, it is classified separately and excluded from final synthesis.\n\nTo further refine the claim verification process, Valsci implements an optional evidence-scoring mechanism that ranks papers based on their scientific credibility and impact. Unlike simple relevance-based ranking, this scoring process incorporates bibliometric indicators such as the H-index of the first and last authors, the citation count of the paper, and an LLM-derived estimate of the journal's impact. The author impact metric considers the expertise of the researchers involved, while citation count provides a measure of how influential the study has been in the field. The journal impact metric is assessed using an LLM prompt aiming to recognize venue prestige based on historical publication standards and citation patterns in the model's parametric knowledge, which simplifies implementation by removing the need for integration with an external database. These three factors are weighted to produce a final evidence score, which determines the relative importance of each paper in the final assessment. The weight given to each bibliometric factor can be adjusted through the interface when submitting a claim for verification. Users who prefer not to use any bibliometric weighting can disable this feature altogether.\n\nOnce literature retrieval, relevance assessment, and evidence scoring are complete, Valsci synthesizes the results into a structured report using a guided CoT LLM prompt. This final synthesis process is designed to mimic expert-level reasoning by systematically structuring the evaluation across multiple dimensions. The report begins with a summary of supporting evidence, where the strongest corroborating papers and their key excerpts are presented. This is followed by a discussion of contradictory evidence, ensuring that conflicting findings are critically examined. The report then includes a mechanistic evaluation, exploring biological, chemical, or theoretical pathways that may explain or refute the claim. Finally, the balance of evidence is assessed, and a claim veracity rating is assigned based on the strength and consistency of the findings.\n\nThe final claim rating follows an ordinal scale: Contradicted, Likely False, Mixed Evidence, Likely True, Highly Supported, or, if no relevant works were found, No Evidence. This rating system provides an interpretable and standardized measure of claim validity, allowing researchers to quickly determine the degree of empirical support for a given statement. For large-scale research applications, Valsci allows batch downloads of processed claim reports, enabling streamlined verification workflows across multiple projects.\n\nThe entire system is implemented in Python. The system's processing module runs as a polling loop to monitor for submitted jobs, coordinate LLM calls while staying within rate limits, and track the status of claim verification tasks during intermediate stages of analysis. API calls are performed asynchronously and only gathered when necessary using Python's asyncio library. By default, the system specifies a 0.0 temperature setting for all LLM calls without any other hyperparameter adjustments. The frontend is a graphical web interface, which can be used for submitting batches, reviewing results, and exporting files. Screenshots of the interface can be found in Appendix B. It runs comfortably on consumer hardware for users who integrate with cloud-based frontier LLM providers or other hosted LLM services on their network. Network operations, LLM queries, and file I/O are executed concurrently, enabling large-scale claim verification with minimal latency. The request management system dynamically regulates LLM usage, allowing users to tune their implementation to the specific rate limits of the LLM provider they are leveraging. Valsci is designed to be highly scalable and adaptable, supporting integration with cloud-hosted LLM APIs as well as locally deployed open-source models such as LLaMA, Deepseek-R1, and Mistral for privacy-focused research environments.\n\nResults\n\nTo assess Valsci's performance in large-batch scientific claim verification, we conducted experiments across three key evaluation dimensions: hallucination reduction, processing speed and efficiency, and misclassifications. We used two popular base large language models, GPT-4o (2024-11-20 version) and GPT-4o-mini (2024-07-18 version), and compared the results using these models standalone versus as the backend of the Valsci claim verification system. Processing speed was additionally evaluated against a human undergraduate researcher performing manual claim verification.\n\nOur evaluation methodology focuses on quantifying improvements in evidence-based claim validation and computational efficiency. Experiments with both models were conducted using claims extracted from the SciFact dataset, a benchmark of scientific claims annotated with evidence from literature, developed by the Allen Institute for AI [13]. The SciFact dataset comprises claims labeled with supporting or contradicting evidence, which are critical for verifying Valsci's outputs against ground truth annotations. Specifically, we map SciFact claims labeled as \"Supported\" as true and \"Contradicted\" as false for our experimentation. To ensure accurate performance assessment, we excluded unlabeled claims (that is, claims with neither the \"Supported\" nor \"Contradicted\" label present) from the dataset, focusing solely on those with verifiable evidence. The selection of approximately 500 claims was a deliberate choice to balance the need for a sufficient sample size to draw robust conclusions with the computational resource intensiveness of running repeated benchmarks. Importantly, our approach was developed and tested exclusively on this labeled subset, and no tweaking or adjustments were made based on the remaining, unlabeled portions of the SciFact dataset.\n\nOur tests were run using a Microsoft Azure cloud-hosted Standard D2ads v6 (2 vcpus, 8 GiB memory) virtual machine running Debian 12.\n\nHallucination rate reduction\n\nA major limitation of generative LLMs is their propensity for hallucination—generating plausible yet false citations, particularly in the absence of strong retrieval mechanisms. Valsci effectively eliminates hallucinations by retrieving real excerpts from Semantic Scholar into the context window, then starting the guided CoT by evaluating the available evidence from them before conducting the rest of its analysis. In a sample of 10 claims containing 211 citations, every work cited by Valsci was confirmed to be extant.\n\nThe base models, on the other hand, were asked to provide citations with the same format (paper title, lead authors, and a URL) as Valsci as part of their output. We scored the generated citations as \"full hallucinations\" if they appeared to be completely fabricated and as \"partial hallucinations\" if there were errors, but searching the internet for the title and author still yielded a similar, extant paper. Partial hallucinations were assigned half-credit in determining the hallucination rate. The comparison of citation verification between the baseline GPT-4o and Valsci is shown in Table 1 below.\n\nIn a sample of 30 papers, the GPT-4o model failed to provide a single paper without a significant error. Only three papers were scored as \"partial\" hallucinations. Our sample from the GPT-4o-mini model also did not include any accurate citations – the smaller model more commonly defaulted to using obvious placeholder names and URLs (such as \"Jane Doe\" and www.example.com) rather than the plausible-seeming but incorrect citations created by the larger model.\n\nTable 1: Evaluation of citations provided by each literature review method in a review of ten claims\n- GPT-4o-mini: 0 verified, 0 partial, 30 full hallucinations\n- GPT-4o (baseline): 0 verified, 3 partial, 27 full hallucinations\n- Valsci (using GPT-4o): 211 verified, 0 partial, 0 full hallucinations\n\nProcessing speed and efficiency\n\nTable 2, shown below, presents the average processing rate for evaluation of scientific claims and generation of structured claim verification reports by Valsci compared to an undergraduate researcher with more than an academic semester of experience working in a research setting and conducting similar work.\n\nValsci processes approximately 144 claims per hour under rate limits set to use no more than 10 requests and 25,000 tokens in a rolling five-second window. Even with these limits, the processing is approximately 36x faster than an undergraduate researcher manually verifying claims. The undergraduate researcher was allowed to use publicly available academic databases and search engines but was not permitted to use generative AI for this evaluation.\n\nWe emphasize that Valsci's rate limits can be configured to maximally utilize the resources available in the environment of the user's deployment—the limiting step for processing speed is the throughput of the LLM endpoint (local- or cloud-deployed), available to the end researcher.\n\nTable 2: Rate of scientific claim evaluation by Valsci integrated with GPT-4o versus an undergraduate researcher\n- Valsci (using GPT-4o): 144 claims processed per hour\n- Undergraduate Researcher: 4 claims processed per hour\n\nPrecision, recall, F1, and uncertainty rate under various conditions\n\nTo evaluate whether accuracy is preserved during the claim verification task, we compute precision, recall, F1-score, and uncertainty rate. For clarity, we define the counts used in these calculations based on the system's classifications as follows:\n\n- C: The number of claims correctly classified as true or false.\n- I: The number of claims incorrectly classified as true or false.\n- U: The number of claims where the system abstained from making a definitive classification (i.e., uncertain).\n\nUsing these counts, we calculate the following metrics:\n- Precision: C / (C + I)\n- Recall: C / (C + I + U)\n- F1 Score: 2 x (Precision x Recall) / (Precision + Recall)\n- Uncertainty Rate: U / (C + I + U)\n\nThese metrics provide a comprehensive evaluation of the system's performance. Additionally, we include columns specifying the maximum number of citations that Valsci was configured to review and whether bibliometric indicators were incorporated into the scoring.\n\nThe maximum number of citations represents the product of the number of queries generated by Valsci and the number of papers reviewed per query. Specifically, we configured Valsci for three scenarios: 3 queries with 3 papers each, 5 queries with 5 papers each, and 7 queries with 7 papers each.\n\nDue to resource constraints, experiments varying configuration parameters and performing bibliometric ablation were conducted exclusively using the GPT-4o-mini model, chosen for its significantly lower computational cost compared to the larger GPT-4o model.\n\nTable 3 below presents a detailed comparison of precision, recall, F1-score, and uncertainty rate across these varying conditions.\n\nTable 3: Comparison of precision, recall, F1, and uncertainty rate across various models and system configurations\n- GPT-4o (No limit, Bibliometric Yes): Precision 0.907, Recall 0.578, F1 0.706, Uncertainty 0.360\n- Valsci using GPT-4o (Max 25, Bibliometric Yes): Precision 0.900, Recall 0.659, F1 0.761, Uncertainty 0.267\n- GPT-4o-mini (No limit, Bibliometric Yes): Precision 0.807, Recall 0.473, F1 0.597, Uncertainty 0.412\n- Valsci using GPT-4o-mini (Max 9, Bibliometric Yes): Precision 0.877, Recall 0.523, F1 0.655, Uncertainty 0.404\n- Valsci using GPT-4o-mini (Max 25, Bibliometric Yes): Precision 0.909, Recall 0.596, F1 0.720, Uncertainty 0.345\n- Valsci using GPT-4o-mini (Max 49, Bibliometric Yes): Precision 0.902, Recall 0.604, F1 0.724, Uncertainty 0.331\n- Valsci using GPT-4o-mini (Max 25, Bibliometric No): Precision 0.886, Recall 0.584, F1 0.704, Uncertainty 0.341\n\nThe raw results from each configuration used for calculating the above scores are available in the supplementary data hosted on Zenodo and in the \"Valsci_SupplementaryData_2025_03_27.zip\" additional file.\n\nOverall, these findings indicate that Valsci consistently outperforms stand-alone LLM baselines. As shown in Table 3, using Valsci with GPT-4o yields both an increased F1 score (0.761 vs. 0.706) and a markedly lower uncertainty rate (0.267 vs. 0.360) compared to GPT-4o alone. A similar trend holds for GPT-4o-mini: integrating the model into Valsci results in a substantial jump in F1 (from 0.597 to 0.720) and a decrease in uncertainty (from 0.412 to 0.345).\n\nMoreover, when varying Valsci's retrieval settings (i.e., the product of the number of queries and papers per query), higher citation coverage improves both recall and F1 while reducing the rate of uncertain (abstained) classifications. For instance, increasing the maximum citation count from 9 to 49 yields respective gains in F1 from 0.655 to 0.724 and a reduction in the uncertainty rate from 0.404 to 0.331. Disabling bibliometric indicators has a small but noticeable impact on performance: the system's F1 dips from 0.720 to 0.704, suggesting that weighting evidence by author impact and journal prestige can further refine final claim assessments.\n\nIn order to further validate the system on a different underlying dataset, an additional manual quality review was performed on Valsci's assessment of twenty hand-curated true claims extracted from publicly available Cochrane Reviews. Our inspection of Valsci's outputs on these claims shows reasonable analysis and chains of thought – we include the full, unadjusted output from Valsci for these claims in the supplementary data hosted on Zenodo and in the \"Valsci_SupplementaryData_2025_03_27.zip\" additional file. Table 4, which includes evaluation statistics for this batch of claims, is shown below:\n\nTable 4: Precision, recall, F1, and uncertainty rate for Valsci on a set of hand-curated claims sourced from publicly available Cochrane Reviews\n- Valsci (using GPT-4o, Max 25, Bibliometric Yes): Precision 1.000, Recall 0.800, F1 0.889, Uncertainty 0.200\n\nOf the twenty claims, Valsci was sufficiently confident to classify sixteen, and it was correct in those classifications.\n\nDiscussion\n\nThe results presented herein demonstrate that Valsci successfully meets its primary objectives of providing an open-source, high-throughput, and verifiable framework for scientific claim verification. Critically, its integration of retrieval-augmented generation (RAG) and bibliometric scoring methods offers distinct advantages over both standalone large language models (LLMs) and existing proprietary solutions. This discussion examines how these findings extend the current state of literature verification tools, identifies limitations, and outlines opportunities for future work.\n\nRetrieval-augmented framework and accuracy\n\nA key driver of Valsci's superior performance compared to the baseline GPT-4o model is its retrieval augmentation system. Rather than relying solely on parametric knowledge embedded within an LLM, Valsci always grounds its outputs in actual scientific literature. By employing guided query expansion, Valsci systematically seeks out relevant, diverse evidence. This is particularly beneficial for specialized research fields with idiosyncratic terminology, thereby broadening the scope of retrieved articles and augmenting recall. The consistent accuracy at very high throughput is striking and underscores how modern AI can not only match but occasionally exceed human capabilities in rapid literature review tasks.\n\nMoreover, the guided chain-of-thought (CoT) synthesis approach allows Valsci to structurally integrate bibliometric indicators, context from full-text excerpts, and mechanistic insights into a coherent verification report. This layered reasoning contrasts with common single-step LLM responses, providing better transparency and interpretability. The multi-stage pipeline—encompassing query generation, excerpt extraction, bibliometric weighting, and final structured reporting—mirrors human expert workflows, but at far greater scale and throughput.\n\nHallucination mitigation and bibliometric scoring\n\nBy validating each reference against a genuine retrieval from the Semantic Scholar database and employing deduplication, Valsci ensures that spurious citations do not permeate final results. The inclusion of an evidence-scoring mechanism, which integrates author-level impact (H-index), citation count, and LLM-estimated journal prestige, also introduces a beneficial quality-control dimension. This approach not only ranks references by credibility but inherently promotes verifiability. Papers from higher-impact journals or authors with substantial contributions in the domain intuitively hold greater weight in the final assessment, potentially reducing the influence of marginal or erroneous studies.\n\nHowever, bibliometric indicators also come with caveats that merit further attention. Citation counts and H-index values can inflate due to general popularity of certain topics or self-citations, and journal-based impact metrics may overlook important findings published in less prominent venues. In fast-moving fields or interdisciplinary research areas, relying too heavily on bibliometrics can inadvertently sideline novel, high-value studies. Thus, while the inclusion of bibliometric scores bolsters validity, Valsci's ultimate goal of thoroughly capturing supporting and contradicting evidence demands that these measures be employed judiciously. Fine-tuning the weights assigned to each metric or incorporating alternative credibility heuristics could further optimize this aspect of the pipeline.\n\nScalability and throughput\n\nValsci's asynchronous parallelization yields a considerable throughput advantage for batch verification tasks. In experiments with rate limits set to use no more than 10 requests and 25,000 tokens in a rolling five-second window, Valsci processed claims at a rate approximately 36 times faster than undergraduate researchers, a significant boost for time-sensitive fields such as bioinformatics and clinical guideline updates. Furthermore, as discussed earlier, these rate limits can be adjusted to take maximal advantage of the LLM inference resources available in the end user's environment. This efficiency stems from orchestrating multiple processes (e.g., search requests, LLM inference, file I/O) concurrently. The capacity for researchers to integrate local or cloud-hosted OpenAI-compatible LLMs further enhances Valsci's adaptability, offering a cost-effective, flexible alternative to subscription-based platforms.\n\nLimitations\n\nDespite its strengths, Valsci has several limitations. First, although it benefits from the expansive Semantic Scholar database and the S2ORC corpus, coverage gaps remain for proprietary or paywalled journals, leading to possible incomplete evidence retrieval. Local storage of the Semantic Scholar database also requires significant hard disk space—almost two terabytes—and it must be updated periodically using the bundled utility to ensure the latest indexed works are available to the system. Moreover, while Valsci explicitly searches for both supporting and refuting sources, highly specialized claims with limited prior studies may yield sparse or no corroboration, complicating the assignment of a final veracity rating. Researchers should interpret \"No Evidence\" or \"Mixed Evidence\" findings cautiously, recognizing the dependence on existing literature availability and retrieval completeness.\n\nSecond, Valsci relies on frontier LLMs for query generation, relevance scoring, and final CoT synthesis. While substituting local or alternative LLM models can mitigate cost and privacy issues, performance may vary significantly among different LLMs, particularly for specialized domains or non-English literature. Ensuring that the underlying LLM is robust and domain-tuned may be important to mitigate these concerns.\n\nLastly, interpretability and accountability remain important concerns. Although Valsci provides structured CoT outputs, discerning the rationale behind final veracity ratings may still be non-trivial for complex claims. Valsci's interpretive chain-of-thought itself is only as transparent as the language model's competence and accuracy in its articulation of intermediate reasoning. Advances in the interpretability and alignment scoring of base LLMs will allow Valsci users to better understand their outputs as well.\n\nFuture directions\n\nLooking ahead, several avenues could refine and extend Valsci's capabilities:\n\n- Enhanced Bibliometric Models: Incorporating additional metrics such as altmetrics, domain-specific citation databases, or network-based analyses could yield more nuanced evidence weighting. Analysis of the LLM-derived journal impact score and comparison to methods using bibliographic databases and additional author disambiguation techniques would be helpful for optimizing the system.\n\n- Domain Specialization of Backend Models: Domain-tuned LLMs, especially in biomedical fields, may improve query generation and excerpt extraction by leveraging specialized vocabularies and knowledge representations.\n\n- More Sources of Evidence: Integrating data from clinical trials, chemical structures, or biological pathway databases could expand Valsci's claim verification beyond textual information from Semantic Scholar's databases.\n\n- User-Friendly Interface Improvements: While Valsci has a graphical web interface built-in, improvements to the design and usability could encourage broader adoption by non-technical researchers.\n\n- Explainable AI Integration: Although the system's reasoning for assigning a rating to a claim can be traced through the chain-of-thought included in the final report, advancements in explainable AI and mechanistic interpretability could be leveraged to further improve the user's confidence in the outputs.\n\n- Additional Evaluations: The system was tested using popular closed-source models offered through Azure due to the computational resources available to our team, but further testing with different models and datasets could be insightful. It could also be interesting to evaluate the processing speed of a human with access to standard AI tools relative to Valsci's fully automated process or the human reviewer without AI access.\n\nConclusion\n\nThis work introduces Valsci, an open-source, self-hostable utility that effectively bridges the gap between large language model capabilities and rigorous literature-based verification. By coupling retrieval-augmented generation with structured bibliometric scoring and guided chain-of-thought synthesis, Valsci excels in accurately assessing the veracity of scientific claims at scale. Experimental comparisons indicate that it not only dramatically reduces hallucinations relative to raw LLM outputs but also maintains high accuracy while dramatically increasing verification speed relative to a human conducting the same task.\n\nThe system's capacity to operate asynchronously on large batches of claims empowers researchers to make full use of their resources to efficiently validate extensive sets of computational predictions, systematic review topics, or clinical guidelines. Its open design and modular architecture support custom LLM backends and evolving bibliometric metrics, providing both flexibility and transparency absent from proprietary alternatives. Although issues such as database coverage gaps, variability in LLM performance, and interpretability challenges persist, Valsci offers a valuable foundation for further innovation in automated scientific validation.\n\nAbbreviations\n\nLLM: Large Language Model\nRAG: Retrieval-Augmented Generation\nCoT: Chain-of-Thought\nAPI: Application Programming Interface\nS2ORC: Semantic Scholar Open Research Corpus\nGPL: General Public License\n\nReferences\n\n1. Agarwal S, Laradji IH, Charlin L, Pal C. LitLLM: a toolkit for scientific literature review (No. arXiv:2402.01788). 2024. arXiv. https://doi.org/10.48550/arXiv.2402.01788.\n\n2. Haddaway NR, Bethel A, Dicks LV, Koricheva J, Macura B, Petrokofsky G, Pullin AS, Savilaakso S, Stewart GB. Eight problems with literature reviews and how to fix them. Nat Ecol Evol. 2020;4(12):1582-9. https://doi.org/10.1038/s41559-020-01295-x.\n\n3. Hanselowski A, PVS A, Schiller B, Caspelherr F, Chaudhuri D, Meyer CM, Gurevych I. A Retrospective Analysis of the Fake News Challenge Stance Detection Task (No. arXiv:1806.05180). 2018. arXiv. https://doi.org/10.48550/arXiv.1806.05180.\n\n4. Haryanto CY. LLAssist: simple tools for automating literature review using large language models (No. arXiv:2407.13993). 2024. arXiv. https://doi.org/10.48550/arXiv.2407.13993.\n\n5. Hirsch JE. An index to quantify an individual's scientific research output. Proc Natl Acad Sci USA. 2005;102(46):16569-72. https://doi.org/10.1073/pnas.0507655102.\n\n6. Huang L, Yu W, Ma W, Zhong W, Feng Z, Wang H, Chen Q, Peng W, Feng X, Qin B, Liu T. A survey on hallucination in large language models: principles, taxonomy, challenges, and open questions. ACM Trans Inf Syst. 2025;43(2):42:1-42:55. https://doi.org/10.1145/3703155.\n\n7. Kinney R, Anastasiades C, Authur R, Beltagy I, Bragg J, Buraczynski A, Cachola I, Candra S, Chandrasekhar Y, Cohan A, Crawford M, Downey D, Dunkelberger J, Etzioni O, Evans R, Feldman S, Gorney J, Graham D, Hu F, Weld D.S. The Semantic Scholar Open Data Platform (No. arXiv:2301.10140). 2023. arXiv. https://doi.org/10.48550/arXiv.2301.10140.\n\n8. Lewis P, Perez E, Piktus A, Petroni F, Karpukhin V, Goyal N, Kuttler H, Lewis M, Yih W, Rocktaschel T, Riedel S, Kiela D. Retrieval-augmented generation for knowledge-intensive NLP tasks (No. arXiv:2005.11401). 2021. arXiv. https://doi.org/10.48550/arXiv.2005.11401.\n\n9. Lo K, Wang LL, Neumann M, Kinney R, Weld DS. S2ORC: the semantic scholar open research corpus (No. arXiv:1911.02782). 2020. arXiv. https://doi.org/10.48550/arXiv.1911.02782.\n\n10. Nicholson JM, Mordaunt M, Lopez P, Uppala A, Rosati D, Rodrigues NP, Grabitz P, Rife SC. scite: a smart citation index that displays the context of citations and classifies their intent using deep learning. Quant Sci Stud. 2021;2(3):882-98. https://doi.org/10.1162/qss_a_00146.\n\n11. Nie Y, Chen H, Bansal M. Combining fact extraction and verification with neural semantic matching networks (No. arXiv:1811.07039). 2018. arXiv. https://doi.org/10.48550/arXiv.1811.07039.\n\n12. Pan RK, Petersen AM, Pammolli F, Fortunato S. The memory of science: Inflation, myopia, and the knowledge network. J Informet. 2018;12(3):656-78. https://doi.org/10.1016/j.joi.2018.06.005.\n\n13. Wadden D, Lin S, Lo K, Wang LL, Zuylen van M, Cohan A, Hajishirzi H. Fact or Fiction: Verifying Scientific Claims (No. arXiv:2004.14974). 2020. arXiv. https://doi.org/10.48550/arXiv.2004.14974.\n\n14. Wadden D, Lo K, Wang LL, Cohan A, Beltagy I, Hajishirzi H. MultiVerS: Improving scientific claim verification with weak supervision and full-document context (No. arXiv:2112.01640). 2022. arXiv. https://doi.org/10.48550/arXiv.2112.01640.\n\n15. Wei J, Wang X, Schuurmans D, Bosma M, Ichter B, Xia F, Chi EH, Le QV, Zhou D. Chain-of-thought prompting elicits reasoning in large language models. In: Proceedings of the 36th International Conference on neural information processing systems, 2022; 24824-24837.\n",
+  "summary": {
+    "total_claims": 19,
+    "supported": 0,
+    "unsupported": 1,
+    "not_addressed": 6,
+    "partially_supported": 12,
+    "citation_found_rate": 0.10526315789473684,
+    "verifiability_status": "low_citation_density",
+    "fulltext_verified": 2,
+    "no_passage_found": 0,
+    "fulltext_unavailable": 17,
+    "resolution_low_confidence": 0,
+    "retracted_sources": 0,
+    "numeric_checks_run": 0,
+    "numeric_inconsistencies_flagged": 0,
+    "total_cost_usd": 0.250203,
+    "usage_by_stage": {
+      "extract": {
+        "tokens_in": 10886,
+        "tokens_out": 2110,
+        "cost_usd": 0.064308,
+        "n_steps": 1,
+        "n_cache_hits": 0
+      },
+      "resolve": {
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0.0,
+        "n_steps": 19,
+        "n_cache_hits": 0
+      },
+      "fetch_fulltext": {
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0.0,
+        "n_steps": 21,
+        "n_cache_hits": 0
+      },
+      "chunk_paper": {
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0.0,
+        "n_steps": 3,
+        "n_cache_hits": 0
+      },
+      "select_passages": {
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0.0,
+        "n_steps": 3,
+        "n_cache_hits": 0
+      },
+      "verify": {
+        "tokens_in": 44925,
+        "tokens_out": 2640,
+        "cost_usd": 0.17437499999999997,
+        "n_steps": 31,
+        "n_cache_hits": 0
+      },
+      "numeric_extract": {
+        "tokens_in": 3720,
+        "tokens_out": 24,
+        "cost_usd": 0.011519999999999999,
+        "n_steps": 3,
+        "n_cache_hits": 0
+      },
+      "aggregate": {
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0.0,
+        "n_steps": 2,
+        "n_cache_hits": 0
+      }
+    }
+  },
+  "claims": [
+    {
+      "claim_id": "a27cf1e6-b654-4e81-9f34-d241b01eb769",
+      "claim_text": "Classical approaches to literature review require manually searching, extracting, and synthesizing evidence, and can be slow, labor-intensive, and prone to human error.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Haddaway",
+        "Bethel",
+        "Dicks",
+        "Koricheva",
+        "Macura",
+        "Petrokofsky",
+        "Pullin",
+        "Savilaakso",
+        "Stewart"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41559-020-01295-x",
+        "title": "Eight problems with literature reviews and how to fix them",
+        "abstract": "Eight problems with literature reviews and how to fix them. Haddaway NR(1)(2)(3), Bethel A(4), Dicks LV(5)(6), Koricheva J(7), Macura B(8), Petrokofsky G(9), Pullin AS(10), Savilaakso S(11)(12), Stewart GB(13). Erratum in Nat Ecol Evol. 2020 Dec;4(12):1725. doi: 10.1038/s41559-020-01346-3. Comment in Nat Ecol Evol. 2021 Mar;5(3):264. doi: 10.1038/s41559-020-01369-w. Traditional approaches to reviewing literature may be susceptible to bias and result in incorrect decisions. This is of particular concern when reviews address policy- and practice-relevant questions. Systematic reviews have been introduced as a more rigorous approach to synthesizing evidence across studies; they rely on a suite of evidence-based methods aimed at maximizing rigour and minimizing susceptibility to bias. Despite the increasing popularity of systematic reviews in the environmental field, evidence synthesis methods continue to be poorly applied in practice, resulting in the publication of syntheses that are highly susceptible to bias. Recognizing the constraints that researchers can sometimes feel when attempting to plan, conduct and publish rigorous and comprehensive evidence syntheses, we aim here to identify major pitfalls in the conduct and reporting of systematic reviews, making use of recent examples from across the field. Adopting a 'critical friend' role in supporting would-be systematic reviews and avoiding individual responses to police use of the 'systematic review' label, we go on to identify methodological solutions to mitigate these pitfalls. We then highlight existing support available to avoid these issues and call on the entire community, including systematic review specialists, to work towards better evidence syntheses for better evidence and better decisions.",
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.repository.cam.ac.uk/bitstreams/e00b32a8-f10f-4c56-9f1a-7fee33fb0bd9/download",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The passage supports the claim that classical/traditional approaches to literature reviews are susceptible to bias and can result in incorrect decisions, but does not explicitly mention being 'slow, labor-intensive, and prone to human error' as described in the claim. The passage confirms susceptibility to bias but frames the problems differently (bias, lack of rigor, poor decisions) rather than explicitly characterizing traditional reviews as slow, labor-intensive, or prone to human error.",
+        "confidence": 0.7,
+        "source_passages": [
+          "Traditional approaches to literature reviews are susceptible to bias and may result in incorrect decisions [2, 3].",
+          "Substandard reviews could provide misleading findings, potentially causing harm and wasting valuable resources in research, policy and practice."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "daa8e103-c71a-4111-aecd-86611636d8ce",
+      "claim_text": "When deployed as stand-alone tools for scientific claim verification, LLMs often struggle with hallucinations—fabricating data or citing non-existent sources.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Huang",
+        "Yu",
+        "Ma",
+        "Zhong",
+        "Feng",
+        "Wang",
+        "Chen",
+        "Peng",
+        "Feng",
+        "Qin",
+        "Liu"
+      ],
+      "cited_year": 2025,
+      "source": {
+        "found": true,
+        "doi": "10.1145/3703155",
+        "title": "A Survey on Hallucination in Large Language Models: Principles, Taxonomy, Challenges, and Open Questions",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The title directly addresses hallucination in large language models, which is the core subject of the claim. However, title-only evidence cannot confirm the specific assertion about stand-alone LLM deployment in scientific claim verification contexts or the particular manifestations described (fabricating data, citing non-existent sources); an abstract or full text would be needed to establish full support.",
+        "confidence": 0.65,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "title_only",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "title_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "b3695817-7a3e-453f-afa9-cae3a13820d8",
+      "claim_text": "Scite classifies citations as supporting, contradicting, or mentioning a referenced claim from a particular academic work.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Nicholson",
+        "Mordaunt",
+        "Lopez",
+        "Uppala",
+        "Rosati",
+        "Rodrigues",
+        "Grabitz",
+        "Rife"
+      ],
+      "cited_year": 2021,
+      "source": {
+        "found": true,
+        "doi": "10.1162/qss_a_00146",
+        "title": "scite: A smart citation index that displays the context of citations and classifies their intent using deep learning",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The title of this work references classifying citation intent and displaying citation context, which is consistent with the claim that Scite classifies citations as supporting, contradicting, or mentioning. However, the title alone does not specify the exact classification categories (supporting, contradicting, mentioning), so full support cannot be established from the title only.",
+        "confidence": 0.65,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "title_only",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "title_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "ae49573c-9275-49b9-b474-37aaff481c8c",
+      "claim_text": "LitLLM applies retrieval-augmented generation (RAG) to ensure that LLM-generated summaries are grounded in retrieved texts, reducing the risk of hallucination.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Agarwal",
+        "Laradji",
+        "Charlin",
+        "Pal"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.48550/arXiv.2402.01788",
+        "title": "LitLLM: a toolkit for scientific literature review (No",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The title references 'LitLLM' as a toolkit for scientific literature review, which is consistent with the claim's subject, but the title alone provides no detail about retrieval-augmented generation, grounding mechanisms, or hallucination reduction. Title-only evidence cannot confirm these specific assertions.",
+        "confidence": 0.62,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "title_only",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "title_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "1a1a748e-8b52-487d-9c77-378d661a63fb",
+      "claim_text": "LLAssist takes a batch of abstracts and ranks them by relevance to a predefined research question but does not automatically search for or retrieve relevant papers.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Haryanto"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.48550/arXiv.2407.13993",
+        "title": "LLAssist: simple tools for automating literature review using large language models (No",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The title references 'LLAssist' as a tool for automating literature review using large language models, which is consistent with the claim's description of the tool. However, the title alone cannot confirm the specific functional details—such as ranking abstracts by relevance or the absence of automatic paper retrieval—without access to the abstract or full text.",
+        "confidence": 0.6,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "title_only",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "title_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "a8073bc6-b8d9-4105-a634-060fefdae71c",
+      "claim_text": "MultiVerS focuses on document-level fact-checking in controlled scientific contexts and relies on specialized model training (i.e. resource-intensive, domain-specific fine-tuning) for tasks like annotating SciFact claims.",
+      "claim_type": "methodological",
+      "cited_authors": [
+        "Wadden",
+        "Lo",
+        "Wang",
+        "Cohan",
+        "Beltagy",
+        "Hajishirzi"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.48550/arXiv.2112.01640",
+        "title": "MultiVerS: Improving scientific claim verification with weak supervision and full-document context (No",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The title references MultiVerS for scientific claim verification using full-document context, which is consistent with the claim's mention of document-level fact-checking in scientific contexts and tasks like annotating SciFact claims. However, the title emphasizes weak supervision rather than resource-intensive domain-specific fine-tuning, which may partially contradict the claim's characterization of 'specialized, resource-intensive fine-tuning'; a full text would be needed to verify this specific assertion.",
+        "confidence": 0.6,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "title_only",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "title_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "95bd9380-0a30-464c-a489-8557f5d71ef3",
+      "claim_text": "Valsci integrates with the Semantic Scholar database to fetch relevant abstracts and full texts.",
+      "claim_type": "methodological",
+      "cited_authors": [
+        "Kinney",
+        "Anastasiades",
+        "Authur",
+        "Beltagy",
+        "Bragg"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.48550/arXiv.2301.10140",
+        "title": null,
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "[10.48550/arXiv.2301.10140] not_addressed: Source not found or abstract unavailable. || [10.48550/arXiv.1911.02782] unsupported: The title refers to the Semantic Scholar Open Research Corpus (S2ORC), which is a dataset/resource, not a description of Valsci or its integration with Semantic Scholar. Title-only evidence cannot establish that Valsci integrates with this database to fetch abstracts and full texts.",
+        "confidence": 0.8,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "5dd1e3ee-9f96-40b4-af88-3e7db017f35b",
+      "claim_text": "Valsci incorporates an author's H-index, citation counts, and estimated journal impact into an overall evidence score.",
+      "claim_type": "methodological",
+      "cited_authors": [
+        "Hirsch"
+      ],
+      "cited_year": 2005,
+      "source": {
+        "found": true,
+        "doi": "10.1073/pnas.0507655102",
+        "title": "An index to quantify an individual's scientific research output",
+        "abstract": "An index to quantify an individual's scientific research output. Hirsch JE(1). I propose the index h, defined as the number of papers with citation number > or =h, as a useful index to characterize the scientific output of a researcher.",
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": "https://europepmc.org/articles/PMC1283832?pdf=render",
+        "pmcid": "PMC1283832",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "unsupported",
+        "explanation": "The passage is entirely about Hirsch's original 2005 paper proposing the h-index concept. It contains no mention of 'Valsci' or any system that combines an author's H-index, citation counts, and estimated journal impact into an 'overall evidence score.' The passages are on a different scientific subject (defining and validating the h-index) and cannot substantiate the specific claim about Valsci.",
+        "confidence": 0.95,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "40ec6135-b883-4a7f-93fe-2fa7c153a73e",
+      "claim_text": "Valsci uses guided chain-of-thought (CoT) reasoning.",
+      "claim_type": "methodological",
+      "cited_authors": [
+        "Wei",
+        "Wang",
+        "Schuurmans",
+        "Bosma",
+        "Ichter",
+        "Xia",
+        "Chi",
+        "Le",
+        "Zhou"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.48550/arXiv.2201.11903",
+        "title": "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models",
+        "abstract": null,
+        "similarity_score": 0.775,
+        "title_match_score": 0.55,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The citing paper's abstract explicitly states that Valsci uses 'chain-of-thought prompting' and later references 'A guided prompt-flow', which aligns with the claim of guided chain-of-thought (CoT) reasoning. Internal-consistency is present as the citing paper attributes CoT reasoning to Valsci's design, and Wei et al. (2022) is the canonical reference for chain-of-thought prompting, consistent with this attribution.",
+        "confidence": 0.5,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "citing_paper_context",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "citing_paper_context",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "081e6ec9-9737-462c-ae17-71b489f4004a",
+      "claim_text": "In NLP, claim verification is often formalized as a classification or natural language inference (NLI) task, in which claims are evaluated against retrieved evidence, producing judgments such as supported, refuted, or inconclusive.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Hanselowski",
+        "Schiller",
+        "Caspelherr",
+        "Chaudhuri",
+        "Meyer",
+        "Gurevych",
+        "Nie",
+        "Chen",
+        "Bansal"
+      ],
+      "cited_year": null,
+      "source": {
+        "found": true,
+        "doi": "10.48550/arXiv.1806.05180",
+        "title": "A Retrospective Analysis of the Fake News Challenge Stance Detection Task (No",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "[10.48550/arXiv.1806.05180] partially_supported: The title references the Fake News Challenge Stance Detection task, which is closely related to claim verification framed as classification/NLI — stance detection involves evaluating claims against evidence to produce categorical judgments. However, the title alone cannot confirm the specific framing of 'supported, refuted, or inconclusive' labels, and a full-text review would be needed to establish complete support. || [10.48550/arXiv.1811.07039] partially_supported: The title references fact extraction and verification combined with neural semantic matching networks, which is consistent with the claim's description of claim verification as a classification/NLI task evaluated against evidence. However, title-only evidence cannot confirm specific details about supported/refuted/inconclusive labels or the formalization as NLI.",
+        "confidence": 0.635,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "2b8d212e-195e-48c1-9023-c621aea15e26",
+      "claim_text": "The SciFact dataset is a benchmark of scientific claims annotated with evidence from literature, developed by the Allen Institute for AI.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Wadden",
+        "Lin",
+        "Lo",
+        "Wang",
+        "Zuylen van",
+        "Cohan",
+        "Hajishirzi"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.48550/arXiv.2004.14974",
+        "title": "Fact or Fiction: Verifying Scientific Claims (No",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The title 'Fact or Fiction: Verifying Scientific Claims' is directly on-topic and consistent with the claim about a benchmark dataset for verifying scientific claims. However, title-only evidence cannot confirm the annotation methodology, the specific role of literature evidence, or the involvement of the Allen Institute for AI — an abstract or full text would be needed to establish full support.",
+        "confidence": 0.65,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "title_only",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "title_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "4b70ce14-390f-4364-96db-e6bd3608edd7",
+      "claim_text": "In a sample of 10 claims containing 211 citations, every work cited by Valsci was confirmed to be extant.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The citing paper's surrounding text contains the claim's assertion verbatim: 'In a sample of 10 claims containing 211 citations, every work cited by Valsci was confirmed to be extant,' attributing this result to Valsci's performance. This satisfies the internal-consistency check under rule A, though independent verification of the cited source remains pending.",
+        "confidence": 0.5,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "citing_paper_context",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "citing_paper_context",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "7f40d312-9210-41fe-8889-f9964553f4f7",
+      "claim_text": "In a sample of 30 papers, the GPT-4o model failed to provide a single paper without a significant error; only three papers were scored as 'partial' hallucinations.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "521a4616-6d7e-401f-a833-e35f3b57b3c7",
+      "claim_text": "Valsci processes approximately 144 claims per hour under rate limits set to use no more than 10 requests and 25,000 tokens in a rolling five-second window, approximately 36x faster than an undergraduate researcher manually verifying claims.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The citing paper's surrounding text contains the claim's assertion verbatim: 'Valsci processes approximately 144 claims per hour under rate limits set to use no more than 10 requests and 25,000 tokens in a rolling five-second window' and 'approximately 36x faster than an undergraduate researcher manually verifying claims.' This satisfies internal-consistency rule A, though the cited reference is unattributed, so independent verification remains pending.",
+        "confidence": 0.55,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "citing_paper_context",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "citing_paper_context",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "8385989e-4d51-4fe6-bda2-672c2931f19c",
+      "claim_text": "Using Valsci with GPT-4o yields an increased F1 score (0.761 vs. 0.706) and a markedly lower uncertainty rate (0.267 vs. 0.360) compared to GPT-4o alone.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "3b668f5b-6434-4a5f-9161-1961758ae215",
+      "claim_text": "Integrating GPT-4o-mini into Valsci results in a substantial jump in F1 (from 0.597 to 0.720) and a decrease in uncertainty (from 0.412 to 0.345).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "956d171e-1fb0-47e1-ade8-0d4ccb3cfa3d",
+      "claim_text": "Increasing the maximum citation count from 9 to 49 yields respective gains in F1 from 0.655 to 0.724 and a reduction in the uncertainty rate from 0.404 to 0.331.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "eb77659c-5aa3-4415-89f9-2666f7a11e7a",
+      "claim_text": "Disabling bibliometric indicators causes the system's F1 to dip from 0.720 to 0.704.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "1d5dd8bc-cd1f-40ab-91f2-044fde0491a1",
+      "claim_text": "Of twenty hand-curated true claims from Cochrane Reviews, Valsci classified sixteen with sufficient confidence and was correct in all those classifications, yielding precision 1.000, recall 0.800, F1 0.889, and uncertainty rate 0.200.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    }
+  ]
+}

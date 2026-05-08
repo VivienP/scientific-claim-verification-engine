@@ -1,6 +1,6 @@
-Status: scaffold complete; verdicts track populated (`reference_paper_v1_verdicts.json`); recall track (`reference_paper_v1.json`) pending.
-
 # End-to-end benchmark — Phase A artifact
+
+> Status: scaffold complete; verdicts track populated (`reference_paper_v1_verdicts.json`); recall track (`reference_paper_v1.json`) pending.
 
 This directory holds the hand-annotated ground truth used to measure the full
 pipeline (extract → resolve → verify) on real content. It complements the
@@ -42,6 +42,14 @@ Both tracks annotate the same source paper but target different metrics:
 6. **Delete the `_annotation_guide` block** before saving the final file.
 
 7. **Validate the file.** `python -c "from eval.e2e.schema import load_reference_paper; from pathlib import Path; load_reference_paper(Path('eval/e2e/reference_paper_v1.json'))"` — should print nothing if valid.
+
+## Attribution
+
+The 25 hand-labeled verdict annotations in `reference_paper_v1_verdicts.json` are derived from:
+
+> Perrelle, V. (2023). *Exploring Activity-Induced Lactate Pharmacokinetics: Implications for Minimally-Invasive Monitoring*. De Vinci Innovation Center.
+
+The source paper and its annotations are the original work of Vivien Perrelle. The benchmark data is released under the same MIT licence as the rest of this repository. If you use this benchmark in published work, please cite the source paper above.
 
 ## Time budget
 

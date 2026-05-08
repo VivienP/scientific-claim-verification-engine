@@ -102,4 +102,4 @@ Canary controls (contradiction detection, weak resolution, numeric inconsistency
 
 Apache 2.0 — see [LICENSE](LICENSE). Dataset under `eval/e2e/` is CC BY-NC.
 
-**Looking for design partners.** If you're building an AI-for-science tool, working in pharma medical affairs, or evaluating AI-generated scientific text — reach out. Interested in 20-minute calls to understand your workflow. [@PerrelleVivien](https://x.com/PerrelleVivien)
+**Looking for design partners.** If you're building an AI-for-science tool, working in pharma medical affairs, or evaluating AI-generated scientific text — reach out [@PerrelleVivien](https://x.com/PerrelleVivien).

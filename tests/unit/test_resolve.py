@@ -1010,3 +1010,36 @@ class TestResolveCitationsMulti:
         assert legacy_sources["c1"].doi == new_sets["c1"].primary().doi
         assert legacy_sources["c1"].title == new_sets["c1"].primary().title
         assert legacy_sources["c1"].abstract == new_sets["c1"].primary().abstract
+
+    def test_best_bib_match_zero_author_multi_marker_returns_none(self) -> None:
+        """_best_bib_match returns None when cited_authors is empty and multiple markers match.
+
+        Zero author signal means the candidates cannot be ranked — returning the first
+        arbitrarily would propagate a false-high confidence through _resolve_via_bib_doi.
+        """
+        from src.bibliography import BibEntry
+        from src.resolve_utils import _best_bib_match
+
+        bib = {
+            99: BibEntry(number=99, raw="ref 99", authors=["Alpha"], title="A", year=2020),
+            100: BibEntry(number=100, raw="ref 100", authors=["Beta"], title="B", year=2021),
+        }
+        claim = _make_claim("c1", cited_authors=[], cited_year=None, citation_markers=[99, 100])
+        assert _best_bib_match(claim, bib) is None
+
+    @patch("src.resolve.search_paper")
+    def test_multi_marker_no_author_resolves_to_not_found_no_http(self, mock_oa: MagicMock) -> None:
+        """resolve_citations with citation_markers=[99,100] and cited_authors=[] must
+        return found=False without any HTTP call — single-source path cannot safely pick."""
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            99: BibEntry(number=99, raw="ref 99", authors=["Alpha"], title="A", year=2020),
+            100: BibEntry(number=100, raw="ref 100", authors=["Beta"], title="B", year=2021),
+        }
+        claim = _make_claim("c1", cited_authors=[], cited_year=None, citation_markers=[99, 100])
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_oa.assert_not_called()
+        assert sources["c1"].found is False

@@ -112,8 +112,6 @@ def _best_bib_match(claim: Claim, bibliography: dict[int, BibEntry]) -> BibEntry
         if score > best_score:
             best_score = score
             best = entry
-    if best is None and marker_candidates:
-        return marker_candidates[0]
     if best_score < 1:
         return None
     return best

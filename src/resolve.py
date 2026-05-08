@@ -373,7 +373,14 @@ def resolve_citations(
 
         if not claim.cited_authors and bib_match is None:
             source = _NOT_FOUND
-            logger.debug("resolve_skipped_no_citation", claim_id=claim.claim_id)
+            if claim.citation_markers:
+                logger.debug(
+                    "resolve_skipped_multi_marker_no_author",
+                    claim_id=claim.claim_id,
+                    markers=list(claim.citation_markers),
+                )
+            else:
+                logger.debug("resolve_skipped_no_citation", claim_id=claim.claim_id)
         elif claim.cited_year is None and bib_match is None:
             source = _NOT_FOUND
             logger.debug("resolve_skipped_no_year_no_bib_match", claim_id=claim.claim_id)

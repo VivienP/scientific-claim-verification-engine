@@ -2,7 +2,7 @@
 
 ![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)
 ![License](https://img.shields.io/badge/license-Apache%202.0-green)
-![Tests](https://img.shields.io/badge/tests-295-brightgreen)
+![Tests](https://img.shields.io/badge/tests-371-brightgreen)
 
 Auditable claim-by-claim evidence review for scientific text.
 
@@ -21,8 +21,11 @@ a broad automatic inconsistency detector.
 | End of S1 | 12/25 (48%) | Rubric v2 + title-only verifier + PMCID enrichment + Jaccard scoring |
 | End of S2 | 16/25 (64%) | Europe PMC client + multi-source aggregation |
 | End of S3 | 16/25 (64%) | Citing-context fallback + fulltext token bump + test cull |
+| End of S4 | 16/25 (64%) | Architecture refactor + SOTA techniques (see below); structural ceiling on lactate-ISF set |
 
 The remaining 9 disagreements split into three structural categories: (a) paywalled / identifier-less sources unreachable without institutional access (claims 008, 009, 011, 015) — out of scope for an OA-only verifier, (b) abstract-on-topic-but-silent on the specific assertion (008, 009 again, 022, 024) — the verifier is correctly conservative, (c) annotator-borderline calls (017, 022, 024). See [`eval/e2e/reference_paper_v1_results.md`](eval/e2e/reference_paper_v1_results.md) for the per-claim diagnostic.
+
+S4 left the verdict count at 16/25 because every remaining gap is structural to the OA-only constraint, not addressable by code. The S4 deliverables target *quality of the audit artifact* itself: canonical pipeline orchestrator, prompt-injection guards on every system prompt, AAR scorecard (PCov/PSnd/CTran/AEff), per-stage usage_by_stage cost breakdown, multi-signal CrossRef scoring (defensive — kicks in on resolver paths that are not exercised by the lactate-ISF DOI-bib bypass), and 40 new tests locking each new contract.
 
 ## Related Work
 
@@ -36,7 +39,7 @@ The space of LLM-grounded scientific claim verification is now actively populate
 **Benchmarks and evaluation standards:**
 
 - **SciClaimEval** ([sciclaimeval.github.io](https://sciclaimeval.github.io/)) — cross-modal claim ↔ table/figure benchmark (1,664 samples, 180 papers). SOTA is o4-mini at 68.2% pair-accuracy. Not a direct competitor (cross-modal, not text→text), but its perturbation methodology is informative.
-- **AAR standard** (arXiv 2602.13855) defines four metrics — Provenance Coverage (PCov), Provenance Soundness (PSnd), Claim Transparency (CTran), Audit Efficiency (AEff) — emerging as the consensus scorecard for evaluating audit tools over research agents. Adopting this scorecard is on the S4 roadmap.
+- **AAR standard** (arXiv 2602.13855) defines four metrics — Provenance Coverage (PCov), Provenance Soundness (PSnd), Claim Transparency (CTran), Audit Efficiency (AEff) — emerging as the consensus scorecard for evaluating audit tools over research agents. Adopted in S4: see [`src/aar.py`](src/aar.py) and `python scripts/aar_scorecard.py reports/runs/<id>`.
 - **SciClaimHunt_Num** (arXiv 2502.10003) is the closest public asset to the lactate-ISF benchmark — numeric scientific claim verification with structured ground truth.
 - **MuSciClaims** confirms the 3-class SUPPORT / NEUTRAL / CONTRADICT rubric used here is the public formalization of the absence-of-support-vs-not-addressed distinction.
 - **AFEV** (arXiv 2506.07446) introduces adaptive atomic decomposition for compound claims — relevant to the multi-source aggregation ceiling we hit at S2.

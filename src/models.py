@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Literal
 
@@ -13,6 +14,9 @@ VerificationStatus = Literal["supported", "unsupported", "not_addressed", "parti
 OperationType = Literal[
     "extract",
     "resolve",
+    "fetch_fulltext",
+    "chunk_paper",
+    "select_passages",
     "verify",
     "aggregate",
     "numeric_extract",
@@ -21,7 +25,13 @@ OperationType = Literal[
 VerifiabilityStatus = Literal["verifiable", "no_citations_found", "low_citation_density"]
 SectionLabel = Literal["introduction", "methods", "results", "discussion", "other"]
 RetrievalStatus = Literal["passage_found", "no_passage_found", "fulltext_unavailable"]
-EvidenceQuality = Literal["quoted_passage", "abstract_only", "no_evidence"]
+EvidenceQuality = Literal[
+    "quoted_passage",
+    "abstract_only",
+    "title_only",
+    "citing_paper_context",
+    "no_evidence",
+]
 
 
 @dataclass(frozen=True)
@@ -40,6 +50,7 @@ class Claim:
     cited_authors: list[str]
     cited_year: int | None
     claim_type: ClaimType
+    citation_markers: list[int] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -56,6 +67,71 @@ class ResolvedSource:
     retraction_status: bool = False
 
 
+_NOT_FOUND_SOURCE = ResolvedSource(
+    found=False, doi=None, title=None, abstract=None, similarity_score=None
+)
+
+
+@dataclass(frozen=True)
+class ResolvedSourceSet:
+    """A set of ResolvedSource entries for a multi-citation claim.
+
+    S2-P4: claims with `[81-83]` or `[99, 100]` reference multiple bibliography
+    entries that may individually support, contradict, or fail to address the
+    claim. The verifier needs all of them to aggregate honestly. The single
+    `ResolvedSource` API is preserved through `.primary()` for backward compat,
+    so the existing benchmark runner and `examples/sample_run.py` keep working.
+    """
+
+    sources: tuple[ResolvedSource, ...]
+    citation_markers: tuple[int, ...]
+
+    def primary(self) -> ResolvedSource:
+        """First found source in marker order, or `_NOT_FOUND_SOURCE` when empty.
+
+        Contract: when an author writes `[7, 9]`, ref [7] is the primary
+        citation by textual intent. `primary()` honors that order. The
+        resolver populates ``self.sources`` parallel to ``citation_markers``,
+        so iterating sources is equivalent to iterating markers.
+
+        Bug A (Valsci validation run, 2026-05-08): the previous implementation
+        used ``max(sources, key=title_match_score)`` and on `[7, 9]`
+        (Kinney + Lo) returned Lo because its title-match-score against
+        the claim text "Semantic Scholar database" was higher — even
+        though the user listed Kinney first. The score-based heuristic
+        was a leaky abstraction; marker order is the only ordering the
+        author intentionally provided.
+
+        Returns:
+        - The first source whose ``found`` is True, walking sources in
+          marker order. This is the marker-order primary.
+        - When no source resolved, returns the first source (still
+          unfound-shaped) so the result preserves marker-order invariants
+          for downstream provenance hashes.
+        - When the set is empty, returns ``_NOT_FOUND_SOURCE``.
+
+        Used by callers expecting a single ResolvedSource (legacy single-
+        source verifier modes, report headline DOI). The multi-source
+        verifier sees the full set via iteration and is unaffected.
+        """
+        if not self.sources:
+            return _NOT_FOUND_SOURCE
+        for source in self.sources:
+            if source.found:
+                return source
+        return self.sources[0]
+
+    def found_sources(self) -> tuple[ResolvedSource, ...]:
+        """All resolved entries with `found=True`. Empty tuple if none resolved."""
+        return tuple(s for s in self.sources if s.found)
+
+    def __iter__(self) -> Iterator[ResolvedSource]:
+        return iter(self.sources)
+
+    def __len__(self) -> int:
+        return len(self.sources)
+
+
 @dataclass(frozen=True)
 class VerificationResult:
     status: VerificationStatus
@@ -64,7 +140,9 @@ class VerificationResult:
     source_passages: list[str] = field(default_factory=list)
     source_section: str | None = None
     fulltext_available: bool = False
-    verification_depth: Literal["fulltext", "abstract"] = "abstract"
+    verification_depth: Literal["fulltext", "abstract", "title_only", "citing_paper_context"] = (
+        "abstract"
+    )
     retrieval_status: RetrievalStatus = "fulltext_unavailable"
     evidence_quality: EvidenceQuality = "abstract_only"
     retraction_status: bool = False

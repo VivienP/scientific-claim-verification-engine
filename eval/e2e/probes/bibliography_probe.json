@@ -1,0 +1,339 @@
+{
+  "metadata": {
+    "source_text": "eval/e2e/source_texts/review_2023_lactate_isf.txt",
+    "null_year_claims": [
+      "lactate_review_001",
+      "lactate_review_004",
+      "lactate_review_005",
+      "lactate_review_011",
+      "lactate_review_017",
+      "lactate_review_018",
+      "lactate_review_020"
+    ],
+    "null_year_unresolved_count": 7,
+    "null_year_count": 7,
+    "multi_citation_null_year_count": 7,
+    "key_finding": "All 7 cited_year=null claims are multi-citation/range bracket references and all 7 are unresolved because resolve_citations skips yearless claims.",
+    "reference_summaries": {
+      "[3]": "Goodwin et al. Blood lactate measurements and analysis during exercise: a guide for clinicians. JDST 1.4 (2007), 558-569; source export has no DOI, web identifies DOI 10.1177/193229680700100414.",
+      "[14]/[93]": "Bonaventura et al. Reliability and accuracy of six hand-held blood lactate analysers. J Sports Sci Med 14.1 (2015/2014), PMCID PMC4306774, no CrossRef DOI in bibliography.",
+      "[21]": "Rezapour Sarabi et al. 3D-Printed Microneedles for Point-of-Care Biosensing Applications. DOI 10.3390/mi13071099.",
+      "[23]": "Qin et al. Porosity control of polylactic acid porous microneedles using microfluidic technology. DOI 10.1109/ICSJ55786.2022.10034733.",
+      "[95]": "Ono et al. Regulation of blood vascular permeability in the skin. DOI 10.1186/s41232-017-0042-9.",
+      "[97]/[105]": "Jansson/Krogstad microdialysis skin lactate papers; [97] has DOI 10.1152/ajpendo.1996.271.1.E138, [105] lacks DOI in source export.",
+      "[99]": "Birklein et al. Increased skin lactate in complex regional pain syndrome. DOI 10.1212/WNL.55.8.1213.",
+      "[80]": "Kim. Blood Glucose Measurement: Is Serum Equal to Plasma? DOI 10.4093/dmj.2016.40.5.365, PMCID PMC5069392."
+    }
+  },
+  "rows": [
+    {
+      "claim_id": "lactate_review_001",
+      "source_citation_marker": "[3,39]",
+      "extractor_cited_authors": [
+        "Goodwin",
+        "Tuteja",
+        "Ormsby",
+        "Neethirajan"
+      ],
+      "extractor_cited_year": null,
+      "resolver_found": false,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": true
+    },
+    {
+      "claim_id": "lactate_review_002",
+      "source_citation_marker": "[58]",
+      "extractor_cited_authors": [
+        "Brooks"
+      ],
+      "extractor_cited_year": 1986,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_003",
+      "source_citation_marker": "[3]",
+      "extractor_cited_authors": [
+        "Goodwin"
+      ],
+      "extractor_cited_year": 2007,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_004",
+      "source_citation_marker": "[81-83]",
+      "extractor_cited_authors": [
+        "P\u00f6s\u00f6",
+        "Koho",
+        "Williams"
+      ],
+      "extractor_cited_year": null,
+      "resolver_found": false,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": true
+    },
+    {
+      "claim_id": "lactate_review_005",
+      "source_citation_marker": "[86-88]",
+      "extractor_cited_authors": [
+        "Collange",
+        "Seoane",
+        "Raa"
+      ],
+      "extractor_cited_year": null,
+      "resolver_found": false,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": true
+    },
+    {
+      "claim_id": "lactate_review_006",
+      "source_citation_marker": "[93,94]",
+      "extractor_cited_authors": [
+        "Bonaventura"
+      ],
+      "extractor_cited_year": 2015,
+      "resolver_found": true,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_007",
+      "source_citation_marker": "[93]",
+      "extractor_cited_authors": [
+        "Bonaventura"
+      ],
+      "extractor_cited_year": 2015,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_008",
+      "source_citation_marker": "[30]",
+      "extractor_cited_authors": [
+        "Heikenfeld"
+      ],
+      "extractor_cited_year": 2019,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_009",
+      "source_citation_marker": "[30]",
+      "extractor_cited_authors": [
+        "Heikenfeld"
+      ],
+      "extractor_cited_year": 2019,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_010",
+      "source_citation_marker": "[99]",
+      "extractor_cited_authors": [
+        "Birklein",
+        "Weber",
+        "Neund\u00f6rfer"
+      ],
+      "extractor_cited_year": 2000,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_011",
+      "source_citation_marker": "[99,100]",
+      "extractor_cited_authors": [
+        "Birklein",
+        "Muller"
+      ],
+      "extractor_cited_year": null,
+      "resolver_found": false,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": true
+    },
+    {
+      "claim_id": "lactate_review_012",
+      "source_citation_marker": "[97]",
+      "extractor_cited_authors": [
+        "Jansson",
+        "Krogstad",
+        "Lonnroth"
+      ],
+      "extractor_cited_year": 1996,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_013",
+      "source_citation_marker": "[102,103]",
+      "extractor_cited_authors": [
+        "Ming",
+        "Chien"
+      ],
+      "extractor_cited_year": 2022,
+      "resolver_found": true,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_014",
+      "source_citation_marker": "[104]",
+      "extractor_cited_authors": [
+        "Braverman"
+      ],
+      "extractor_cited_year": 2000,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_015",
+      "source_citation_marker": "[105]",
+      "extractor_cited_authors": [
+        "Krogstad"
+      ],
+      "extractor_cited_year": 1996,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_016",
+      "source_citation_marker": "[105]",
+      "extractor_cited_authors": [
+        "Jansson",
+        "Krogstad",
+        "Lonnroth"
+      ],
+      "extractor_cited_year": 1996,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_017",
+      "source_citation_marker": "[70-73]",
+      "extractor_cited_authors": [
+        "L\u00f6llgen",
+        "Graham",
+        "Sjogaard",
+        "Gladden",
+        "Karlsson",
+        "Jacobs"
+      ],
+      "extractor_cited_year": null,
+      "resolver_found": false,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": true
+    },
+    {
+      "claim_id": "lactate_review_018",
+      "source_citation_marker": "[95,96]",
+      "extractor_cited_authors": [
+        "Ono",
+        "Egawa",
+        "Kabashima",
+        "Currie",
+        "Bodo",
+        "Pearce"
+      ],
+      "extractor_cited_year": null,
+      "resolver_found": false,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": true
+    },
+    {
+      "claim_id": "lactate_review_019",
+      "source_citation_marker": "[52]",
+      "extractor_cited_authors": [
+        "Forsythe",
+        "Schmidt"
+      ],
+      "extractor_cited_year": 2000,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_020",
+      "source_citation_marker": "[79,80]",
+      "extractor_cited_authors": [
+        "Kotwal",
+        "Pandit",
+        "Kim"
+      ],
+      "extractor_cited_year": null,
+      "resolver_found": false,
+      "multi_citation_or_range": true,
+      "year_null_and_unresolved": true
+    },
+    {
+      "claim_id": "lactate_review_021",
+      "source_citation_marker": "[83]",
+      "extractor_cited_authors": [
+        "Williams",
+        "Armstrong",
+        "Kirby"
+      ],
+      "extractor_cited_year": 1992,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_022",
+      "source_citation_marker": "[22]",
+      "extractor_cited_authors": [
+        "Ventrelli",
+        "Strambini",
+        "Barillaro"
+      ],
+      "extractor_cited_year": 2015,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_023",
+      "source_citation_marker": "[21]",
+      "extractor_cited_authors": [
+        "Rezapour Sarabi",
+        "Akbari Nakhjavani",
+        "Tasoglu"
+      ],
+      "extractor_cited_year": 2022,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_024",
+      "source_citation_marker": "[23]",
+      "extractor_cited_authors": [
+        "Qin"
+      ],
+      "extractor_cited_year": 2022,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    },
+    {
+      "claim_id": "lactate_review_025",
+      "source_citation_marker": "[26]",
+      "extractor_cited_authors": [
+        "Keenan"
+      ],
+      "extractor_cited_year": 2013,
+      "resolver_found": true,
+      "multi_citation_or_range": false,
+      "year_null_and_unresolved": false
+    }
+  ]
+}

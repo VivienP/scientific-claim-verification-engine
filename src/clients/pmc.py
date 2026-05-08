@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -11,11 +10,16 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 _BASE_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-_CACHE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 _MIN_TEXT_LENGTH = 100
 _WHITESPACE_RE = re.compile(r"\s+")
 
@@ -23,7 +27,7 @@ _HEADERS = {"User-Agent": "ScientificClaimVerifier/0.1"}
 
 
 def _cache_key(pmcid: str) -> str:
-    return hashlib.sha256(f"pmc:{pmcid}".encode()).hexdigest()
+    return make_cache_key("pmc", pmcid)
 
 
 def _normalize_pmcid(pmcid: str) -> str:

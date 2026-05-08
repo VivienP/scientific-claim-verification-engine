@@ -1,0 +1,53 @@
+{
+  "schema_version": "1.0",
+  "paper": {
+    "title": "REPLACE_ME — title of Vivien's 2023 lactate/ISF review",
+    "authors": ["Perrelle, Vivien"],
+    "year": 2023,
+    "source_text_path": "eval/e2e/source_texts/review_2023_lactate_isf.txt"
+  },
+  "_annotation_guide": {
+    "instructions": "For each verifiable claim in the paper, add an entry to 'claims' below. Replace these example entries with real ones. Delete this _annotation_guide field before saving the final file as reference_paper_v1.json.",
+    "field_definitions": {
+      "gt_claim_id": "Unique stable id, e.g. 'c001', 'c002'. Use sequential numbering for traceability.",
+      "claim_text": "Verbatim quote of the claim from the paper. Include the full sentence (or sub-sentence) that conveys the assertion.",
+      "section": "One of: introduction | methods | results | discussion | other",
+      "claim_type": "One of: factual_numeric | factual_qualitative | methodological | causal",
+      "claim_origin": "'secondary' = claim is attributed to a cited paper; 'primary' = claim is a finding of THIS paper itself (no external citation, will not be scored on resolution)",
+      "cited_authors": "Surnames of the authors of the cited paper, e.g. ['Smith', 'Jones']. Empty list [] for primary claims.",
+      "cited_year": "Year of the cited paper as int, or null for primary claims.",
+      "ground_truth_doi": "The DOI of the actually-cited paper, lowercased. null if you don't have it or the citation has no DOI (preprint, book chapter).",
+      "ground_truth_title": "Title of the cited paper, for sanity-checking resolver outputs."
+    },
+    "tips": [
+      "Aim for 60-80 claims on a 15-20 page review. Quality > quantity — only annotate claims that are factually verifiable.",
+      "Composite claims like 'X showed A, B, and C' should be split into multiple entries (one per atomic assertion). This is the FActScore pattern that the pipeline targets in Phase C.",
+      "For decontextualized clarity: include enough context in claim_text that a reader could verify it without seeing the paragraph above. Resolve pronouns ('they' -> 'CGM sensors') if needed.",
+      "Use the bibliography of your paper (BibTeX or reference list) to fill ground_truth_doi efficiently — most of the work is done."
+    ]
+  },
+  "claims": [
+    {
+      "gt_claim_id": "c001",
+      "claim_text": "EXAMPLE — replace this. Wang et al. demonstrated a microneedle patch capable of extracting interstitial fluid for glucose monitoring with a correlation r=0.92 against blood glucose.",
+      "section": "introduction",
+      "claim_type": "factual_numeric",
+      "claim_origin": "secondary",
+      "cited_authors": ["Wang"],
+      "cited_year": 2024,
+      "ground_truth_doi": "10.1038/s43246-024-00468-6",
+      "ground_truth_title": "EXAMPLE — Microneedle-based interstitial fluid sampling for glucose monitoring"
+    },
+    {
+      "gt_claim_id": "c002",
+      "claim_text": "EXAMPLE — replace this. The interstitial fluid compartment in human skin represents approximately three times the volume of the vascular compartment.",
+      "section": "results",
+      "claim_type": "factual_numeric",
+      "claim_origin": "primary",
+      "cited_authors": [],
+      "cited_year": null,
+      "ground_truth_doi": null,
+      "ground_truth_title": null
+    }
+  ]
+}

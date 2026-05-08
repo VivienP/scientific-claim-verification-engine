@@ -1,27 +1,27 @@
 {
-  "report_id": "sakana_ai_scientist_rerun_8bf1241a",
-  "timestamp": 1777426786.9055383,
+  "report_id": "sakana_ai_scientist_rerun_00eb5b04",
+  "timestamp": 1778011733.219819,
   "input_text": "000\n001\n002\n003\n004\n005\n006\n007\n008\n009\n010\n011\n012\n013\n014\n015\n016\n017\n018\n019\n020\n021\n022\n023\n024\n025\n026\n027\n028\n029\n030\n031\n032\n033\n034\n035\n036\n037\n038\n039\n040\n041\n042\n043\n044\n045\n046\n047\n048\n049\n050\n051\n052\n053\nUnder review as a workshop paper at ICLR 2025\nCOMPOSITIONAL REGULARIZATION:\nUNEXPECTED OBSTACLES IN ENHANCING NEURAL\nNETWORK GENERALIZATION\nAnonymous authors\nPaper under double-blind review\nABSTRACT\nNeural networks excel in many tasks but often struggle with compositional gener-\nalization\u2014the ability to understand and generate novel combinations of familiar\ncomponents. This limitation hampers their performance on tasks requiring sys-\ntematic reasoning beyond the training data. In this work, we introduce a training\nmethod that incorporates an explicit compositional regularization term into the\nloss function, aiming to encourage the network to develop compositional repre-\nsentations. Contrary to our expectations, our experiments on synthetic arithmetic\nexpression datasets reveal that models trained with compositional regularization\ndo not achieve significant improvements in generalization to unseen combinations\ncompared to baseline models. Additionally, we find that increasing the complex-\nity of expressions exacerbates the models\u2019 difficulties, regardless of compositional\nregularization. These findings highlight the challenges of enforcing compositional\nstructures in neural networks and suggest that such regularization may not be suf-\nficient to enhance compositional generalization.\n1\nINTRODUCTION\nCompositional generalization refers to the ability to understand and produce novel combinations of\nknown components, a fundamental aspect of human cognition (Ito et al., 2022). Despite the success\nof neural networks in various domains, they often struggle with compositional generalization, lim-\niting their applicability in tasks requiring systematic reasoning beyond the training data (Qu et al.,\n2023; Klinger et al., 2020). Previous efforts to enhance compositional generalization have explored\nvarious approaches, including architectural modifications and training strategies (Finn et al., 2017;\nLepori et al., 2023). One promising direction is the incorporation of regularization terms that en-\nComment:\nCiting MAML\nin the context\nof composi-\ntional gener-\nalization does\nnot seem en-\ntirely appropri-\nate\ncourage certain properties in the learned representations (Yin et al., 2023).\nIn this paper, we introduce a training method that incorporates an explicit compositional regular-\nization term into the loss function. This regularization term is designed to penalize deviations from\nexpected compositional structures in the network\u2019s internal representations, with the aim of encour-\naging the network to form compositional representations. We hypothesized that this approach would\nenhance the network\u2019s ability to generalize to unseen combinations. However, our experiments on\nsynthetic arithmetic expression datasets show that the inclusion of compositional regularization does\nnot lead to the expected improvements in generalization performance. In some cases, it even hinders\nthe learning process. Furthermore, we observe that increasing the complexity of arithmetic expres-\nsions, such as using more operators or nesting\nComment:\nThe dataset\nused in the\nexperiments\ndid not con-\ntain a nesting\nstructure, but\nsome exper-\niments were\nconducted\nwith increas-\ning complexity\nby incorpo-\nrating more\noperators.\n, exacerbates the models\u2019 generalization difficulties\nregardless of the regularization. These unexpected results highlight the challenges of enforcing\ncompositionality through regularization and suggest that this approach may not be straightforwardly\neffective.\nIn summary, we propose a compositional regularization term intended to enhance compositional\ngeneralization in neural networks, conduct extensive experiments to evaluate its impact, and analyze\nthe unexpected outcomes, including the impact of operator complexity, discussing potential reasons\nwhy compositional regularization did not yield the anticipated benefits.\n1\n\n\n054\n055\n056\n057\n058\n059\n060\n061\n062\n063\n064\n065\n066\n067\n068\n069\n070\n071\n072\n073\n074\n075\n076\n077\n078\n079\n080\n081\n082\n083\n084\n085\n086\n087\n088\n089\n090\n091\n092\n093\n094\n095\n096\n097\n098\n099\n100\n101\n102\n103\n104\n105\n106\n107\nUnder review as a workshop paper at ICLR 2025\n2\nRELATED WORK\nComment: An\nincomplete and\ntoo general\nversion of a\nrelated work\nsection.\nCompositional generalization in neural networks has been a topic of considerable research interest\n(Klinger et al., 2020). Ito et al. (2022) explored abstract representations to tackle this issue, empha-\nsizing the importance of compositionality in achieving human-like reasoning. Yin et al. (2023) pro-\nposed consistency regularization training to enhance compositional generalization. Meta-learning\napproaches, such as Model-Agnostic Meta-Learning (MAML) (Finn et al., 2017), have also been\ninvestigated to improve generalization capabilities. Lepori et al. (2023) studied structural composi-\ntionality in neural networks, suggesting that networks may implicitly learn to decompose complex\ntasks.\nOur work differs by directly incorporating an explicit regularization term into the training objective\nto enforce compositional structures. Despite the theoretical appeal, our findings indicate that such\nregularization may not effectively enhance compositional generalization and that operator complex-\nity plays a significant role in the models\u2019 performance limitations.\n3\nMETHOD\nOur goal is to enhance compositional generalization in neural networks by incorporating a composi-\ntional regularization term into the training loss. We focus on a simple yet illustrative task: evaluating\narithmetic expressions involving basic operators.\n3.1\nMODEL ARCHITECTURE\nWe use an LSTM-based neural network (Goodfellow et al., 2016)\nComment:\nThis should be\nHochreiter &\nSchmidhuber\n(1997).\nto model the mapping from input\nexpressions to their computed results. The model consists of an embedding layer, an LSTM layer,\nand a fully connected output layer.\n3.2\nCOMPOSITIONAL REGULARIZATION\nLet ht be the hidden state at time t. We define the compositional regularization term as the mean\nComment:\nThis should be\nmore precise.\nE.g. refer to\nthe embed-\nding hidden\nstate. A bet-\nter alternative\nwould be et\nand et\u22121.\nsquared difference between successive hidden states:\nLcomp =\n1\nT \u22121\nT \u22121\nX\nt=1\n\u2225ht+1 \u2212ht\u22252\n(1)\nwhere T is the length of the input sequence.\nThis term penalizes large changes in hidden states between successive time steps, encouraging the\nmodel to form additive representations, which are a simple form of compositionality.\n3.3\nTRAINING OBJECTIVE\nThe total loss is the sum of the main loss (mean squared error between predicted and true results)\nand the compositional regularization term weighted by a hyperparameter \u03bb:\nLtotal = Lmain + \u03bbLcomp.\n(2)\nWe experimented with different values of \u03bb to assess its impact on compositional generalization.\n4\nEXPERIMENTS\n4.1\nEXPERIMENTAL SETUP\nWe generated synthetic datasets of arithmetic expressions to evaluate compositional generalization.\nThe datasets consist of expressions combining digits and operators (e.g., \u201c3+4\u201d, \u201c7*2\u201d). We com-\npared models trained with and without the compositional regularization term and performed several\nablation studies to assess the impact of different hyperparameters, operator complexity, and archi-\ntectural choices.\n2\n\n\n108\n109\n110\n111\n112\n113\n114\n115\n116\n117\n118\n119\n120\n121\n122\n123\n124\n125\n126\n127\n128\n129\n130\n131\n132\n133\n134\n135\n136\n137\n138\n139\n140\n141\n142\n143\n144\n145\n146\n147\n148\n149\n150\n151\n152\n153\n154\n155\n156\n157\n158\n159\n160\n161\nUnder review as a workshop paper at ICLR 2025\nFigure 1: Baseline model performance over epochs. Left: Training and test loss decrease over\nepochs, indicating learning progress. Middle: Test accuracy increases, reaching approximately\n84%.\nComment:\nFigure 1 shows\nonly up to\n40% accuracy,\nbut since Fig-\nure 2 (Right),\nwhich uses a\nsimilar setup,\nshows around\n84%, it\u2019s likely\nthat the x-axis\nof Figure 1 is\ntruncated.\nRight: Compositional loss remains steady, suggesting the model does not inherently develop\ncompositional representations without regularization.\n4.1.1\nDATASETS\n\u2022 Training set: 1,000 randomly generated expressions using a limited set of numbers and\noperators.\n\u2022 Test set: 200 expressions not seen during training, including novel combinations of num-\nbers and operators, as well as increased operator complexity.\n4.1.2\nIMPLEMENTATION DETAILS\n\u2022 Models were trained for 30 epochs using the Adam optimizer and mean squared error loss.\n\u2022 The compositional regularization term was weighted by \u03bb = 0.1 unless otherwise specified.\n\u2022 We evaluated model performance using test accuracy (percentage of correct predictions\nwithin\nComment:\n\u201cWithin a tol-\nerance\u201d refers\nto the fact that\nthe model re-\ngresses its out-\nput to match\nthe ground\ntruth numerical\nanswer. See\nthe Code Re-\nview section.\na tolerance) and compositional loss.\n\u2022 Experiments were repeated with different hyperparameters and operator complexities.\n4.2\nRESULTS\n4.2.1\nBASELINE PERFORMANCE\nWe first trained the baseline LSTM model without compositional regularization. Figure 1 shows the\nComment:\nThe figure\nlacks an ex-\nplanation for\nthe shadowed\narea, which\nshould be clar-\nified as rep-\nresenting the\nstandard devi-\nation across 3\nor 4 indepen-\ndent runs.\ntraining and test loss, test accuracy, and compositional loss over epochs. As training progresses, both\ntraining and test loss decrease, and test accuracy increases, reaching approximately 84% accuracy.\nThe compositional loss remains relatively steady, indicating that without regularization, the model\nComment:\nThis claim\ncannot be in-\nferred from\nFigure 1\n(Right).\ndoes not inherently develop compositional representations.\nComment:\nThis section\nis meant to\nshow the base-\nline perfor-\nmance, but it\nalso includes\nthe compo-\nsitional loss\nplot, which is\nconfusing.\n4.2.2\nIMPACT OF COMPOSITIONAL REGULARIZATION\nWe introduced the compositional regularization term with different weights \u03bb and assessed its im-\npact. Figure 2 illustrates the effects of varying \u03bb on training loss, compositional loss, and final test\naccuracy. Higher values of \u03bb led to a lower compositional loss but did not improve test accuracy.\nIn some cases, the test accuracy decreased. This suggests that while compositional regularization\nencourages the learning of compositional representations as measured by the regularization term, it\nmay interfere with the main learning objective by constraining the model\u2019s capacity to fit the training\ndata.\n4.2.3\nIMPACT OF OPERATOR COMPLEXITY\nWe investigated how increasing the operator complexity of arithmetic expressions affects model\nperformance. Figure 3 presents the training loss, validation loss, and final validation accuracy for\nexpressions with varying numbers of operators. Our results show that as the complexity of the ex-\npressions increases, the models\u2019 ability to generalize diminishes significantly. Neither the baseline\nmodel nor the model with compositional regularization could handle expressions with higher opera-\ntor complexity effectively. This finding emphasizes that compositional regularization alone may not\naddress the challenges posed by complex compositional structures.\n3\n\n\n162\n163\n164\n165\n166\n167\n168\n169\n170\n171\n172\n173\n174\n175\n176\n177\n178\n179\n180\n181\n182\n183\n184\n185\n186\n187\n188\n189\n190\n191\n192\n193\n194\n195\n196\n197\n198\n199\n200\n201\n202\n203\n204\n205\n206\n207\n208\n209\n210\n211\n212\n213\n214\n215\nUnder review as a workshop paper at ICLR 2025\nFigure 2: Impact of compositional weight \u03bb on model performance. Left: Training loss over epochs\nfor different \u03bb. Higher \u03bb values slightly increase training loss. Middle: Compositional loss de-\ncreases with higher \u03bb,\nComment:\nThis is a\nstretch because\nthe paper has\nnot rigorously\nshown that\nlower compo-\nsitional loss\nleads to more\ncompositional-\nity.\nindicating the regularization term effectively enforces compositionality.\nRight: Final test accuracy does not improve with higher \u03bb and may decrease, suggesting a trade-off\nbetween compositional regularization and the primary learning objective.\nFigure 3: Model performance on expressions with varying operator complexity. Left: Training\nloss increases with operator complexity, indicating the models struggle to fit more complex data.\nMiddle: Validation loss is higher for complex expressions, reflecting poor generalization. Right:\nFinal validation\nComment:\nThis should\nbe \u201cFinal val-\nidation loss\nincreases\u201d to\nmatch the fig-\nure, although\nthe mean-\ning remains\nroughly the\nsame.\naccuracy decreases significantly as operator complexity increases, underscoring\ninherent limitations in handling complex compositional structures with compositional regularization\nalone.\n5\nCONCLUSION\nIn this work, we introduced a compositional regularization term with the intention of enhancing\ncompositional generalization in neural networks. Our experiments on synthetic arithmetic expres-\nsion datasets revealed that compositional regularization did not lead to the expected improvements\nin generalization performance. In some cases, it even hindered the learning process. Additionally,\nwe found that increasing the complexity of arithmetic expressions exacerbates the models\u2019 general-\nization difficulties, highlighting inherent limitations.\nThese findings highlight the challenges of enforcing compositional structures in neural networks\nthrough regularization. Possible reasons for the lack of improvement include conflicts between the\nregularization term and the primary learning objective, which may cause the network to prioritize\nminimizing the compositional loss over fitting the data. Additionally, the measure of composition-\nality used in the regularization term may not align with the aspects of compositionality that are\ncritical for generalization. The synthetic dataset may also not adequately capture the complexities\nof compositional generalization in real-world tasks, and increased operator complexity introduces\nadditional challenges that compositional regularization alone cannot overcome.\nFor future work, we suggest exploring alternative regularization strategies, refining the definition of\ncompositionality in the context of neural networks, and testing on more complex datasets. Investi-\ngating models that can inherently handle higher operator complexity, such as those with recursive or\nhierarchical structures, may also be beneficial. Our findings underscore the importance of rigorously\nevaluating proposed methods and openly reporting negative or inconclusive results to advance our\nunderstanding of the challenges in deep learning.\n4\n\n\n216\n217\n218\n219\n220\n221\n222\n223\n224\n225\n226\n227\n228\n229\n230\n231\n232\n233\n234\n235\n236\n237\n238\n239\n240\n241\n242\n243\n244\n245\n246\n247\n248\n249\n250\n251\n252\n253\n254\n255\n256\n257\n258\n259\n260\n261\n262\n263\n264\n265\n266\n267\n268\n269\nUnder review as a workshop paper at ICLR 2025\nREFERENCES\nChelsea Finn, P. Abbeel, and S. Levine. Model-agnostic meta-learning for fast adaptation of deep\nnetworks. pp. 1126\u20131135, 2017.\nIan Goodfellow, Yoshua Bengio, Aaron Courville, and Yoshua Bengio. Deep learning, volume 1.\nMIT Press, 2016.\nTakuya Ito, Tim Klinger, D. Schultz, J. Murray, Michael W. Cole, and Mattia Rigotti. Compositional\ngeneralization through abstract representations in human and artificial neural networks. 2022.\nTim Klinger, D. Adjodah, Vincent Marois, Joshua Joseph, M. Riemer, A. Pentland, and Murray\nCampbell. A study of compositional generalization in neural models. ArXiv, abs/2006.09437,\n2020.\nMichael A. Lepori, Thomas Serre, and Ellie Pavlick. Break it down: Evidence for structural com-\npositionality in neural networks. ArXiv, abs/2301.10884, 2023.\nCarolyn Qu, Rodrigo Nieto, \u2022. Mentor, and John Hewitt. Compositional generalization based on\nsemantic interpretation: Where can neural networks improve? 2023.\nAshish Vaswani, Noam M. Shazeer, Niki Parmar, Jakob Uszkoreit, Llion Jones, Aidan N. Gomez,\nLukasz Kaiser, and Illia Polosukhin. Attention is all you need. pp. 5998\u20136008, 2017.\nYongjing Yin, Jiali Zeng, Yafu Li, Fandong Meng, Jie Zhou, and Yue Zhang. Consistency regular-\nization training for compositional generalization. pp. 1294\u20131308, 2023.\nSUPPLEMENTARY MATERIAL\nA\nEFFECT OF EMBEDDING DIMENSION\nWe explored the impact of different embedding dimensions on model performance. Figure 4 shows\nthe training loss, compositional loss, and final test accuracy for embedding dimensions 16, 32, 64,\nand 128. Increasing\nComment:\nIncreasing the\nembedding\ndimension did\nimprove test\naccuracy, but it\nappears to be\nplateauing.\nthe embedding dimension did not consistently improve test accuracy. While\nlarger embedding dimensions provide the model with greater capacity, our results indicate that\nsimply increasing model capacity is not sufficient to enhance compositional generalization in this\nComment:\nThis could\nbe viewed as\nhinting that\nthe regularizer\nis applied to\nthe embedding\nhidden state.\ncontext. This suggests that the bottleneck may lie in the model\u2019s ability to capture compositional\nstructures rather than in its representational capacity.\nFigure 4: Effect of embedding dimension on model performance. Left: Training loss decreases\nsimilarly across embedding dimensions, indicating comparable learning progress. Middle: Compo-\nsitional loss trends are similar, suggesting embedding size has limited impact on compositionality\nas measured. Right: Final test accuracy does not consistently improve with larger embedding di-\nmensions, highlighting that increasing model capacity alone does not enhance compositional gener-\nalization.\nB\nINTEGRATION OF ATTENTION MECHANISM\nWe compared the baseline model with an enhanced model that incorporates an attention mecha-\nnism Vaswani et al. (2017). The attention mechanism is known to improve performance in various\nsequence-to-sequence tasks by allowing the model to focus on relevant parts of the input sequence.\n5\n\n\n270\n271\n272\n273\n274\n275\n276\n277\n278\n279\n280\n281\n282\n283\n284\n285\n286\n287\n288\n289\n290\n291\n292\n293\n294\n295\n296\n297\n298\n299\n300\n301\n302\n303\n304\n305\n306\n307\n308\n309\n310\n311\n312\n313\n314\n315\n316\n317\n318\n319\n320\n321\n322\n323\nUnder review as a workshop paper at ICLR 2025\nB.1\nEXPERIMENTAL SETUP\nWe modified the baseline LSTM model to include an attention layer after the LSTM outputs. The\nattention weights were calculated based on the hidden states, and a context vector was formed to aid\nin the final output prediction.\nB.2\nRESULTS\nThe attention model achieves a test accuracy similar to the baseline, as shown in Figure 5. While the\nComment:\nThe conclusion\nhere seems\nwrong. From\nthe figure,\nthe attention-\naugmented\nLSTM per-\nforms much\nbetter than\nthe baseline\nLSTM, where\nthe former re-\nports 100%\nfinal test accu-\nracy. See the\nCode Review\nfor more de-\ntails.\nattention mechanism slightly improved the training dynamics, it did not lead to significant improve-\nments in generalization performance. This suggests that the challenges in compositional generaliza-\ntion are not primarily due to the model\u2019s ability to focus on relevant parts of the input sequence but\nmay be related to deeper architectural limitations or the need for more sophisticated mechanisms to\ncapture compositionality.\nFigure 5: Comparison of baseline and attention models. Left: Training loss over epochs shows sim-\nilar convergence for both models. Middle: Compositional loss remains comparable, indicating that\nattention does not significantly enhance compositional representations. Right: Final test accuracy is\nsimilar for both models, suggesting that the attention mechanism does not address the compositional\ngeneralization challenges.\nComment:\nThe gener-\nated caption\nseems to be\nstrongly influ-\nenced by the\nconclusion in\nthe main text.\nFor example,\neven though\nattention out-\nperforms\nthe base-\nline LSTM,\nit states that\nthe two are\nroughly simi-\nlar.\nC\nADDITIONAL EXPERIMENTS\nC.1\nABLATION STUDY ON COMPOSITIONAL WEIGHT\nWe conducted an ablation study on the compositional weight \u03bb to further investigate its impact on\nmodel performance. Figures 6 and 7 show the training loss and final test accuracy for various values\nof \u03bb. Higher \u03bb values effectively reduce the compositional loss but adversely affect test accuracy.\nThis reinforces the conclusion that emphasizing compositional regularization may conflict with the\nprimary learning objective.\nC.2\nCOMPARISON OF LSTM AND RNN ARCHITECTURES\nWe compared the performance of LSTM and simple RNN architectures to assess the influence of\nmodel choice on compositional generalization. Figure 8 illustrates the training loss and final test\naccuracy for both models. The LSTM model showed marginal improvements over the simple RNN,\nbut both architectures struggled with compositional generalization, indicating that the limitations\nare not solely due to the recurrent unit type.\nC.3\nDROPOUT IMPACT\nWe investigated the impact of dropout on model performance. Figure 9 shows the final test accuracy\nfor different dropout rates. We found that increasing the dropout rate did not lead to significant\nimprovements in generalization, suggesting that regularization techniques like dropout may not ad-\ndress compositional generalization challenges. This indicates that standard regularization methods\nmay not be sufficient to overcome the inherent difficulties in learning compositional structures.\n6\n\n\n324\n325\n326\n327\n328\n329\n330\n331\n332\n333\n334\n335\n336\n337\n338\n339\n340\n341\n342\n343\n344\n345\n346\n347\n348\n349\n350\n351\n352\n353\n354\n355\n356\n357\n358\n359\n360\n361\n362\n363\n364\n365\n366\n367\n368\n369\n370\n371\n372\n373\n374\n375\n376\n377\nUnder review as a workshop paper at ICLR 2025\nFigure 6: Training loss over epochs for different values of compositional weight \u03bb. Increasing\n\u03bb leads to slightly higher training loss, indicating potential interference with the primary learning\nobjective.\nFigure 7: Final test accuracy for different values of compositional weight \u03bb. Higher \u03bb values do\nnot improve test accuracy and may lead to decreased performance, suggesting a trade-off between\ncompositional regularization and generalization.\nComment:\nHard to draw\nany conclusion\nfrom this plot\nalone.\nFigure 8: Comparison of LSTM and RNN architectures. Left: Training loss over epochs shows\nsimilar convergence patterns, with LSTM performing slightly better. Right: Final test accuracy is\nmarginally higher for LSTM, but both models struggle with compositional generalization, suggest-\ning that recurrent unit choice does not resolve the underlying challenges.\nD\nHYPERPARAMETERS AND TRAINING DETAILS\nWe provide additional details on the hyperparameters and training procedures used in our experi-\nments:\n7\n\n\n378\n379\n380\n381\n382\n383\n384\n385\n386\n387\n388\n389\n390\n391\n392\n393\n394\n395\n396\n397\n398\n399\n400\n401\n402\n403\n404\n405\n406\n407\n408\n409\n410\n411\n412\n413\n414\n415\n416\n417\n418\n419\n420\n421\n422\n423\n424\n425\n426\n427\n428\n429\n430\n431\nUnder review as a workshop paper at ICLR 2025\nFigure 9: Final test accuracy for different dropout rates.\nComment:\nThe figure\nonly shows\nthe best con-\nfiguration,\neven though\nthe caption\nsuggests that\nresults for dif-\nferent dropout\nrates are in-\ncluded.\nHigher dropout rates did not enhance\ncompositional generalization, indicating limited effectiveness of dropout in this context.\n\u2022 Learning rate: 0.001\n\u2022 Batch size: 32\n\u2022 Embedding dimensions: Tested values of 16, 32, 64, 128\n\u2022 Hidden units: 64 for LSTM layers\n\u2022 Optimizer: Adam\n\u2022 Activation functions: ReLU for hidden layers\nComment:\nReLU is not\nused\n\u2022 Dropout rates: Tested values of 0.0, 0.2, and 0.5\nComment: 0.3\ninstead of 0.2\n\u2022 Loss function: Mean squared error for main loss\n\u2022 Regularization weight (\u03bb): Tested values of 0.0 (baseline), 0.1, 0.3, 0.5, 0.7, 1.0\nComment:\n0.01 instead of\n0.3 and 0.7\n\u2022 Number of epochs: 30\nComment:\nMinor: tested\n10, 30, and 50\nE\nADDITIONAL NOTES\n\u2022 All experiments were implemented using PyTorch.\n\u2022 Training was conducted on a single NVIDIA GPU.\n\u2022 Early stopping was not used; models were trained for a fixed number of epochs.\n\u2022 The synthetic dataset was generated with a predefined random seed for reproducibility.\n8\n",
   "summary": {
-    "total_claims": 17,
-    "supported": 1,
+    "total_claims": 14,
+    "supported": 0,
     "unsupported": 0,
-    "not_addressed": 16,
+    "not_addressed": 14,
     "partially_supported": 0,
-    "citation_found_rate": 0.5294117647058824,
+    "citation_found_rate": 0.7142857142857143,
     "verifiability_status": "verifiable",
     "fulltext_verified": 3,
     "no_passage_found": 0,
-    "fulltext_unavailable": 14,
+    "fulltext_unavailable": 11,
     "resolution_low_confidence": 0,
     "retracted_sources": 0,
     "numeric_checks_run": 0,
     "numeric_inconsistencies_flagged": 0,
-    "total_cost_usd": 0.32361
+    "total_cost_usd": 0.16206
   },
   "claims": [
     {
-      "claim_id": "8bcb8a48-ad0f-4582-bef0-266185330cf5",
+      "claim_id": "216d2db0-d62d-4d34-9393-b0c948ca97dd",
       "claim_text": "Compositional generalization is a fundamental aspect of human cognition.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
@@ -55,7 +55,7 @@
       }
     },
     {
-      "claim_id": "6106ae45-479e-49ae-9898-a6b4adde0e6e",
+      "claim_id": "451d9b42-8712-4beb-b00a-089815f54d24",
       "claim_text": "Neural networks often struggle with compositional generalization, limiting their applicability in tasks requiring systematic reasoning beyond the training data.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
@@ -77,8 +77,8 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The abstract is about TopiOCQA, a conversational question answering dataset with topic switches in an open-domain setting. It does not discuss neural networks' compositional generalization capabilities or systematic reasoning beyond training data.",
-        "confidence": 0.97,
+        "explanation": "The abstract is about conversational question answering and introduces a dataset called TopiOCQA for open-domain conversations with topic switches. It does not discuss compositional generalization or neural networks' ability to systematically reason beyond training data.",
+        "confidence": 0.95,
         "source_passages": [],
         "source_section": null,
         "fulltext_available": false,
@@ -90,29 +90,62 @@
       }
     },
     {
-      "claim_id": "92f6108a-3f0e-476a-98bc-0b933e024d30",
-      "claim_text": "Previous efforts to enhance compositional generalization have explored architectural modifications and training strategies.",
+      "claim_id": "3c5d1775-7a51-4e56-b35e-49de908081a6",
+      "claim_text": "Neural networks often struggle with compositional generalization, limiting their applicability in tasks requiring systematic reasoning beyond the training data.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
-        "Finn",
-        "Lepori"
+        "Klinger"
       ],
-      "cited_year": 2023,
+      "cited_year": 2020,
       "source": {
         "found": true,
-        "doi": "10.1111/brv.12958",
-        "title": "Biotic homogenisation and differentiation as directional change in beta diversity: synthesising driver\u2013response relationships to develop conceptual models across ecosystems",
-        "abstract": "Biotic homogenisation is defined as decreasing dissimilarity among ecological assemblages sampled within a given spatial area over time. Biotic differentiation, in turn, is defined as increasing dissimilarity over time. Overall, changes in the spatial dissimilarities among assemblages (termed 'beta diversity') is an increasingly recognised feature of broader biodiversity change in the Anthropocene. Empirical evidence of biotic homogenisation and biotic differentiation remains scattered across different ecosystems. Most meta-analyses quantify the prevalence and direction of change in beta diversity, rather than attempting to identify underlying ecological drivers of such changes. By conceptualising the mechanisms that contribute to decreasing or increasing dissimilarity in the composition of ecological assemblages across space, environmental managers and conservation practitioners can make informed decisions about what interventions may be required to sustain biodiversity and can predict potential biodiversity outcomes of future disturbances. We systematically reviewed and synthesised published empirical evidence for ecological drivers of biotic homogenisation and differentiation across terrestrial, marine, and freshwater realms to derive conceptual models that explain changes in spatial beta diversity. We pursued five key themes in our review: (i) temporal environmental change; (ii) disturbance regime; (iii) connectivity alteration and species redistribution; (iv) habitat change; and (v) biotic and trophic interactions. Our first conceptual model highlights how biotic homogenisation and differentiation can occur as a function of changes in local (alpha) diversity or regional (gamma) diversity, independently of species invasions and losses due to changes in species occurrence among assemblages. Second, the direction and magnitude of change in beta diversity depends on the interaction between spatial variation (patchiness) and temporal variation (synchronicity) of disturbance events. Third, in the context of connectivity and species redistribution, divergent beta diversity outcomes occur as different species have different dispersal characteristics, and the magnitude of beta diversity change associated with species invasions also depends strongly on alpha and gamma diversity prior to species invasion. Fourth, beta diversity is positively linked with spatial environmental variability, such that biotic homogenisation and differentiation occur when environmental heterogeneity decreases or increases, respectively. Fifth, species interactions can influence beta diversity via habitat modification, disease, consumption (trophic dynamics), competition, and by altering ecosystem productivity. Our synthesis highlights the multitude of mechanisms that cause assemblages to be more or less spatially similar in composition (taxonomically, functionally, phylogenetically) through time. We consider that future studies should aim to enhance our collective understanding of ecological systems by clarifying the underlying mechanisms driving homogenisation or differentiation, rather than focusing only on reporting the prevalence and direction of change in beta diversity, per se.",
+        "doi": "10.1111/jcpp.13176",
+        "title": "Annual Research Review: Looking back to look forward \u2013 changes in the concept of autism and implications for future research",
+        "abstract": "The concept of autism is a significant contribution from child psychiatry that has entered wider culture and public consciousness, and has evolved significantly over the last four decades. Taking a rather personal retrospective, reflecting on our own time in autism research, this review explores changes in the concept of autism and the implications of these for future research. We focus on seven major changes in how autism is thought of, operationalised, and recognised: (1) from a narrow definition to wide diagnostic criteria; (2) from a rare to a relatively common condition, although probably still under-recognised in women; (3) from something affecting children, to a lifelong condition; (4) from something discreet and distinct, to a dimensional view; (5) from one thing to many 'autisms', and a compound or 'fractionable' condition; (6) from a focus on 'pure' autism, to recognition that complexity and comorbidity is the norm; and finally, (7) from conceptualising autism purely as a 'developmental disorder', to recognising a neurodiversity perspective, operationalised in participatory research models. We conclude with some challenges for the field and suggestions for areas currently neglected in autism research.",
         "similarity_score": 1.0,
-        "title_match_score": 0.16666666666666666,
+        "title_match_score": null,
         "resolution_low_confidence": false,
-        "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/brv.12958",
+        "oa_url": "https://discovery.ucl.ac.uk/10091945/1/Frith_HappeFrith%20Changes%20in%20autism%20concept.Prefinal.pdf",
         "pmcid": null,
         "retraction_status": false
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The abstract is entirely about biotic homogenisation and differentiation in ecological assemblages, with no mention of compositional generalization, architectural modifications, or training strategies (which relate to machine learning/AI). The claim's subject matter is completely unrelated to the abstract's content.",
+        "explanation": "The provided passage is entirely about the concept of autism and its evolution over decades, with no discussion of neural networks, compositional generalization, or systematic reasoning in machine learning or AI systems.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "ee0dda5c-09a7-4f14-a349-a214ba512584",
+      "claim_text": "Previous efforts to enhance compositional generalization have explored architectural modifications and training strategies including Model-Agnostic Meta-Learning (MAML).",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Finn"
+      ],
+      "cited_year": 2017,
+      "source": {
+        "found": true,
+        "doi": "10.1093/nar/gkw1129",
+        "title": "CDD/SPARCLE: functional classification of proteins via subfamily domain architectures",
+        "abstract": "NCBI's Conserved Domain Database (CDD) aims at annotating biomolecular sequences with the location of evolutionarily conserved protein domain footprints, and functional sites inferred from such footprints. An archive of pre-computed domain annotation is maintained for proteins tracked by NCBI's Entrez database, and live search services are offered as well. CDD curation staff supplements a comprehensive collection of protein domain and protein family models, which have been imported from external providers, with representations of selected domain families that are curated in-house and organized into hierarchical classifications of functionally distinct families and sub-families. CDD also supports comparative analyses of protein families via conserved domain architectures, and a recent curation effort focuses on providing functional characterizations of distinct subfamily architectures using SPARCLE:",
+        "similarity_score": 0.9,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://academic.oup.com/nar/article-pdf/45/D1/D200/8846941/gkw1129.pdf",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is about NCBI's Conserved Domain Database (CDD) for annotating protein domain footprints, which has no relevance to compositional generalization, architectural modifications, training strategies, or Model-Agnostic Meta-Learning (MAML).",
         "confidence": 0.99,
         "source_passages": [],
         "source_section": null,
@@ -125,8 +158,42 @@
       }
     },
     {
-      "claim_id": "d562d43c-6d88-4d02-816c-4a0a118afd22",
-      "claim_text": "Regularization terms that encourage certain properties in learned representations have been investigated to enhance compositional generalization.",
+      "claim_id": "f567c623-b063-4211-8671-3ab9ca5346a4",
+      "claim_text": "Previous efforts to enhance compositional generalization have explored architectural modifications and training strategies.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Lepori"
+      ],
+      "cited_year": 2023,
+      "source": {
+        "found": true,
+        "doi": "10.1111/brv.12958",
+        "title": "Biotic homogenisation and differentiation as directional change in beta diversity: synthesising driver\u2013response relationships to develop conceptual models across ecosystems",
+        "abstract": "Biotic homogenisation is defined as decreasing dissimilarity among ecological assemblages sampled within a given spatial area over time. Biotic differentiation, in turn, is defined as increasing dissimilarity over time. Overall, changes in the spatial dissimilarities among assemblages (termed 'beta diversity') is an increasingly recognised feature of broader biodiversity change in the Anthropocene. Empirical evidence of biotic homogenisation and biotic differentiation remains scattered across different ecosystems. Most meta-analyses quantify the prevalence and direction of change in beta diversity, rather than attempting to identify underlying ecological drivers of such changes. By conceptualising the mechanisms that contribute to decreasing or increasing dissimilarity in the composition of ecological assemblages across space, environmental managers and conservation practitioners can make informed decisions about what interventions may be required to sustain biodiversity and can predict potential biodiversity outcomes of future disturbances. We systematically reviewed and synthesised published empirical evidence for ecological drivers of biotic homogenisation and differentiation across terrestrial, marine, and freshwater realms to derive conceptual models that explain changes in spatial beta diversity. We pursued five key themes in our review: (i) temporal environmental change; (ii) disturbance regime; (iii) connectivity alteration and species redistribution; (iv) habitat change; and (v) biotic and trophic interactions. Our first conceptual model highlights how biotic homogenisation and differentiation can occur as a function of changes in local (alpha) diversity or regional (gamma) diversity, independently of species invasions and losses due to changes in species occurrence among assemblages. Second, the direction and magnitude of change in beta diversity depends on the interaction between spatial variation (patchiness) and temporal variation (synchronicity) of disturbance events. Third, in the context of connectivity and species redistribution, divergent beta diversity outcomes occur as different species have different dispersal characteristics, and the magnitude of beta diversity change associated with species invasions also depends strongly on alpha and gamma diversity prior to species invasion. Fourth, beta diversity is positively linked with spatial environmental variability, such that biotic homogenisation and differentiation occur when environmental heterogeneity decreases or increases, respectively. Fifth, species interactions can influence beta diversity via habitat modification, disease, consumption (trophic dynamics), competition, and by altering ecosystem productivity. Our synthesis highlights the multitude of mechanisms that cause assemblages to be more or less spatially similar in composition (taxonomically, functionally, phylogenetically) through time. We consider that future studies should aim to enhance our collective understanding of ecological systems by clarifying the underlying mechanisms driving homogenisation or differentiation, rather than focusing only on reporting the prevalence and direction of change in beta diversity, per se.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/brv.12958",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "The abstract is about biotic homogenisation and differentiation in ecological assemblages, focusing on beta diversity changes in ecosystems. It does not discuss compositional generalization, architectural modifications, or training strategies, which are concepts from machine learning/AI research.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "09de7ebe-519c-495d-918c-059560b96523",
+      "claim_text": "Regularization terms that encourage certain properties in the learned representations have been explored as a promising direction for compositional generalization.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
         "Yin"
@@ -146,7 +213,7 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The provided passage is entirely about Explainable Artificial Intelligence (XAI) and interpretability of black-box models. It contains no discussion of compositional generalization or regularization terms designed to encourage properties in learned representations for that purpose.",
+        "explanation": "The provided passage is about Explainable AI (XAI) and interpretability of black-box models, and does not contain any information about regularization terms, compositional generalization, or learned representations in the context the claim describes.",
         "confidence": 0.97,
         "source_passages": [],
         "source_section": "other",
@@ -159,7 +226,7 @@
       }
     },
     {
-      "claim_id": "2a3f9520-8f88-421b-b9a4-b93fed211c84",
+      "claim_id": "21a89143-79d8-410d-b2a5-069f690ef18f",
       "claim_text": "Ito et al. (2022) explored abstract representations to tackle compositional generalization, emphasizing the importance of compositionality in achieving human-like reasoning.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
@@ -180,7 +247,7 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The source abstract is entirely about COVID-19, SARS-CoV-2, nirmatrelvir resistance, and related therapeutic topics. It contains no information about Ito et al. (2022), abstract representations, compositional generalization, or human-like reasoning.",
+        "explanation": "The source abstract is entirely about COVID-19, SARS-CoV-2 therapeutics, nirmatrelvir resistance, and related topics. It contains no information about Ito et al. (2022), abstract representations, compositional generalization, or human-like reasoning.",
         "confidence": 0.99,
         "source_passages": [],
         "source_section": null,
@@ -193,7 +260,7 @@
       }
     },
     {
-      "claim_id": "51070a12-3ef0-40b5-a675-5cff15d31957",
+      "claim_id": "17273705-a9d2-439b-899f-f0ebae5b37a3",
       "claim_text": "Yin et al. (2023) proposed consistency regularization training to enhance compositional generalization.",
       "claim_type": "methodological",
       "cited_authors": [
@@ -214,7 +281,7 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The abstract is about ancient Chinese medicine, yin-yang theory, and psychoneuroimmunology \u2014 it has no connection to the claim about Yin et al. (2023) proposing consistency regularization training for compositional generalization in machine learning or NLP.",
+        "explanation": "The abstract discusses ancient Chinese medicine, yin-yang theory, and psychoneuroimmunology. It contains no information about Yin et al. (2023), consistency regularization training, or compositional generalization in machine learning or any related field.",
         "confidence": 0.99,
         "source_passages": [],
         "source_section": null,
@@ -227,44 +294,7 @@
       }
     },
     {
-      "claim_id": "76df305b-409b-4866-8dc6-6067854adfe7",
-      "claim_text": "Model-Agnostic Meta-Learning (MAML) has been investigated to improve generalization capabilities.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [
-        "Finn"
-      ],
-      "cited_year": 2017,
-      "source": {
-        "found": true,
-        "doi": "10.1609/aaai.v32i1.11596",
-        "title": "Learning to Generalize: Meta-Learning for Domain Generalization",
-        "abstract": "Domain shift refers to the well known problem that a model trained in one source domain performs poorly when appliedto a target domain with different statistics. Domain Generalization (DG) techniques attempt to alleviate this issue by producing models which by design generalize well to novel testing domains. We propose a novel meta-learning method for domain generalization. Rather than designing a specific model that is robust to domain shift as in most previous DG work, we propose a model agnostic training procedure for DG. Our algorithm simulates train/test domain shift during training by synthesizing virtual testing domains within each mini-batch. The meta-optimization objective requires that steps to improve training domain performance should also improve testing domain performance. This meta-learning procedure trains models with good generalization ability to novel domains. We evaluate our method and achieve state of the art results on a recent cross-domain image classification benchmark, as well demonstrating its potential on two classic reinforcement learning tasks.",
-        "similarity_score": 0.9,
-        "title_match_score": 0.5,
-        "resolution_low_confidence": false,
-        "oa_url": "https://ojs.aaai.org/index.php/AAAI/article/download/11596/11455",
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "supported",
-        "explanation": "The passages explicitly discuss MAML (Model-Agnostic Meta-Learning) and its role in improving generalization, noting that the proposed MLDG approach is most related to MAML and both are model-agnostic approaches that improve generalization capabilities. The paper directly references MAML as a key related work investigated for generalization.",
-        "confidence": 0.9,
-        "source_passages": [
-          "The most related of these studies to ours is the MAML approach of (Finn, Abbeel, and Levine 2017). MAML takes a meta-learning approach to few-shot learning by training a single model on a set of source tasks that is only a few gradient descent steps away from a good task-specific model.",
-          "Our approach is most related to those that learn transferable weight initializations, notably MAML (Finn, Abbeel, and Levine 2017). In MAML a single shared source model shared is trained using multiple source tasks. The meta-learning process simulates transfer learning by fine-tuning, so the global model is updated to solve each source task in turn based on a few examples and a few gradient descent steps."
-        ],
-        "source_section": "other",
-        "fulltext_available": true,
-        "verification_depth": "fulltext",
-        "retrieval_status": "passage_found",
-        "evidence_quality": "quoted_passage",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "7a095776-baca-4aed-809d-5fa8d88b191e",
+      "claim_id": "6c8260e1-8c4d-4d41-8c42-37101360a58a",
       "claim_text": "Lepori et al. (2023) studied structural compositionality in neural networks, suggesting that networks may implicitly learn to decompose complex tasks.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
@@ -285,7 +315,7 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The abstract provided contains only 'International audience' and no actual content about the study or its findings. There is no information to verify or contradict the claim about Lepori et al. (2023) studying structural compositionality in neural networks.",
+        "explanation": "The abstract provided contains only 'International audience' with no substantive content about structural compositionality, neural networks, or task decomposition. There is insufficient information to assess any claims.",
         "confidence": 0.95,
         "source_passages": [],
         "source_section": null,
@@ -298,7 +328,7 @@
       }
     },
     {
-      "claim_id": "ec5c4304-45c0-4cb1-9c15-2f3e94f497ac",
+      "claim_id": "d5b794ad-b713-4762-b272-06297fe8611f",
       "claim_text": "The baseline LSTM model without compositional regularization reached approximately 84% test accuracy.",
       "claim_type": "factual_numeric",
       "cited_authors": [],
@@ -330,71 +360,7 @@
       }
     },
     {
-      "claim_id": "7e5d6fda-7f7d-4333-8209-a5634f466c05",
-      "claim_text": "Higher values of \u03bb led to a lower compositional loss but did not improve test accuracy, and in some cases test accuracy decreased.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [],
-      "cited_year": null,
-      "source": {
-        "found": false,
-        "doi": null,
-        "title": null,
-        "abstract": null,
-        "similarity_score": null,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "Source not found or abstract unavailable.",
-        "confidence": 1.0,
-        "source_passages": [],
-        "source_section": null,
-        "fulltext_available": false,
-        "verification_depth": "abstract",
-        "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "b3b5fd6f-022c-47db-8118-94292cf90304",
-      "claim_text": "As the complexity of arithmetic expressions increases, the models' ability to generalize diminishes significantly.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [],
-      "cited_year": null,
-      "source": {
-        "found": false,
-        "doi": null,
-        "title": null,
-        "abstract": null,
-        "similarity_score": null,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "Source not found or abstract unavailable.",
-        "confidence": 1.0,
-        "source_passages": [],
-        "source_section": null,
-        "fulltext_available": false,
-        "verification_depth": "abstract",
-        "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "29514f16-83c2-4582-801c-adaa1b9adf65",
+      "claim_id": "1cc943c5-263e-432d-9817-7cc3c086aa84",
       "claim_text": "The attention mechanism is known to improve performance in various sequence-to-sequence tasks by allowing the model to focus on relevant parts of the input sequence.",
       "claim_type": "factual_qualitative",
       "cited_authors": [
@@ -415,7 +381,7 @@
       },
       "verification": {
         "status": "not_addressed",
-        "explanation": "The passages are about automated theorem proving for the Mizar Mathematical Library using ENIGMA, premise selection, and related AI/TP methods. While transformers and RNNs are briefly mentioned as architectures used for premise selection, there is no discussion of the attention mechanism improving performance in sequence-to-sequence tasks specifically.",
+        "explanation": "The passages are about automated theorem proving, ENIGMA, and premise selection for the Mizar Mathematical Library. They do not discuss attention mechanisms or their role in improving sequence-to-sequence tasks.",
         "confidence": 0.95,
         "source_passages": [],
         "source_section": "other",
@@ -428,72 +394,8 @@
       }
     },
     {
-      "claim_id": "e4dee7ba-869d-421b-847f-2c619d913004",
-      "claim_text": "Increasing the dropout rate did not lead to significant improvements in generalization.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [],
-      "cited_year": null,
-      "source": {
-        "found": false,
-        "doi": null,
-        "title": null,
-        "abstract": null,
-        "similarity_score": null,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "Source not found or abstract unavailable.",
-        "confidence": 1.0,
-        "source_passages": [],
-        "source_section": null,
-        "fulltext_available": false,
-        "verification_depth": "abstract",
-        "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "badb9a70-de0b-4f87-831a-89c1e8087110",
-      "claim_text": "The LSTM model showed marginal improvements over the simple RNN in compositional generalization tasks.",
-      "claim_type": "factual_qualitative",
-      "cited_authors": [],
-      "cited_year": null,
-      "source": {
-        "found": false,
-        "doi": null,
-        "title": null,
-        "abstract": null,
-        "similarity_score": null,
-        "title_match_score": null,
-        "resolution_low_confidence": false,
-        "oa_url": null,
-        "pmcid": null,
-        "retraction_status": false
-      },
-      "verification": {
-        "status": "not_addressed",
-        "explanation": "Source not found or abstract unavailable.",
-        "confidence": 1.0,
-        "source_passages": [],
-        "source_section": null,
-        "fulltext_available": false,
-        "verification_depth": "abstract",
-        "retrieval_status": "fulltext_unavailable",
-        "evidence_quality": "no_evidence",
-        "retraction_status": false,
-        "numeric_check": null
-      }
-    },
-    {
-      "claim_id": "fd1c45f0-5eb8-4e51-92e3-6ae5f2b5e432",
-      "claim_text": "The training set consisted of 1,000 randomly generated expressions using a limited set of numbers and operators.",
+      "claim_id": "134ddfe4-4fd8-48b5-904c-a1c56d282b52",
+      "claim_text": "The training set consisted of 1,000 randomly generated arithmetic expressions using a limited set of numbers and operators.",
       "claim_type": "methodological",
       "cited_authors": [],
       "cited_year": null,
@@ -524,7 +426,7 @@
       }
     },
     {
-      "claim_id": "862a9643-e6ed-41a6-ba69-1329b7177d16",
+      "claim_id": "80b56b3d-7ac0-477e-85eb-1e0fdff2a09f",
       "claim_text": "The test set consisted of 200 expressions not seen during training, including novel combinations of numbers and operators.",
       "claim_type": "methodological",
       "cited_authors": [],
@@ -556,7 +458,7 @@
       }
     },
     {
-      "claim_id": "1ff8bc92-48d3-420c-bc8c-a51cb41469cd",
+      "claim_id": "44b4cdc5-6144-4dbb-afba-faa544381bb7",
       "claim_text": "Models were trained for 30 epochs using the Adam optimizer and mean squared error loss.",
       "claim_type": "methodological",
       "cited_authors": [],

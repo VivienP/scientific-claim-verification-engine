@@ -1,0 +1,506 @@
+{
+  "004_Williams1992": {
+    "doi": "10.1080/02640419208729912",
+    "note": "T&F paywall",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "<h4>Unlabelled</h4>This paper reports the findings of two investigations into methodological problems associated with the interpretation of blood lactate (BLa) in the sports sciences. In Experiment 1,",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "UNLABELLED: This paper reports the findings of two investigations into methodological problems associated with the interpretation of blood lactate (BLa) in the sports sciences. In Experiment 1, brachial artery (A), antecubital venous (V) and fingertip capillary (C) blood samples were",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "005_Raa2020": {
+    "doi": "10.1186/s13049-020-00776-z",
+    "note": "BMC OA expected",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": "PMC7437027",
+        "abstract_preview": "<h4>Background</h4>The measurement of lactate in emergency medical services has the potential for earlier detection of shock and can be performed with a point-of-care handheld device. Validation of a ",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": "PMC7437027",
+        "abstract_preview": "Background The measurement of lactate in emergency medical services has the potential for earlier detection of shock and can be performed with a point-of-care handheld device. Validation of a point-of",
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": "BACKGROUND: The measurement of lactate in emergency medical services has the potential for earlier detection of shock and can be performed with a point-of-care handheld device. Validation of a point-of-care handheld device is required for prehospital implementation. AIM: The primary",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "008_009_Heikenfeld2019": {
+    "doi": "10.1038/s41587-019-0040-3",
+    "note": "Nature paywall",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "Peripheral biochemical monitoring involves the use of wearable devices for minimally invasive or noninvasive measurement of analytes in biofluids such as interstitial fluid, saliva, tears and sweat. T",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "011_Birklein2000": {
+    "doi": "10.1212/WNL.55.8.1213",
+    "note": "AAN/Neurology paywall",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "To investigate oxygen metabolism in complex regional pain syndrome (CRPS), the authors measured skin lactate via dermal microdialysis performed on patients with CRPS (n = 11) and healthy control subje",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "To investigate oxygen metabolism in complex regional pain syndrome (CRPS), the authors measured skin lactate via dermal microdialysis performed on patients with CRPS (n = 11) and healthy control subjects (n = 11). In addition, they measured blood lactate. Although",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "011_Muller1996": {
+    "doi": "10.1152/ajpendo.1996.271.6.E1003",
+    "note": "APS paywall",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "To study the relationship between blood flow rate and muscle metabolism, muscle microdialysis was performed in nine human subjects (5 females and 4 males) after an oral glucose load (75 g). Two microd",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "To study the relationship between blood flow rate and muscle metabolism, muscle microdialysis was performed in nine human subjects (5 females and 4 males) after an oral glucose load (75 g). Two microdialysis probes were inserted into the medial femoral",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "015_Krogstad1996": {
+    "doi": "10.1046/j.1365-2133.1996.d01-893.x",
+    "note": "Wiley paywall",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": false,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "In this study we aimed to validate the microdialysis technique for metabolic measurements in the dermal interstitial fluid. The abdominal and forearm skin was used for microdialysis in 15 healthy normal weight volunteers. The depth of the microdialysis catheter was",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "016_Jansson1996": {
+    "doi": "10.1152/ajpendo.1996.271.1.E138",
+    "note": "APS paywall",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "To assess net lactate release from dermal skin, seven lean, healthy men were studied after overnight fasting. Two microdialysis catheters were inserted in the upper dermal tissue, as ensured by ultras",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "To assess net lactate release from dermal skin, seven lean, healthy men were studied after overnight fasting. Two microdialysis catheters were inserted in the upper dermal tissue, as ensured by ultrasound scanning, in the periumbilical area. Each catheter was calibrated",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "017_Loellgen1980": {
+    "doi": "10.1249/00005768-198012050-00008",
+    "note": "LWW paywall, pre-internet",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "Muscle metabolites, force, and perceived exertion bicycling at varying pedal rates. Med. Sci. Sports Exercise, Vol 12, No. 5, pp. 345-351, 1980. The relative significance of central (VE, Vo2, heart ra",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "Muscle metabolites, force, and perceived exertion bicycling at varying pedal rates. Med. Sci. Sports Exercise, Vol 12, No. 5, pp. 345-351, 1980. The relative significance of central (VE, Vo2, heart rate) or peripheral (muscle tension, muscle metabolites) factors on perceived",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "022_Ventrelli2015": {
+    "doi": "10.1002/adhm.201500450",
+    "note": "Wiley paywall",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": false,
+        "pmcid": null,
+        "abstract_preview": "A novel trend is rapidly emerging in the use of microneedles, which are a miniaturized replica of hypodermic needles with length-scales of hundreds of micrometers, aimed at the transdermal biosensing ",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": "A novel trend is rapidly emerging in the use of microneedles, which are a miniaturized replica of hypodermic needles with length-scales of hundreds of micrometers, aimed at the transdermal biosensing of analytes of clinical interest, e.g., glucose, biomarkers, and others.",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "003_Goodwin2007_control": {
+    "doi": "10.1177/193229680700100414",
+    "note": "PMC2769631 confirmed",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": "PMC2769631",
+        "abstract_preview": "Blood lactate concentration ([La(-)](b)) is one of the most often measured parameters during clinical exercise testing as well as during performance testing of athletes. While an elevated [La(-)](b) m",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": "Blood lactate concentration ([La(-)](b)) is one of the most often measured parameters during clinical exercise testing as well as during performance testing of athletes. While an elevated [La(-)](b) may be indicative of ischemia or hypoxemia, it may also be a",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "020_Kotwal2012_control": {
+    "doi": "10.4103/2230-8210.104052",
+    "note": "PMC3603039 confirmed",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": "PMC3603039",
+        "abstract_preview": "Self monitoring of blood glucose helps achieve glycemic goals. Glucometers must be accurate. Many variables affect blood glucose levels. Factors are analytical variables (intrinsic to glucometer and g",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": "PMC3603039",
+        "abstract_preview": "Self monitoring of blood glucose helps achieve glycemic goals. Glucometers must be accurate. Many variables affect blood glucose levels. Factors are analytical variables (intrinsic to glucometer and g",
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": "Self monitoring of blood glucose helps achieve glycemic goals. Glucometers must be accurate. Many variables affect blood glucose levels. Factors are analytical variables (intrinsic to glucometer and glucose strips) and pre analytical related to patients. Analytical variables depend on factors",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  },
+  "013_Ming2022_control": {
+    "doi": "10.1136/bmjinnov-2021-000864",
+    "note": "PMC7618145 confirmed",
+    "services": {
+      "europe_pmc": {
+        "service": "europe_pmc",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": "PMC7618145",
+        "abstract_preview": "<h4>Introduction</h4>Determination of blood lactate levels supports decision-making in a range of medical conditions. Invasive blood-sampling and laboratory access are often required, and measurements",
+        "error": null
+      },
+      "semantic_scholar": {
+        "service": "semantic_scholar",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": "PMC7618145",
+        "abstract_preview": "Introduction Determination of blood lactate levels supports decision-making in a range of medical conditions. Invasive blood-sampling and laboratory access are often required, and measurements provide",
+        "error": null
+      },
+      "openalex": {
+        "service": "openalex",
+        "found": true,
+        "has_abstract": true,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": "Introduction: Determination of blood lactate levels supports decision-making in a range of medical conditions. Invasive blood-sampling and laboratory access are often required, and measurements provide a static profile at each instance. We conducted a phase I clinical study validating performance",
+        "error": null
+      },
+      "unpaywall": {
+        "service": "unpaywall",
+        "found": true,
+        "has_abstract": false,
+        "has_oa_url": true,
+        "pmcid": null,
+        "abstract_preview": null,
+        "error": null
+      }
+    }
+  }
+}

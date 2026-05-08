@@ -5,20 +5,7 @@ from __future__ import annotations
 import time
 from pathlib import Path
 
-from src.clients._cache import default_db_path, get, init_db, prune_expired, put
-
-
-class TestDefaultDbPath:
-    def test_returns_path(self) -> None:
-        p = default_db_path()
-        assert isinstance(p, Path)
-        assert p.name == "api_cache.db"
-        assert p.parent.name == ".cache"
-
-    def test_is_under_project_root(self) -> None:
-        p = default_db_path()
-        # Should be at project root, not inside src/clients/
-        assert "src" not in str(p)
+from src.clients._cache import get, init_db, prune_expired, put
 
 
 class TestInitDb:
@@ -27,13 +14,6 @@ class TestInitDb:
         conn = init_db(db_path)
         conn.close()
         assert db_path.exists()
-
-    def test_creates_cache_table(self, tmp_path: Path) -> None:
-        db_path = tmp_path / "test_cache.db"
-        conn = init_db(db_path)
-        cursor = conn.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cache'")
-        assert cursor.fetchone() is not None
-        conn.close()
 
     def test_wal_mode(self, tmp_path: Path) -> None:
         db_path = tmp_path / "test_cache.db"

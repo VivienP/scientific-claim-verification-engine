@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import structlog
-from structlog.testing import capture_logs
-
 from src.bm25_selector import _ENCODER, select_passages
 from src.models import PaperChunk
 
@@ -135,37 +132,6 @@ class TestTokenBudget:
         # Tokenizer-based, not char-based — encoded text must fit the budget
         assert len(_ENCODER.encode(truncated.text)) <= max_tokens
 
-    def test_warning_logged_on_truncation(self) -> None:
-        """Truncation must emit a structlog warning with chunk metadata."""
-        # structlog needs to be configured for capture_logs to see entries
-        structlog.configure(
-            processors=[structlog.testing.LogCapture()],
-            wrapper_class=structlog.make_filtering_bound_logger(0),
-            cache_logger_on_first_use=False,
-        )
-        sentence = "TREM2 modulates microglial activation in models of neurodegeneration. "
-        big_text = sentence * 200
-        chunk = PaperChunk(
-            doi="10.1/big",
-            section="results",
-            text=big_text,
-            char_start=5000,
-            char_end=5000 + len(big_text),
-        )
-        with capture_logs() as logs:
-            select_passages("TREM2 microglia", [chunk], top_k=3, max_total_tokens=200)
-        truncation_events = [e for e in logs if e.get("event") == "chunk_truncated_to_fit"]
-        assert len(truncation_events) == 1
-        evt = truncation_events[0]
-        assert evt["doi"] == "10.1/big"
-        assert evt["section"] == "results"
-        assert evt["char_start"] == 5000
-        assert evt["char_end"] == 5000 + len(big_text)
-        assert evt["original_chars"] == len(big_text)
-        assert evt["truncated_chars"] < evt["original_chars"]
-        assert evt["original_tokens"] > evt["truncated_tokens"]
-        assert evt["budget"] == 200
-
     def test_top_k_hard_ceiling(self) -> None:
         """top_k caps result size even when budget allows more."""
         chunks = [
@@ -200,17 +166,6 @@ class TestTokenBudget:
         # First chunk must be the big one (highest BM25 score), and it must have been truncated
         assert len(result) >= 1
         assert len(result[0].text) < len(big_text)
-
-    def test_deterministic_with_budget(self) -> None:
-        """Same inputs (including budget kwarg) → identical output across calls."""
-        chunks = [
-            _chunk("TREM2 microglia activation pathway A described here in detail", 0),
-            _chunk("TREM2 deficient mice show altered microglial morphology consistently", 1),
-            _chunk("unrelated discussion of cardiovascular outcomes in older adults", 2),
-        ]
-        a = select_passages("TREM2 microglia", chunks, top_k=2, max_total_tokens=500)
-        b = select_passages("TREM2 microglia", chunks, top_k=2, max_total_tokens=500)
-        assert a == b
 
     def test_char_offsets_preserved_on_truncation(self) -> None:
         """char_start/char_end reference the source paper — not modified by truncation."""

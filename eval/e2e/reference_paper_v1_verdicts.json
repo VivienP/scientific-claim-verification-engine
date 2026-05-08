@@ -1,0 +1,543 @@
+{
+  "metadata": {
+    "schema_version": "verdicts-1.0",
+    "source_document": "PERRELLE 2023 lactate ISF review",
+    "source_document_full_title": "Exploring Activity-Induced Lactate Pharmacokinetics: Implications for Minimally-Invasive Monitoring",
+    "source_document_authors": [
+      "Perrelle, Vivien"
+    ],
+    "source_document_year": 2023,
+    "source_document_organization": "PKvitality",
+    "source_text_path": "eval/e2e/source_texts/review_2023_lactate_isf.txt",
+    "annotator": "Vivien Perrelle (domain expert)",
+    "annotation_date": "2026-05-07",
+    "n_claims": 25,
+    "license": "MIT",
+    "citation": "Perrelle, V. (2023). Exploring Activity-Induced Lactate Pharmacokinetics: Implications for Minimally-Invasive Monitoring. De Vinci Innovation Center.",
+    "schema_extensions": [
+      "is_primary_source",
+      "primary_source_doi",
+      "recommended_fix"
+    ],
+    "extraction_provenance": {
+      "extractor_model": "claude-sonnet-4-6",
+      "n_claims_extracted_total": 28,
+      "n_claims_used": 25,
+      "selection_rule": "first 25 cited claims in document order"
+    },
+    "verdict_distribution": {
+      "unsupported": 3,
+      "supported": 10,
+      "partially_supported": 12
+    },
+    "purpose": "Hand-labeled full-pipeline benchmark: measures verdict agreement between the extract -> resolve -> fetch_fulltext -> verify pipeline and a domain-expert annotation. Complements reference_paper_v1.json (which targets extraction recall + DOI accuracy, separate scaffolding).",
+    "audit_log": [
+      {
+        "date": "2026-05-07",
+        "scope": "primary_source_doi field, all 25 entries",
+        "method": "Cross-checked each annotated DOI against the journal/publisher of the cited reference in the source bibliography (eval/e2e/source_texts/review_2023_lactate_isf.txt).",
+        "corrections": [
+          {
+            "claim_id": "lactate_review_003",
+            "field": "primary_source_doi",
+            "before": "10.1007/BF00382568",
+            "after": "10.1177/193229680700100414",
+            "reason": "The 10.1007 prefix is Springer; the cited paper (Goodwin et al. 2007, 'Blood lactate measurements and analysis during exercise: a guide for clinicians') was published in Journal of Diabetes Science and Technology 1.4 (2007), 558-569 — a SAGE journal with prefix 10.1177. The corrected DOI follows the SAGE article identifier convention for that issue."
+          }
+        ],
+        "flags": [
+          {
+            "claim_id": "lactate_review_002",
+            "field": "primary_source_doi",
+            "value": "10.1249/00005768-198606000-00003",
+            "concern": "The 10.1249 prefix is Lippincott Williams & Wilkins (Medicine & Science in Sports & Exercise). The cited paper (bibliography ref [58], Brooks 1986 'Lactate production under fully aerobic conditions: the lactate shuttle during rest and exercise') was published in Federation Proceedings 45.13, which generally has no Crossref DOI. The annotated DOI may correspond to a different Brooks paper (possibly bibliography ref [69], Brooks 1985 in Med Sci Sports Exerc). Left unchanged pending verification of which Brooks paper Vivien intended."
+          }
+        ],
+        "verified_consistent": [
+          "lactate_review_004 (10.1080 = T&F, J Sports Sci)",
+          "lactate_review_005 (10.1186 = BMC, Scand J Trauma Resusc Emerg Med)",
+          "lactate_review_006 (PMID 25729309, no Crossref DOI)",
+          "lactate_review_007 (PMID 25729309, no Crossref DOI)",
+          "lactate_review_008 (10.1038/s41587 = Nature Biotech)",
+          "lactate_review_009 (10.1038/s41587 = Nature Biotech)",
+          "lactate_review_010 (10.1212 = AAN, Neurology)",
+          "lactate_review_011 (10.1212 = AAN, Neurology)",
+          "lactate_review_013 (10.1136 = BMJ, BMJ Innovations)",
+          "lactate_review_014 (10.1046 = Wiley, JID Symposium Proc)",
+          "lactate_review_015 (10.1152 = APS, Am J Physiol)",
+          "lactate_review_016 (10.1152 = APS, Am J Physiol)",
+          "lactate_review_017 (mixed multi-source, primary DOIs match journals)",
+          "lactate_review_018 (10.1186 = BMC, Inflammation and Regeneration)",
+          "lactate_review_019 (10.1378 = ACCP, Chest)",
+          "lactate_review_020 (10.4103 = Medknow, Indian J Endocrinol Metab)",
+          "lactate_review_021 (10.1080 = T&F, J Sports Sci)",
+          "lactate_review_022 (10.1002/adhm = Wiley, Adv Healthcare Mater)",
+          "lactate_review_023 (10.3390 = MDPI, Micromachines)",
+          "lactate_review_024 (10.1109 = IEEE, ICSJ)",
+          "lactate_review_025 (10.1016/j.bspc = Elsevier, Biomed Signal Process Control)"
+        ]
+      }
+    ]
+  },
+  "claims": [
+    {
+      "claim_id": "lactate_review_001",
+      "extractor_claim_id": "b808f683-1df7-4aeb-9d7a-4585ec458c4a",
+      "claim_text": "Blood contains approximately 100 times more l-lactate than d-lactate.",
+      "cited_authors": [
+        "Goodwin",
+        "Tuteja",
+        "Ormsby",
+        "Neethirajan"
+      ],
+      "cited_year": null,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "unsupported",
+      "expected_verdict_rationale": "The cited Goodwin 2007 publication discusses total lactate metabolism and the 'lactate shuttle' concept but does not distinguish between L- and D-lactate isomers or provide their relative concentration ratios in blood; Tuteja 2018 is a graphene biosensor paper for cortisol/lactate detection and likewise does not quantify the L:D ratio.",
+      "is_primary_source": false,
+      "primary_source_doi": "N/A",
+      "expected_full_text_available": true,
+      "annotation_notes": "To support this claim the source would need biochemical assays quantifying both L- and D-lactate enantiomers in human blood. Typical resting human L-lactate is ~1-2 mM and D-lactate ~5-20 microM, so the true ratio is closer to ~100-400:1 — 'approximately 100x' is a defensible lower-bound approximation, but the cited refs don't establish it. Goodwin 2007 is OA on PMC; Tuteja 2018 is OA in Nano-Micro Letters.",
+      "recommended_fix": "Replace [3, 39] for this specific claim with Ewaschuk, Naylor & Zello 2005, J Nutr 135(7): 1619-25, 'D-lactate in human and ruminant metabolism' (DOI 10.1093/jn/135.7.1619) — the canonical primary source for human D-lactate concentrations. Optionally also cite Connor et al. 1983, Ann Clin Biochem 20: 214-219, for resting D-lactate measurements. Keep [3] only if it is reused elsewhere for the broader lactate-physiology context. If a primary measurement source is unavailable, soften the wording to 'Blood contains substantially more l-lactate than d-lactate (typically two orders of magnitude)' to match what the literature actually quantifies."
+    },
+    {
+      "claim_id": "lactate_review_002",
+      "extractor_claim_id": "c3b76bb8-0a4b-47a8-8ba0-aed91328cdcb",
+      "claim_text": "Lactic acid accumulates in contracting muscle and blood, beginning around 50-70% of the maximal O2 uptake, well before the aerobic capacity is fully utilized.",
+      "cited_authors": [
+        "Brooks"
+      ],
+      "cited_year": 1986,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "Brooks explicitly states that lactate begins to accumulate at approximately 50-70% of VO2max, well before the aerobic capacity of the mitochondria is exceeded.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1249/00005768-198606000-00003",
+      "expected_full_text_available": true,
+      "annotation_notes": "The text identifies the 'anaerobic threshold' concept as a common misunderstanding, clarifying that while lactate levels rise at these intensities, it is due to an imbalance between production and clearance rates rather than a lack of oxygen in the tissue.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_003",
+      "extractor_claim_id": "2c82555a-80f9-4747-ae66-1cc7837ac2e3",
+      "claim_text": "The whole blood-plasma lactate concentration ratio might vary from 63% to 81% depending on plasma water content and hematocrit.",
+      "cited_authors": [
+        "Goodwin"
+      ],
+      "cited_year": 2007,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "Goodwin 2007 explicitly states that the ratio of whole-blood to plasma lactate concentration is expected to vary from approximately 63% (at 55% hematocrit) to 81% (at 25% hematocrit).",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1177/193229680700100414",
+      "expected_full_text_available": true,
+      "annotation_notes": "This literature review identifies hematocrit as the primary driver for the variation in the whole blood-plasma ratio (63-81%) and notes that lactate distribution is also influenced by water content corrections.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_004",
+      "extractor_claim_id": "494842fd-3165-4555-848b-47e90b0d48b0",
+      "claim_text": "[La−]pla is around 1.5 times higher than whole [La−]blo at rest.",
+      "cited_authors": [
+        "Pösö",
+        "Koho",
+        "Williams"
+      ],
+      "cited_year": null,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "The ~1.5x magnitude is anchored only by [83] Williams 1992 (P 7.0 vs WB 4.7 mM, ratio 1.49 — but during incremental exercise, not at rest); [81] Pösö 1995 and [82] Koho 2002 are equine post-exercise studies that do not establish a human resting ratio.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1080/02640419208729912",
+      "expected_full_text_available": false,
+      "annotation_notes": "The 1.5x value is biologically defensible (at Hct 40-45% with ~20% of blood lactate in RBCs, predicted P/WB ratio ~ 1.4-1.6; Bally et al. 2015 reports slope 1.66 at normal Hct across rest+exercise YSI samples). Internal contradiction: the next sentence states this ratio 'increases during rapid and graded exercise-induced lactate releases' — yet Williams' 1.49 is itself a mid-exercise mean, so [83] is being cited for a value the paper simultaneously implies is exercise-elevated. The equine refs [81, 82] are a category mismatch: they establish that horses partition more lactate into RBCs than humans (~50% vs ~20% post-exercise), a species-mechanism point unrelated to the human resting ratio. Foxdal 1990 [76] is the canonical reference for this exact comparison.",
+      "recommended_fix": "Replace [81-83] with [76] (Foxdal et al. 1990 — submaximal graded exercise in humans) and keep [83] as a secondary anchor. Drop [81] and [82] from this sentence; reuse them in §4.2's preceding sentence on inhomogeneous lactate distribution where the equine RBC-sink mechanism is on-topic. Optional wording tightening to match the cited evidence: '[La-]pla is around 1.5 times higher than whole [La-]blo across rest and submaximal exercise [76, 83]' — since Williams' 1.49 is a mid-exercise mean and Foxdal spans both states."
+    },
+    {
+      "claim_id": "lactate_review_005",
+      "extractor_claim_id": "327e796f-ebb9-4859-a24c-c3acf06742e2",
+      "claim_text": "Capillary plasma lactate concentration and hand-held point-of-care device measurements are significantly higher than arterial plasma lactate concentration and its measurements in laboratory.",
+      "cited_authors": [
+        "Collange",
+        "Seoane",
+        "Raa"
+      ],
+      "cited_year": null,
+      "claim_type": "factual_qualitative",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "All three refs confirm that capillary blood lactate is significantly higher than arterial blood lactate (sample-site effect), but the parallel sub-claim that 'hand-held POC device measurements are higher than laboratory measurements' (device effect) is not supported and is actively contradicted by [88] Raa 2020, which found no significant difference between Lactate Pro 2 and the ABL800 Flex reference when both measured arterial blood.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1186/s13049-020-00776-z",
+      "expected_full_text_available": false,
+      "annotation_notes": "Direction confirmed across all three. Collange 2017: ICU shock patients, mean capillary-arterial bias +0.56 ± 2.21 mmol/L (ICC r²=0.92). Seoane 2013: ED tissue-hypoperfusion patients, capillary > arterial implied by recommended cutoff shift (2.35 vs 2.00 mmol/L). Raa 2020: ICU patients — capillary fingertip 47% higher and earlobe 27% higher than arterial; healthy volunteers post-VO2max — fingertip 14% higher, earlobe no significant difference. Conflation of two effects: the claim ANDs 'capillary > arterial' (sample-site, supported) with 'POC > laboratory' (device effect, not supported). Raa 2020 separates these: capillary AND arterial samples on the same Lactate Pro 2, plus arterial on Lactate Pro 2 AND ABL800 reference. Result: device-vs-lab bias was non-significant; entire bias is sample-site-driven. Collange and Seoane don't separate factors. Terminology drift: claim uses 'capillary plasma' and 'arterial plasma' but all three studies measure whole blood. Population mismatch: all three are clinical (shock, ED, ICU); Raa 2020 healthy volunteers post-VO2max is the closest analog to sports framing. Full-text status: true for [88] (PMC7437027); false for [86] (Elsevier paywall, DOI 10.1016/j.accpm.2016.08.007); false for [87] (Elsevier paywall, DOI 10.1016/j.ajem.2013.06.015). Conservative aggregate is false.",
+      "recommended_fix": "Reword to separate the two effects and tighten terminology: 'Capillary blood lactate concentration is significantly higher than arterial blood lactate concentration [86-88]. This bias is driven by sample site rather than by the hand-held device itself: when arterial blood is measured on both a hand-held analyzer and a laboratory reference, the two agree closely [88]. The magnitude of the capillary-arterial bias varies with hemodynamic state (~14% in healthy volunteers post-exercise vs. ~27-47% in ICU patients [88]).' This change keeps all three citations, removes the unsupported POC-vs-lab claim, replaces 'plasma' with 'blood' to match what the cited devices actually measure, and adds the population-dependence nuance the next sentence in the paper already gestures at."
+    },
+    {
+      "claim_id": "lactate_review_006",
+      "extractor_claim_id": "a7eb3729-da74-476e-9aed-02fd94f8052e",
+      "claim_text": "For all five portable analyzers, the analytical error within a brand was much smaller than the biological variation in venous blood lactate, and all portable analyzers tend to under-read, particularly evident at the highest concentrations (15 to 23 mM).",
+      "cited_authors": [
+        "Bonaventura"
+      ],
+      "cited_year": 2015,
+      "claim_type": "factual_qualitative",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "Bonaventura 2015 verbatim states 'there was a tendency for all portable analysers to under-read the same time-matched sample analysed by the Radiometer ABL90, which was particularly evident at the highest concentrations (BLa ~15-23 mM)'; the within-sample SDs reported (0.00-0.54 mM across all bands) are an order of magnitude smaller than the 1-23 mM biological range covered in the same study.",
+      "is_primary_source": false,
+      "primary_source_doi": "PMID 25729309 (no Crossref DOI assigned; PMC4306774)",
+      "expected_full_text_available": true,
+      "annotation_notes": "Important caveat the claim omits: Bonaventura also reports that the Edge and Lactate Pro2 had a small *positive* bias for resting concentrations (~1.0-2.0 mM) â€” i.e., the under-read pattern is concentration-dependent, not universal. The paper's overall conclusion ('In all cases, bias (negative) was the major contribution to the sqrt(MSE)') supports the directional claim about bias dominating analytical error. The under-read tendency is most pronounced for athletic peak-lactate measurements (>15 mM), which is the relevant operating range for sports applications. Note: 5 portable analysers (Lactate Pro, Lactate Pro2, Lactate Scout+, Xpress, Edge) + 1 POC analyser (i-STAT) were tested â€” the paper title says 'six' but the claim correctly references 'five portable analysers.'",
+      "recommended_fix": "Optional caveat to add for fidelity to source: '...tend to under-read at high concentrations (15-23 mM), though some devices show a small positive bias at resting concentrations (~1-2 mM) [93].'"
+    },
+    {
+      "claim_id": "lactate_review_007",
+      "extractor_claim_id": "000f9ee4-05ac-4cff-8c78-c9c69dd024e3",
+      "claim_text": "The devices' reliability was generally lower than 0.5 mM for concentrations of 1.0 to 10 mM.",
+      "cited_authors": [
+        "Bonaventura"
+      ],
+      "cited_year": 2015,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "Within-sample SD (the operational definition of reliability in Bonaventura 2015) for all six devices is well below 0.5 mM across the 1.0-10 mM range â€” the highest reported value in this range is 0.30 mM (Lactate Pro, 5.0-9.9 mM band).",
+      "is_primary_source": false,
+      "primary_source_doi": "PMID 25729309 (no Crossref DOI assigned; PMC4306774)",
+      "expected_full_text_available": true,
+      "annotation_notes": "Per-device wsSDs in the 0-9.9 mM range from Bonaventura's Table: Edge 0.00-0.01, i-STAT 0.00-0.20, Lactate Pro 0.07-0.30, Lactate Pro2 0.00-0.08, Scout+ 0.01-0.05, Xpress 0.00. All comfortably <0.5 mM. The 10-14.9 mM band starts to creep up (Lactate Pro 0.37, Xpress 0.13), but the claim's stated range stops at 10 mM. Terminology nuance: 'reliability' in Bonaventura specifically means within-sample repeatability (wsSD of 6 replicates of the same sample), not the broader test-retest or accuracy concept. Total error (sqrt(MSE)) is larger than wsSD because it includes bias.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_008",
+      "extractor_claim_id": "7468fae3-0d8e-4da2-ad67-fe27cd78244b",
+      "claim_text": "Lactate ISF concentration has a nearly 1:1 ratio correlation with capillary blood lactate concentration.",
+      "cited_authors": [
+        "Heikenfeld"
+      ],
+      "cited_year": 2019,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Heikenfeld 2019 supports a near-1:1 ratio between ISF and plasma lactate (not capillary blood), and the claim is itself hedged in the source ('fewer data exist for ISF lactate, but lactate's smaller size and much higher diffusivity compared with glucose suggests a near unity plasma/ISF ratio') â€” extrapolated from glucose rather than directly measured.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1038/s41587-019-0040-3",
+      "expected_full_text_available": false,
+      "annotation_notes": "Reference compartment mismatch: Heikenfeld is explicit throughout that the comparison is ISF vs plasma. Plasma lactate ~1.5x whole blood lactate (per claim 004), so ISF:capillary-whole-blood ~1.5:1, not 1:1. The terminology drift flagged in claim 005 (plasma vs whole blood) recurs here. Evidence base in Heikenfeld is inferential, not empirical: paper explicitly says 'fewer data exist for ISF lactate' and unity ratio is inferred from lactate's smaller MW and higher diffusivity vs glucose, not from direct measurement. Ratio-vs-correlation conflation: '1:1 ratio correlation' mixes two distinct concepts (1:1 concentration ratio vs r~1 statistical correlation). Nature Biotechnology paywall; full text accessible via author institutional copy.",
+      "recommended_fix": "Tighten both compartment and hedge: 'Lactate ISF concentration is approximately equal to plasma lactate concentration [30], inferred from its low molecular weight and high diffusivity given that direct ISF measurements remain limited.' If keeping the capillary-blood framing for downstream microneedle relevance, add the conversion explicitly: 'Given the ~1:1 ISF/plasma ratio [30] and the ~1.5:1 plasma/whole-blood ratio at rest [76, 83], the expected ISF/capillary-whole-blood ratio is around 1.5:1.' Also consider citing Ming et al. 2022 [102] or Chien et al. 2022 [103] â€” they provide direct microneedle ISF/blood lactate correlation data."
+    },
+    {
+      "claim_id": "lactate_review_009",
+      "extractor_claim_id": "10b7a860-ea7b-4564-9fe0-8b9fa069f847",
+      "claim_text": "The blood-to-ISF lag time is between 5 to 15 minutes.",
+      "cited_authors": [
+        "Heikenfeld"
+      ],
+      "cited_year": 2019,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "Heikenfeld 2019 Table 1 explicitly lists ISF lag time as '~5-15 min' â€” exact match to the claim.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1038/s41587-019-0040-3",
+      "expected_full_text_available": false,
+      "annotation_notes": "The 5-15 min figure is a composite of two contributions: physiological plasma-to-ISF lag (5-10 min, derived from glucose CGM data) plus device response time (1-5 min). For pure physiological blood-to-ISF transit, the relevant figure is closer to 5-10 min; the 5-15 min upper bound includes sensor diffusion lag. The data are glucose-derived, not lactate-specific â€” Heikenfeld notes 'lag time for proper correlation with blood plasma might be longer' for non-glucose analytes but lactate's smaller MW and higher diffusivity suggest similar or shorter physiological lag. Direct microneedle measurements for lactate (Ming and Chien 2022) suggest ~10 min, comfortably within the cited 5-15 min window. Paywalled; institutional copy available.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_010",
+      "extractor_claim_id": "fe81eb1e-3fb5-46d2-9d1e-843efd23ccc5",
+      "claim_text": "In healthy people, skin lactate concentration at rest is between 1 and 2.5 mmol/l.",
+      "cited_authors": [
+        "Birklein",
+        "Weber",
+        "Neundörfer"
+      ],
+      "cited_year": 2000,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Birklein 2000 reports a single mean value of 1.74 mmol/L for healthy controls (n=11, dermal microdialysis) â€” within the claimed range, but the paper does not itself state a '1 to 2.5 mmol/L' interval; the range is an extrapolation around a single point estimate.",
+      "is_primary_source": true,
+      "primary_source_doi": "10.1212/WNL.55.8.1213",
+      "expected_full_text_available": false,
+      "annotation_notes": "Single mean is not a population range. Birklein 2000 measured 11 healthy controls and reported mean skin lactate 1.74 mmol/L (vs CRPS patients at 2.95 mmol/L, p < 0.005). The abstract does not provide SD or 95% CI, so the '1 to 2.5' range cannot be derived from this paper alone â€” it would need Â±~0.4 SD around the mean to span that interval, which is plausible but not stated. Methodology consistency: dermal microdialysis, same modality as Jansson 1996 [97] and Krogstad 1996 [105]. Sample size limitation: n=11 is small for establishing a population reference range. PMID 11071503; Neurology / AAN paywall, abstract only on PubMed.",
+      "recommended_fix": "Either (a) tighten the claim to match what Birklein actually reports â€” 'In healthy people, mean skin lactate concentration at rest is approximately 1.74 mmol/L [99]' â€” or (b) keep the range and add corroborating citations from existing bibliography that report compatible values: 'In healthy people, skin lactate concentration at rest is between 1 and 2.5 mmol/L [97, 99]' (Jansson 1996 reports baseline dermal microdialysate lactate ~1.0-1.2 mmol/L during OGTT, complementing Birklein's 1.74 mmol/L mean to span the claimed range). Option (b) is preferable â€” it preserves the range framing while grounding it in two independent primary sources."
+    },
+    {
+      "claim_id": "lactate_review_011",
+      "extractor_claim_id": "2fa30546-e956-43c7-977d-ad09a712eca9",
+      "claim_text": "Resting dermal [La−]ISF is on average about 30% higher than arterial [La−]pla.",
+      "cited_authors": [
+        "Birklein",
+        "Muller"
+      ],
+      "cited_year": null,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "The directional claim (ISF > arterial plasma at rest) is supported, but neither cited reference reports a '~30%' magnitude for dermal ISF â€” Muller 1996 measured interstitial muscle lactate (0.83 vs arterial plasma 0.60 mmol/L = +38%), and Birklein 2000 reports skin lactate (1.74 mmol/L) without an explicit ratio to arterial plasma.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1212/WNL.55.8.1213",
+      "expected_full_text_available": false,
+      "annotation_notes": "Available skin-specific data point to ~50% higher, not 30%: Jansson 1996 [97] reports dermal ISF 1001 micromol/L vs arterialized plasma 673 = +49%; Krogstad 1996 [105] reports 1171 vs 781 = +50%. Muller's +38% figure is muscle ISF, not dermal â€” wrong tissue (DOI 10.1152/ajpendo.1996.271.6.E1003 is for muscle). Birklein abstract lacks a numerical arterial-plasma comparison. Birklein paywalled (Neurology); Muller paywalled (APS).",
+      "recommended_fix": "Replace [99, 100] with [97, 105] (Jansson 1996 + Krogstad 1996, both already in bibliography and both directly measure dermal ISF vs plasma lactate). Update the magnitude to match the cited evidence: 'Resting dermal [La-]ISF is on average about 50% higher than arterial [La-]pla [97, 105].' If you want to keep '30%' as a general approximation, you'd need a different primary source â€” but the dermal microdialysis literature consistently shows ~40-50%."
+    },
+    {
+      "claim_id": "lactate_review_012",
+      "extractor_claim_id": "9890fb1c-7bea-41e3-965f-ec9a0ba30e3e",
+      "claim_text": "Skin contributes about 5% at rest to the whole-body lactate turnover.",
+      "cited_authors": [
+        "Jansson",
+        "Krogstad",
+        "Lonnroth"
+      ],
+      "cited_year": 1996,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "unsupported",
+      "expected_verdict_rationale": "Jansson 1996 reports dermal apparent lactate release (570 Â± 89 micromol/h/100g tissue) but does not compute or state a whole-body turnover percentage; the '5%' figure cannot be derived from the cited abstract alone.",
+      "is_primary_source": false,
+      "primary_source_doi": "N/A",
+      "expected_full_text_available": false,
+      "annotation_notes": "The same paper (Vivien 2023, Figure 0.10) attributes whole-body tissue contributions to systemic lactate turnover to Van Hall 2010 [51] â€” that's the actual primary source for tissue-level percent contributions. Jansson 1996 is a single-tissue local-flux measurement; deriving '5% of whole-body turnover' from it requires multiplying by total skin surface area and comparing to whole-body Ra (rate of appearance), which Jansson does not do. APS paywall on Jansson. Note: Jansson DOI is 10.1152/ajpendo.1996.271.1.E138 but the figure attribution is wrong; the 5% turnover number is sourced from systemic-balance studies, not local microdialysis flux.",
+      "recommended_fix": "Replace [97] with [51] (Van Hall 2010, Acta Physiologica 199(4): 499-508, DOI 10.1111/j.1748-1716.2010.02122.x) â€” already in bibliography and explicitly attributed in Figure 0.10 for this exact concept. Keep [97] only if you also discuss the local dermal flux measurement (570 micromol/h/100g) directly. If the 5% figure is specifically from Van Hall's diagram, verify the number against the figure (Figure 0.10 shows skin 'Net release -5,000 micromol/min' which needs context to convert to a percentage)."
+    },
+    {
+      "claim_id": "lactate_review_013",
+      "extractor_claim_id": "9420bc82-63e6-4146-b2c8-cf2fef3c226e",
+      "claim_text": "Recent non-commercialized microneedle-based lactate biosensors suggest a measured lag time of approximately 10 minutes relative to plasma variations.",
+      "cited_authors": [
+        "Ming",
+        "Chien"
+      ],
+      "cited_year": 2022,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Ming 2022 reports a lag time of 5 minutes (IQR -4 to 11 min), not 'approximately 10 minutes' â€” 10 min sits at the upper IQR bound, not the central estimate; Chien 2022 does not report a quantitative ISF-vs-plasma lag time at all.",
+      "is_primary_source": true,
+      "primary_source_doi": "10.1136/bmjinnov-2021-000864",
+      "expected_full_text_available": true,
+      "annotation_notes": "Ming 2022 reports microneedle-vs-venous-blood lag = 5 min (IQR -4 to 11); Chien 2022 measured 40 cyclists during incremental exercise but reports no plasma-vs-microneedle lag analysis (no concurrent blood sampling). The 'approximately 10 minutes' claim overstates Ming's central estimate by 2x and isn't supported by Chien at all. Also: Ming's reference comparator was venous blood, not plasma â€” same plasma/whole-blood terminology drift flagged in earlier batches. Ming OA via PMC7618145; Chien OA via PMC8874548.",
+      "recommended_fix": "Tighten to match the cited evidence: 'A recent microneedle-based lactate biosensor reports a measured lag time of approximately 5 minutes (IQR -4 to 11 min) relative to venous blood lactate variations [102].' Drop [103] from this sentence â€” Chien 2022 doesn't quantify lag and shouldn't be cited for this claim. Move [103] to a different sentence about microneedle continuous-monitoring feasibility or exercise-protocol validation, where it actually fits."
+    },
+    {
+      "claim_id": "lactate_review_014",
+      "extractor_claim_id": "8ffedee0-3995-40b5-ac37-fcdb1234788d",
+      "claim_text": "The subcutaneous depth of the capillary plexus varies between 0.6 and 1.5 mm, depending on the on-body location.",
+      "cited_authors": [
+        "Braverman"
+      ],
+      "cited_year": 2000,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Braverman 2000 specifies the upper horizontal plexus at '1-1.5 mm below the skin surface' â€” the 1.5 mm upper bound matches, but the 0.6 mm lower bound is not stated in this paper.",
+      "is_primary_source": true,
+      "primary_source_doi": "10.1046/j.1087-0024.2000.00010.x",
+      "expected_full_text_available": true,
+      "annotation_notes": "Braverman describes two horizontal plexuses: an upper plexus at 1-1.5 mm depth and a lower plexus at the dermal-subcutaneous junction (typically 2-4 mm depending on body site). The 0.6 mm value would correspond to thin-skin sites (eyelid, scrotum) or to the papillary capillary loops that ascend from the upper plexus toward the epidermis â€” but Braverman doesn't quote 0.6 mm explicitly. Also: the claim says 'the capillary plexus' (singular), but Braverman is clear there are two plexuses with different depths. For microneedle device design (1 mm penetration, per Ming/Chien), the 1-1.5 mm upper-plexus depth is the operationally relevant figure. Open access on jidsponline.org under CC BY-NC-ND.",
+      "recommended_fix": "Either tighten to match Braverman: 'The subcutaneous depth of the upper capillary plexus is approximately 1-1.5 mm, depending on the on-body location [104]' â€” or, if you want the 0.6 mm lower bound, add a citation that supports it (e.g., Krogstad 1996 [105] reports mean catheter depth 0.8 Â± 0.3 mm in abdominal/forearm skin, giving a range of ~0.5-1.1 mm for healthy dermal microdialysis sites). Compound version: 'The capillary plexus depth varies between ~0.6 and 1.5 mm depending on body site [104, 105].'"
+    },
+    {
+      "claim_id": "lactate_review_015",
+      "extractor_claim_id": "76a29da7-9557-4ace-b09b-319924155708",
+      "claim_text": "Krogstad et al. suggest a possible negative linear relationship between the catheter location in the dermal tissue layer and dermal [La−]ISF during microdialysis measurements.",
+      "cited_authors": [
+        "Krogstad"
+      ],
+      "cited_year": 1996,
+      "claim_type": "factual_qualitative",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Krogstad 1996 measured catheter depth (mean 0.8 Â± 0.3 mm) and dermal ISF lactate in 15 subjects but the available abstract does not state a negative linear depth-lactate relationship; meanwhile the paper's own Figure 0.19 attributes the depth-vs-lactate linear relationship (R = -0.89, P < 0.05, n = 6) to [97] Jansson 1996, not [105] Krogstad â€” internal citation inconsistency.",
+      "is_primary_source": true,
+      "primary_source_doi": "10.1152/ajpendo.1996.271.1.E138",
+      "expected_full_text_available": false,
+      "annotation_notes": "The figure caption (Fig 0.19) and the in-text citation point to two different papers. The R = -0.89 correlation with n = 6 is consistent with a small subset of one of these studies; Jansson 1996 (n = 7 healthy men, dermal microdialysis) is more likely the actual source given the n = 6 figure. Krogstad 1996 (n = 15) explicitly used ultrasound to measure catheter depth, so it could plausibly contain this analysis â€” but the figure is attributed to Jansson. Krogstad DOI 10.1046/j.1365-2133.1996.d01-893.x is paywalled (Wiley/Oxford). This is an internal-consistency bug in the source paper that no current pipeline can detect (would require cross-referencing in-text citation with figure caption).",
+      "recommended_fix": "Reconcile the inconsistency. Either (a) verify which paper actually contains the depth-vs-lactate regression by retrieving full text of both, then update the citation to match â€” most likely 'Jansson et al. reported a negative linear relationship... [97]' given the figure attribution; or (b) if both papers report compatible analyses, cite both: 'Jansson and Krogstad et al. report a negative linear relationship between catheter depth in the dermal tissue layer and dermal [La-]ISF [97, 105].' Sci-Hub or institutional access to both Wiley-paywalled abstracts will resolve which is correct."
+    },
+    {
+      "claim_id": "lactate_review_016",
+      "extractor_claim_id": "b59e809c-a934-4367-bd08-5c9f1a128f1e",
+      "claim_text": "Dermal ISF lactate concentration depends on catheter depth according to a linear relationship (R=-0.89, P < 0.05).",
+      "cited_authors": [
+        "Jansson",
+        "Krogstad",
+        "Lonnroth"
+      ],
+      "cited_year": 1996,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "The R = -0.89 correlation cannot be confirmed from publicly available abstracts of either Jansson 1996 (n = 7 lean men) or Krogstad 1996 (n = 15 healthy volunteers); the paper's own Fig 0.19 caption specifies n = 6, which matches neither paper's full cohort and is presumably a subset.",
+      "is_primary_source": true,
+      "primary_source_doi": "10.1152/ajpendo.1996.271.1.E138",
+      "expected_full_text_available": false,
+      "annotation_notes": "Krogstad 1996 explicitly used ultrasound to measure catheter depth (mean 0.8 Â± 0.3 mm) across 15 subjects in abdominal and forearm skin â€” a stronger candidate for a depth-vs-lactate regression than Jansson 1996. The figure attribution to [97] (Jansson) and text citation to [105] (Krogstad) noted in claim 015 reflects the same unresolved inconsistency. Without full text of either paper, the specific R = -0.89 statistic cannot be verified. APS paywall on Jansson.",
+      "recommended_fix": "Retrieve full text of both Jansson 1996 and Krogstad 1996 to identify the actual source of the R = -0.89 figure, then update both the in-text citation (claim 015) and the figure caption to point to the same paper. If the analysis is in Jansson, the n = 6 must be a subset of the n = 7 cohort â€” explain in the caption. If in Krogstad, update the figure attribution from [97] to [105]."
+    },
+    {
+      "claim_id": "lactate_review_017",
+      "extractor_claim_id": "887bb35c-5661-4926-96e1-2d21c2c9d706",
+      "claim_text": "Active muscle lactate concentration presents similar patterns to those of blood lactate concentration.",
+      "cited_authors": [
+        "Löllgen",
+        "Graham",
+        "Sjogaard",
+        "Gladden",
+        "Karlsson",
+        "Jacobs"
+      ],
+      "cited_year": null,
+      "claim_type": "factual_qualitative",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "LÃ¶llgen 1980 (n = 6, bicycle exercise at varying pedal rates) measured both muscle and blood lactate concurrently across rest, submaximal (70% VO2max), and maximal intensities; multiple independent primary sources from 1970-2004 corroborate parallel directional patterns between muscle and blood lactate during exercise.",
+      "is_primary_source": "mixed",
+      "primary_source_doi": "LÃ¶llgen 1980 PMID 7453512 (no DOI assigned); Karlsson 1970 DOI 10.3109/00365517009046250; Jacobs & Kaiser 1982 Acta Physiol Scand 114(3):461-66; Gladden 2004 DOI 10.1113/jphysiol.2003.058701 (J Physiol 558:5-30 review)",
+      "expected_full_text_available": false,
+      "annotation_notes": "This is a qualitative directional claim well-established in exercise physiology â€” multiple converging primary sources support the parallel-pattern observation. Caveat on LÃ¶llgen 1980 specifically: its central finding was that muscle/blood metabolites failed to correlate with RPE, not that they tracked each other â€” but the paper does measure both and the data show parallel intensity-dependent increases. Claim 017 is correct on the parallel-pattern observation; LÃ¶llgen is not the strongest single citation for it but is acceptable as one of four. Gladden 2004 (review) provides the most synthetic support. LÃ¶llgen, Karlsson, Jacobs are primary sources; Gladden 2004 is a review. Mostly paywalled (pre-internet abstracts).",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_018",
+      "extractor_claim_id": "ddd66849-5e38-4e8d-ab0e-3399887f89bc",
+      "claim_text": "Pores of continuous capillary lining only allow small solutes, under approximately 70 kDa, to pass across the capillary wall.",
+      "cited_authors": [
+        "Ono",
+        "Egawa",
+        "Kabashima",
+        "Currie",
+        "Bodo",
+        "Pearce"
+      ],
+      "cited_year": null,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Ono 2017 supports the directional claim (continuous capillary IEJs act as a size barrier, with a molecular-weight cutoff for paracellular passage) and Figure 1 displays plasma molecules with a discrimination between those that may/may not extravasate paracellularly â€” but the specific '~70 kDa' numerical cutoff is not stated verbatim in the available text and Figure 1 details cannot be verified from abstract/intro alone.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1186/s41232-017-0042-9",
+      "expected_full_text_available": true,
+      "annotation_notes": "The 70 kDa cutoff aligns with the standard textbook value for continuous capillary 'small pore' filtration â€” albumin (~67 kDa) is the canonical reference solute for this threshold. So the claim is physiologically correct as a textbook approximation even if not stated verbatim in Ono 2017. However, Ono 2017's framing emphasizes that IEJs are not the sole determinant of size barrier â€” basement membranes, fenestrae, and diaphragms also contribute (their Table 1) â€” so a single '70 kDa' cutoff oversimplifies the multi-component barrier. Currie 2004 as a non-peer-reviewed Walter Reed Army Institute technical report is a weak citation for a numerical claim. Ono 2017 OA via PMC5725833.",
+      "recommended_fix": "Either tighten by citing a stronger primary source for the 70 kDa figure (Sarin 2010, J Angiogenes Res 2:14, DOI 10.1186/2040-2384-2-14, which Ono 2017 itself cites for upper pore-size limits), or hedge the claim: 'The continuous capillary lining acts primarily as a size barrier, restricting paracellular passage of solutes above approximately 70 kDa (the size of albumin) [95].' Replace Currie 2004 [96] with a peer-reviewed source."
+    },
+    {
+      "claim_id": "lactate_review_019",
+      "extractor_claim_id": "756aab41-8feb-4105-b3c4-868b3dcfef5d",
+      "claim_text": "Lactic acidosis is defined as a blood lactate concentration of 5 mmol/L and a pH lower than 7.35.",
+      "cited_authors": [
+        "Forsythe",
+        "Schmidt"
+      ],
+      "cited_year": 2000,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "unsupported",
+      "expected_verdict_rationale": "The standard literature definition of lactic acidosis is lactate > 4 mmol/L with pH < 7.35 (StatPearls, multiple peer-reviewed reviews) â€” not 5 mmol/L; additionally, Forsythe & Schmidt 2000 (Chest) is a sodium-bicarbonate treatment review, not a definition source.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1378/chest.117.1.260",
+      "expected_full_text_available": false,
+      "annotation_notes": "Multiple authoritative sources converge on >4 mmol/L: StatPearls 'Lactic Acidosis' (NBK470202): 'defined as a serum lactate concentration above 4 mmol/Lâ€¦ blood pH < 7.35'; a 2023 ScienceDirect review on bicarbonate use: 'lactic acidosis is defined by a serum lactate > 4 mmol/L and pH < 7.35'; Pharmaceuticals 2022 review: 'L-lactic acidosis occurs when L-lactate concentration exceeds 4 mmol/L.' The 5 mmol/L threshold does appear in some specific clinical contexts (e.g., metformin-associated lactic acidosis case-control studies), but is not the standard. The pH threshold (<7.35) matches the standard. For training data, this is the most consequential error of the batch: the model would learn an incorrect physiological definition that is off by 25% on the lactate threshold. The cited DOI is wrong-source-for-claim, not wrong-DOI â€” Forsythe & Schmidt is a treatment review.",
+      "recommended_fix": "Replace [52] with a definition-source citation and correct the threshold: 'Lactic acidosis is defined as a blood lactate concentration above 4 mmol/L and a pH lower than 7.35 [StatPearls / Kraut & Madias 2014 NEJM DOI 10.1056/NEJMra1309483].' If you specifically want to cite Forsythe 2000, frame it for treatment context, not definition. The 5 mmol/L number â€” wherever it came from â€” should be removed unless you explicitly want to discuss the MALA-specific clinical convention (and label it as such)."
+    },
+    {
+      "claim_id": "lactate_review_020",
+      "extractor_claim_id": "81d91f3b-d1d4-45a2-aaad-08c54ad686f8",
+      "claim_text": "Plasma glucose values are about 10%–15% higher than whole blood when the hematocrit is normal.",
+      "cited_authors": [
+        "Kotwal",
+        "Pandit",
+        "Kim"
+      ],
+      "cited_year": null,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "Kotwal & Pandit 2012 states verbatim: 'the estimation of whole blood glucose levels are usually 10-15% lower than plasma glucose alone' (PMC3603039); Kim 2016 states verbatim: 'Plasma glucose values are about 11% higher than those of whole blood when the hematocrit is normal' (PMC5069392) â€” Kim's 11% point estimate falls within Kotwal's 10-15% range, fully consistent.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.4103/2230-8210.104052",
+      "expected_full_text_available": true,
+      "annotation_notes": "Both cited sources directly contain the claimed values, with matching qualitative framing ('when the hematocrit is normal'). This is the cleanest claim of the batch â€” text-to-source match is essentially verbatim. The underlying mechanism cited in both papers (plasma has greater water content than erythrocytes, so glucose is more concentrated in plasma than whole-blood water) is correct and well-established. Note: this glucose result is sometimes used in lactate literature by analogy (lactate distributes similarly between plasma and erythrocytes), but the analogy is imperfect â€” lactate's plasma/whole-blood ratio is closer to 1.5x (per claim 004) due to slower erythrocyte uptake of lactate vs glucose. Kim 2016 DOI 10.4093/dmj.2016.40.5.365. Both OA via PMC.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_021",
+      "extractor_claim_id": "b0ff86ba-0ed1-4e37-8d36-e5e039983bbc",
+      "claim_text": "Correlation between arterial and capillary lactate increases during physical exercise.",
+      "cited_authors": [
+        "Williams",
+        "Armstrong",
+        "Kirby"
+      ],
+      "cited_year": 1992,
+      "claim_type": "factual_qualitative",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Williams 1992 reports very high arterial-capillary correlations (r = 0.858-0.983) across the entire incremental treadmill protocol, but does not specifically demonstrate that the correlation increases as exercise intensity rises â€” the high correlations are reported as aggregate values, not as a function of exercise stage.",
+      "is_primary_source": true,
+      "primary_source_doi": "10.1080/02640419208729912",
+      "expected_full_text_available": false,
+      "annotation_notes": "Williams 1992 conclusion: 'Significant arterial and venous BLa concentration differences do not exist during incremental treadmill exercise. As capillary BLa concentrations reflect arterial values, their use in laboratory and field settings is recommended.' The paper supports a high arterial-capillary correlation during exercise but does not test a rest-vs-exercise comparison or report a correlation-increase trajectory. The claim is essentially correct in spirit (the agreement is good during exercise) but the specific framing â€” 'correlation increases' â€” adds a directional change that the cited paper does not demonstrate. Taylor & Francis paywall; abstract on PubMed PMID 1588685.",
+      "recommended_fix": "Tighten to match the cited evidence: 'Capillary lactate concentrations closely reflect arterial values during physical exercise (r = 0.858-0.983) [83].' If you specifically want to claim an increase from rest to exercise, you'd need a paper that compares the two conditions side-by-side (Forsythe 2000 or Moran 2012 may be more appropriate)."
+    },
+    {
+      "claim_id": "lactate_review_022",
+      "extractor_claim_id": "28a34265-343f-4792-aed7-8839e1edd38b",
+      "claim_text": "Microneedles have a small dimension of less than 1 mm in length, allowing them to penetrate the stratum corneum without reaching deep into the subcutaneous tissue.",
+      "cited_authors": [
+        "Ventrelli",
+        "Strambini",
+        "Barillaro"
+      ],
+      "cited_year": 2015,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "Ventrelli 2015 abstract states verbatim: 'microneedles, which are a miniaturized replica of hypodermic needles with length-scales of hundreds of micrometers' â€” directly supporting 'less than 1 mm' since 100s of micrometers = <1000 micrometers = <1 mm.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1002/adhm.201500450",
+      "expected_full_text_available": false,
+      "annotation_notes": "The penetration claim ('penetrate the stratum corneum without reaching deep into the subcutaneous tissue') is also consistent with the paper's central focus on transdermal biosensing. Standard textbook range across the microneedle literature is 25-2000 micrometers with most biosensing devices in the 100-1000 micrometer range â€” '<1 mm' is a defensible upper bound. Note: some microneedle designs exceed 1 mm (e.g., Chien 2022's microneedles are 1 mm long, sitting right at the boundary), so 'less than 1 mm' is a slight overgeneralization but not incorrect for the typical range covered in Ventrelli 2015. Wiley paywall; abstract on PubMed PMID 26439100.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_023",
+      "extractor_claim_id": "36c89764-e5d3-47e5-9116-9850b11836d4",
+      "claim_text": "3D printing has emerged as a promising technique for fabricating microneedle arrays, enabling point-of-care biosensing applications.",
+      "cited_authors": [
+        "Rezapour Sarabi",
+        "Akbari Nakhjavani",
+        "Tasoglu"
+      ],
+      "cited_year": 2022,
+      "claim_type": "factual_qualitative",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "The paper title is verbatim '3D-Printed Microneedles for Point-of-Care Biosensing Applications'; abstract states 'Herein, we discuss the 3D printing of microneedle arrays (MNAs) toward enabling point-of-care (POC) biosensing applications' â€” direct match to the claim.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.3390/mi13071099",
+      "expected_full_text_available": true,
+      "annotation_notes": "Strong text-to-source match. The paper explicitly frames 3D printing as an emerging fabrication method for MNAs, succeeding earlier methods like molding, micro-machining, and photolithography. Open-access status (MDPI and PMC9318629) makes it ideal for citation.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_024",
+      "extractor_claim_id": "572aee2c-099f-4c59-b134-38dd3f12bb46",
+      "claim_text": "Microfluidic technology has been used to control the porosity of polylactic acid porous microneedles, allowing for adjustable ISF extraction efficiency.",
+      "cited_authors": [
+        "Qin"
+      ],
+      "cited_year": 2022,
+      "claim_type": "methodological",
+      "expected_verdict": "supported",
+      "expected_verdict_rationale": "The paper title is verbatim 'Porosity control of polylactic acid porous microneedles using microfluidic technology'; abstract states 'we proposed a novel fabrication of porous MNs by using microfluidic technology. The porous MNs composed of homogeneous microparticles made by microfluidic technology could achieve a porosity-controlled structure inside' and explicitly links porosity control to 'ISF extraction efficiency' â€” exact match to the claim.",
+      "is_primary_source": true,
+      "primary_source_doi": "10.1109/ICSJ55786.2022.10034733",
+      "expected_full_text_available": false,
+      "annotation_notes": "Strong text-to-source match. The paper is a conference proceeding (IEEE CPMT Symposium Japan 2022, pp. 127-130; Qin B, Park J, Jing H, Bao L, Kim B), which is somewhat lower in publication tier than peer-reviewed journal articles, but the claim is methodological/qualitative and the abstract is sufficient to support it. A 2025 follow-up paper from the same group (Qin et al., Microsystems & Nanoengineering, DOI 10.1038/s41378-025-01103-1) extends this work with quantitative pore-size data â€” could be cited as a stronger journal-tier source if revising post-2025.",
+      "recommended_fix": null
+    },
+    {
+      "claim_id": "lactate_review_025",
+      "extractor_claim_id": "29b84a86-985c-45b3-8ef0-a0c00a02518d",
+      "claim_text": "The lag time of glucose concentrations in the ISF is around 10 minutes compared with plasma concentrations.",
+      "cited_authors": [
+        "Keenan"
+      ],
+      "cited_year": 2013,
+      "claim_type": "factual_numeric",
+      "expected_verdict": "partially_supported",
+      "expected_verdict_rationale": "Keenan 2013 reports 'Delays of 10 Â± 2 min (mean Â± SD) were introduced into each signal' â€” but these were simulated test delays applied to artificial signals, not directly measured physiological lag values; Keenan 2013 is a Wiener-filter algorithm-validation paper, not a primary measurement of ISF lag.",
+      "is_primary_source": false,
+      "primary_source_doi": "10.1016/j.bspc.2012.05.007",
+      "expected_full_text_available": false,
+      "annotation_notes": "The 10 min value Keenan uses is consistent with â€” and likely chosen from â€” the broader CGM literature consensus that ISF glucose lag is approximately 5-10 min (Heikenfeld 2019, claim 009; 'A Tale of Two Compartments' 2010 cites 'average lag of 8-10 min'; 'Time Delay of CGM Sensors' 2015 cites '5 to 10 minutes'). However, the direct primary measurement of physiological ISF glucose lag is Basu et al. 2013 (Diabetes 62(12):4083-87, DOI 10.2337/db13-1132), which performed the first direct tracer measurement in 8 healthy subjects â€” that's the right source for a quantitative claim about physiological lag. Keenan 2013 cites and assumes this lag rather than measuring it. Keenan published online 2012, formal print 2013, in Biomedical Signal Processing and Control 8(1):81-89. Elsevier paywall.",
+      "recommended_fix": "Replace [111] Keenan 2013 with Basu et al. 2013 (DOI 10.2337/db13-1132, 'Time Lag of Glucose From Intravascular to Interstitial Compartment in Humans') for the primary physiological measurement, or pair both: 'The lag time of glucose concentrations in the ISF is around 10 minutes compared with plasma concentrations [Basu 2013, Keenan 2013].' Note: Basu 2013's actual measured lag is shorter than 10 min in their tracer experiments (~5-6 min after correction for catheter transit time) â€” so the specific '10 minute' value is closer to the upper bound of the literature consensus, not the central estimate from direct measurements. If precise: 'around 5-10 minutes' is more defensible than 'around 10 minutes'."
+    }
+  ]
+}

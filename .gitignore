@@ -48,6 +48,11 @@ AGENTS.md
 CLAUDE.md
 .claude/
 decisions/
+independent-project-audit-*.md
+
+# Dogfood source PDFs (copyright — not redistributable; see README for links)
+benchmarks/real_papers/*/source.pdf
+benchmarks/real_papers/*/*.bak
 
 # Local caches and tooling
 .cache/
@@ -56,3 +61,9 @@ decisions/
 
 # Local-only docs (outreach drafts, private notes) — suffix .local.md to keep untracked
 *.local.md
+
+# E2E benchmark scratch (intermediate annotation buffer + per-batch staging files)
+eval/e2e/_*.json
+eval/e2e/_*.py
+eval/e2e/source_texts/*.txt
+eval/e2e/source_texts/_*.json

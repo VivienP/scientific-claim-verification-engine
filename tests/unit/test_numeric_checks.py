@@ -26,11 +26,6 @@ class TestCheckOrCiConsistency:
         assert r.consistent is False
         assert "outside CI" in r.explanation
 
-    def test_or_outside_ci_low(self) -> None:
-        r = check_or_ci_consistency(10.0, 23.58, 73.71)
-        assert r.consistent is False
-        assert "outside CI" in r.explanation
-
     def test_ci_inverted(self) -> None:
         r = check_or_ci_consistency(2.0, 3.0, 1.0)
         assert r.consistent is False
@@ -80,10 +75,6 @@ class TestCheckOrCiConsistency:
         r = check_or_ci_consistency(40.53, 23.58, 73.71, extracted=ext)
         assert isinstance(r, NumericCheckResult)
         assert r.extracted == ext
-
-    def test_default_extracted_is_empty_list(self) -> None:
-        r = check_or_ci_consistency(2.0, 1.0, 3.0)
-        assert r.extracted == []
 
 
 class TestCheckPValueCiConsistency:

@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import dataclasses
-import hashlib
 import json
+import re
 import time
+import unicodedata
 import urllib.parse
 from pathlib import Path
 from typing import Any
@@ -14,16 +15,27 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    RETRACTION_CACHE_TTL_SECONDS as _RETRACTION_CACHE_TTL,
+)
+from src.clients._common import (
+    RETRY_BACKOFF_BASE as _RETRY_BACKOFF_BASE,
+)
+from src.clients._common import (
+    RETRY_MAX as _RETRY_MAX,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 from src.models import ResolvedSource
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 _BASE_URL = "https://api.crossref.org"
 _MAILTO = "vivienperrelle@gmail.com"
-_RETRY_MAX = 3
-_RETRY_BACKOFF_BASE = 2.0
-_CACHE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
-_RETRACTION_CACHE_TTL = 7 * 24 * 3600  # 7 days — retractions are stable but faster-changing
 
 _HEADERS = {
     "User-Agent": "ScientificClaimVerifier/0.1",
@@ -31,10 +43,238 @@ _HEADERS = {
 }
 
 _NOT_FOUND = ResolvedSource(found=False, doi=None, title=None, abstract=None, similarity_score=None)
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+_STOPWORDS = {
+    "a",
+    "an",
+    "and",
+    "for",
+    "in",
+    "of",
+    "on",
+    "the",
+    "to",
+    "with",
+}
+_SEARCH_TRANSLATION = str.maketrans(
+    {
+        "\u00a0": " ",
+        "\u2010": "-",
+        "\u2011": "-",
+        "\u2012": "-",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2212": "-",
+    }
+)
 
 
-def _cache_key(prefix: str, value: str) -> str:
-    return hashlib.sha256(f"{prefix}:{value}".encode()).hexdigest()
+def _normalise_doi(doi_raw: str | None) -> str | None:
+    if doi_raw is None:
+        return None
+    return doi_raw.replace("https://doi.org/", "")
+
+
+def _normalise_search_text(text: str) -> str:
+    translated = text.translate(_SEARCH_TRANSLATION)
+    decomposed = unicodedata.normalize("NFKD", translated)
+    ascii_text = decomposed.encode("ascii", "ignore").decode("ascii")
+    return " ".join(ascii_text.split())
+
+
+def _content_tokens(text: str) -> set[str]:
+    return {
+        token
+        for token in _TOKEN_RE.findall(_normalise_search_text(text).lower())
+        if token not in _STOPWORDS
+    }
+
+
+def _title_from_work_message(message: dict[str, Any]) -> str | None:
+    title_list: list[str] | None = message.get("title")
+    return title_list[0] if title_list else None
+
+
+def _work_type_score(work_type: str | None) -> float:
+    if work_type == "journal-article":
+        return 0.25
+    if work_type in {"posted-content", "component", "grant"}:
+        return -0.25
+    return 0.0
+
+
+_YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+
+
+def _extract_query_year(query: str) -> int | None:
+    match = _YEAR_RE.search(query)
+    return int(match.group()) if match else None
+
+
+def _item_authors(item: dict[str, Any]) -> list[str]:
+    """Return lowercased family-name surnames from a CrossRef ``author`` array."""
+    raw = item.get("author")
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for entry in raw:
+        if isinstance(entry, dict):
+            family = entry.get("family")
+            if isinstance(family, str) and family.strip():
+                out.append(_normalise_search_text(family).lower())
+    return out
+
+
+def _item_year(item: dict[str, Any]) -> int | None:
+    """Return the publication year from CrossRef's nested ``issued`` field."""
+    issued = item.get("issued")
+    if not isinstance(issued, dict):
+        return None
+    parts = issued.get("date-parts")
+    if not isinstance(parts, list) or not parts or not isinstance(parts[0], list) or not parts[0]:
+        return None
+    first = parts[0][0]
+    if isinstance(first, int):
+        return first
+    return None
+
+
+def _candidate_score(query: str, item: dict[str, Any], index: int) -> tuple[float, float, int]:
+    """Score a CrossRef candidate against the query using a multi-signal blend.
+
+    Background. Bug C (S1-P1-C) replaced the asymmetric ``|q & t| / |t|``
+    overlap with symmetric Jaccard, which fixed claim-005 (Raa long title
+    beating Collange short title). But pure title Jaccard cannot
+    distinguish two candidates with similar token overlap when the query
+    carries strong author and year signals. Claims 002, 003, 017 in the
+    lactate-ISF benchmark were resolving to the wrong DOI because of this.
+
+    S4b-4 multi-signal score: 50% title Jaccard + 30% author overlap +
+    15% year proximity + 5% DOI presence + work-type bonus. Author
+    overlap is computed against CrossRef's structured ``author`` array
+    (family-name field), not against title tokens — so a candidate
+    whose surname appears in the query is rewarded even if its title
+    shares few tokens with the claim.
+
+    The previous behaviour (title Jaccard) is the limit of this score
+    when authors / year are absent from the query: then author_score
+    and year_score are 0 and the composite reduces to title Jaccard
+    times its 0.5 weight, plus the same DOI / work-type bonuses. The
+    relative ordering between candidates with no author/year signal is
+    preserved.
+
+    Returns (composite, title_only_jaccard, -index) — the second element
+    is kept as a tiebreaker so two candidates with equal composites fall
+    back to title overlap (the previous primary signal).
+    """
+    query_tokens = _content_tokens(query)
+    query_lower = _normalise_search_text(query).lower()
+    query_year = _extract_query_year(query)
+
+    title_tokens = _content_tokens(_title_from_work_message(item) or "")
+    if not query_tokens or not title_tokens:
+        title_score = 0.0
+    else:
+        union_size = len(query_tokens | title_tokens)
+        title_score = len(query_tokens & title_tokens) / union_size
+
+    item_authors = _item_authors(item)
+    if item_authors:
+        matched = sum(1 for a in item_authors if a and a in query_lower)
+        author_score = matched / len(item_authors)
+    else:
+        author_score = 0.0
+
+    year = _item_year(item)
+    if query_year is not None and year is not None:
+        diff = abs(query_year - year)
+        if diff == 0:
+            year_score = 1.0
+        elif diff == 1:
+            year_score = 0.5
+        else:
+            year_score = 0.0
+    else:
+        year_score = 0.0
+
+    doi_bonus = 0.05 if item.get("DOI") else 0.0
+    composite = (
+        0.5 * title_score
+        + 0.3 * author_score
+        + 0.15 * year_score
+        + doi_bonus
+        + _work_type_score(item.get("type"))
+    )
+    return (composite, title_score, -index)
+
+
+def _pick_best_item(query: str, items: list[dict[str, Any]]) -> dict[str, Any] | None:
+    if not items:
+        return None
+    return max(enumerate(items), key=lambda item: _candidate_score(query, item[1], item[0]))[1]
+
+
+def _resolved_from_work_message(message: dict[str, Any]) -> ResolvedSource:
+    return ResolvedSource(
+        found=True,
+        doi=_normalise_doi(message.get("DOI")),
+        title=_title_from_work_message(message),
+        abstract=None,
+        similarity_score=None,
+    )
+
+
+def fetch_work_by_doi(
+    doi: str,
+    *,
+    timeout: float = 10.0,
+    db_path: Path | None = None,
+) -> ResolvedSource:
+    """Fetch a CrossRef work by exact DOI using /works/{doi}."""
+    if not doi:
+        return _NOT_FOUND
+    resolved_db_path = db_path if db_path is not None else _default_db_path()
+    normalised = _normalise_doi(doi.strip()) or ""
+    key = make_cache_key("crossref:doi", normalised.lower())
+
+    cached = get(resolved_db_path, key)
+    if cached is not None:
+        logger.debug("crossref_doi_cache_hit", doi=normalised)
+        data: dict[str, Any] = json.loads(cached)
+        return ResolvedSource(**{**dataclasses.asdict(_NOT_FOUND), **data})
+
+    encoded_doi = urllib.parse.quote(normalised, safe="")
+    url = f"{_BASE_URL}/works/{encoded_doi}"
+
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.get(url, params={"mailto": _MAILTO}, headers=_HEADERS)
+        if response.status_code == 404:
+            put(
+                resolved_db_path,
+                key,
+                json.dumps(dataclasses.asdict(_NOT_FOUND)),
+                _CACHE_TTL_SECONDS,
+            )
+            return _NOT_FOUND
+        response.raise_for_status()
+        payload: dict[str, Any] = response.json()
+        message: dict[str, Any] = payload.get("message", {})
+        if not message:
+            return _NOT_FOUND
+        resolved = _resolved_from_work_message(message)
+        put(resolved_db_path, key, json.dumps(dataclasses.asdict(resolved)), _CACHE_TTL_SECONDS)
+        logger.info("crossref_doi_resolved", doi=resolved.doi, title=resolved.title)
+        return resolved
+    except httpx.HTTPStatusError as exc:
+        logger.error("crossref_doi_request_error", doi=normalised, error=str(exc))
+        return _NOT_FOUND
+    except httpx.RequestError as exc:
+        logger.error("crossref_doi_request_error", doi=normalised, error=str(exc))
+        return _NOT_FOUND
+    except Exception as exc:
+        logger.error("crossref_doi_unexpected_error", doi=normalised, error=str(exc))
+        return _NOT_FOUND
 
 
 def search_paper(
@@ -52,7 +292,7 @@ def search_paper(
     Retries on 429 with exponential backoff (max 3, base 2.0s).
     """
     resolved_db_path = db_path if db_path is not None else _default_db_path()
-    key = _cache_key("crossref", query)
+    key = make_cache_key("crossref:v2", query)
 
     cached = get(resolved_db_path, key)
     if cached is not None:
@@ -63,7 +303,7 @@ def search_paper(
     url = f"{_BASE_URL}/works"
     params: dict[str, str | int] = {
         "query.bibliographic": query,
-        "rows": 1,
+        "rows": 5,
         "mailto": _MAILTO,
     }
 
@@ -88,21 +328,12 @@ def search_paper(
             if not items:
                 return _NOT_FOUND
 
-            item = items[0]
-            doi_raw: str | None = item.get("DOI")
-            doi = doi_raw.replace("https://doi.org/", "") if doi_raw else doi_raw
-            title_list: list[str] | None = item.get("title")
-            title = title_list[0] if title_list else None
-
-            resolved = ResolvedSource(
-                found=True,
-                doi=doi,
-                title=title,
-                abstract=None,
-                similarity_score=None,
-            )
+            item = _pick_best_item(query, items)
+            if item is None:
+                return _NOT_FOUND
+            resolved = _resolved_from_work_message(item)
             put(resolved_db_path, key, json.dumps(dataclasses.asdict(resolved)), _CACHE_TTL_SECONDS)
-            logger.info("crossref_resolved", doi=doi, title=title)
+            logger.info("crossref_resolved", doi=resolved.doi, title=resolved.title)
             return resolved
 
         except httpx.HTTPStatusError as exc:
@@ -131,7 +362,7 @@ def check_retraction(
     Cache key: sha256("crossref:retraction:{doi}"). TTL 7 days.
     """
     resolved_db_path = db_path if db_path is not None else _default_db_path()
-    key = _cache_key("crossref:retraction", doi)
+    key = make_cache_key("crossref:retraction", doi)
 
     cached = get(resolved_db_path, key)
     if cached is not None:

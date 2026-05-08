@@ -31,16 +31,57 @@ def _hash(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
+def _step_cost(step: ProvenanceStep) -> float:
+    """Cost of a single step in USD. Zero when the step has no token data."""
+    cost = 0.0
+    if step.tokens_in is not None:
+        # cache_hit=None (short-circuit steps) treated as uncached — conservative estimate
+        rate = _COST_INPUT_CACHED_PER_TOKEN if step.cache_hit else _COST_INPUT_PER_TOKEN
+        cost += step.tokens_in * rate
+    if step.tokens_out is not None:
+        cost += step.tokens_out * _COST_OUTPUT_PER_TOKEN
+    return cost
+
+
 def _compute_cost(steps: list[ProvenanceStep]) -> float:
-    total = 0.0
+    return sum(_step_cost(s) for s in steps)
+
+
+def _compute_usage_by_stage(steps: list[ProvenanceStep]) -> dict[str, dict[str, int | float]]:
+    """Bucket cumulative token + cost spend by ``operation`` field.
+
+    Returns one entry per distinct operation seen in the step list, each
+    carrying ``tokens_in``, ``tokens_out``, ``cost_usd``, ``n_steps``,
+    and ``n_cache_hits``. Stages with no token data (deterministic
+    operations like ``fetch_fulltext`` or ``aggregate``) appear with
+    zero token totals and zero cost — explicit visibility is preferable
+    to silent omission.
+
+    The Valsci 2025 paper formalised this as a key audit-tool deliverable:
+    operators want to know "which phase is dominating cost?" without
+    having to re-derive it from raw provenance lines.
+    """
+    by_stage: dict[str, dict[str, int | float]] = {}
     for step in steps:
+        bucket = by_stage.setdefault(
+            step.operation,
+            {
+                "tokens_in": 0,
+                "tokens_out": 0,
+                "cost_usd": 0.0,
+                "n_steps": 0,
+                "n_cache_hits": 0,
+            },
+        )
+        bucket["n_steps"] = int(bucket["n_steps"]) + 1
         if step.tokens_in is not None:
-            # cache_hit=None (short-circuit steps) treated as uncached — conservative estimate
-            rate = _COST_INPUT_CACHED_PER_TOKEN if step.cache_hit else _COST_INPUT_PER_TOKEN
-            total += step.tokens_in * rate
+            bucket["tokens_in"] = int(bucket["tokens_in"]) + step.tokens_in
         if step.tokens_out is not None:
-            total += step.tokens_out * _COST_OUTPUT_PER_TOKEN
-    return total
+            bucket["tokens_out"] = int(bucket["tokens_out"]) + step.tokens_out
+        if step.cache_hit:
+            bucket["n_cache_hits"] = int(bucket["n_cache_hits"]) + 1
+        bucket["cost_usd"] = float(bucket["cost_usd"]) + _step_cost(step)
+    return by_stage
 
 
 def _verifiability_status(citation_found_rate: float) -> VerifiabilityStatus:
@@ -137,6 +178,7 @@ def build_report(
     stats = _compute_summary_stats(claims, results, sources)
     total_cost = _compute_cost(provenance_steps)
     stats["total_cost_usd"] = total_cost
+    stats["usage_by_stage"] = _compute_usage_by_stage(provenance_steps)  # type: ignore[assignment]
 
     claim_records = []
     for claim in claims:

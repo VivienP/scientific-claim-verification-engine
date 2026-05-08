@@ -1,0 +1,105 @@
+{
+  "_description": "Manually-curated expected DOIs for the Valsci paper (Edelman & Skolnick 2025) validation run. Each entry maps a claim signature (cited_authors[0]/cited_year/citation_marker_hint) to the DOI that the resolver SHOULD have returned. When `expected_doi` is null the claim has no externally-cited source and any resolution attempt should yield `found=False` (the 8 self-result claims about Valsci's own Tables 1-4).",
+  "_source_paper_doi": "10.1186/s12859-025-06159-4",
+  "_source_paper": "Edelman & Skolnick. Valsci: an open-source, self-hostable literature review utility... BMC Bioinformatics 2025;26:140",
+  "_run_date": "2026-05-08",
+  "claims": [
+    {
+      "cited_authors_first": "Haddaway",
+      "cited_year": 2020,
+      "citation_marker": 2,
+      "expected_doi": "10.1038/s41559-020-01295-x",
+      "expected_title_substring": "Eight problems with literature reviews"
+    },
+    {
+      "cited_authors_first": "Huang",
+      "cited_year": 2025,
+      "citation_marker": 6,
+      "expected_doi": "10.1145/3703155",
+      "expected_title_substring": "hallucination in large language models"
+    },
+    {
+      "cited_authors_first": "Nicholson",
+      "cited_year": 2021,
+      "citation_marker": 10,
+      "expected_doi": "10.1162/qss_a_00146",
+      "expected_title_substring": "scite: a smart citation index"
+    },
+    {
+      "cited_authors_first": "Lewis",
+      "cited_year": 2021,
+      "citation_marker": 8,
+      "expected_doi": "10.48550/arXiv.2005.11401",
+      "expected_title_substring": "Retrieval-augmented generation"
+    },
+    {
+      "cited_authors_first": "Kinney",
+      "cited_year": 2023,
+      "citation_marker": 7,
+      "expected_doi": "10.48550/arXiv.2301.10140",
+      "expected_title_substring": "Semantic Scholar Open Data Platform"
+    },
+    {
+      "cited_authors_first": "Hirsch",
+      "cited_year": 2005,
+      "citation_marker": 5,
+      "expected_doi": "10.1073/pnas.0507655102",
+      "expected_title_substring": "index to quantify"
+    },
+    {
+      "cited_authors_first": "Wei",
+      "cited_year": 2022,
+      "citation_marker": 15,
+      "expected_doi": "10.48550/arXiv.2201.11903",
+      "expected_title_substring": "Chain-of-Thought Prompting",
+      "_note": "Bibliography entry [15] has no DOI; resolver must succeed via title-search fallback. Real DOI is the arXiv preprint 2201.11903."
+    },
+    {
+      "cited_authors_first": "Hanselowski",
+      "cited_year": null,
+      "citation_marker": 3,
+      "expected_doi": "10.48550/arXiv.1806.05180",
+      "expected_title_substring": "Fake News Challenge",
+      "_note": "Multi-marker [3, 11] — extractor flattened authors of refs 3 and 11; with bibliography parsing fixed, resolver should produce 2 sources via multi-source path"
+    },
+    {
+      "cited_authors_first": "Agarwal",
+      "cited_year": 2024,
+      "citation_marker": 1,
+      "expected_doi": "10.48550/arXiv.2402.01788",
+      "expected_title_substring": "LitLLM"
+    },
+    {
+      "cited_authors_first": "Haryanto",
+      "cited_year": 2024,
+      "citation_marker": 4,
+      "expected_doi": "10.48550/arXiv.2407.13993",
+      "expected_title_substring": "LLAssist"
+    },
+    {
+      "cited_authors_first": "Wadden",
+      "cited_year": 2022,
+      "citation_marker": 14,
+      "expected_doi": "10.48550/arXiv.2112.01640",
+      "expected_title_substring": "MultiVerS"
+    },
+    {
+      "cited_authors_first": "Wadden",
+      "cited_year": 2020,
+      "citation_marker": 13,
+      "expected_doi": "10.48550/arXiv.2004.14974",
+      "expected_title_substring": "Fact or Fiction"
+    },
+    {
+      "cited_authors_first": "Pan",
+      "cited_year": 2018,
+      "citation_marker": 12,
+      "expected_doi": "10.1016/j.joi.2018.06.005",
+      "expected_title_substring": "memory of science"
+    }
+  ],
+  "_self_result_claims": {
+    "_description": "These 8 claims describe Valsci's own internal results (Tables 1-4 reporting their measured F1, hallucination counts, processing speed). They have no `cited_authors` because they cite nothing external — the pipeline correctly classifies them as `not_addressed` since there is no cited source to verify against. NOT counted in correct_source_rate.",
+    "expected_count": 8
+  }
+}

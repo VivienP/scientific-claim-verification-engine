@@ -1,0 +1,24 @@
+{
+  "metadata": {
+    "new_anthropic_spend_usd": 0.0,
+    "experiment_status": "not rerun; static prompt review only",
+    "code_refs": [
+      "src/verify.py:37",
+      "src/verify.py:41",
+      "src/verify.py:138",
+      "src/verify.py:142",
+      "scripts/eval_scifact.py:184"
+    ]
+  },
+  "static_findings": [
+    "Verifier supports partially_supported in schema and unit tests, so class collapse is not a parser/mapping bug.",
+    "The full-text and abstract prompts both instruct the model to err toward not_addressed when evidence is insufficient or off-topic.",
+    "SciFact maps partially_supported to supported and is verifier-only, so it does not validate the real four-class abstention behavior.",
+    "Unsupported requires explicit contradiction; unsupported-by-absence claims such as lactate_review_001/012/019 are structurally likely to become not_addressed."
+  ],
+  "expected_partially_supported_count": 12,
+  "pipeline_partially_supported_count": 1,
+  "pipeline_partially_supported_claims": [
+    "lactate_review_022"
+  ]
+}

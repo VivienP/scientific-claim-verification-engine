@@ -16,17 +16,13 @@ import json
 import os
 import sys
 import uuid
+from collections import Counter
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-from src.bm25_selector import select_passages
-from src.chunker import chunk_paper
-from src.extract import extract_claims
-from src.fetch_fulltext import fetch_fulltext
+from src.pipeline import PipelineConfig, run_pipeline
 from src.report import build_report
-from src.resolve import resolve_citations
-from src.verify import verify_claim, verify_claim_fulltext_with_numeric
 
 
 def main() -> None:
@@ -46,41 +42,21 @@ def main() -> None:
     )
     text = sample_path.read_text(encoding="utf-8")
     report_id = str(uuid.uuid4())
-    all_steps = []
 
-    claims, extract_step = extract_claims(text)
-    all_steps.append(extract_step)
-    print(f"Extracted {len(claims)} claims.")
+    config = PipelineConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
+    verifications, all_steps = run_pipeline(text, config=config)
+    print(f"Extracted {len(verifications)} claims.")
 
-    sources, resolve_steps = resolve_citations(claims)
-    all_steps.extend(resolve_steps)
-
-    results = {}
-    fulltext_methods: dict[str, str] = {}
-    for claim in claims:
-        source = sources[claim.claim_id]
-        fulltext, method = fetch_fulltext(source)
-        fulltext_methods[claim.claim_id] = method
-
-        if fulltext is not None:
-            chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
-            passages = select_passages(claim.claim_text, chunks, top_k=3)
-            result, verify_steps = verify_claim_fulltext_with_numeric(claim, source, passages)
-            all_steps.extend(verify_steps)
-        else:
-            result, verify_step = verify_claim(claim, source)
-            all_steps.append(verify_step)
-
-        results[claim.claim_id] = result
+    claims = [cv.claim for cv in verifications]
+    sources = {cv.claim.claim_id: cv.source for cv in verifications}
+    results = {cv.claim.claim_id: cv.result for cv in verifications}
+    fetch_method_counts = Counter(cv.fetch_method for cv in verifications)
 
     run_dir = build_report(report_id, text, claims, sources, results, all_steps)
     print(f"Report written to: {run_dir}")
     print(
         "Full-text retrieval methods: "
-        + ", ".join(
-            f"{m}={list(fulltext_methods.values()).count(m)}"
-            for m in sorted(set(fulltext_methods.values()))
-        )
+        + ", ".join(f"{m}={n}" for m, n in sorted(fetch_method_counts.items()))
     )
 
     report = json.loads((run_dir / "report.json").read_text(encoding="utf-8"))

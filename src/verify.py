@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import hashlib
 import json
 import os
 import time
@@ -12,7 +11,7 @@ from typing import Any
 
 import anthropic
 import structlog
-from anthropic.types import TextBlock, Usage
+from anthropic.types import TextBlock
 
 from src.models import (
     Claim,
@@ -22,155 +21,61 @@ from src.models import (
     VerificationResult,
     VerificationStatus,
 )
+from src.verify_multi import (
+    _aggregate_multi_source_verdicts,
+    verify_claim_multi_source,
+)
+from src.verify_prompts import (
+    _CITING_CONTEXT_MAX_CONFIDENCE,
+    _CITING_CONTEXT_SYSTEM_PROMPT,
+    _CITING_CONTEXT_WINDOW_CHARS,
+    _FULLTEXT_SYSTEM_PROMPT,
+    _PARSE_ERROR_RESULT,
+    _SHORT_CIRCUIT_RESULT,
+    _SYSTEM_PROMPT,
+    _TITLE_ONLY_MAX_CONFIDENCE,
+    _TITLE_ONLY_MIN_TITLE_LENGTH,
+    _TITLE_ONLY_SYSTEM_PROMPT,
+    _VALID_STATUSES,
+    MODEL_ID,
+    _build_passages_block,
+    _extract_citing_context_window,
+    _hash,
+    _make_short_circuit_step,
+    _parse_cache_hit,
+    _strip_fences,
+)
+
+# Re-export all symbols that tests import from this module path.
+__all__ = [
+    "MODEL_ID",
+    "_CITING_CONTEXT_MAX_CONFIDENCE",
+    "_CITING_CONTEXT_SYSTEM_PROMPT",
+    "_CITING_CONTEXT_WINDOW_CHARS",
+    "_FULLTEXT_SYSTEM_PROMPT",
+    "_PARSE_ERROR_RESULT",
+    "_SHORT_CIRCUIT_RESULT",
+    "_SYSTEM_PROMPT",
+    "_TITLE_ONLY_MAX_CONFIDENCE",
+    "_TITLE_ONLY_MIN_TITLE_LENGTH",
+    "_TITLE_ONLY_SYSTEM_PROMPT",
+    "_VALID_STATUSES",
+    "_aggregate_multi_source_verdicts",
+    "_build_passages_block",
+    "_extract_citing_context_window",
+    "_hash",
+    "_make_short_circuit_step",
+    "_parse_cache_hit",
+    "_strip_fences",
+    "verify_claim",
+    "verify_claim_citing_context",
+    "verify_claim_fulltext",
+    "verify_claim_fulltext_with_numeric",
+    "verify_claim_multi_source",
+    "verify_claim_title_only",
+]
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
-
-MODEL_ID = "claude-sonnet-4-6"
-
-_SYSTEM_PROMPT = """\
-You are a scientific claim verifier. Your task is to determine whether a source abstract supports, contradicts, or does not address a given scientific claim.
-
-Verification statuses:
-- supported: The abstract explicitly provides evidence that supports the claim. The claim's core assertion is consistent with what the abstract states.
-- unsupported: The abstract explicitly contradicts the claim, or the abstract addresses the same topic but the claim's assertion is inconsistent with the abstract's findings.
-- not_addressed: The abstract does not contain relevant information about the claim's subject matter. The abstract is about a different topic, or the specific assertion in the claim is not mentioned.
-- partially_supported: The abstract provides some support for the claim but not complete support — for example, if the claim states a stronger effect than the abstract reports, or if the abstract's findings are mixed.
-
-Guidelines:
-- Base your verdict ONLY on the abstract text provided. Do not use outside knowledge.
-- If the abstract is very short or general, err toward not_addressed rather than guessing.
-- Confidence: 0.9-1.0 for clear cases, 0.6-0.8 for moderate certainty, 0.4-0.6 for uncertain.
-
-Return ONLY a JSON object:
-{
-  "status": "supported|unsupported|not_addressed|partially_supported",
-  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the abstract.",
-  "confidence": 0.85
-}
-
-Your response must be valid JSON only — no explanatory text, no markdown code blocks, no additional commentary.
-
-Remember:
-- "supported" requires explicit positive evidence in the abstract.
-- "unsupported" requires the abstract to specifically contradict the claim.
-- "not_addressed" is appropriate when the abstract does not discuss the claim's topic at all, or discusses it without addressing the specific assertion.
-- "partially_supported" is for cases where the abstract provides some but not complete support.
-- Always cite the specific sentences or phrases from the abstract that justify your verdict.
-- Confidence should reflect your certainty, not the strength of the claim.
-"""
-
-
-def _hash(data: str) -> str:
-    return hashlib.sha256(data.encode()).hexdigest()
-
-
-def _strip_fences(text: str) -> str:
-    """Strip markdown code fences (```json ... ``` or ``` ... ```) from LLM output."""
-    stripped = text.strip()
-    if stripped.startswith("```"):
-        first_newline = stripped.find("\n")
-        if first_newline != -1:
-            stripped = stripped[first_newline + 1 :]
-        if stripped.endswith("```"):
-            stripped = stripped[: stripped.rfind("```")].rstrip()
-    return stripped
-
-
-def _parse_cache_hit(usage: Usage) -> bool | None:
-    cache_read: int = usage.cache_read_input_tokens or 0
-    cache_creation: int = usage.cache_creation_input_tokens or 0
-    if cache_read > 0:
-        return True
-    if cache_creation > 0:
-        return False
-    return None
-
-
-def _make_short_circuit_step(
-    claim: Claim,
-    source: ResolvedSource,
-) -> ProvenanceStep:
-    return ProvenanceStep(
-        step_id=str(uuid.uuid4()),
-        claim_id=claim.claim_id,
-        operation="verify",
-        input_hash=_hash(repr((claim, source))),
-        output_hash=_hash(repr("not_addressed")),
-        model_id=None,
-        timestamp=time.time(),
-        tokens_in=None,
-        tokens_out=None,
-        cache_hit=None,
-        confidence=1.0,
-    )
-
-
-_SHORT_CIRCUIT_RESULT = VerificationResult(
-    status="not_addressed",
-    explanation="Source not found or abstract unavailable.",
-    confidence=1.0,
-    evidence_quality="no_evidence",
-)
-
-_PARSE_ERROR_RESULT = VerificationResult(
-    status="not_addressed",
-    explanation="Parse error.",
-    confidence=0.0,
-    evidence_quality="no_evidence",
-)
-
-_VALID_STATUSES: set[str] = {"supported", "unsupported", "not_addressed", "partially_supported"}
-
-
-_FULLTEXT_SYSTEM_PROMPT = """\
-You are a scientific claim verifier operating in full-text mode. Your task is to determine whether the provided source passages support, contradict, or do not address a given scientific claim.
-
-You will receive a claim and a set of passages selected from the source paper using BM25 relevance ranking. Each passage is labeled with the section it came from (introduction, methods, results, discussion, or other) so you can weigh evidence appropriately:
-- Claims about study design should be verified against Methods passages.
-- Claims about quantitative outcomes should be verified against Results passages.
-- Interpretive or causal claims should be verified against Discussion passages.
-- Background statements may be verified against Introduction passages.
-
-Verification statuses:
-- supported: At least one passage explicitly provides evidence consistent with the claim's core assertion. Quote the exact sentence(s) from the passage that justify this verdict.
-- unsupported: At least one passage explicitly contradicts the claim, OR the passages address the same topic but the claim's assertion is inconsistent with what the passages report.
-- not_addressed: The passages do not contain relevant information about the specific assertion in the claim. The passages may be about related topics but never address the exact claim.
-- partially_supported: The passages provide some support for the claim but not complete support — for example, the claim asserts a stronger effect than the passages report, or the passages give mixed or qualified findings.
-
-Guidelines:
-- Base your verdict ONLY on the provided passages. Do not use outside knowledge of the paper or domain.
-- If the passages are insufficient or off-topic, err toward not_addressed rather than guessing.
-- Identify the section that contains the strongest evidence for your verdict (use the section attribute of the most relevant passage). Lowercase: "introduction", "methods", "results", "discussion", or "other".
-- Extract verbatim sentences from the passages — at most three — into source_passages. Do NOT paraphrase. If the passages contain no relevant evidence, return an empty list.
-- Confidence: 0.9-1.0 for clear-cut cases with explicit textual evidence, 0.6-0.8 for moderate certainty, 0.4-0.6 for uncertain verdicts.
-
-Return ONLY a JSON object with this exact schema:
-{
-  "status": "supported|unsupported|not_addressed|partially_supported",
-  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the passages.",
-  "confidence": 0.85,
-  "source_passages": ["exact sentence quoted from a passage", "another exact sentence"],
-  "source_section": "results"
-}
-
-Your response must be valid JSON only — no explanatory text outside the JSON, no markdown code blocks, no additional commentary.
-
-Reminder of how to weigh evidence:
-- "supported" requires explicit textual evidence in at least one passage.
-- "unsupported" requires the passages to specifically contradict the claim.
-- "not_addressed" is appropriate when no passage discusses the claim's specific assertion at all.
-- "partially_supported" is for cases where the evidence is real but qualified, mixed, or weaker than the claim suggests.
-- source_passages must contain verbatim quotes pulled directly from the passages provided. Never paraphrase or invent text.
-- source_section should match the section attribute of the passage(s) you cite. If you cite multiple passages from different sections, choose the one whose section best characterizes the evidence (Results for outcome data, Methods for design, Discussion for interpretation).
-- Confidence should reflect your certainty in the verdict, not the strength or specificity of the claim itself.
-"""
-
-
-def _build_passages_block(passages: list[PaperChunk]) -> str:
-    parts: list[str] = []
-    for chunk in passages:
-        parts.append(f'<passage section="{chunk.section}">\n{chunk.text}\n</passage>')
-    return "<passages>\n" + "\n".join(parts) + "\n</passages>"
 
 
 def verify_claim_fulltext(
@@ -217,7 +122,10 @@ def verify_claim_fulltext(
 
     response = client.messages.create(
         model=model_id,
-        max_tokens=1024,
+        # max_tokens=2048: full-text verifier may quote up to 3 source_passages
+        # plus a multi-sentence explanation. Observed parse errors on claim 003
+        # were caused by truncated JSON when 1024 was insufficient.
+        max_tokens=2048,
         system=[
             {
                 "type": "text",
@@ -340,6 +248,247 @@ def verify_claim_fulltext_with_numeric(
     return result, [verify_step, *numeric_steps]
 
 
+def verify_claim_citing_context(
+    claim: Claim,
+    source: ResolvedSource,
+    citing_paper_text: str,
+    *,
+    model_id: str = MODEL_ID,
+    api_key: str | None = None,
+) -> tuple[VerificationResult, ProvenanceStep]:
+    """Verify a claim against the citing paper's own internal context.
+
+    S3-P1 last-resort verifier: when the cited source cannot be retrieved
+    (Layers 1-4 failed — no abstract, no full text, no informative title),
+    check whether the citing paper's own surrounding text is consistent with
+    the claim being attributed to the citation. This is internal-consistency
+    evidence, NOT third-party verification — and is capped at
+    `partially_supported` accordingly.
+
+    The prompt explicitly tells the LLM that supported is forbidden; a
+    deterministic post-LLM guard re-applies the cap so prompt non-compliance
+    cannot leak `supported` verdicts.
+
+    Returns a `VerificationResult` with:
+        verification_depth = "citing_paper_context"
+        evidence_quality   = "citing_paper_context"
+        confidence         <= _CITING_CONTEXT_MAX_CONFIDENCE
+    The explanation is prefixed with "[Internal-consistency only]" so the
+    Medical Writer audit consumer sees the contract distinction at a glance.
+    """
+    ts = time.time()
+    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=effective_key)
+
+    citation_label = ", ".join(claim.cited_authors) or "(unattributed)"
+    if claim.cited_year is not None:
+        citation_label = f"{citation_label} ({claim.cited_year})"
+    context = _extract_citing_context_window(citing_paper_text, claim.claim_text)
+    user_message = (
+        f"<claim>{claim.claim_text}</claim>\n"
+        f"<cited_reference>{citation_label}</cited_reference>\n"
+        f"<citing_paper_context>{context}</citing_paper_context>"
+    )
+
+    response = client.messages.create(
+        model=model_id,
+        max_tokens=512,
+        system=[
+            {
+                "type": "text",
+                "text": _CITING_CONTEXT_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": user_message}],
+    )
+
+    tokens_in: int = response.usage.input_tokens
+    tokens_out: int = response.usage.output_tokens
+    cache_hit = _parse_cache_hit(response.usage)
+
+    logger.info(
+        "verify_citing_context_llm_call",
+        model_id=model_id,
+        claim_id=claim.claim_id,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+    )
+
+    first_block = response.content[0] if response.content else None
+    response_text = first_block.text if isinstance(first_block, TextBlock) else ""
+
+    try:
+        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
+        status_raw = str(parsed["status"])
+        if status_raw not in _VALID_STATUSES:
+            raise ValueError(f"Invalid status: {status_raw}")
+        confidence = float(parsed["confidence"])
+        # Hard cap: internal consistency cannot establish supported.
+        if status_raw == "supported":
+            status_raw = "partially_supported"
+        confidence = min(confidence, _CITING_CONTEXT_MAX_CONFIDENCE)
+        status: VerificationStatus = status_raw  # type: ignore[assignment]
+        raw_explanation = str(parsed["explanation"])
+        explanation = (
+            raw_explanation
+            if "internal-consistency" in raw_explanation.lower()
+            else f"[Internal-consistency only] {raw_explanation}"
+        )
+        result = VerificationResult(
+            status=status,
+            explanation=explanation,
+            confidence=confidence,
+            verification_depth="citing_paper_context",
+            evidence_quality="citing_paper_context",
+            retraction_status=source.retraction_status,
+        )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        logger.error(
+            "verify_citing_context_parse_error",
+            claim_id=claim.claim_id,
+            raw_response=response_text[:200],
+            error=str(exc),
+        )
+        result = VerificationResult(
+            status="not_addressed",
+            explanation="Parse error.",
+            confidence=0.0,
+            verification_depth="citing_paper_context",
+            evidence_quality="no_evidence",
+            retraction_status=source.retraction_status,
+        )
+
+    step = ProvenanceStep(
+        step_id=str(uuid.uuid4()),
+        claim_id=claim.claim_id,
+        operation="verify",
+        input_hash=_hash(repr((claim, source, len(citing_paper_text)))),
+        output_hash=_hash(repr(result)),
+        model_id=model_id,
+        timestamp=ts,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+        confidence=result.confidence,
+    )
+
+    return result, step
+
+
+def verify_claim_title_only(
+    claim: Claim,
+    source: ResolvedSource,
+    *,
+    model_id: str = MODEL_ID,
+    api_key: str | None = None,
+) -> tuple[VerificationResult, ProvenanceStep]:
+    """Verify a claim against the source title (and optionally journal) only.
+
+    Bug B fix (S1-P1-B): when the resolver finds the right paper but neither
+    CrossRef nor PubMed exposes an abstract (common for IEEE proceedings,
+    Elsevier paywalls, and older journals), the previous `verify_claim`
+    short-circuited to `not_addressed`. For claims whose target title is
+    near-verbatim with the claim text (e.g. "Porosity control of polylactic
+    acid porous microneedles using microfluidic technology"), the title is
+    informative enough to warrant `partially_supported` rather than
+    `not_addressed`.
+
+    Hard guarantees enforced post-LLM (defensive against prompt non-compliance):
+        - status `supported` is downgraded to `partially_supported`
+        - confidence is clamped to <= _TITLE_ONLY_MAX_CONFIDENCE (0.7)
+        - evidence_quality is always `title_only`
+        - verification_depth is always `title_only`
+    """
+    ts = time.time()
+    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+    client = anthropic.Anthropic(api_key=effective_key)
+
+    title = source.title or ""
+    user_message = f"<claim>{claim.claim_text}</claim>\n<title>{title}</title>"
+
+    response = client.messages.create(
+        model=model_id,
+        max_tokens=512,
+        system=[
+            {
+                "type": "text",
+                "text": _TITLE_ONLY_SYSTEM_PROMPT,
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+        messages=[{"role": "user", "content": user_message}],
+    )
+
+    tokens_in: int = response.usage.input_tokens
+    tokens_out: int = response.usage.output_tokens
+    cache_hit = _parse_cache_hit(response.usage)
+
+    logger.info(
+        "verify_title_only_llm_call",
+        model_id=model_id,
+        claim_id=claim.claim_id,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+    )
+
+    first_block = response.content[0] if response.content else None
+    response_text = first_block.text if isinstance(first_block, TextBlock) else ""
+
+    try:
+        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
+        status_raw = str(parsed["status"])
+        if status_raw not in _VALID_STATUSES:
+            raise ValueError(f"Invalid status: {status_raw}")
+        confidence = float(parsed["confidence"])
+        # Hard cap: title-only evidence cannot establish supported.
+        if status_raw == "supported":
+            status_raw = "partially_supported"
+        confidence = min(confidence, _TITLE_ONLY_MAX_CONFIDENCE)
+        status: VerificationStatus = status_raw  # type: ignore[assignment]
+        result = VerificationResult(
+            status=status,
+            explanation=str(parsed["explanation"]),
+            confidence=confidence,
+            verification_depth="title_only",
+            evidence_quality="title_only",
+            retraction_status=source.retraction_status,
+        )
+    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
+        logger.error(
+            "verify_title_only_parse_error",
+            claim_id=claim.claim_id,
+            raw_response=response_text[:200],
+            error=str(exc),
+        )
+        result = VerificationResult(
+            status="not_addressed",
+            explanation="Parse error.",
+            confidence=0.0,
+            verification_depth="title_only",
+            evidence_quality="no_evidence",
+            retraction_status=source.retraction_status,
+        )
+
+    step = ProvenanceStep(
+        step_id=str(uuid.uuid4()),
+        claim_id=claim.claim_id,
+        operation="verify",
+        input_hash=_hash(repr((claim, source))),
+        output_hash=_hash(repr(result)),
+        model_id=model_id,
+        timestamp=ts,
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cache_hit=cache_hit,
+        confidence=result.confidence,
+    )
+
+    return result, step
+
+
 def verify_claim(
     claim: Claim,
     source: ResolvedSource,
@@ -349,12 +498,17 @@ def verify_claim(
 ) -> tuple[VerificationResult, ProvenanceStep]:
     """Verify a single claim against its resolved source abstract via Claude API.
 
-    Short-circuits (no LLM call) when source.found=False or source.abstract is None.
+    Short-circuits (no LLM call) when source.found=False, or when both
+    source.abstract is None and source.title is too short to verify against.
+    When abstract is None but the title is informative (>= _TITLE_ONLY_MIN_TITLE_LENGTH
+    chars), routes to `verify_claim_title_only` (Bug B fix S1-P1-B).
     System prompt >1024 tokens → cache_control={"type": "ephemeral"}.
-    Claim wrapped in <claim>...</claim>; abstract in <source>...</source>.
-    Logs tokens_in, tokens_out, cache_hit, model_id via structlog on every LLM call.
     """
-    if not source.found or source.abstract is None:
+    if not source.found:
+        return _SHORT_CIRCUIT_RESULT, _make_short_circuit_step(claim, source)
+    if source.abstract is None:
+        if source.title and len(source.title) >= _TITLE_ONLY_MIN_TITLE_LENGTH:
+            return verify_claim_title_only(claim, source, model_id=model_id, api_key=api_key)
         return _SHORT_CIRCUIT_RESULT, _make_short_circuit_step(claim, source)
 
     ts = time.time()

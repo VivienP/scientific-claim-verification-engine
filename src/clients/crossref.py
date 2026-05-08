@@ -103,29 +103,109 @@ def _work_type_score(work_type: str | None) -> float:
     return 0.0
 
 
-def _candidate_score(query: str, item: dict[str, Any], index: int) -> tuple[float, float, int]:
-    """Score a CrossRef candidate against the query.
+_YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 
-    Bug C fix (S1-P1-C): the previous score `|q & t| / |t|` was asymmetric
-    and overweighted short titles whose tokens were all in the query (any
-    token outside the query proportionally penalized longer titles). This
-    caused the wrong-pick on claim 005 — Collange's short title beat Raa's
-    long title even though Raa shared more absolute overlap with the query.
-    Jaccard `|q & t| / |q | t|` is symmetric and rewards absolute overlap.
+
+def _extract_query_year(query: str) -> int | None:
+    match = _YEAR_RE.search(query)
+    return int(match.group()) if match else None
+
+
+def _item_authors(item: dict[str, Any]) -> list[str]:
+    """Return lowercased family-name surnames from a CrossRef ``author`` array."""
+    raw = item.get("author")
+    if not isinstance(raw, list):
+        return []
+    out: list[str] = []
+    for entry in raw:
+        if isinstance(entry, dict):
+            family = entry.get("family")
+            if isinstance(family, str) and family.strip():
+                out.append(_normalise_search_text(family).lower())
+    return out
+
+
+def _item_year(item: dict[str, Any]) -> int | None:
+    """Return the publication year from CrossRef's nested ``issued`` field."""
+    issued = item.get("issued")
+    if not isinstance(issued, dict):
+        return None
+    parts = issued.get("date-parts")
+    if not isinstance(parts, list) or not parts or not isinstance(parts[0], list) or not parts[0]:
+        return None
+    first = parts[0][0]
+    if isinstance(first, int):
+        return first
+    return None
+
+
+def _candidate_score(query: str, item: dict[str, Any], index: int) -> tuple[float, float, int]:
+    """Score a CrossRef candidate against the query using a multi-signal blend.
+
+    Background. Bug C (S1-P1-C) replaced the asymmetric ``|q & t| / |t|``
+    overlap with symmetric Jaccard, which fixed claim-005 (Raa long title
+    beating Collange short title). But pure title Jaccard cannot
+    distinguish two candidates with similar token overlap when the query
+    carries strong author and year signals. Claims 002, 003, 017 in the
+    lactate-ISF benchmark were resolving to the wrong DOI because of this.
+
+    S4b-4 multi-signal score: 50% title Jaccard + 30% author overlap +
+    15% year proximity + 5% DOI presence + work-type bonus. Author
+    overlap is computed against CrossRef's structured ``author`` array
+    (family-name field), not against title tokens — so a candidate
+    whose surname appears in the query is rewarded even if its title
+    shares few tokens with the claim.
+
+    The previous behaviour (title Jaccard) is the limit of this score
+    when authors / year are absent from the query: then author_score
+    and year_score are 0 and the composite reduces to title Jaccard
+    times its 0.5 weight, plus the same DOI / work-type bonuses. The
+    relative ordering between candidates with no author/year signal is
+    preserved.
+
+    Returns (composite, title_only_jaccard, -index) — the second element
+    is kept as a tiebreaker so two candidates with equal composites fall
+    back to title overlap (the previous primary signal).
     """
     query_tokens = _content_tokens(query)
+    query_lower = _normalise_search_text(query).lower()
+    query_year = _extract_query_year(query)
+
     title_tokens = _content_tokens(_title_from_work_message(item) or "")
     if not query_tokens or not title_tokens:
-        lexical_score = 0.0
+        title_score = 0.0
     else:
         union_size = len(query_tokens | title_tokens)
-        lexical_score = len(query_tokens & title_tokens) / union_size
-    doi_score = 0.05 if item.get("DOI") else 0.0
-    return (
-        lexical_score + _work_type_score(item.get("type")) + doi_score,
-        lexical_score,
-        -index,
+        title_score = len(query_tokens & title_tokens) / union_size
+
+    item_authors = _item_authors(item)
+    if item_authors:
+        matched = sum(1 for a in item_authors if a and a in query_lower)
+        author_score = matched / len(item_authors)
+    else:
+        author_score = 0.0
+
+    year = _item_year(item)
+    if query_year is not None and year is not None:
+        diff = abs(query_year - year)
+        if diff == 0:
+            year_score = 1.0
+        elif diff == 1:
+            year_score = 0.5
+        else:
+            year_score = 0.0
+    else:
+        year_score = 0.0
+
+    doi_bonus = 0.05 if item.get("DOI") else 0.0
+    composite = (
+        0.5 * title_score
+        + 0.3 * author_score
+        + 0.15 * year_score
+        + doi_bonus
+        + _work_type_score(item.get("type"))
     )
+    return (composite, title_score, -index)
 
 
 def _pick_best_item(query: str, items: list[dict[str, Any]]) -> dict[str, Any] | None:

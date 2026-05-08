@@ -192,6 +192,110 @@ class TestSearchPaper:
         assert result.doi == "10.match/yes"
 
 
+class TestMultiSignalScore:
+    """S4b-4: title-only Jaccard could not distinguish candidates whose
+    titles overlap similarly with the query. Author + year signals break
+    the tie when the query carries them."""
+
+    def test_author_match_breaks_title_overlap_tie(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        """Two candidates with identical title-Jaccard against the query;
+        only one matches the cited author surname. The author-matching
+        candidate must win.
+        """
+        # Both titles share these tokens with the query: "lactate", "ISF".
+        # Title Jaccard alone is identical for both. The query carries
+        # "Smith 2020"; only the first item lists Smith as an author.
+        query = "Smith 2020 lactate ISF"
+        httpx_mock.add_response(
+            json={
+                "message": {
+                    "items": [
+                        {
+                            "DOI": "10.right/smith",
+                            "type": "journal-article",
+                            "title": ["Lactate in ISF"],
+                            "author": [{"family": "Smith", "given": "J."}],
+                            "issued": {"date-parts": [[2020]]},
+                        },
+                        {
+                            "DOI": "10.wrong/jones",
+                            "type": "journal-article",
+                            "title": ["Lactate in ISF"],
+                            "author": [{"family": "Jones", "given": "B."}],
+                            "issued": {"date-parts": [[2018]]},
+                        },
+                    ]
+                }
+            }
+        )
+        result = search_paper(query, db_path=tmp_path / "c.db")
+        assert result.doi == "10.right/smith"
+
+    def test_year_match_breaks_remaining_tie_when_authors_equal(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        """Both candidates match the query author equally; only one matches
+        the year. The matching-year candidate wins."""
+        query = "Smith 2020 lactate ISF"
+        httpx_mock.add_response(
+            json={
+                "message": {
+                    "items": [
+                        {
+                            "DOI": "10.wrong/year",
+                            "type": "journal-article",
+                            "title": ["Lactate in ISF"],
+                            "author": [{"family": "Smith", "given": "J."}],
+                            "issued": {"date-parts": [[2010]]},
+                        },
+                        {
+                            "DOI": "10.right/year",
+                            "type": "journal-article",
+                            "title": ["Lactate in ISF"],
+                            "author": [{"family": "Smith", "given": "J."}],
+                            "issued": {"date-parts": [[2020]]},
+                        },
+                    ]
+                }
+            }
+        )
+        result = search_paper(query, db_path=tmp_path / "c.db")
+        assert result.doi == "10.right/year"
+
+    def test_no_author_signal_falls_back_to_title_jaccard(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        """When the query carries no recognisable author, the score
+        reduces to title Jaccard (* 0.5) plus type bonus — preserving
+        the pre-S4b-4 ordering."""
+        # Query has no surname.
+        query = "lactate kinetics exercise"
+        httpx_mock.add_response(
+            json={
+                "message": {
+                    "items": [
+                        {
+                            "DOI": "10.match/yes",
+                            "type": "journal-article",
+                            "title": ["Lactate kinetics during exercise"],
+                            "author": [{"family": "Adams", "given": "X."}],
+                        },
+                        {
+                            "DOI": "10.unrelated/no",
+                            "type": "journal-article",
+                            "title": ["Cosmological inflation"],
+                            "author": [{"family": "Bell", "given": "Y."}],
+                        },
+                    ]
+                }
+            }
+        )
+        result = search_paper(query, db_path=tmp_path / "c.db")
+        assert result.doi == "10.match/yes"
+
+
 class TestFetchWorkByDoi:
     def test_fetches_exact_doi_endpoint(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
         httpx_mock.add_response(

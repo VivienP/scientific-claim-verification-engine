@@ -1,0 +1,98 @@
+# Reference configuration — *not loaded at runtime*.
+#
+# This file documents every operator-tunable knob in the verification
+# pipeline so an operator can see, in one place, what behaviours are
+# parameterised. The pipeline does not read this file: settings flow
+# through explicit parameters (PipelineConfig, function arguments,
+# environment variables) so callers can compose them per-claim or
+# per-experiment without a global mutable config.
+#
+# To apply a value, pass it where it is used:
+#
+#   from src.pipeline import PipelineConfig, run_pipeline
+#   cfg = PipelineConfig(top_k_passages=5, enable_multi_source=False)
+#   run_pipeline(text, config=cfg)
+#
+
+[pipeline]
+# Number of BM25-ranked passages handed to the full-text verifier per claim.
+# Lower = cheaper and more focused; higher = better recall on diffuse claims.
+top_k_passages = 3
+
+# Source title length (chars) below which the title-only verifier is skipped
+# and the claim short-circuits to "not_addressed".
+title_only_min_title_length = 20
+
+# Multi-source aggregation: when a claim has > 1 resolved citation marker,
+# verify each source independently and aggregate per the rules in
+# verify_claim_multi_source. Disable to fall back to .primary() only.
+enable_multi_source = true
+
+# Citing-context fallback: when no source evidence is retrievable, attempt
+# an internal-consistency check against the citing paper's own text.
+# Hard-capped to partially_supported.
+enable_citing_context_fallback = true
+
+
+[bm25]
+# Token budget passed to select_passages(). The selector picks the highest-
+# BM25-scoring chunks (lower-bm25 dropped) until the next would exceed this.
+# Roughly 4 chars per token; 6000 ≈ 24 KB of source text per claim.
+max_total_tokens = 6000
+
+
+[chunker]
+# IMRAD-section chunks shorter than this (chars) are dropped before BM25
+# ranking. Prevents single-sentence "Methods" stubs from out-ranking real
+# Results passages on lexical overlap alone.
+min_chunk_length = 50
+
+
+[verify]
+# Maximum confidence the title-only verifier may emit. Hard-capped because
+# title text alone is structurally insufficient to establish full support.
+title_only_max_confidence = 0.7
+
+# Maximum confidence the citing-context verifier may emit. Lower than
+# title_only because internal consistency is structurally weaker than even
+# a title match.
+citing_context_max_confidence = 0.6
+
+# Window (chars) on each side of the claim's first 80-char prefix that the
+# citing-context verifier reads from the citing paper.
+citing_context_window_chars = 600
+
+# Max output tokens for the full-text verifier's JSON response. 2048 is
+# enough for the structured payload + 2-3 verbatim source_passages.
+fulltext_max_response_tokens = 2048
+
+
+[clients]
+# 30 days. Covers a sprint cycle without re-paying CrossRef / OpenAlex /
+# PubMed / Europe PMC / Unpaywall.
+cache_ttl_default_seconds = 2_592_000
+
+# 7 days. Retraction notices propagate slowly but are stable; we want
+# faster invalidation than the regular metadata cache.
+retraction_cache_ttl_seconds = 604_800
+
+# Three attempts with exponential backoff (2s, 4s, 8s). Empirically enough
+# to ride out CrossRef and OpenAlex rate-limit windows.
+retry_max = 3
+retry_backoff_base = 2.0
+
+
+[budgets]
+# These are not pipeline knobs — they are caller policies. The benchmark
+# harness in eval/e2e/_run_pipeline_on_verdicts.py and the recall script
+# in scripts/measure_e2e_recall.py both accept --max-cost on the CLI.
+# Documented here so an operator scanning this file sees them.
+benchmark_max_cost_usd = 1.40   # per full benchmark pass on the lactate-ISF set
+recall_max_cost_usd = 5.00      # per measure_e2e_recall.py run
+
+
+# Environment variables (read at runtime, not in this file):
+#
+#   ANTHROPIC_API_KEY     required by every LLM-calling phase
+#   UNPAYWALL_EMAIL       optional; passed to PubMed e-utilities and Unpaywall
+#   PUBMED_EMAIL          alias for UNPAYWALL_EMAIL on PubMed only

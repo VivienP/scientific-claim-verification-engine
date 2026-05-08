@@ -87,17 +87,39 @@ class ResolvedSourceSet:
     citation_markers: tuple[int, ...]
 
     def primary(self) -> ResolvedSource:
-        """Highest-confidence resolved source, or `_NOT_FOUND_SOURCE` when empty.
+        """First found source in marker order, or `_NOT_FOUND_SOURCE` when empty.
 
-        Selection order: prefer found entries; among those, prefer the highest
-        title_match_score. Used by callers expecting a single ResolvedSource.
+        Contract: when an author writes `[7, 9]`, ref [7] is the primary
+        citation by textual intent. `primary()` honors that order. The
+        resolver populates ``self.sources`` parallel to ``citation_markers``,
+        so iterating sources is equivalent to iterating markers.
+
+        Bug A (Valsci validation run, 2026-05-08): the previous implementation
+        used ``max(sources, key=title_match_score)`` and on `[7, 9]`
+        (Kinney + Lo) returned Lo because its title-match-score against
+        the claim text "Semantic Scholar database" was higher — even
+        though the user listed Kinney first. The score-based heuristic
+        was a leaky abstraction; marker order is the only ordering the
+        author intentionally provided.
+
+        Returns:
+        - The first source whose ``found`` is True, walking sources in
+          marker order. This is the marker-order primary.
+        - When no source resolved, returns the first source (still
+          unfound-shaped) so the result preserves marker-order invariants
+          for downstream provenance hashes.
+        - When the set is empty, returns ``_NOT_FOUND_SOURCE``.
+
+        Used by callers expecting a single ResolvedSource (legacy single-
+        source verifier modes, report headline DOI). The multi-source
+        verifier sees the full set via iteration and is unaffected.
         """
         if not self.sources:
             return _NOT_FOUND_SOURCE
-        return max(
-            self.sources,
-            key=lambda s: (s.found, s.title_match_score or 0.0, s.similarity_score or 0.0),
-        )
+        for source in self.sources:
+            if source.found:
+                return source
+        return self.sources[0]
 
     def found_sources(self) -> tuple[ResolvedSource, ...]:
         """All resolved entries with `found=True`. Empty tuple if none resolved."""

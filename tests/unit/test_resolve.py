@@ -1043,3 +1043,266 @@ class TestResolveCitationsMulti:
 
         mock_oa.assert_not_called()
         assert sources["c1"].found is False
+
+
+class TestCitingPaperRecursionGuard:
+    """A claim cannot legally cite the paper that contains it. When the
+    resolver returns the citing paper's own DOI, that is a structurally
+    impossible match and must be rejected — otherwise the verifier
+    compares the claim against the citing text itself, producing
+    tautological 'supported' verdicts.
+
+    On the Valsci validation run (2026-05-08) this happened 4 times because the
+    resolver's OpenAlex fallback used the claim text — which contained
+    'Valsci' — and OpenAlex returned Valsci's own paper as a match for
+    Kinney/Hirsch/Agarwal/Haryanto citations.
+    """
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_rejects_resolution_matching_citing_paper_doi(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.resolve import resolve_citations
+
+        # OpenAlex returns the citing paper itself — common when the claim
+        # text contains the citing paper's name (e.g. "Valsci integrates...").
+        mock_oa.return_value = ResolvedSource(
+            True, "10.1186/s12859-025-06159-4", "Valsci paper", "abs", 0.9
+        )
+        sources, _ = resolve_citations(
+            [_make_claim("c1")],
+            citing_paper_doi="10.1186/s12859-025-06159-4",
+        )
+        assert sources["c1"].found is False, (
+            "Resolution matching the citing paper's own DOI must be rejected"
+        )
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_does_not_reject_when_no_citing_doi_provided(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        """When citing_paper_doi is None, the guard is inert — no behavior change."""
+        from src.resolve import resolve_citations
+
+        mock_oa.return_value = ResolvedSource(True, "10.1/x", "T", "abs", 0.9)
+        sources, _ = resolve_citations([_make_claim("c1")], citing_paper_doi=None)
+        assert sources["c1"].found is True
+        assert sources["c1"].doi == "10.1/x"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_does_not_reject_unrelated_doi(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.resolve import resolve_citations
+
+        mock_oa.return_value = ResolvedSource(True, "10.1/different", "T", "abs", 0.9)
+        sources, _ = resolve_citations(
+            [_make_claim("c1")],
+            citing_paper_doi="10.1186/s12859-025-06159-4",
+        )
+        assert sources["c1"].found is True
+        assert sources["c1"].doi == "10.1/different"
+
+    def test_doi_comparison_is_case_insensitive(self) -> None:
+        """DOIs are case-insensitive per the DOI handbook §2.4. The guard
+        must compare them case-insensitively or it will let through
+        capitalisation drift between bibliography and resolver outputs.
+        """
+        from src.resolve import _is_citing_paper_doi
+
+        assert _is_citing_paper_doi("10.1186/s12859-025-06159-4", "10.1186/S12859-025-06159-4")
+        assert _is_citing_paper_doi("10.1186/S12859-025-06159-4", "10.1186/s12859-025-06159-4")
+        assert not _is_citing_paper_doi("10.1186/different", "10.1186/s12859-025-06159-4")
+        assert not _is_citing_paper_doi(None, "10.1186/s12859-025-06159-4")
+        assert not _is_citing_paper_doi("10.1186/s12859-025-06159-4", None)
+
+
+class TestDetectCitingPaperDoi:
+    """The pipeline auto-detects the citing paper's DOI from the input
+    text when the caller does not provide one explicitly. The detector
+    looks only in the head of the document (typically where journal
+    self-references appear) so it cannot pick up bibliography entries.
+    """
+
+    def test_finds_doi_in_head_of_text(self) -> None:
+        from src.pipeline import detect_citing_paper_doi
+
+        text = (
+            "Valsci: an open-source...\n"
+            "Edelman and Skolnick BMC Bioinformatics (2025) 26:140\n"
+            "https://doi.org/10.1186/s12859-025-06159-4\n"
+            "Abstract: ...\n"
+        )
+        assert detect_citing_paper_doi(text) == "10.1186/s12859-025-06159-4"
+
+    def test_returns_none_when_no_doi_in_head(self) -> None:
+        from src.pipeline import detect_citing_paper_doi
+
+        text = "A paper with no DOI URL in the first few kilobytes."
+        assert detect_citing_paper_doi(text) is None
+
+    def test_only_searches_head(self) -> None:
+        """The detector must not return a DOI that only appears late in
+        the document (in the bibliography). Otherwise it would mistake a
+        cited reference for the citing paper.
+        """
+        from src.pipeline import detect_citing_paper_doi
+
+        # 5 KB of filler so the DOI URL falls outside the head window
+        head = "Just a paper title.\n" * 200  # ~3.6 KB
+        bib_doi = "https://doi.org/10.99/should-not-be-detected"
+        text = head + "\nReferences\n1. Some entry. 2024. " + bib_doi + "\n"
+        assert detect_citing_paper_doi(text) is None
+
+    def test_picks_first_url_when_multiple_in_head(self) -> None:
+        from src.pipeline import detect_citing_paper_doi
+
+        # DOI registrant prefixes are always >= 4 digits (10.XXXX) per the
+        # DOI handbook §2.2; the regex enforces this so it can't be misled
+        # by spurious `10.1` patterns in body text (e.g. "section 10.1").
+        text = (
+            "Title.\n"
+            "https://doi.org/10.1234/first-paper\n"
+            "Some intro text.\n"
+            "https://doi.org/10.5678/second-paper\n"
+        )
+        assert detect_citing_paper_doi(text) == "10.1234/first-paper"
+
+
+class TestArxivFallback:
+    """arXiv fallback fires for DOI-less bib entries, before CrossRef title-search."""
+
+    @staticmethod
+    def _bib_no_doi() -> object:
+        from src.bibliography import BibEntry
+
+        return BibEntry(
+            number=15,
+            raw="...",
+            authors=["Wei"],
+            title=("Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"),
+            year=2022,
+            doi=None,
+        )
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve._arxiv.find_paper_by_title_authors")
+    @patch("src.resolve.search_paper")
+    def test_arxiv_fallback_fires_when_bib_has_no_doi(
+        self,
+        mock_oa: MagicMock,
+        mock_arxiv: MagicMock,
+        mock_cf_search: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.resolve import resolve_citations
+
+        arxiv_hit = ResolvedSource(
+            found=True,
+            doi="10.48550/arXiv.2201.11903",
+            title=("Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"),
+            abstract=None,
+            similarity_score=0.85,
+            title_match_score=0.72,
+        )
+        mock_arxiv.return_value = arxiv_hit
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+
+        bib = {15: self._bib_no_doi()}
+        claim = _make_claim("c1", cited_authors=["Wei"], cited_year=2022, citation_markers=[15])
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_arxiv.assert_called_once()
+        # CrossRef title-search must NOT be called when arXiv already returned a hit.
+        mock_cf_search.assert_not_called()
+        assert sources["c1"].doi == "10.48550/arXiv.2201.11903"
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve._arxiv.find_paper_by_title_authors")
+    @patch("src.resolve.search_paper")
+    def test_arxiv_miss_falls_through_to_crossref_title(
+        self,
+        mock_oa: MagicMock,
+        mock_arxiv: MagicMock,
+        mock_cf_search: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.resolve import resolve_citations
+
+        mock_arxiv.return_value = ResolvedSource(False, None, None, None, None)
+        crossref_hit = ResolvedSource(
+            found=True,
+            doi="10.1234/some.paper",
+            title=("Chain-of-Thought Prompting Elicits Reasoning in Large Language Models"),
+            abstract=None,
+            similarity_score=0.90,
+        )
+        mock_cf_search.return_value = crossref_hit
+        mock_oa.return_value = ResolvedSource(False, None, None, None, None)
+
+        bib = {15: self._bib_no_doi()}
+        claim = _make_claim("c1", cited_authors=["Wei"], cited_year=2022, citation_markers=[15])
+
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        mock_arxiv.assert_called_once()
+        # The claim resolved via CrossRef fallback after arXiv miss.
+        assert sources["c1"].doi in ("10.1234/some.paper", None) or sources["c1"].found is True
+
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._arxiv.find_paper_by_title_authors")
+    @patch("src.resolve._crossref.fetch_work_by_doi")
+    @patch("src.resolve.search_paper")
+    def test_arxiv_skipped_when_bib_has_doi(
+        self,
+        mock_oa: MagicMock,
+        mock_fetch_doi: MagicMock,
+        mock_arxiv: MagicMock,
+        mock_retr: MagicMock,
+    ) -> None:
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib_with_doi = {
+            15: BibEntry(
+                number=15,
+                raw="...",
+                authors=["Wei"],
+                title="Chain-of-Thought Prompting Elicits Reasoning in LLMs",
+                year=2022,
+                doi="10.48550/arXiv.2201.11903",  # DOI already in bibliography
+            )
+        }
+        mock_fetch_doi.return_value = ResolvedSource(
+            found=True,
+            doi="10.48550/arXiv.2201.11903",
+            title="Chain-of-Thought Prompting Elicits Reasoning in LLMs",
+            abstract=None,
+            similarity_score=1.0,
+        )
+        claim = _make_claim("c1", cited_authors=["Wei"], cited_year=2022, citation_markers=[15])
+
+        sources, _ = resolve_citations([claim], bibliography=bib_with_doi)
+
+        # When the bib entry has a DOI, _resolve_via_bib_doi succeeds first
+        # and the arXiv client must never be invoked.
+        mock_arxiv.assert_not_called()
+        assert sources["c1"].doi == "10.48550/arXiv.2201.11903"

@@ -31,6 +31,7 @@ Design contract:
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 import uuid
 from collections.abc import Sequence
@@ -46,6 +47,7 @@ from src.extract import extract_claims
 from src.fetch_fulltext import FulltextMethod, fetch_fulltext
 from src.models import (
     Claim,
+    OperationType,
     PaperChunk,
     ProvenanceStep,
     ResolvedSource,
@@ -69,7 +71,7 @@ def _hash(payload: str) -> str:
 def _make_step(
     *,
     claim_id: str,
-    operation: str,
+    operation: OperationType,
     input_repr: str,
     output_repr: str,
 ) -> ProvenanceStep:
@@ -83,7 +85,7 @@ def _make_step(
     return ProvenanceStep(
         step_id=str(uuid.uuid4()),
         claim_id=claim_id,
-        operation=operation,  # type: ignore[arg-type]
+        operation=operation,
         input_hash=_hash(input_repr),
         output_hash=_hash(output_repr),
         model_id=None,
@@ -131,6 +133,41 @@ def _select_step(
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 
+# Citing-paper DOI detection — see `detect_citing_paper_doi`. The head
+# window is large enough to catch journal headers and DOI lines that
+# typically appear within the first kilobyte but small enough to never
+# overlap with the bibliography section in a real paper.
+_CITING_DOI_HEAD_BYTES = 4096
+_DOI_URL_RE = re.compile(
+    r"https?://(?:dx\.)?doi\.org/(10\.\d{4,9}/\S+)",
+    re.IGNORECASE,
+)
+
+
+def detect_citing_paper_doi(text: str) -> str | None:
+    """Return the citing paper's DOI when discoverable in the document head.
+
+    Scans the first ``_CITING_DOI_HEAD_BYTES`` of ``text`` for a DOI URL
+    (``https://doi.org/...`` or ``https://dx.doi.org/...``). The head
+    window is the natural location for a journal-format paper's
+    self-DOI line; restricting to this window guarantees we never pick
+    up a bibliography entry by mistake.
+
+    Returns the bare DOI suffix (``10.xxxx/yyyy``), trailing punctuation
+    stripped. Returns ``None`` when no URL is present in the head.
+
+    Used by :func:`run_pipeline` to populate the citing-paper recursion
+    guard automatically when ``PipelineConfig.citing_paper_doi`` is
+    ``None``. Callers may pass an explicit DOI via the config to bypass
+    detection (e.g. when the citing paper has no inline DOI URL).
+    """
+    head = text[:_CITING_DOI_HEAD_BYTES]
+    match = _DOI_URL_RE.search(head)
+    if match is None:
+        return None
+    return match.group(1).rstrip(".,;:)")
+
+
 @dataclass(frozen=True)
 class PipelineConfig:
     """Explicit knobs passed by callers — no defaults read from environment.
@@ -154,6 +191,13 @@ class PipelineConfig:
     title_only_min_title_length: int = 20
     enable_multi_source: bool = True
     enable_citing_context_fallback: bool = True
+    # Citing-paper recursion guard: when set, the resolver rejects any
+    # candidate DOI that matches this. When `None` and `auto_detect_citing_doi`
+    # is True (default), `run_pipeline` calls `detect_citing_paper_doi(text)`
+    # to populate this from the input head. Set explicitly to override
+    # auto-detection for documents whose self-DOI is absent or non-canonical.
+    citing_paper_doi: str | None = None
+    auto_detect_citing_doi: bool = True
 
 
 @dataclass(frozen=True)
@@ -212,10 +256,12 @@ def verify_one_claim(
 
     if config.enable_multi_source and len(source_set) > 1 and len(source_set.found_sources()) > 0:
         passages_per_source: dict[str, list[PaperChunk]] = {}
+        methods_per_source: dict[str, FulltextMethod | str] = {}
         for sub_source in source_set:
             if not sub_source.found:
                 continue
             ft, sub_method = fetch_fulltext(sub_source, db_path=config.db_path)
+            methods_per_source[sub_source.doi or ""] = sub_method
             steps.append(_fetch_step(claim, sub_source, sub_method, ft))
             if ft is not None:
                 sub_chunks = chunk_paper(sub_source.doi or claim.claim_id, ft)
@@ -232,8 +278,7 @@ def verify_one_claim(
             api_key=config.api_key,
         )
         steps.extend(verify_steps)
-        # Backward-compat: report the primary source's fetch method.
-        _, fetch_method = fetch_fulltext(source, db_path=config.db_path)
+        fetch_method = methods_per_source.get(source.doi or "", "abstract_fallback")
         passages = tuple(passages_per_source.get(source.doi or "", []))
     else:
         fulltext, fetch_method = fetch_fulltext(source, db_path=config.db_path)
@@ -330,8 +375,18 @@ def run_pipeline(
         pre_parsed_bibliography if pre_parsed_bibliography is not None else parse_bibliography(text)
     )
 
+    citing_doi = config.citing_paper_doi
+    if citing_doi is None and config.auto_detect_citing_doi:
+        citing_doi = detect_citing_paper_doi(text)
+        if citing_doi is not None:
+            logger.info("citing_paper_doi_auto_detected", doi=citing_doi)
+
     source_sets, resolve_steps = resolve_citations_multi(
-        claims, bibliography=bibliography, api_key=config.api_key, db_path=config.db_path
+        claims,
+        bibliography=bibliography,
+        api_key=config.api_key,
+        db_path=config.db_path,
+        citing_paper_doi=citing_doi,
     )
     all_steps.extend(resolve_steps)
 
@@ -358,6 +413,7 @@ def run_pipeline(
 __all__ = [
     "ClaimVerification",
     "PipelineConfig",
+    "detect_citing_paper_doi",
     "run_pipeline",
     "verify_one_claim",
 ]

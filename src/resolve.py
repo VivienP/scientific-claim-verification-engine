@@ -10,11 +10,12 @@ from pathlib import Path
 import structlog
 
 from src.bibliography import BibEntry
+from src.clients import arxiv as _arxiv
 from src.clients import crossref as _crossref
-from src.clients import europepmc as _europepmc
 from src.clients import pubmed as _pubmed
 from src.clients.openalex import search_paper
 from src.models import Claim, ProvenanceStep, ResolvedSource, ResolvedSourceSet
+from src.resolve_enrich import _enrich_via_europepmc, _enrich_via_pubmed
 from src.resolve_utils import (
     _NOT_FOUND,
     _TITLE_MATCH_ACCEPT_THRESHOLD,
@@ -31,109 +32,43 @@ from src.resolve_utils import (
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 
-def _enrich_via_pubmed(
-    source: ResolvedSource,
-    *,
-    db_path: Path | None,
-) -> ResolvedSource:
-    """Populate pmcid and (if missing) abstract from PubMed via DOI->PMID->record.
+def _is_citing_paper_doi(candidate: str | None, citing: str | None) -> bool:
+    """Return True iff `candidate` is the citing paper's own DOI.
 
-    Bug A fix (S1-P1-A): the previous `_enrich_abstract_via_pubmed` short-circuited
-    whenever CrossRef had any abstract, silently dropping the pmcid. PubMed often
-    has the pmcid even when CrossRef does not (NIH-deposit OA mirrors), and
-    propagating it unblocks the PMC fulltext path in `fetch_fulltext`. This
-    function:
+    Per the DOI handbook §2.4, DOIs are case-insensitive. We compare in
+    lowercase so casing drift between bibliography text and resolver
+    output cannot let a self-citation slip through.
 
-    * fires for any found source with a DOI that lacks either abstract OR pmcid;
-    * uses `find_pmid_by_doi` -> `fetch_record` (preserving the full record);
-    * preserves the existing abstract when CrossRef's is longer than PubMed's,
-      and always backfills pmcid when PubMed exposes one.
-
-    Returns source unchanged on any miss (caching layer keeps repeat lookups cheap).
+    A claim cannot legally cite the paper that contains it. Treat any
+    such resolution as a structural error and reject. Without this guard,
+    OpenAlex/CrossRef searches whose query happens to contain the citing
+    paper's name (e.g. claim text "Valsci integrates...") return the
+    citing paper itself, and the verifier then compares the claim against
+    the citing text, producing tautological 'supported' verdicts.
     """
-    if not source.found or source.doi is None:
-        return source
-    if source.abstract and source.pmcid:
-        return source
-    pmid = _pubmed.find_pmid_by_doi(source.doi, db_path=db_path)
-    if pmid is None:
-        return source
-    record = _pubmed.fetch_record(pmid, db_path=db_path)
-    if record is None:
-        return source
-    new_abstract = _pick_longer_abstract(source.abstract, record.abstract)
-    new_pmcid = source.pmcid or _normalize_pmcid(record.pmcid)
-    if new_abstract == source.abstract and new_pmcid == source.pmcid:
-        return source
-    logger.info(
-        "pubmed_record_enriched",
-        doi=source.doi,
-        pmid=pmid,
-        abstract_added=source.abstract is None and record.abstract is not None,
-        pmcid_added=source.pmcid is None and new_pmcid is not None,
-    )
-    return dataclasses.replace(source, abstract=new_abstract, pmcid=new_pmcid)
+    if not candidate or not citing:
+        return False
+    return candidate.strip().lower() == citing.strip().lower()
 
 
-def _pick_longer_abstract(existing: str | None, candidate: str | None) -> str | None:
-    """Return whichever abstract is more informative (longer, prefers existing on ties)."""
-    if not existing:
-        return candidate
-    if not candidate:
-        return existing
-    return existing if len(existing) >= len(candidate) else candidate
-
-
-def _enrich_via_europepmc(
+def _reject_if_citing_paper(
     source: ResolvedSource,
+    citing_paper_doi: str | None,
     *,
-    db_path: Path | None,
+    claim_id: str,
 ) -> ResolvedSource:
-    """Fill abstract / pmcid / oa_url gaps from Europe PMC.
+    """Replace `source` with `_NOT_FOUND` when it matches the citing paper.
 
-    S2-P1: Europe PMC indexes biomedical OA mirrors that NCBI sometimes misses
-    and exposes abstracts through `abstractText` even when CrossRef returns
-    null. The S2-P0 OA discovery probe confirmed 100 % abstract coverage and
-    50 % OA URL coverage on a paywall-heavy benchmark sample.
-
-    Fires only when at least one of (abstract, pmcid, oa_url) is still missing
-    after `_enrich_via_pubmed`. Existing values are preserved on conflict
-    (longer abstract wins; pmcid / oa_url are filled only when None).
-
-    Returns source unchanged on any miss.
+    Logs a warning so silent recursion failures cannot hide in the noise.
     """
-    if not source.found or source.doi is None:
-        return source
-    if source.abstract and source.pmcid and source.oa_url:
-        return source
-    record = _europepmc.fetch_record(source.doi, db_path=db_path)
-    if record is None:
-        return source
-
-    new_abstract = _pick_longer_abstract(source.abstract, record.abstract)
-    new_pmcid = source.pmcid or record.pmcid
-    new_oa_url = source.oa_url or record.pdf_url or record.html_url
-
-    if (
-        new_abstract == source.abstract
-        and new_pmcid == source.pmcid
-        and new_oa_url == source.oa_url
-    ):
-        return source
-
-    logger.info(
-        "europepmc_enriched",
-        doi=source.doi,
-        abstract_added=source.abstract is None and record.abstract is not None,
-        pmcid_added=source.pmcid is None and new_pmcid is not None,
-        oa_url_added=source.oa_url is None and new_oa_url is not None,
-    )
-    return dataclasses.replace(
-        source,
-        abstract=new_abstract,
-        pmcid=new_pmcid,
-        oa_url=new_oa_url,
-    )
+    if _is_citing_paper_doi(source.doi, citing_paper_doi):
+        logger.warning(
+            "resolve_rejected_citing_paper_self_match",
+            claim_id=claim_id,
+            doi=source.doi,
+        )
+        return _NOT_FOUND
+    return source
 
 
 def _resolve_via_bib_doi(entry: BibEntry, *, db_path: Path | None) -> ResolvedSource:
@@ -170,6 +105,23 @@ def _resolve_via_bib_pmid(entry: BibEntry, *, db_path: Path | None) -> ResolvedS
         abstract=record.abstract,
         doi=record.doi,
         pmcid=record.pmcid,
+    )
+
+
+def _resolve_via_arxiv_title(entry: BibEntry, *, db_path: Path | None) -> ResolvedSource:
+    """Search arXiv by title + authors for a DOI-less bibliography entry.
+
+    Inserted before CrossRef title-search so ML/AI preprints (which lack a
+    journal DOI in the bibliography) are caught at their natural authority
+    rather than mis-matched to an unrelated journal record.
+    """
+    if not entry.title:
+        return _NOT_FOUND
+    return _arxiv.find_paper_by_title_authors(
+        entry.title,
+        entry.authors,
+        entry.year,
+        db_path=db_path,
     )
 
 
@@ -236,6 +188,8 @@ def _resolve_for_bib_entry(
     if not source.found and (bib_entry.pmid or bib_entry.pmcid):
         source = _resolve_via_bib_pmid(bib_entry, db_path=db_path)
     if not source.found and bib_entry.title:
+        source = _resolve_via_arxiv_title(bib_entry, db_path=db_path)
+    if not source.found and bib_entry.title:
         source = _resolve_via_bib_crossref_title(bib_entry, claim, db_path=db_path)
     if not source.found and bib_entry.title:
         source = _resolve_via_pubmed_title(bib_entry, db_path=db_path)
@@ -262,6 +216,7 @@ def resolve_citations_multi(
     api_key: str | None = None,
     db_path: Path | None = None,
     bibliography: dict[int, BibEntry] | None = None,
+    citing_paper_doi: str | None = None,
 ) -> tuple[dict[str, ResolvedSourceSet], list[ProvenanceStep]]:
     """Resolve every bibliography marker on each claim into a ResolvedSourceSet.
 
@@ -291,6 +246,7 @@ def resolve_citations_multi(
                 if entry is None:
                     continue
                 source = _resolve_for_bib_entry(entry, claim, api_key=api_key, db_path=db_path)
+                source = _reject_if_citing_paper(source, citing_paper_doi, claim_id=claim.claim_id)
                 per_marker_sources.append(source)
                 logger.debug(
                     "multi_resolve_marker",
@@ -305,7 +261,11 @@ def resolve_citations_multi(
             # via the existing resolve_citations path so semantics align with
             # the legacy primary-source API.
             singles, single_steps = resolve_citations(
-                [claim], api_key=api_key, db_path=db_path, bibliography=bibliography
+                [claim],
+                api_key=api_key,
+                db_path=db_path,
+                bibliography=bibliography,
+                citing_paper_doi=citing_paper_doi,
             )
             per_marker_sources = [singles[claim.claim_id]]
             steps.extend(single_steps)
@@ -345,6 +305,7 @@ def resolve_citations(
     api_key: str | None = None,
     db_path: Path | None = None,
     bibliography: dict[int, BibEntry] | None = None,
+    citing_paper_doi: str | None = None,
 ) -> tuple[dict[str, ResolvedSource], list[ProvenanceStep]]:
     """Resolve each claim's cited source via OpenAlex.
 
@@ -406,6 +367,15 @@ def resolve_citations(
                         pmcid=bib_match.pmcid,
                     )
             if not source.found and bib_match is not None and bib_match.title:
+                source = _resolve_via_arxiv_title(bib_match, db_path=db_path)
+                if source.found:
+                    logger.info(
+                        "resolve_via_arxiv_title",
+                        claim_id=claim.claim_id,
+                        bib_number=bib_match.number,
+                        doi=source.doi,
+                    )
+            if not source.found and bib_match is not None and bib_match.title:
                 source = _resolve_via_bib_crossref_title(bib_match, claim, db_path=db_path)
                 if source.found:
                     logger.info(
@@ -434,6 +404,11 @@ def resolve_citations(
                     if cf_source.found:
                         source = cf_source
                         logger.info("crossref_fallback_success", claim_id=claim.claim_id)
+
+        # Reject self-citations (citing paper resolved to itself). Must run
+        # AFTER all resolution paths and BEFORE retraction/enrichment so we
+        # do not waste HTTP calls on a structurally-impossible match.
+        source = _reject_if_citing_paper(source, citing_paper_doi, claim_id=claim.claim_id)
 
         if source.doi is not None:
             retracted = _crossref.check_retraction(source.doi, db_path=db_path)

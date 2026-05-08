@@ -2,9 +2,12 @@
 
 The fixture intentionally contains en-dashes in page ranges to mirror
 BibTeX-rendered bibliographies. RUF001 (ambiguous Unicode) is disabled
-file-wide so the test input matches real-world data.
+file-wide so the test input matches real-world data. E501 (line length)
+is also disabled file-wide because the BMC-format fixtures are real
+bibliography entries and breaking them across lines would change the
+text the parser sees and defeat the test's purpose.
 """
-# ruff: noqa: RUF001
+# ruff: noqa: RUF001, E501
 
 from __future__ import annotations
 
@@ -120,3 +123,206 @@ class TestParseBibliography:
         entries = parse_bibliography(text)
         assert 1 not in entries
         assert 2 in entries
+
+
+# Journal-numbered format ("1. Author A, ..." inline) — used by BMC, Nature,
+# Cell, NEJM, JAMA and most biomedical journals. Distinct from the LaTeX
+# bracket-on-own-line format above.
+_BMC_SAMPLE = """Background
+
+Some background text [1] referencing an entry.
+
+References
+
+1. Agarwal S, Laradji IH, Charlin L, Pal C. LitLLM: a toolkit for scientific literature review (No. arXiv:2402.01788). 2024. arXiv. https://doi.org/10.48550/arXiv.2402.01788.
+
+2. Haddaway NR, Bethel A, Dicks LV, Koricheva J, Macura B, Petrokofsky G, Pullin AS, Savilaakso S, Stewart GB. Eight problems with literature reviews and how to fix them. Nat Ecol Evol. 2020;4(12):1582-9. https://doi.org/10.1038/s41559-020-01295-x.
+
+5. Hirsch JE. An index to quantify an individual's scientific research output. Proc Natl Acad Sci USA. 2005;102(46):16569-72. https://doi.org/10.1073/pnas.0507655102.
+
+10. Nicholson JM, Mordaunt M, Lopez P, Uppala A, Rosati D, Rodrigues NP, Grabitz P, Rife SC. scite: a smart citation index that displays the context of citations and classifies their intent using deep learning. Quant Sci Stud. 2021;2(3):882-98. https://doi.org/10.1162/qss_a_00146.
+
+15. Wei J, Wang X, Schuurmans D, Bosma M, Ichter B, Xia F, Chi EH, Le QV, Zhou D. Chain-of-thought prompting elicits reasoning in large language models. In: Proceedings of the 36th International Conference on neural information processing systems, 2022; 24824-24837.
+"""
+
+
+class TestParseBibliographyJournalNumbered:
+    """The BMC/journal '1. Author A, ...' format must parse to the same
+    BibEntry shape as the bracket-on-own-line LaTeX format. The DOI is the
+    most important field — `_resolve_via_bib_doi` is the gold path that
+    bypasses every lossy author/year search.
+    """
+
+    def test_finds_all_numbered_entries(self) -> None:
+        entries = parse_bibliography(_BMC_SAMPLE)
+        assert set(entries.keys()) == {1, 2, 5, 10, 15}
+
+    def test_extracts_doi_from_https_url(self) -> None:
+        entries = parse_bibliography(_BMC_SAMPLE)
+        assert entries[1].doi == "10.48550/arXiv.2402.01788"
+        assert entries[2].doi == "10.1038/s41559-020-01295-x"
+        assert entries[5].doi == "10.1073/pnas.0507655102"
+        assert entries[10].doi == "10.1162/qss_a_00146"
+
+    def test_extracts_authors(self) -> None:
+        entries = parse_bibliography(_BMC_SAMPLE)
+        # First entry: "Agarwal S, Laradji IH, Charlin L, Pal C."
+        # We expect the surnames preserved (initials dropped per existing convention).
+        assert entries[1].authors[0] == "Agarwal"
+        assert "Laradji" in entries[1].authors
+        assert "Charlin" in entries[1].authors
+        assert "Pal" in entries[1].authors
+        # Long author list with mixed initials — surnames preserved
+        assert entries[2].authors[0] == "Haddaway"
+        assert "Stewart" in entries[2].authors
+
+    def test_extracts_year(self) -> None:
+        entries = parse_bibliography(_BMC_SAMPLE)
+        assert entries[1].year == 2024
+        assert entries[2].year == 2020
+        assert entries[5].year == 2005
+        assert entries[10].year == 2021
+        assert entries[15].year == 2022
+
+    def test_extracts_title(self) -> None:
+        entries = parse_bibliography(_BMC_SAMPLE)
+        # Titles are not in quotes in this format — captured via period-segmented heuristic
+        # We accept any extraction that contains the salient title tokens
+        assert "litllm" in entries[1].title.lower()
+        assert "eight problems" in entries[2].title.lower()
+        assert (
+            "quantify" in entries[5].title.lower()
+            or "h-index" in entries[5].title.lower()
+            or "scientific research output" in entries[5].title.lower()
+        )
+        assert "scite" in entries[10].title.lower()
+        assert (
+            "chain-of-thought" in entries[15].title.lower()
+            or "chain of thought" in entries[15].title.lower()
+        )
+
+    def test_does_not_pick_up_inline_bracket_citations_as_entries(self) -> None:
+        # The Background section contains a `[1]` citation marker that is
+        # NOT a bibliography entry. The parser must not be confused by it.
+        # Specifically, the `[1]` in the body text must not produce a
+        # spurious entry from the surrounding background prose.
+        entries = parse_bibliography(_BMC_SAMPLE)
+        # entry 1 must come from the References section (LitLLM), not from
+        # the background prose
+        assert "litllm" in entries[1].title.lower() or "agarwal" in str(entries[1].authors).lower()
+
+
+_INLINE_BRACKET_SAMPLE = """References
+
+[1] Smith J, Doe A. A study on something. Journal of Things. 2020;5:100-110. doi: 10.1234/abc.
+
+[2] Roe B. Another paper. Nature. 2021;500:1-5. doi: 10.5678/xyz.
+"""
+
+
+class TestParseBibliographyInlineBracket:
+    """The inline bracket format `[N] Author...` — used by some preprints
+    and arXiv listings. Number and content on the same line.
+    """
+
+    def test_finds_inline_bracket_entries(self) -> None:
+        entries = parse_bibliography(_INLINE_BRACKET_SAMPLE)
+        assert set(entries.keys()) == {1, 2}
+
+    def test_extracts_inline_bracket_doi(self) -> None:
+        entries = parse_bibliography(_INLINE_BRACKET_SAMPLE)
+        assert entries[1].doi == "10.1234/abc"
+        assert entries[2].doi == "10.5678/xyz"
+
+    def test_extracts_inline_bracket_year(self) -> None:
+        entries = parse_bibliography(_INLINE_BRACKET_SAMPLE)
+        assert entries[1].year == 2020
+        assert entries[2].year == 2021
+
+    def test_extracts_inline_bracket_authors(self) -> None:
+        entries = parse_bibliography(_INLINE_BRACKET_SAMPLE)
+        assert "Smith" in entries[1].authors
+        assert "Doe" in entries[1].authors
+        assert "Roe" in entries[2].authors
+
+
+class TestParseBibliographyRobustness:
+    """Cross-format robustness — the parser must not produce false entries
+    or silently drop real ones across format variations.
+    """
+
+    def test_silent_zero_return_is_a_bug(self) -> None:
+        # If the input has a clear References section with numbered entries
+        # in a recognizable format, returning {} is a parser bug — not a
+        # legitimate "no references found" outcome. This regression test
+        # locks in the BMC-format support so future edits can't regress.
+        entries = parse_bibliography(_BMC_SAMPLE)
+        assert len(entries) > 0, (
+            "Parser silently returned no entries on a recognizable BMC-format "
+            "bibliography. This is the regression that broke the Valsci validation run."
+        )
+
+    def test_mixed_doi_url_styles(self) -> None:
+        # `https://doi.org/...`, `doi:...`, and `https://dx.doi.org/...` all valid
+        text = """References
+
+1. A. Title A. 2020. doi: 10.1111/aaa.
+2. B. Title B. 2021. https://doi.org/10.2222/bbb.
+3. C. Title C. 2022. https://dx.doi.org/10.3333/ccc.
+"""
+        entries = parse_bibliography(text)
+        assert entries[1].doi == "10.1111/aaa"
+        assert entries[2].doi == "10.2222/bbb"
+        assert entries[3].doi == "10.3333/ccc"
+
+    def test_real_valsci_input_parses(self) -> None:
+        """End-to-end regression on the actual Valsci validation run input.
+
+        This file is the canonical fixture for the bibliography parser fix —
+        if this test fails after a future edit, the BMC-format support
+        regressed.
+        """
+        from pathlib import Path
+
+        repo_root = Path(__file__).resolve().parents[2]
+        valsci = repo_root / "benchmarks" / "real_papers" / "valsci_brice_2025" / "input.txt"
+        if not valsci.exists():
+            return  # skip when fixture absent (e.g. fresh clone without real_papers fixture)
+        text = valsci.read_text(encoding="utf-8")
+        entries = parse_bibliography(text)
+        # Valsci has 15 numbered references
+        assert len(entries) == 15, (
+            f"expected 15 entries, got {len(entries)}: {sorted(entries.keys())}"
+        )
+        # Spot-check a few specific DOIs
+        assert entries[2].doi == "10.1038/s41559-020-01295-x"  # Haddaway
+        assert entries[5].doi == "10.1073/pnas.0507655102"  # Hirsch H-index
+        assert entries[10].doi == "10.1162/qss_a_00146"  # Nicholson Scite
+
+    def test_year_extraction_skips_arxiv_id_prefix(self) -> None:
+        """arXiv preprint IDs of the form `arXiv:YYMM.NNNNN` start with a
+        year-like 4-digit token (e.g. `2005.11401` for May 2020). A naive
+        first-match year regex picks the arXiv ID prefix instead of the
+        actual publication year that appears later in the citation.
+        Regression test for the Valsci validation run, where 3 entries had
+        their year mis-extracted from arXiv IDs.
+        """
+        text = (
+            "References\n\n"
+            "1. Lewis P. Retrieval-augmented generation for knowledge-intensive NLP "
+            "tasks (No. arXiv:2005.11401). 2021. arXiv. https://doi.org/10.48550/arXiv.2005.11401.\n\n"
+            "2. Lo K. S2ORC: the semantic scholar open research corpus "
+            "(No. arXiv:1911.02782). 2020. arXiv. https://doi.org/10.48550/arXiv.1911.02782.\n\n"
+            "3. Wadden D. Fact or Fiction (No. arXiv:2004.14974). 2020. arXiv. "
+            "https://doi.org/10.48550/arXiv.2004.14974.\n"
+        )
+        entries = parse_bibliography(text)
+        assert entries[1].year == 2021, (
+            f"expected 2021, got {entries[1].year} (likely picked up arXiv ID 2005)"
+        )
+        assert entries[2].year == 2020, (
+            f"expected 2020, got {entries[2].year} (likely picked up arXiv ID 1911)"
+        )
+        assert entries[3].year == 2020, (
+            f"expected 2020, got {entries[3].year} (likely picked up arXiv ID 2004)"
+        )

@@ -73,13 +73,38 @@ class TestResolvedSourceSet:
             title_match_score=title_match,
         )
 
-    def test_primary_picks_highest_title_match(self) -> None:
+    def test_primary_returns_first_found_in_marker_order(self) -> None:
+        """When the user writes `[7, 9]` they are stating that ref [7] is the
+        primary citation by textual intent, regardless of which retrieved
+        source happens to score higher on title-match. `primary()` must
+        honor that order so the report's headline DOI matches the
+        author's first-listed marker.
+
+        Bug A (2026-05-08, Valsci validation run): for `[7, 9]` (Kinney+Lo), both
+        sources resolved correctly, but `primary()` used to pick Lo because
+        its title_match_score was higher — even though the user wrote
+        Kinney first. The new contract: marker order is primary; scoring
+        is only a tiebreaker when no source is found in marker order.
+        """
         from src.models import ResolvedSourceSet
 
-        weak = self._src(doi="10.1/weak", title_match=0.3)
-        strong = self._src(doi="10.1/strong", title_match=0.95)
-        rs_set = ResolvedSourceSet(sources=(weak, strong), citation_markers=(81, 82))
-        assert rs_set.primary().doi == "10.1/strong"
+        # marker [7] → kinney (lower title_match), marker [9] → lo (higher)
+        kinney = self._src(doi="10.1/kinney", title_match=0.4)
+        lo = self._src(doi="10.1/lo", title_match=1.0)
+        rs_set = ResolvedSourceSet(sources=(kinney, lo), citation_markers=(7, 9))
+        assert rs_set.primary().doi == "10.1/kinney", (
+            "First-marker source must be the primary regardless of score"
+        )
+
+    def test_primary_skips_unfound_to_first_found_in_marker_order(self) -> None:
+        from src.models import ResolvedSourceSet
+
+        unfound = self._src(found=False, doi=None, title_match=None)
+        found_a = self._src(doi="10.1/a", title_match=0.3)
+        found_b = self._src(doi="10.1/b", title_match=0.95)
+        # Marker [1] failed; among found sources [2] is first → wins
+        rs_set = ResolvedSourceSet(sources=(unfound, found_a, found_b), citation_markers=(1, 2, 3))
+        assert rs_set.primary().doi == "10.1/a"
 
     def test_primary_prefers_found_over_unfound(self) -> None:
         from src.models import ResolvedSourceSet
@@ -89,6 +114,19 @@ class TestResolvedSourceSet:
         rs_set = ResolvedSourceSet(sources=(unfound, found), citation_markers=(1, 2))
         assert rs_set.primary().doi == "10.1/y"
 
+    def test_primary_returns_first_unfound_when_all_failed(self) -> None:
+        """When no source resolved, return the first attempt (still unfound-shaped)
+        rather than picking arbitrarily. This preserves the marker order
+        invariant even on full-failure runs.
+        """
+        from src.models import ResolvedSourceSet
+
+        u1 = self._src(found=False, doi=None, title_match=None)
+        u2 = self._src(found=False, doi=None, title_match=None)
+        rs_set = ResolvedSourceSet(sources=(u1, u2), citation_markers=(7, 9))
+        primary = rs_set.primary()
+        assert primary.found is False
+
     def test_primary_returns_not_found_on_empty(self) -> None:
         from src.models import ResolvedSourceSet
 
@@ -96,6 +134,14 @@ class TestResolvedSourceSet:
         primary = rs_set.primary()
         assert primary.found is False
         assert primary.doi is None
+
+    def test_primary_single_source_returns_it(self) -> None:
+        """Single-source claims (the common case) are unaffected by this change."""
+        from src.models import ResolvedSourceSet
+
+        only = self._src(doi="10.1/only", title_match=0.7)
+        rs_set = ResolvedSourceSet(sources=(only,), citation_markers=(42,))
+        assert rs_set.primary().doi == "10.1/only"
 
     def test_found_sources_filters_unresolved(self) -> None:
         from src.models import ResolvedSourceSet

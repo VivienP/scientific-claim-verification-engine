@@ -26,14 +26,11 @@ from dotenv import load_dotenv
 from eval.e2e.measurement import Metrics, align_claims, compute_metrics
 from eval.e2e.schema import ReferencePaper, load_reference_paper
 from src.bibliography import parse_bibliography
-from src.bm25_selector import select_passages
-from src.chunker import chunk_paper
 from src.extract import extract_claims
-from src.fetch_fulltext import fetch_fulltext
 from src.models import Claim, ResolvedSource, VerificationResult
+from src.pipeline import PipelineConfig, verify_one_claim
 from src.report import _compute_cost
-from src.resolve import resolve_citations
-from src.verify import verify_claim, verify_claim_fulltext_with_numeric
+from src.resolve import resolve_citations_multi
 
 load_dotenv()
 
@@ -59,8 +56,11 @@ def _run_pipeline(
     logger.info("e2e_extract_complete", n_claims=len(claims))
 
     bibliography = parse_bibliography(text)
-    sources, resolve_steps = resolve_citations(claims, bibliography=bibliography)
+    source_sets, resolve_steps = resolve_citations_multi(claims, bibliography=bibliography)
     all_steps.extend(resolve_steps)
+    sources: dict[str, ResolvedSource] = {
+        cid: rs_set.primary() for cid, rs_set in source_sets.items()
+    }
     logger.info(
         "e2e_resolve_complete",
         n_sources=len(sources),
@@ -76,19 +76,14 @@ def _run_pipeline(
         )
         sys.exit(1)
 
+    config = PipelineConfig()
     verifications: dict[str, VerificationResult] = {}
     for claim in claims:
-        source = sources[claim.claim_id]
-        fulltext, _method = fetch_fulltext(source)
-        if fulltext is not None:
-            chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
-            passages = select_passages(claim.claim_text, chunks, top_k=3)
-            result, verify_steps = verify_claim_fulltext_with_numeric(claim, source, passages)
-            all_steps.extend(verify_steps)
-        else:
-            result, verify_step = verify_claim(claim, source)
-            all_steps.append(verify_step)
-        verifications[claim.claim_id] = result
+        cv = verify_one_claim(
+            claim, source_sets[claim.claim_id], citing_paper_text=text, config=config
+        )
+        all_steps.extend(cv.steps)
+        verifications[claim.claim_id] = cv.result
 
         cumulative_cost = _compute_cost(all_steps)
         if cumulative_cost > max_cost_usd:

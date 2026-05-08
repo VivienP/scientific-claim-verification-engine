@@ -89,6 +89,7 @@ def test_run_pipeline_passes_parsed_bibliography_to_resolver(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     import scripts.measure_e2e_recall as measure
+    from src.models import ResolvedSourceSet
 
     claim = _make_extracted(
         "e1",
@@ -99,21 +100,30 @@ def test_run_pipeline_passes_parsed_bibliography_to_resolver(
     source = _make_source(found=True, doi=None)
     captured: dict[str, object] = {}
 
-    def fake_resolve(
+    def fake_resolve_multi(
         claims: list[Claim], **kwargs: object
-    ) -> tuple[dict[str, ResolvedSource], list[object]]:
+    ) -> tuple[dict[str, ResolvedSourceSet], list[object]]:
         captured["claims"] = claims
         captured["bibliography"] = kwargs.get("bibliography")
-        return {"e1": source}, []
+        rs_set = ResolvedSourceSet(sources=(source,), citation_markers=())
+        return {"e1": rs_set}, []
+
+    def fake_verify_one_claim(
+        claim_arg: Claim, source_set_arg: object, *, citing_paper_text: str | None, config: object
+    ) -> object:
+        from src.pipeline import ClaimVerification
+
+        return ClaimVerification(
+            claim=claim_arg,
+            source=source,
+            source_set=source_set_arg,  # type: ignore[arg-type]
+            result=_make_verification("supported"),
+            fetch_method="abstract_fallback",
+        )
 
     monkeypatch.setattr(measure, "extract_claims", lambda text: ([claim], object()))
-    monkeypatch.setattr(measure, "resolve_citations", fake_resolve)
-    monkeypatch.setattr(measure, "fetch_fulltext", lambda resolved: (None, "abstract_fallback"))
-    monkeypatch.setattr(
-        measure,
-        "verify_claim",
-        lambda claim_arg, source_arg: (_make_verification("supported"), object()),
-    )
+    monkeypatch.setattr(measure, "resolve_citations_multi", fake_resolve_multi)
+    monkeypatch.setattr(measure, "verify_one_claim", fake_verify_one_claim)
     monkeypatch.setattr(measure, "_compute_cost", lambda steps: 0.0)
 
     text = "Body claim [1].\n\nReferences\n[1]\nSmith A. 'Reference title'. In: J (2020).\n"

@@ -21,6 +21,7 @@ from src.models import (
     ResolvedSource,
     VerificationResult,
 )
+from src.prompt_guard import PROMPT_INJECTION_GUARD
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -30,7 +31,10 @@ MODEL_ID = "claude-sonnet-4-6"
 # System prompts (all > 1024 tokens → prompt-cached at call sites)
 # ---------------------------------------------------------------------------
 
-_SYSTEM_PROMPT = """\
+_SYSTEM_PROMPT = (
+    PROMPT_INJECTION_GUARD
+    + "\n"
+    + """\
 You are a scientific claim verifier. Your task is to determine whether a source abstract supports, contradicts, or does not address a given scientific claim. The user is auditing whether the cited source actually backs the claim it is attached to.
 
 Verification statuses:
@@ -87,9 +91,13 @@ Remember:
 - Always cite the specific sentences or phrases from the abstract that justify your verdict.
 - Confidence should reflect your certainty, not the strength of the claim.
 """
+)
 
 
-_FULLTEXT_SYSTEM_PROMPT = """\
+_FULLTEXT_SYSTEM_PROMPT = (
+    PROMPT_INJECTION_GUARD
+    + "\n"
+    + """\
 You are a scientific claim verifier operating in full-text mode. Your task is to determine whether the provided source passages support, contradict, or do not address a given scientific claim. The user is auditing whether the cited source actually backs the claim it is attached to, so the distinction between "wrong citation" and "wrong topic" matters.
 
 You will receive a claim and a set of passages selected from the source paper using BM25 relevance ranking. Each passage is labeled with the section it came from (introduction, methods, results, discussion, or other) so you can weigh evidence appropriately:
@@ -156,9 +164,13 @@ Reminder of how to weigh evidence:
 - source_section should match the section attribute of the passage(s) you cite. If you cite multiple passages from different sections, choose the one whose section best characterizes the evidence (Results for outcome data, Methods for design, Discussion for interpretation).
 - Confidence should reflect your certainty in the verdict, not the strength or specificity of the claim itself.
 """
+)
 
 
-_TITLE_ONLY_SYSTEM_PROMPT = """\
+_TITLE_ONLY_SYSTEM_PROMPT = (
+    PROMPT_INJECTION_GUARD
+    + "\n"
+    + """\
 You are a scientific claim verifier operating in title-only mode. The source's abstract and full text are unavailable; only the source's title (and journal when present) is provided. Your task is to determine whether the title alone is *consistent with* the claim, recognizing that title-only evidence cannot establish full support.
 
 Verification statuses (capped — supported is NEVER allowed in this mode):
@@ -182,9 +194,13 @@ Return ONLY a JSON object in this exact format:
 
 Your response must be valid JSON only — no markdown, no explanatory text outside the JSON.
 """
+)
 
 
-_CITING_CONTEXT_SYSTEM_PROMPT = """\
+_CITING_CONTEXT_SYSTEM_PROMPT = (
+    PROMPT_INJECTION_GUARD
+    + "\n"
+    + """\
 You are auditing a scientific paper for INTERNAL CONSISTENCY between a claim and the citing paper's own treatment of a cited reference. The cited source cannot be independently retrieved. You are NOT verifying the claim against the cited source itself; you are checking whether the citing paper's surrounding text is consistent with the claim being attributed to that citation.
 
 This is structurally weaker evidence than abstract / title / fulltext verification. You MUST NOT return `supported`.
@@ -220,6 +236,7 @@ Return ONLY a JSON object:
 
 Your response must be valid JSON only — no markdown, no explanatory text outside the JSON.
 """
+)
 
 # ---------------------------------------------------------------------------
 # Shared constants

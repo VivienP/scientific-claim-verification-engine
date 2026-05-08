@@ -15,12 +15,16 @@ import structlog
 from anthropic.types import TextBlock, Usage
 
 from src.models import Claim, ProvenanceStep
+from src.prompt_guard import PROMPT_INJECTION_GUARD
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 MODEL_ID = "claude-sonnet-4-6"
 
-_SYSTEM_PROMPT = """\
+_SYSTEM_PROMPT = (
+    PROMPT_INJECTION_GUARD
+    + "\n"
+    + """\
 You are a scientific claim extractor. Your task is to identify verifiable factual claims in scientific text that cite specific sources.
 
 A verifiable claim must:
@@ -71,6 +75,7 @@ Additional context on verifiability:
 
 Your response must be valid JSON only — no explanatory text, no markdown, no code blocks.
 """
+)
 
 
 def _hash(data: str) -> str:

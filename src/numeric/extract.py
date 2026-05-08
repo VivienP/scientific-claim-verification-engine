@@ -19,6 +19,7 @@ from anthropic.types import TextBlock, Usage
 
 from src.models import ProvenanceStep
 from src.numeric.checks import NumericAssertion, NumericRole
+from src.prompt_guard import PROMPT_INJECTION_GUARD
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -26,7 +27,10 @@ MODEL_ID = "claude-sonnet-4-6"
 
 _VALID_ROLES: set[str] = {"primary", "ci_low", "ci_high", "comparator", "p_value", "n"}
 
-_SYSTEM_PROMPT = """\
+_SYSTEM_PROMPT = (
+    PROMPT_INJECTION_GUARD
+    + "\n"
+    + """\
 You are a structured-data extractor for scientific numeric assertions.
 
 Your task: given a scientific claim that may contain odds ratios, confidence intervals, p-values, sample sizes, percentages, or other quantitative reports, extract each numeric assertion as a structured record so a downstream deterministic engine can run consistency checks.
@@ -85,6 +89,7 @@ Extraction:
 
 Reminder: emit JSON only, no commentary, no markdown.
 """
+)
 
 
 def _hash(data: str) -> str:

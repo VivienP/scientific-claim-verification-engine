@@ -30,6 +30,10 @@ Design contract:
 
 from __future__ import annotations
 
+import hashlib
+import time
+import uuid
+from collections.abc import Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -56,6 +60,73 @@ from src.verify import (
     verify_claim_multi_source,
     verify_claim_title_only,
 )
+
+
+def _hash(payload: str) -> str:
+    return hashlib.sha256(payload.encode()).hexdigest()
+
+
+def _make_step(
+    *,
+    claim_id: str,
+    operation: str,
+    input_repr: str,
+    output_repr: str,
+) -> ProvenanceStep:
+    """Build a deterministic, model-free ProvenanceStep for retrieval / preprocessing.
+
+    These are the entries that satisfy the provenance-first rule for the
+    deterministic phases (fetch_fulltext, chunk_paper, select_passages).
+    LLM-emitting steps (verify, extract, etc.) are still produced inside
+    their own modules so they can attach token counts and cache-hit data.
+    """
+    return ProvenanceStep(
+        step_id=str(uuid.uuid4()),
+        claim_id=claim_id,
+        operation=operation,  # type: ignore[arg-type]
+        input_hash=_hash(input_repr),
+        output_hash=_hash(output_repr),
+        model_id=None,
+        timestamp=time.time(),
+        tokens_in=None,
+        tokens_out=None,
+        cache_hit=None,
+        confidence=None,
+    )
+
+
+def _fetch_step(
+    claim: Claim, source: ResolvedSource, method: str, fulltext: str | None
+) -> ProvenanceStep:
+    return _make_step(
+        claim_id=claim.claim_id,
+        operation="fetch_fulltext",
+        input_repr=repr((source.doi, source.pmcid, source.oa_url)),
+        output_repr=f"{method}|{len(fulltext or '')}",
+    )
+
+
+def _chunk_step(
+    claim: Claim, source: ResolvedSource, chunks: Sequence[PaperChunk]
+) -> ProvenanceStep:
+    return _make_step(
+        claim_id=claim.claim_id,
+        operation="chunk_paper",
+        input_repr=repr((source.doi or claim.claim_id, sum(len(c.text) for c in chunks))),
+        output_repr=repr([(c.section, c.char_start, c.char_end) for c in chunks]),
+    )
+
+
+def _select_step(
+    claim: Claim, chunks: Sequence[PaperChunk], passages: Sequence[PaperChunk]
+) -> ProvenanceStep:
+    return _make_step(
+        claim_id=claim.claim_id,
+        operation="select_passages",
+        input_repr=f"{len(chunks)}|{claim.claim_text[:120]}",
+        output_repr=repr([(p.section, p.char_start, p.char_end) for p in passages]),
+    )
+
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -144,12 +215,16 @@ def verify_one_claim(
         for sub_source in source_set:
             if not sub_source.found:
                 continue
-            ft, _ = fetch_fulltext(sub_source, db_path=config.db_path)
+            ft, sub_method = fetch_fulltext(sub_source, db_path=config.db_path)
+            steps.append(_fetch_step(claim, sub_source, sub_method, ft))
             if ft is not None:
                 sub_chunks = chunk_paper(sub_source.doi or claim.claim_id, ft)
-                passages_per_source[sub_source.doi or ""] = list(
+                steps.append(_chunk_step(claim, sub_source, sub_chunks))
+                sub_passages = list(
                     select_passages(claim.claim_text, sub_chunks, top_k=config.top_k_passages)
                 )
+                steps.append(_select_step(claim, sub_chunks, sub_passages))
+                passages_per_source[sub_source.doi or ""] = sub_passages
         result, verify_steps = verify_claim_multi_source(
             claim,
             source_set,
@@ -162,9 +237,13 @@ def verify_one_claim(
         passages = tuple(passages_per_source.get(source.doi or "", []))
     else:
         fulltext, fetch_method = fetch_fulltext(source, db_path=config.db_path)
+        steps.append(_fetch_step(claim, source, fetch_method, fulltext))
         if fulltext is not None:
             chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
-            passages = tuple(select_passages(claim.claim_text, chunks, top_k=config.top_k_passages))
+            steps.append(_chunk_step(claim, source, chunks))
+            selected = list(select_passages(claim.claim_text, chunks, top_k=config.top_k_passages))
+            steps.append(_select_step(claim, chunks, selected))
+            passages = tuple(selected)
             result, verify_steps = verify_claim_fulltext_with_numeric(
                 claim,
                 source,

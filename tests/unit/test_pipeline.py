@@ -149,7 +149,11 @@ class TestVerifyOneClaimRouting:
         rs_set = ResolvedSourceSet(sources=(_source(), _source()), citation_markers=(81, 82))
         cv = verify_one_claim(_claim(markers=[81, 82]), rs_set, config=PipelineConfig())
         mock_multi.assert_called_once()
-        assert len(cv.steps) == 2
+        # 2 fetch steps (per source) + 2 verify steps from mock = 4 total.
+        # When fetch returns None there is no chunk/select step.
+        assert len(cv.steps) == 4
+        assert sum(1 for s in cv.steps if s.operation == "fetch_fulltext") == 2
+        assert sum(1 for s in cv.steps if s.operation == "verify") == 2
 
     @patch("src.pipeline.fetch_fulltext")
     @patch("src.pipeline.verify_claim")
@@ -286,8 +290,10 @@ class TestRunPipeline:
         cvs, all_steps = run_pipeline("Some text [1].", config=PipelineConfig())
         assert len(cvs) == 1
         assert isinstance(cvs[0], ClaimVerification)
-        # extract_step + resolve_step + verify_step
-        assert len(all_steps) == 3
+        # extract_step + resolve_step + fetch_step + verify_step = 4
+        assert len(all_steps) == 4
+        ops = [s.operation for s in all_steps]
+        assert "fetch_fulltext" in ops
         mock_extract.assert_called_once()
         mock_parse_bib.assert_called_once()
 
@@ -386,6 +392,55 @@ class TestClaimVerificationShape:
         )
         with pytest.raises((AttributeError, TypeError)):
             cv.fetch_method = "other"  # type: ignore[misc]
+
+
+class TestProvenanceEmissionForRetrieval:
+    """provenance-first.md requires fetch / chunk / select to emit steps."""
+
+    @patch("src.pipeline.fetch_fulltext")
+    @patch("src.pipeline.chunk_paper")
+    @patch("src.pipeline.select_passages")
+    @patch("src.pipeline.verify_claim_fulltext_with_numeric")
+    def test_fulltext_path_emits_fetch_chunk_select_verify_steps(
+        self,
+        mock_ft_verify: MagicMock,
+        mock_select: MagicMock,
+        mock_chunk: MagicMock,
+        mock_fetch: MagicMock,
+    ) -> None:
+        mock_fetch.return_value = ("body", "oa_url_pdf")
+        chunk = PaperChunk(
+            doi="10.1/x",
+            section="results",
+            text="results body",
+            char_start=0,
+            char_end=12,
+        )
+        mock_chunk.return_value = [chunk]
+        mock_select.return_value = [chunk]
+        mock_ft_verify.return_value = (_result("supported", "quoted_passage"), [_step()])
+
+        rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
+        cv = verify_one_claim(_claim(), rs_set, config=PipelineConfig())
+
+        ops = [s.operation for s in cv.steps]
+        assert ops == ["fetch_fulltext", "chunk_paper", "select_passages", "verify"]
+        # Deterministic steps carry no model_id.
+        for s in cv.steps[:3]:
+            assert s.model_id is None
+            assert s.tokens_in is None
+
+    @patch("src.pipeline.fetch_fulltext")
+    @patch("src.pipeline.verify_claim")
+    def test_abstract_path_emits_fetch_then_verify(
+        self, mock_verify: MagicMock, mock_fetch: MagicMock
+    ) -> None:
+        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_verify.return_value = (_result(), _step())
+        rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
+        cv = verify_one_claim(_claim(), rs_set, config=PipelineConfig())
+        ops = [s.operation for s in cv.steps]
+        assert ops == ["fetch_fulltext", "verify"]
 
 
 # Avoid unused import warnings for PaperChunk in tests that don't use it directly.

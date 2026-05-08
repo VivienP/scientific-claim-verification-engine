@@ -14,6 +14,9 @@ VerificationStatus = Literal["supported", "unsupported", "not_addressed", "parti
 OperationType = Literal[
     "extract",
     "resolve",
+    "fetch_fulltext",
+    "chunk_paper",
+    "select_passages",
     "verify",
     "aggregate",
     "numeric_extract",

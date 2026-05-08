@@ -465,3 +465,78 @@ class TestVerifiabilityStatus:
             report = json.load(f)
 
         assert report["summary"]["verifiability_status"] == "low_citation_density"
+
+
+class TestUsageByStage:
+    """S4b-6: per-stage cost / token bucketing in report.summary.usage_by_stage."""
+
+    def test_buckets_steps_by_operation(self, tmp_path: Path) -> None:
+        from src.report import build_report
+
+        claims = [_make_claim("c1")]
+        sources = {"c1": _make_source()}
+        results = {"c1": _make_result()}
+        steps = [
+            _make_step("s1", "c1", operation="extract", tokens_in=200, tokens_out=80),
+            _make_step("s2", "c1", operation="resolve", tokens_in=None, tokens_out=None),
+            _make_step("s3", "c1", operation="verify", tokens_in=300, tokens_out=120),
+            _make_step("s4", "c1", operation="verify", tokens_in=250, tokens_out=100),
+        ]
+
+        run_dir = build_report("ub-001", "T.", claims, sources, results, steps, output_dir=tmp_path)
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        usage = report["summary"]["usage_by_stage"]
+        # The auto-emitted aggregate step is meta (it covers the report
+        # itself) and is intentionally excluded from per-stage usage so
+        # the operator sees the audited operations only.
+        assert set(usage.keys()) == {"extract", "resolve", "verify"}
+        # Verify is summed across both steps.
+        assert usage["verify"]["tokens_in"] == 550
+        assert usage["verify"]["tokens_out"] == 220
+        assert usage["verify"]["n_steps"] == 2
+        # Extract has its own bucket.
+        assert usage["extract"]["tokens_in"] == 200
+        assert usage["extract"]["n_steps"] == 1
+        # Resolve had no token data — bucket exists with zeros for visibility.
+        assert usage["resolve"]["tokens_in"] == 0
+        assert usage["resolve"]["n_steps"] == 1
+
+    def test_cache_hit_count_per_stage(self, tmp_path: Path) -> None:
+        from src.report import build_report
+
+        claims = [_make_claim("c1")]
+        sources = {"c1": _make_source()}
+        results = {"c1": _make_result()}
+        steps = [
+            _make_step("s1", "c1", operation="verify", cache_hit=True),
+            _make_step("s2", "c1", operation="verify", cache_hit=False),
+            _make_step("s3", "c1", operation="verify", cache_hit=True),
+        ]
+
+        run_dir = build_report("ub-002", "T.", claims, sources, results, steps, output_dir=tmp_path)
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["usage_by_stage"]["verify"]["n_cache_hits"] == 2
+
+    def test_per_stage_cost_sums_to_total(self, tmp_path: Path) -> None:
+        from src.report import build_report
+
+        claims = [_make_claim("c1")]
+        sources = {"c1": _make_source()}
+        results = {"c1": _make_result()}
+        steps = [
+            _make_step("s1", "c1", operation="extract", tokens_in=200, tokens_out=80),
+            _make_step("s2", "c1", operation="verify", tokens_in=300, tokens_out=120),
+        ]
+
+        run_dir = build_report("ub-003", "T.", claims, sources, results, steps, output_dir=tmp_path)
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        usage = report["summary"]["usage_by_stage"]
+        per_stage_total = sum(float(b["cost_usd"]) for b in usage.values())
+        # The auto-emitted aggregate step contributes 0 cost (no tokens).
+        assert per_stage_total == report["summary"]["total_cost_usd"]

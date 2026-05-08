@@ -441,7 +441,10 @@ class TestVerifyClaimMultiSource:
         result, steps = verify_claim_multi_source(_make_claim(), rs_set)
 
         assert result.status == "supported"
-        assert len(steps) == 2  # one verify call per source
+        assert len(steps) == 3  # one verify step per source + one aggregate step
+        assert steps[-1].operation == "aggregate"
+        assert steps[-1].model_id is None
+        assert steps[-1].claim_id == _make_claim().claim_id
         assert "[10.1/a] supported" in result.explanation
         assert "[10.1/b] supported" in result.explanation
 
@@ -483,8 +486,9 @@ class TestVerifyClaimMultiSource:
         )
         rs_set = ResolvedSourceSet(sources=(s1, s2), citation_markers=(81, 82))
 
-        result, _steps = verify_claim_multi_source(_make_claim(), rs_set)
+        result, steps = verify_claim_multi_source(_make_claim(), rs_set)
         assert result.status == "partially_supported"
+        assert steps[-1].operation == "aggregate"
 
 
 class TestVerifyClaimCitingContext:

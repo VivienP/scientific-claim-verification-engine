@@ -11,7 +11,6 @@ SQLite cache used by other clients.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 from dataclasses import asdict, dataclass
@@ -22,6 +21,12 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 from src.clients.pubmed_parser import (
     _WHITESPACE,
     _extract_record_fields,
@@ -33,7 +38,6 @@ logger: structlog.BoundLogger = structlog.get_logger(__name__)
 _ESEARCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
 _ESUMMARY_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 _EFETCH_URL = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi"
-_CACHE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 _MIN_ABSTRACT_LENGTH = 50
 
 _HEADERS = {"User-Agent": "ScientificClaimVerifier/0.1"}
@@ -48,20 +52,20 @@ class PubMedRecord:
 
 
 def _doi_cache_key(doi: str) -> str:
-    return hashlib.sha256(f"pubmed_doi_to_pmid:{doi.lower()}".encode()).hexdigest()
+    return make_cache_key("pubmed_doi_to_pmid", doi.lower())
 
 
 def _title_cache_key(title: str, year: int | None) -> str:
     normalised = _WHITESPACE.sub(" ", title.lower()).strip()
-    return hashlib.sha256(f"pubmed_title_to_pmid_v3:{normalised}:{year or ''}".encode()).hexdigest()
+    return make_cache_key("pubmed_title_to_pmid_v3", normalised, str(year or ""))
 
 
 def _pmid_cache_key(pmid: str) -> str:
-    return hashlib.sha256(f"pubmed_abstract:{pmid}".encode()).hexdigest()
+    return make_cache_key("pubmed_abstract", pmid)
 
 
 def _record_cache_key(pmid: str) -> str:
-    return hashlib.sha256(f"pubmed_record_v1:{pmid}".encode()).hexdigest()
+    return make_cache_key("pubmed_record_v1", pmid)
 
 
 def _params_with_email() -> dict[str, str]:

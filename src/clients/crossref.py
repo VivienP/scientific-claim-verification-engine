@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import hashlib
 import json
 import re
 import time
@@ -16,16 +15,27 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    RETRACTION_CACHE_TTL_SECONDS as _RETRACTION_CACHE_TTL,
+)
+from src.clients._common import (
+    RETRY_BACKOFF_BASE as _RETRY_BACKOFF_BASE,
+)
+from src.clients._common import (
+    RETRY_MAX as _RETRY_MAX,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 from src.models import ResolvedSource
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 _BASE_URL = "https://api.crossref.org"
 _MAILTO = "vivienperrelle@gmail.com"
-_RETRY_MAX = 3
-_RETRY_BACKOFF_BASE = 2.0
-_CACHE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
-_RETRACTION_CACHE_TTL = 7 * 24 * 3600  # 7 days — retractions are stable but faster-changing
 
 _HEADERS = {
     "User-Agent": "ScientificClaimVerifier/0.1",
@@ -57,10 +67,6 @@ _SEARCH_TRANSLATION = str.maketrans(
         "\u2212": "-",
     }
 )
-
-
-def _cache_key(prefix: str, value: str) -> str:
-    return hashlib.sha256(f"{prefix}:{value}".encode()).hexdigest()
 
 
 def _normalise_doi(doi_raw: str | None) -> str | None:
@@ -149,7 +155,7 @@ def fetch_work_by_doi(
         return _NOT_FOUND
     resolved_db_path = db_path if db_path is not None else _default_db_path()
     normalised = _normalise_doi(doi.strip()) or ""
-    key = _cache_key("crossref:doi", normalised.lower())
+    key = make_cache_key("crossref:doi", normalised.lower())
 
     cached = get(resolved_db_path, key)
     if cached is not None:
@@ -206,7 +212,7 @@ def search_paper(
     Retries on 429 with exponential backoff (max 3, base 2.0s).
     """
     resolved_db_path = db_path if db_path is not None else _default_db_path()
-    key = _cache_key("crossref:v2", query)
+    key = make_cache_key("crossref:v2", query)
 
     cached = get(resolved_db_path, key)
     if cached is not None:
@@ -276,7 +282,7 @@ def check_retraction(
     Cache key: sha256("crossref:retraction:{doi}"). TTL 7 days.
     """
     resolved_db_path = db_path if db_path is not None else _default_db_path()
-    key = _cache_key("crossref:retraction", doi)
+    key = make_cache_key("crossref:retraction", doi)
 
     cached = get(resolved_db_path, key)
     if cached is not None:

@@ -19,7 +19,6 @@ re-querying known-missing DOIs.
 
 from __future__ import annotations
 
-import hashlib
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -29,11 +28,16 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 _BASE_URL = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
-_CACHE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 _NULL_SENTINEL = "__NULL__"
 _HEADERS = {"User-Agent": "ScientificClaimVerifier/0.1"}
 
@@ -48,7 +52,7 @@ class EuropePMCRecord:
 
 
 def _cache_key(doi: str) -> str:
-    return hashlib.sha256(f"europepmc_v1:{doi}".encode()).hexdigest()
+    return make_cache_key("europepmc_v1", doi)
 
 
 def _normalise_pmcid(raw: str | None) -> str | None:

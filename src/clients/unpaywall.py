@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 from pathlib import Path
 from typing import Any
@@ -11,19 +10,24 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 _BASE_URL = "https://api.unpaywall.org/v2"
 _EMAIL = "vivienperrelle@gmail.com"
-_CACHE_TTL_SECONDS = 30 * 24 * 3600
 
 _HEADERS = {"User-Agent": "ScientificClaimVerifier/0.1"}
 _NULL_SENTINEL = "__NULL__"
 
 
 def _cache_key(doi: str) -> str:
-    return hashlib.sha256(f"unpaywall:{doi}".encode()).hexdigest()
+    return make_cache_key("unpaywall", doi)
 
 
 def get_oa_url(

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import dataclasses
-import hashlib
 import json
 import re
 import time
@@ -14,14 +13,23 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    RETRY_BACKOFF_BASE as _RETRY_BACKOFF_BASE,
+)
+from src.clients._common import (
+    RETRY_MAX as _RETRY_MAX,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 from src.models import ResolvedSource
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 _BASE_URL = "https://api.openalex.org"
-_RETRY_MAX = 3
-_RETRY_BACKOFF_BASE = 2.0  # seconds; attempts: 2s, 4s, 8s
-_CACHE_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 _MAILTO = "vivienperrelle@gmail.com"  # polite pool — better rate limits
 
 _YEAR_PATTERN = re.compile(r"\b(19|20)\d{2}\b")
@@ -44,7 +52,7 @@ _STOPWORDS = {
 
 
 def _cache_key(query: str) -> str:
-    return hashlib.sha256(f"openalex:{query}".encode()).hexdigest()
+    return make_cache_key("openalex", query)
 
 
 def _extract_year_from_query(query: str) -> int | None:

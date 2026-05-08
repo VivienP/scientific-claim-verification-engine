@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import re
 from pathlib import Path
 
@@ -11,17 +10,22 @@ import httpx
 import structlog
 
 from src.clients._cache import get, put
+from src.clients._common import (
+    CACHE_TTL_DEFAULT_SECONDS as _CACHE_TTL_SECONDS,
+)
+from src.clients._common import (
+    make_cache_key,
+)
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
-_CACHE_TTL_SECONDS = 30 * 24 * 3600
 _MIN_TEXT_LENGTH = 100
 _WHITESPACE_RE = re.compile(r"\s+")
 _HEADERS = {"User-Agent": "ScientificClaimVerifier/0.1"}
 
 
 def _cache_key(url: str) -> str:
-    return hashlib.sha256(f"pdf:{url}".encode()).hexdigest()
+    return make_cache_key("pdf", url)
 
 
 def _extract_text(pdf_bytes: bytes) -> str | None:

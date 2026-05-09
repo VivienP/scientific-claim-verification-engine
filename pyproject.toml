@@ -14,6 +14,7 @@ dependencies = [
     "rank-bm25>=0.2.2",
     "pymupdf>=1.24.0",
     "tiktoken>=0.7.0",
+    "jinja2>=3.1.0",
 ]
 
 [project.optional-dependencies]

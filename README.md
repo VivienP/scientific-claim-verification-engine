@@ -85,7 +85,7 @@ run_dir = build_report(
     claims=[v.claim for v in verifications],
     sources={v.claim.claim_id: v.source for v in verifications},
     results={v.claim.claim_id: v.result for v in verifications},
-    steps=steps,
+    provenance_steps=steps,
 )
 # report.json and provenance.jsonl written to run_dir
 ```

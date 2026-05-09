@@ -1,0 +1,58 @@
+# Phase C — single-tenant on-prem deployment.
+#
+# Quick start:
+#   1. Set secrets in a .env file (NEVER commit .env — it's in .gitignore):
+#        COPILOT_API_KEY=<choose a strong random key>
+#        ANTHROPIC_API_KEY=<your Anthropic key>
+#   2. docker compose up --build
+#   3. Test:
+#        curl http://localhost:8000/health
+#        curl -H "X-API-Key: $COPILOT_API_KEY" \
+#             -H "Content-Type: application/json" \
+#             -d '{"text":"sample claim text [1]"}' \
+#             http://localhost:8000/verify
+#
+# Production note: put a TLS-terminating reverse proxy (Caddy / nginx / Traefik)
+# in front of this service. The container itself only speaks HTTP on port 8000
+# and binds a single tenant's traffic.
+
+services:
+  api:
+    build: .
+    image: locuslab/copilot:0.1.0
+    container_name: copilot-api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"  # bind to localhost; expose via reverse proxy
+    environment:
+      COPILOT_API_KEY: ${COPILOT_API_KEY:?COPILOT_API_KEY must be set in .env}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY must be set in .env}
+      PYTHONUNBUFFERED: "1"
+    volumes:
+      # Persist run artifacts across restarts. Mounted read-write so the
+      # worker can write report.json / copilot_report.html / provenance.jsonl.
+      - ./reports/runs:/app/reports/runs
+      # Persist the TTL cache (CrossRef / Semantic Scholar lookups).
+      - ./reports/.cache:/app/reports/.cache
+    read_only: true
+    tmpfs:
+      - /tmp:rw,size=128M
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import httpx,sys; sys.exit(0 if httpx.get('http://127.0.0.1:8000/health').status_code==200 else 1)"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"

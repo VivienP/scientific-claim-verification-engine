@@ -1,0 +1,41 @@
+# Phase C — keep the build context small and avoid leaking secrets/state.
+.git/
+.github/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Tests are not needed in the runtime image — they would inflate it.
+tests/
+eval/
+benchmarks/
+docs/
+intel/
+reports/
+.cache/
+
+# Secrets — the container reads them from env, never from files in the image.
+.env
+.env.*
+*.key
+*.pem
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

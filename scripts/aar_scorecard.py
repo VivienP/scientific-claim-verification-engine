@@ -20,9 +20,12 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from src.aar import AARScorecard, compute_aar_for_run, render_scorecard_markdown
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_RUNS_DIR = PROJECT_ROOT / "reports" / "runs"
 
 

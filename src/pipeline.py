@@ -4,7 +4,6 @@ This module is the single canonical composer of extraction, bibliography
 parsing, multi-source resolution, full-text fetching, passage selection,
 and verifier-mode dispatch. It is consumed by:
 
-    examples/sample_run.py                       — interactive demo
     eval/e2e/_run_pipeline_on_verdicts.py        — benchmark harness
     scripts/measure_e2e_recall.py                — recall-only run
     tests/integration/test_full_pipeline.py      — end-to-end contract test

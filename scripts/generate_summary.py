@@ -1,7 +1,7 @@
-"""Regenerate benchmarks/real_outputs/SUMMARY.md and the README benchmark table.
+"""Regenerate benchmarks/real_outputs/README.md and the README benchmark table.
 
 Reads each tool's report.json, extracts the summary block, and writes:
-  - benchmarks/real_outputs/SUMMARY.md
+  - benchmarks/real_outputs/README.md
   - README.md real-output benchmark section
 
 No numbers are hand-typed. Run after every benchmark re-run.
@@ -146,7 +146,7 @@ The canary is a controlled four-claim input designed to exercise contradiction d
 - **numeric_inconsistencies_flagged**: subset of `numeric_checks_run` where the deterministic check failed
 - **cost**: total Anthropic API spend (claude-sonnet-4-6, prompt-cached system prompts)
 """
-    out = BASE / "SUMMARY.md"
+    out = BASE / "README.md"
     out.write_text(content, encoding="utf-8")
     print(f"[summary] written -> {out}")
 
@@ -162,7 +162,7 @@ def update_readme(table: str) -> None:
         "Committed reports under `benchmarks/real_outputs/` currently cover three\n"
         "AI-for-science outputs:\n\n"
         f"{table}\n\n"
-        f"Numbers regenerated {TODAY} from `benchmarks/real_outputs/SUMMARY.md`. "
+        f"Numbers regenerated {TODAY} from `benchmarks/real_outputs/README.md`. "
         "Re-run via `python scripts/check_summary_alignment.py`.\n"
     )
 

@@ -50,8 +50,25 @@ The user-uploaded PDF is the canonical source. The text was transcribed page-by-
 
 ## Run command
 
+```python
+from src.pipeline import PipelineConfig, run_pipeline
+from src.report import build_report
+import os, uuid, pathlib
+
+text = pathlib.Path("benchmarks/real_papers/valsci_brice_2025/input.txt").read_text()
+config = PipelineConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
+verifications, steps = run_pipeline(text, config=config)
+run_dir = build_report(
+    str(uuid.uuid4()), text,
+    [v.claim for v in verifications],
+    {v.claim.claim_id: v.source for v in verifications},
+    {v.claim.claim_id: v.result for v in verifications},
+    steps,
+)
+print(f"Report: {run_dir}")
+```
+
 ```bash
-python examples/sample_run.py benchmarks/real_papers/valsci_brice_2025/input.txt
 python scripts/aar_scorecard.py reports/runs/<report_id>
 ```
 

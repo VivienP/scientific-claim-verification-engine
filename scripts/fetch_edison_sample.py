@@ -4,8 +4,7 @@
 The saved file can then be fed directly into the verification pipeline:
 
     python scripts/fetch_edison_sample.py "What is the role of TREM2 in Alzheimer's?"
-    python examples/sample_run.py examples/inputs/edison_trem2.txt
-    python scripts/show_report.py
+    # then run via the public API — see README Quick Start, passing the saved path as text input
 
 Requirements:
     pip install edison-client          # or: pip install -e ".[edison]"
@@ -43,7 +42,8 @@ except ImportError:
     )
     sys.exit(1)
 
-_OUTPUT_DIR = Path(__file__).parent.parent / "examples" / "inputs"
+_OUTPUT_DIR = Path(__file__).parent.parent / "inputs"
+_OUTPUT_DIR.mkdir(exist_ok=True)
 
 
 def _slugify(text: str) -> str:

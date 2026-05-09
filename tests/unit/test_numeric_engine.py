@@ -1,7 +1,6 @@
 """Unit tests for src/numeric/engine.py — minimal coverage per modification 1.
 
 Only one test: malformed LLM response → graceful fallback to (None, [step]).
-Real signal for the engine comes from examples/numeric_worked_example.py end-to-end.
 """
 
 from __future__ import annotations

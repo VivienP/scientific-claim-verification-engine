@@ -1,4 +1,4 @@
-"""Verify that README.md real-output benchmark table matches SUMMARY.md.
+"""Verify that README.md real-output benchmark table matches README.md.
 
 Parses the markdown tables in both files and compares the numeric values for:
   claims, supported, partially_supported, unsupported, not_addressed
@@ -44,7 +44,7 @@ def _parse_table(text: str, after_marker: str) -> dict[str, dict[str, str]]:
         if not cells:
             continue
         label = cells[0]
-        rows[label] = dict(zip(headers, cells[1:], strict=False))
+        rows[label] = dict(zip(headers[1:], cells[1:], strict=False))
     return rows
 
 
@@ -52,6 +52,13 @@ def _find_row(label: str, rows: dict[str, dict[str, str]]) -> dict[str, str] | N
     for key, val in rows.items():
         if label.lower() in _normalize(key):
             return val
+    return None
+
+
+def _find_row_key(label: str, rows: dict[str, dict[str, str]]) -> str | None:
+    for key in rows:
+        if label.lower() in _normalize(key):
+            return key
     return None
 
 
@@ -67,8 +74,68 @@ def _to_int(val: str) -> int:
     return int(re.sub(r"[^\d]", "", val))
 
 
+def _to_percent_tenths(val: str) -> int:
+    match = re.search(r"(\d+(?:\.\d+)?)\s*%", val)
+    if match is None:
+        raise ValueError(f"percentage not found: {val!r}")
+    return round(float(match.group(1)) * 10)
+
+
+def _check_compact_track_record(
+    summary_rows: dict[str, dict[str, str]], readme_text: str
+) -> list[str]:
+    """Validate the compact README Track Record row against SUMMARY total.
+
+    The README was simplified on 2026-05-08: it no longer embeds the full
+    Real-Output Benchmark table, only a Track Record row with total claim
+    count and citation-found rate. Keep the alignment check useful by
+    validating those remaining public numbers against README.md.
+    """
+    mismatches: list[str] = []
+    total = _find_row("Total", summary_rows)
+    if total is None:
+        return ["SUMMARY: no Total row"]
+
+    try:
+        track_rows = _parse_table(readme_text, "## Track Record")
+    except ValueError as exc:
+        return [f"ERROR parsing README.md compact Track Record: {exc}"]
+
+    readme_key = _find_row_key("Real AI-for-science tools", track_rows)
+    if readme_key is None:
+        return ["README: no Track Record row matching 'Real AI-for-science tools'"]
+    readme_row = track_rows[readme_key]
+
+    summary_claims_raw = _find_col("claims", total)
+    summary_cfr_raw = _find_col("citation_found_rate", total)
+    readme_result = _find_col("result", readme_row) or ""
+
+    if summary_claims_raw is None:
+        mismatches.append("SUMMARY: Total row missing 'claims'")
+    else:
+        summary_claims = _to_int(summary_claims_raw)
+        readme_claims = _to_int(readme_key)
+        if summary_claims != readme_claims:
+            mismatches.append(
+                f"compact README claims mismatch: SUMMARY={summary_claims} README={readme_claims}"
+            )
+
+    if summary_cfr_raw is None:
+        mismatches.append("SUMMARY: Total row missing 'citation_found_rate'")
+    else:
+        summary_cfr = _to_percent_tenths(summary_cfr_raw)
+        readme_cfr = _to_percent_tenths(readme_result)
+        if summary_cfr != readme_cfr:
+            mismatches.append(
+                "compact README citation_found_rate mismatch: "
+                f"SUMMARY={summary_cfr_raw} README={readme_result}"
+            )
+
+    return mismatches
+
+
 def main() -> int:
-    summary_path = ROOT / "benchmarks" / "real_outputs" / "SUMMARY.md"
+    summary_path = ROOT / "benchmarks" / "real_outputs" / "README.md"
     readme_path = ROOT / "README.md"
 
     try:
@@ -86,14 +153,20 @@ def main() -> int:
     try:
         summary_rows = _parse_table(summary_text, "# Real-Tool Benchmark Summary")
     except ValueError as e:
-        print(f"ERROR parsing SUMMARY.md: {e}", file=sys.stderr)
-        return 1
-
-    try:
-        readme_rows = _parse_table(readme_text, "## Real-Output Benchmark")
-    except ValueError as e:
         print(f"ERROR parsing README.md: {e}", file=sys.stderr)
         return 1
+
+    readme_rows: dict[str, dict[str, str]] | None = None
+    try:
+        readme_rows = _parse_table(readme_text, "## Real-Output Benchmark")
+    except ValueError:
+        compact_mismatches = _check_compact_track_record(summary_rows, readme_text)
+        if compact_mismatches:
+            print("ALIGNMENT FAILURE — mismatches between README.md and README.md:")
+            for m in compact_mismatches:
+                print(f"  {m}")
+            return 1
+        return 0
 
     mismatches: list[str] = []
 
@@ -126,7 +199,7 @@ def main() -> int:
                 mismatches.append(f"tool={label!r} col={col!r}: SUMMARY={s_int} README={r_int}")
 
     if mismatches:
-        print("ALIGNMENT FAILURE — mismatches between SUMMARY.md and README.md:")
+        print("ALIGNMENT FAILURE — mismatches between README.md and README.md:")
         for m in mismatches:
             print(f"  {m}")
         return 1

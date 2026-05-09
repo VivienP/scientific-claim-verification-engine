@@ -80,7 +80,7 @@ class ResolvedSourceSet:
     entries that may individually support, contradict, or fail to address the
     claim. The verifier needs all of them to aggregate honestly. The single
     `ResolvedSource` API is preserved through `.primary()` for backward compat,
-    so the existing benchmark runner and `examples/sample_run.py` keep working.
+    so the existing benchmark runner keeps working.
     """
 
     sources: tuple[ResolvedSource, ...]

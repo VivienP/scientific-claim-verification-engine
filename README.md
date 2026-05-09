@@ -11,17 +11,34 @@
 
 **Output:** verdict `partially_supported` — the cited paper reports a 40% reduction only in the high-dose cohort; the claim omits the qualifier. Source quote, retrieval status, and provenance hash included.
 
-See [`examples/sample_outputs/edison_trem2_short.json`](examples/sample_outputs/edison_trem2_short.json) for a real 3-claim excerpt from an Edison Scientific Literature output, showing `supported`, `partially_supported`, and `not_addressed` in the same report.
+See [`benchmarks/real_outputs/edison_trem2/report.json`](benchmarks/real_outputs/edison_trem2/report.json) for the full committed run on Edison TREM2 (20 claims), showing all verdict types in a real report.
 
 ## Quick Start
 
 ```bash
 pip install -e ".[dev]"
 export ANTHROPIC_API_KEY=sk-...
-python examples/sample_run.py
 ```
 
-~3 min, ~$0.40 on the default input ([Edison TREM2, 20 claims](benchmarks/real_outputs/edison_trem2/)). Pass any text file as `argv[1]` to run on your own input.
+```python
+from src.pipeline import PipelineConfig, run_pipeline
+from src.report import build_report
+import os, uuid, pathlib
+
+text = pathlib.Path("benchmarks/real_outputs/edison_trem2/input.txt").read_text()
+config = PipelineConfig(api_key=os.environ["ANTHROPIC_API_KEY"])
+verifications, steps = run_pipeline(text, config=config)
+run_dir = build_report(
+    str(uuid.uuid4()), text,
+    [v.claim for v in verifications],
+    {v.claim.claim_id: v.source for v in verifications},
+    {v.claim.claim_id: v.result for v in verifications},
+    steps,
+)
+print(f"Report: {run_dir}")
+```
+
+~3 min, ~$0.40 on the default input ([Edison TREM2, 20 claims](benchmarks/real_outputs/edison_trem2/)).
 
 ## What You Get
 
@@ -37,7 +54,7 @@ Verdicts: `supported` · `partially_supported` · `unsupported` · `not_addresse
 | Lactate-ISF, 25 expert-annotated claims | **full pipeline** | 16/25 verdict agreement (64%) | [eval/e2e/](eval/e2e/reference_paper_v1_results.md) |
 | Valsci paper (bioinformatics), 11 external claims | resolver | 10/11 correct source (91%) | [benchmarks/real_papers/valsci_brice_2025/](benchmarks/real_papers/valsci_brice_2025/README.md) |
 | SciFact dev | verifier, oracle inputs | F1 = 0.94 | binary, [scripts/eval_scifact.py](scripts/eval_scifact.py) |
-| Real AI-for-science tools, 59 claims | resolver | 72.9% citation found rate | [benchmarks/real_outputs/SUMMARY.md](benchmarks/real_outputs/SUMMARY.md) |
+| Real AI-for-science tools, 59 claims | resolver | 72.9% citation found rate | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
 
 ## Pipeline
 
@@ -93,10 +110,10 @@ Closest neighbours: [Valsci](https://github.com/bricee98/Valsci) (single-source,
 ```bash
 python -m pytest -v
 python -m mypy --strict src
-python -m ruff check src tests scripts examples
+python -m ruff check src tests scripts
 ```
 
-Canary controls (contradiction detection, weak resolution, numeric inconsistency): `python examples/sample_run.py benchmarks/canary/input.txt`
+Canary controls (contradiction detection, weak resolution, numeric inconsistency): use `benchmarks/canary/input.txt` as the input text in the Quick Start snippet above.
 
 ## License & Contact
 

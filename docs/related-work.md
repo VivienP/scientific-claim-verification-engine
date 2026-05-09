@@ -30,7 +30,43 @@ CiteAudit and this engine are complementary by design:
 
 A production audit pipeline would run both.
 
+### SemanticCite (arXiv:2511.16198)
+
+Full-text citation verification with LLM-driven evidence extraction. 4-class output: Supported / Partially Supported / Unsupported / Uncertain.
+
+Structural differences vs. this engine:
+
+1. **Rubric** — SemanticCite's "Partially Supported" is a single class; this engine's partial-support rubric (Clauses A/B/C/D) explicitly handles range inclusion, trajectory-vs-snapshot, and numeric-verbatim-absence as distinct sub-cases.
+2. **Multi-citation** — SemanticCite verifies one source per call; this engine aggregates verdicts when a claim cites `[81-83]`.
+3. **Determinism** — numeric comparison in this engine is pure Python; SemanticCite delegates all judgment to the LLM.
+4. **Provenance** — no published audit trail schema; this engine emits a `ProvenanceStep` per step.
+
+Closest true peer to the verify module. Monitor for AAR metric publication.
+
+### MultiVerS (arXiv:2112.01640, NAACL Findings 2022)
+
+AllenAI's state-of-the-art model for scientific NLI on SciFact and two companion datasets. Architecture: Longformer encoder over full documents, multitask head for joint rationale selection and NLI label prediction.
+
+Not a direct competitor (HuggingFace weights, no API). Relevant as the closest published reference architecture for the verify step — specifically, its rationale-then-NLI decomposition and full-document input strategy. Abstract-only systems lose ≥15 F1 points when retrieval is unconstrained (see SciFact-Open below).
+
+### OpenScholar / ScholarQABench (Nature 2025)
+
+RAG synthesis system (Llama 3.1 8B, fine-tuned, 45M Semantic Scholar papers) with grounded citations. Companion benchmark ScholarQABench covers biology, neuroscience, CS, and multi-domain subsets; metric is citation F1.
+
+OpenScholar and this engine are complementary by design:
+
+- **OpenScholar** — generates scientific answers citing multiple sources
+- **This engine** — audits whether cited sources actually support the assertions made
+
+An OpenScholar output is a natural input for this pipeline.
+
 ## Benchmarks and evaluation standards
+
+### SciFact-Open (arXiv:2210.13777, EMNLP Findings 2022)
+
+Open-retrieval extension of SciFact: 279 claims verified against a search corpus of 500K abstracts (vs. 1,409 claims against 5,183 abstracts in the closed set). Systems that perform well on the closed benchmark drop ≥15 F1 points on SciFact-Open because retrieval — not entailment — is the bottleneck at realistic scale.
+
+Directly relevant as a secondary eval benchmark once the multi-source resolver is stable. The performance gap it reveals is the primary risk surface of any retrieval-then-verify pipeline.
 
 ### SciClaimEval
 

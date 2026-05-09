@@ -41,6 +41,9 @@ eval/scifact/claims_train.jsonl
 eval/scifact/claims_test.jsonl
 .env
 
+# Competitive intelligence (private research notes — not for public distribution)
+intel/
+
 # Internal project management — not for public distribution
 development-roadmap.md
 launch-readiness-audit.md

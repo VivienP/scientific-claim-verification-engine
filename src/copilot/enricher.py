@@ -122,8 +122,18 @@ class CopilotEnricher:
             )
             steps.append(fix_step)
 
+        # Compute conflicting_evidence_flag from V1 multi-source signal.
+        conflicting = _compute_conflicting_evidence_flag(cv)
+
         # Assemble CopilotFields — None for mode-disabled fields
-        copilot = _build_fields(config.mode, rationale, clf, primary_source_doi, fix)
+        copilot = _build_fields(
+            config.mode,
+            rationale,
+            clf,
+            primary_source_doi,
+            fix,
+            conflicting_evidence_flag=conflicting,
+        )
 
         logger.info(
             "copilot_enriched",
@@ -160,12 +170,25 @@ class CopilotEnricher:
 # ---------------------------------------------------------------------------
 
 
+def _compute_conflicting_evidence_flag(cv: ClaimVerification) -> bool:
+    """True if V1 multi-source aggregation found disagreement.
+
+    Heuristic: more than one resolved source AND the aggregate verdict is
+    ``partially_supported``. This is the V1 signal that the per-source
+    verdicts disagreed, which the aggregator collapsed into "partial".
+
+    Pure function, deterministic, no LLM. Does not raise.
+    """
+    return len(cv.source_set.sources) > 1 and cv.result.status == "partially_supported"
+
+
 def _build_fields(
     mode: CopilotMode,
     rationale: str,
     clf: SourceClassification | None,
     primary_source_doi: str | None,
     fix: object,  # RecommendedFix | None — avoid circular imports
+    conflicting_evidence_flag: bool = False,
 ) -> CopilotFields:
     from src.copilot.models import RecommendedFix  # local import to satisfy mypy
 
@@ -178,7 +201,7 @@ def _build_fields(
             is_primary_source=clf.is_primary_source if clf else None,
             study_design=clf.study_design if clf else None,
             risk_of_bias=clf.risk_of_bias if clf else None,
-            conflicting_evidence_flag=None,  # set by enricher if multi-source
+            conflicting_evidence_flag=conflicting_evidence_flag,
             primary_source_doi=primary_source_doi,
             novelty_claim=None,
         )

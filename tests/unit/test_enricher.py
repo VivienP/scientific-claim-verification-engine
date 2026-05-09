@@ -314,3 +314,123 @@ class TestEnrichAll:
         results = enricher.enrich_all(cvs)
         assert len(results) == 3
         assert all(isinstance(r, EnrichedVerification) for r in results)
+
+
+# ---------------------------------------------------------------------------
+# conflicting_evidence_flag — pure-function unit + integration through enrich_one
+# ---------------------------------------------------------------------------
+
+
+def _make_cv_multi(verdict: str = "partially_supported", n_sources: int = 2) -> ClaimVerification:
+    """Build a CV with N resolved sources to exercise multi-source paths."""
+    claim = Claim(
+        claim_id="cl-multi",
+        claim_text="Drug X reduces biomarker Y.",
+        cited_authors=["Jones", "Smith"],
+        cited_year=2022,
+        claim_type="factual_qualitative",
+    )
+    sources = tuple(
+        ResolvedSource(
+            found=True,
+            doi=f"10.1234/source-{i}",
+            title=f"Source {i}",
+            abstract="A study.",
+            similarity_score=0.7,
+        )
+        for i in range(n_sources)
+    )
+    source_set = ResolvedSourceSet(sources=sources, citation_markers=tuple(range(1, n_sources + 1)))
+    result = VerificationResult(
+        status=verdict,  # type: ignore[arg-type]
+        explanation="Mixed evidence across sources.",
+        confidence=0.5,
+    )
+    return ClaimVerification(
+        claim=claim,
+        source=sources[0],
+        source_set=source_set,
+        result=result,
+        fetch_method="abstract",
+    )
+
+
+class TestConflictingEvidenceFlagFunction:
+    """Direct unit tests on the pure helper."""
+
+    def test_single_source_partial_returns_false(self) -> None:
+        from src.copilot.enricher import _compute_conflicting_evidence_flag
+
+        cv = _make_cv("partially_supported")
+        assert _compute_conflicting_evidence_flag(cv) is False
+
+    def test_multi_source_partial_returns_true(self) -> None:
+        from src.copilot.enricher import _compute_conflicting_evidence_flag
+
+        cv = _make_cv_multi("partially_supported", n_sources=2)
+        assert _compute_conflicting_evidence_flag(cv) is True
+
+    def test_multi_source_supported_returns_false(self) -> None:
+        from src.copilot.enricher import _compute_conflicting_evidence_flag
+
+        cv = _make_cv_multi("supported", n_sources=3)
+        assert _compute_conflicting_evidence_flag(cv) is False
+
+    def test_multi_source_unsupported_returns_false(self) -> None:
+        from src.copilot.enricher import _compute_conflicting_evidence_flag
+
+        cv = _make_cv_multi("unsupported", n_sources=2)
+        assert _compute_conflicting_evidence_flag(cv) is False
+
+    def test_three_sources_partial_returns_true(self) -> None:
+        from src.copilot.enricher import _compute_conflicting_evidence_flag
+
+        cv = _make_cv_multi("partially_supported", n_sources=3)
+        assert _compute_conflicting_evidence_flag(cv) is True
+
+
+class TestConflictingEvidenceFlagIntegration:
+    """Integration: flag flows through enrich_one into CopilotFields."""
+
+    @patch("src.copilot.enricher.extract_rationale", side_effect=_stub_rationale)
+    @patch("src.copilot.enricher.classify_source", side_effect=_stub_classify)
+    @patch("src.copilot.enricher.find_primary_source_doi", side_effect=_stub_lookup)
+    @patch("src.copilot.enricher.generate_fix", side_effect=_stub_fix)
+    def test_pharma_mode_multi_source_partial_sets_flag(
+        self,
+        mock_fix: MagicMock,
+        mock_lookup: MagicMock,
+        mock_classify: MagicMock,
+        mock_rationale: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        enricher = CopilotEnricher(CopilotConfig(db_path=tmp_path / "c.db"))
+        ev = enricher.enrich_one(_make_cv_multi("partially_supported", n_sources=2))
+        assert ev.copilot.conflicting_evidence_flag is True
+
+    @patch("src.copilot.enricher.extract_rationale", side_effect=_stub_rationale)
+    @patch("src.copilot.enricher.classify_source", side_effect=_stub_classify)
+    @patch("src.copilot.enricher.find_primary_source_doi", side_effect=_stub_lookup)
+    @patch("src.copilot.enricher.generate_fix", side_effect=_stub_fix)
+    def test_pharma_mode_single_source_flag_is_false(
+        self,
+        mock_fix: MagicMock,
+        mock_lookup: MagicMock,
+        mock_classify: MagicMock,
+        mock_rationale: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        enricher = CopilotEnricher(CopilotConfig(db_path=tmp_path / "c.db"))
+        ev = enricher.enrich_one(_make_cv("partially_supported"))
+        assert ev.copilot.conflicting_evidence_flag is False
+
+    @patch("src.copilot.enricher.extract_rationale", side_effect=_stub_rationale)
+    @patch("src.copilot.enricher.generate_fix", side_effect=_stub_fix)
+    def test_general_mode_flag_remains_none(
+        self, mock_fix: MagicMock, mock_rationale: MagicMock, tmp_path: Path
+    ) -> None:
+        config = CopilotConfig(mode=CopilotMode.GENERAL, db_path=tmp_path / "c.db")
+        enricher = CopilotEnricher(config)
+        ev = enricher.enrich_one(_make_cv_multi("partially_supported", n_sources=2))
+        # GENERAL mode does not surface evidence-quality fields.
+        assert ev.copilot.conflicting_evidence_flag is None

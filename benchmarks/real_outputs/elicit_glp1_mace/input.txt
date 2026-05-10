@@ -1,0 +1,15 @@
+# PLACEHOLDER — paste Elicit Report mode PDFs here, then replace this header.
+#
+# Workflow:
+#   1. Run query 1 on Elicit (Report mode):
+#      "What is the evidence for semaglutide reducing MACE in cardiovascular outcome trials?"
+#   2. Export as PDF, save to this directory.
+#   3. Run query 2 on Elicit (Report mode):
+#      "What is the evidence for tirzepatide reducing MACE in cardiovascular outcome trials?"
+#   4. Export as PDF, save to this directory.
+#   5. Drop me the PDF paths and I will:
+#      - Run pymupdf to extract text
+#      - Concatenate query 1 + query 2 outputs into input.txt with "---" separator
+#      - Update meta.json (input_chars, estimated_inline_citations, agent_or_model if Deep Research)
+#      - Run the decision gate (extract_claims with max_output_tokens=8192)
+#      - If ≥ 35 claims, launch the full pipeline run

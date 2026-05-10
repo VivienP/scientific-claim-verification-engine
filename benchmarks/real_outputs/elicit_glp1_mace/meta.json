@@ -1,0 +1,11 @@
+{
+  "tool": "Elicit",
+  "agent_or_model": "Elicit Report mode (web UI, PDF export)",
+  "prompt_used": "What is the evidence for semaglutide reducing MACE in cardiovascular outcome trials?; What is the evidence for tirzepatide reducing MACE in cardiovascular outcome trials?",
+  "fetch_date": "2026-05-10",
+  "source_url": "https://elicit.com",
+  "license_note": "Output captured manually from Elicit UI for verification benchmarking. Single user session, no redistribution of raw output.",
+  "extraction_method": "PDF export from Elicit Report mode UI, text extracted via pymupdf",
+  "input_chars": null,
+  "estimated_inline_citations": null
+}

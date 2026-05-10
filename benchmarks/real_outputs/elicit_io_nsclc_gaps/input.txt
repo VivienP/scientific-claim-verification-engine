@@ -1,0 +1,303 @@
+What is the effectiveness of PD-1 inhibitor monotherapy compared to combination therapy as first-line treatment for PD-L1-high metastatic non-small
+cell lung cancer in terms of overall survival and progression-free survival?
+In PD-L1-high metastatic NSCLC, PD-1 inhibitor–chemotherapy combination therapy consistently improves
+progression-free survival over PD-1 inhibitor monotherapy, but overall survival is similar between the two
+strategies, with combination therapy carrying greater toxicity — though this conclusion rests entirely on indirect
+comparisons, as no direct head-to-head randomized trial has been completed.
+Abstract
+Across 18 included sources — predominantly network meta-analyses and indirect comparisons of randomized controlled trials — PD-1 inhibitor monotherapy and PD-1 inhibitor–chemotherapy combination therapy both significantly improve overall survival and progression-free survival relative to chemotherapy alone in patients with PDL1-high (TPS ≥50%) metastatic NSCLC [1–3]. Combination therapy consistently demonstrates superior progressionfree survival compared with monotherapy, with hazard ratios ranging from 0.55 to 0.81 across analyses [2, 4–7].
+However, no statistically significant overall survival difference between the two strategies has been identified in the
+PD-L1-high subgroup: median OS is approximately 22–26 months with either approach [2, 4, 8, 9]. Combination
+therapy is associated with higher rates of grade 3–5 treatment-related adverse events [9–11].
+No completed randomized trial has directly compared PD-1 inhibitor monotherapy with PD-1 inhibitor–
+chemotherapy in PD-L1-high disease; all comparisons are indirect, anchored through a chemotherapy common
+comparator [2, 4, 5]. The two available head-to-head RCTs evaluated other combination partners (ipilimumab
+and epacadostat) added to pembrolizumab and found no efficacy benefit [10, 12]. Consequently, whether the PFS
+advantage of chemo-immunotherapy translates into a meaningful long-term survival benefit in PD-L1-high patients,
+or whether monotherapy provides equivalent OS with lower toxicity, remains formally unresolved. Critical gaps
+include the absence of validated predictive biomarkers beyond PD-L1 TPS for differential treatment selection [9,
+13], insufficient safety and quality-of-life data stratified by PD-L1 expression [6, 8], and underrepresentation of key
+clinical subgroups such as patients with liver metastases, brain metastases, or advanced age [1, 14].
+1
+Flow Diagram
+Paper search
+We performed a semantic search across over 138 million academic papers from the Elicit search engine, which includes all of Semantic Scholar and OpenAlex.
+We ran this query: ”What is the effectiveness of PD-1 inhibitor monotherapy compared to combination therapy as
+first-line treatment for PD-L1-high metastatic non-small cell lung cancer in terms of overall survival and progression2
+free survival?”
+The search returned 1,000 total results from Elicit.
+We retrieved 1000 papers most relevant to the query for screening.
+Screening
+Abstract screening
+We screened in sources based on their abstracts that met these criteria:
+• Population - NSCLC and PD-L1 Status: Does this study include patients with histologically or cytologically
+confirmed metastatic (stage IV) non-small cell lung cancer with PD-L1-high expression (≥50% tumor proportion score or equivalent high expression threshold)?
+• Intervention Comparison: Does this study compare PD-1 inhibitor monotherapy versus PD-1 inhibitor combination therapy as first-line treatment for metastatic disease?
+• Outcome Measures: Does this study report overall survival and/or progression-free survival outcomes?
+• Study Design Quality: Is this study a randomized controlled trial, systematic review, or meta-analysis (not a
+case report, case series, editorial, or conference abstract)?
+• Population Age: Does this study include adult patients (≥18 years) rather than focusing on pediatric populations?
+• PD-L1 Expression Level: Does this study focus on patients with PD-L1-high tumors rather than PD-L1-low
+or PD-L1-negative tumors?
+• Treatment Comparison Type: Does this study compare different PD-1 inhibitor approaches (monotherapy
+vs combination) rather than comparing PD-1 inhibitors to non-PD-1 inhibitor treatments (e.g., chemotherapy
+alone, targeted therapy)?
+• Study Design - Comparative: Does this study include comparison groups rather than being a single-arm study
+without comparators?
+Papers that failed any strict criterion were automatically excluded. For the remaining papers, we considered all
+screening questions together and made a holistic judgement about whether to screen in each paper.
+37 papers passed abstract screening and moved to full-text screening.
+At abstract screening, the number of papers excluded for each primary reason was:
+• Population - NSCLC and PD-L1 Status: n = 428
+• Intervention Comparison: n = 303
+• Outcome Measures: n = 3
+• Study Design Quality: n = 118
+• PD-L1 Expression Level: n = 103
+• Treatment Comparison Type: n = 6
+• Study Design - Comparative: n = 1
+• Other / below screening threshold: n = 1
+Full-text screening
+We then screened papers based on their full text using these additional criteria:
+3
+• Population - NSCLC and PD-L1 Status: Does this study include patients with histologically or cytologically
+confirmed metastatic (stage IV) non-small cell lung cancer with PD-L1-high expression (≥50% tumor proportion score or equivalent high expression threshold)?
+• Intervention Comparison: Does this study compare PD-1 inhibitor monotherapy versus PD-1 inhibitor combination therapy as first-line treatment for metastatic disease?
+• Outcome Measures: Does this study report overall survival and/or progression-free survival outcomes?
+• Study Design Quality: Is this study a randomized controlled trial, systematic review, or meta-analysis (not a
+case report, case series, editorial, or conference abstract)?
+• Population Age: Does this study include adult patients (≥18 years) rather than focusing on pediatric populations?
+• PD-L1 Expression Level: Does this study focus on patients with PD-L1-high tumors rather than PD-L1-low
+or PD-L1-negative tumors?
+• Treatment Comparison Type: Does this study compare different PD-1 inhibitor approaches (monotherapy
+vs combination) rather than comparing PD-1 inhibitors to non-PD-1 inhibitor treatments (e.g., chemotherapy
+alone, targeted therapy)?
+• Study Design - Comparative: Does this study include comparison groups rather than being a single-arm study
+without comparators?
+Papers that failed any strict criterion were automatically excluded. For the remaining papers, we considered all
+screening questions together and made a holistic judgement about whether to include each paper in the final analysis.
+18 papers passed full-text screening and moved to data extraction.
+At full-text screening, the number of papers excluded for each primary reason was:
+• Population - NSCLC and PD-L1 Status: n = 1
+• Intervention Comparison: n = 2
+• PD-L1 Expression Level: n = 2
+• No full text: n = 12
+• Other / below screening threshold: n = 2
+Data extraction
+We asked a large language model to extract each data column below from each paper. We gave the model the
+extraction instructions shown below for each column.
+• Treatment Comparison:
+Extract details about the specific PD-1 inhibitor treatments being compared for first-line therapy in PD-L1-high
+metastatic NSCLC, including:
+• Specific PD-1 inhibitor monotherapy (drug name, dose, schedule)
+• Specific combination therapy (PD-1 inhibitor + additional agents, doses, schedules)
+• Whether this was a direct head-to-head comparison or indirect comparison
+• Control/reference treatment if applicable
+• Study Population:
+Extract patient population characteristics relevant to PD-L1-high metastatic NSCLC first-line treatment, including:
+4
+• PD-L1 expression threshold used (≥50%, ≥1%, etc.)
+• Confirmation of metastatic/advanced stage NSCLC
+• Confirmation of first-line treatment setting
+• Histology (squamous, non-squamous, mixed)
+• EGFR/ALK mutation status
+• Sample size for each treatment arm
+• Overall Survival:
+Extract all overall survival data comparing PD-1 inhibitor monotherapy vs combination therapy in PD-L1-high
+metastatic NSCLC, including:
+• Median OS for each treatment group (months)
+• Hazard ratio with 95% confidence intervals
+• P-value for OS comparison
+• Follow-up duration
+• Number of events/deaths in each group
+• Any subgroup OS analyses by PD-L1 expression level
+• Progression-Free Survival:
+Extract all progression-free survival data comparing PD-1 inhibitor monotherapy vs combination therapy in
+PD-L1-high metastatic NSCLC, including:
+• Median PFS for each treatment group (months)
+• Hazard ratio with 95% confidence intervals
+• P-value for PFS comparison
+• PFS assessment method (RECIST, investigator vs independent review)
+• Any subgroup PFS analyses by PD-L1 expression level
+• Study Design:
+Extract study methodology details that affect interpretation of monotherapy vs combination therapy comparisons, including:
+• Study type (RCT, meta-analysis, network meta-analysis, observational)
+• Randomization and blinding approach
+• Primary vs secondary endpoint analysis
+• Statistical methods used for comparison
+• Risk of bias assessment if provided
+• Safety Profile:
+Extract safety data comparing PD-1 inhibitor monotherapy vs combination therapy in PD-L1-high metastatic
+NSCLC, including:
+• Grade 3-5 adverse events (percentage in each group)
+• Treatment-related deaths (percentage in each group)
+• Treatment discontinuation rates due to toxicity
+• Specific immune-related adverse events if reported
+• Any safety-related study modifications or early stopping
+5
+• Patient Characteristics:
+Extract baseline patient characteristics that may moderate effectiveness of monotherapy vs combination therapy in PD-L1-high metastatic NSCLC, including:
+• Age distribution and median age
+• Performance status (ECOG 0 vs 1+)
+• Smoking history
+• Presence of brain metastases
+• Presence of liver metastases
+• Tumor burden indicators if reported
+• Key Findings:
+Extract the study's main conclusions about effectiveness of PD-1 inhibitor monotherapy vs combination therapy for PD-L1-high metastatic NSCLC, including:
+• Authors' primary conclusion about comparative effectiveness
+• Clinical significance interpretation by authors
+• Recommendations for clinical practice
+• Limitations or caveats mentioned by authors
+• Future research recommendations if provided
+Summary of Current Evidence
+The included studies consistently demonstrate that both PD-1 inhibitor monotherapy and PD-1 inhibitor-based
+combination therapy (typically with platinum-based chemotherapy) significantly improve overall survival and
+progression-free survival compared with chemotherapy alone in patients with PD-L1-high (TPS ≥50%) metastatic
+NSCLC [1–3]. A recurring finding across network meta-analyses and indirect comparisons is that combination therapy yields superior objective response rates and progression-free survival relative to monotherapy in PD-L1-high
+patients [4–7], whereas overall survival differences between these two strategies are not statistically significant in
+this subgroup [2, 4, 8, 15]. The KEYNOTE-598 trial established that adding ipilimumab to pembrolizumab confers no
+efficacy benefit and increases toxicity [10, 11]. Current guidelines accordingly treat pembrolizumab monotherapy
+and pembrolizumab–chemotherapy as complementary first-line options for PD-L1-high disease, with selection
+guided by clinical context [9].
+Evidence Map
+6
+Study Study Type Research Focus Key Finding Identified Limitation
+R. Herbst et al., 2021 Network meta-analysis of RCTs [1] Comparison of multiple CIT regimens vs chemotherapy in PD-L1-high NSCLC across histology networks [1] Atezolizumab, pembrolizumab, and cemiplimab monotherapies significantly improved OS vs chemotherapy in the mixed-histology network; pembrolizumab plus chemotherapy improved OS in non-squamous network [1] Lack of individual patient data for most trials; heterogeneity in PD-L1 assay methods; most included trials were open-label [1, 1]
+Lingling Li et al., 2020 Systematic review with indirect comparison [16] IO monotherapy vs IO plus chemotherapy as first-line treatment for advanced NSCLC [16] IC yielded significantly better PFS than IO when PD-L1 ≥50% (HR 1.81, 95% CI 1.18–2.78); no significant OS difference in PD-L1 ≥50% subgroup [16, 16] Indirect comparison only; no head-to-head trial data; limited ability to assess treatment-related deaths across strategies [16]
+Patryk Bachurski et al., 2026 Narrative review of RCTs, NMAs, and real-world cohorts [9] Pembrolizumab monotherapy vs pembrolizumab–chemotherapy in driver-negative metastatic NSCLC [9] Combination therapy improves PFS (HR 0.59, 95% CI 0.43–0.81) but does not clearly improve OS compared with monotherapy in PD-L1-high disease [9, 9] Reliance on cross-trial and real-world comparisons; simple PD-L1 cutoffs insufficient for full individualization [9]
+7
+J. H. Kim et al., 2021 Bayesian network meta-analysis [2] Frontline treatments for advanced NSCLC with high PD-L1 expression [2] ICI plus chemotherapy failed to demonstrate significant OS superiority over ICI monotherapy (HR 0.978, 95% CrI 0.771–1.259) [2]; ICI plus chemotherapy significantly improved PFS vs monotherapy (HR 0.571, 95% CrI 0.454–0.709) [2] Aggregated rather than individual patient data; limited studies in certain treatment nodes; variability in PD-L1 measurement methods [2]
+Shibo Huang et al., 2024 Systematic review and network meta-analysis [4] Pembrolizumab plus chemotherapy vs pembrolizumab monotherapy for metastatic NSCLC [4] In PD-L1 ≥50%, combination improved PFS (median 10.41 vs 7.41 months, HR 0.81, P=0.02) but not OS (median 22.54 vs 22.62 months, HR 0.89, P=0.24) [4, 4] Only five studies included; potential errors in reconstructing individual patient data from Kaplan-Meier curves; heterogeneity in baseline characteristics [4]
+Yixin Zhou et al., 2019 Meta-analysis with indirect comparison [5] Pembrolizumab plus chemotherapy vs pembrolizumab monotherapy in PD-L1 TPS ≥50% advanced NSCLC [5] Combination therapy superior for ORR (RR 1.62) and PFS (HR 0.55, 95% CI 0.32–0.97); trend toward improved OS but not significant (HR 0.76, P=0.184) [5, 5] Indirect comparison relying on published aggregate data; short median follow-up (7.8–23.9 months); lack of head-to-head trial data [5]
+Hengrui Liang et al., 2020 Bayesian network meta-analysis [3] Efficacy and safety of PD-1/L1 inhibitors in first-line advanced NSCLC [3] Pembrolizumab plus chemotherapy (HR 0.39) and pembrolizumab monotherapy (HR 0.67) both significantly improved PFS vs chemotherapy in PD-L1 ≥50% [3] Indirect comparisons only; subgroup analyses based solely on PD-L1 expression may lack accuracy; focus limited to high-grade adverse events [3]
+8
+Xiang Li et al., 2021 Network meta-analysis of RCTs [8] PD-1/PD-L1 inhibitors plus chemotherapy vs monotherapy in advanced NSCLC [8] PD-1 inhibitors plus chemotherapy improved PFS (HR 0.72, 95% CI 0.63–0.83) but not OS (HR 0.94, 95% CI 0.82–1.07) in PD-L1 ≥50% [8, 8] Distinction between PD-1 and PD-L1 inhibitor classes complicates pooled interpretation; ongoing trials may alter conclusions; safety data not stratified by PD-L1 level [8]
+M. Boyer et al., 2021 Phase III RCT (KEYNOTE-598) [10] Pembrolizumab plus ipilimumab vs pembrolizumab monotherapy in PD-L1 TPS ≥50% metastatic NSCLC [10] No improvement in OS (HR 1.08, P=0.74) or PFS (HR 1.06, P=0.72) with addition of ipilimumab; greater toxicity with combination (grade 3–5 AEs: 62.4% vs 50.2%) [10, 10, 10] Evaluates pembrolizumab–ipilimumab rather than pembrolizumab–chemotherapy; study stopped early for futility; does not assess pembrolizumab–chemotherapy combinations [10]
+M. Siciliano et al., 2022 Systematic review and Bayesian NMA [14] Ranking of first-line ICI-based regimens for non-oncogene-addicted NSCLC [14] Cemiplimab ranked first for OS in PD-L1 >50% (HR 0.33, 95% CrI 0.14–0.75); atezolizumab/bevacizumab/CT ranked first for PFS [14, 14] Heterogeneity in included data; potential biases from crossover in RCTs; limited safety profile characterization in PD-L1-high subgroup [14]
+Zheng Chuangjie et al., 2022 Systematic review and network meta-analysis [17] ICI alone vs ICI plus chemotherapy in PD-L1 ≥50% NSCLC [17] Primary outcome was PFS; OS data not reported [17, 17] No sensitivity analysis performed; limited detail on included studies and outcomes; OS not evaluated [17]
+9
+T. Peng et al., 2021 Network meta-analysis [13] First-line ICIs for advanced NSCLC across PD-L1 subgroups [13] Pembrolizumab plus platinum-based chemotherapy ranked best for PFS in PD-L1 ≥50% (HR 0.39, 95% CI 0.27–0.56); atezolizumab ranked best for OS in this subgroup [13, 13] Heterogeneity from different treatment regimens; no data on tumor mutational burden; limited safety reporting [13]
+R. Pathak et al., 2020 Network meta-analysis [6] Chemoimmunotherapy vs ICI for first-line advanced NSCLC [6] Chemo-ICI showed significantly improved PFS (HR 0.59, 95% CrI 0.41–0.85) and ORR vs single-agent ICI in PD-L1-high tumors; no significant OS difference [6, 6] No safety data assessed; potential misclassification bias from differences in PD-L1 testing assays; no assessment for publication bias [6]
+T. Tokito et al., 2024 Phase II RCT [12] Epacadostat plus pembrolizumab vs pembrolizumab alone in PD-L1 ≥50% metastatic NSCLC [12] No improvement in ORR (32.5% vs 39.0%), PFS (6.7 vs 6.2 months, HR 1.10), or OS (HR 0.74, P=0.205) with epacadostat addition [12, 12] Small sample size (n=154); short follow-up (median ~7 months); study downsized from phase III to phase II and discontinued early [12]
+Yimin Wang et al., 2022 Network meta-analysis [7] ICI alone vs chemo-ICI in high PD-L1 expression NSCLC [7] Chemo-ICI significantly improved ORR (OR 1.7) and PFS (HR 0.59, 95% CI 0.48–0.74) vs ICI; no significant OS difference (HR 0.82, 95% CI 0.6–1.1) [7, 7] Reliance on published aggregate results rather than individual patient data; limited subgroup data for squamous histology and PD-L1 inhibitor subsets [7]
+10
+Rui Cao et al., 2019 Meta-analysis [15] ICIs vs chemotherapy vs combination as first-line treatment for advanced NSCLC [15] In PD-L1 ≥50%, similar OS between pembrolizumab monotherapy and combination therapy; combination improved PFS and ORR [15, 15] Study-level evidence with potential inter-study heterogeneity; no detailed safety data for PD-L1-high subgroup [15]
+D. Rodríguez Abreu et al., 2022 Phase III RCT follow-up (KEYNOTE-598) [11] 3-year follow-up of pembrolizumab plus ipilimumab vs pembrolizumab plus placebo in PD-L1 TPS ≥50% [11] No OS or PFS benefit from adding ipilimumab; median PFS 8.2 vs 8.4 months (HR 0.99); higher grade 3–5 treatment-related AEs with combination (35.1% vs 20.3%) [11, 11] Ipilimumab and placebo discontinued per DMC recommendation; subsequent pembro monotherapy in both arms complicates long-term analysis; does not evaluate chemoimmunotherapy combinations [11]
+DataSheet1.docx (cost-effectiveness analysis) Markov model with network meta-analysis [18] Cost-effectiveness of cemiplimab, pembrolizumab, and atezolizumab monotherapies and pembrolizumab–chemotherapy in PD-L1 ≥50% NSCLC [18] Cemiplimab was cost-effective compared with pembrolizumab and dominant over atezolizumab; pembrolizumab plus chemotherapy had ICERs of $190,994–$393,359/QALY vs monotherapies [18] No head-to-head trial data; relied on modeled estimates from NMA; histology not specified; limited patient characteristic granularity [18]
+The evidence base is dominated by network meta-analyses and indirect comparisons (14 of 18 sources), with only
+three primary RCTs (KEYNOTE-598 and its follow-up, and the epacadostat trial) providing direct head-to-head data,
+none of which compared pembrolizumab monotherapy with pembrolizumab–chemotherapy [10–12]. The NMAs
+consistently converge on the finding that combination therapy improves PFS (hazard ratios ranging from 0.55 to 0.81
+across analyses) but does not significantly improve OS in PD-L1-high disease [2, 4, 6, 8]. However, almost all comparisons between monotherapy and chemo-immunotherapy are indirect, linked through a common chemotherapy
+comparator, which introduces structural uncertainty that cannot be resolved without a direct randomized comparison.
+11
+Gaps in the Evidence Base
+The most consequential gap is the absence of any completed, adequately powered, randomized controlled trial
+directly comparing PD-1 inhibitor monotherapy with PD-1 inhibitor–chemotherapy in patients with PD-L1 TPS
+≥50%. All efficacy comparisons between these strategies in the included literature derive from indirect methods
+— network meta-analyses anchored to a chemotherapy common comparator [2, 4, 5, 7] — or from cross-trial
+real-world comparisons subject to substantial confounding [9]. The only direct head-to-head RCTs examined
+pembrolizumab–ipilimumab versus pembrolizumab alone (KEYNOTE-598) [10] and pembrolizumab–epacadostat
+versus pembrolizumab alone [12], neither of which evaluated the clinically relevant pembrolizumab–chemotherapy
+comparator. This means that the central clinical question — whether the PFS advantage of combination therapy
+translates into meaningful long-term survival benefit or merely shifts disease control forward without altering
+the OS trajectory — remains formally unanswered. The consequence is that clinician decision-making between
+monotherapy and chemo-immunotherapy in PD-L1-high disease continues to rely on indirect evidence and clinical
+judgment rather than definitive trial data.
+Second, the evidence base lacks adequate characterization of patient subgroups most likely to benefit differentially
+from monotherapy versus combination therapy. While several sources note that tumor burden, performance status,
+age, and histology may modify the relative benefit of these strategies [5, 9, 10], no included study provides prospective, biomarker-stratified subgroup analyses of monotherapy versus chemo-immunotherapy within the PD-L1-high
+population. Most NMAs do not report baseline characteristics such as liver metastases, brain metastases, or tumor
+burden in sufficient detail to perform meaningful moderator analyses [2, 6, 8, 13]. Only two studies explicitly discuss
+liver metastases as a clinical modifier [1, 14], and brain metastases subgroups are reported in only a few analyses
+[10, 12, 14]. The absence of validated predictive biomarkers beyond PD-L1 TPS — such as tumor mutational burden,
+gene expression profiles, or composite clinical-molecular scores — limits the ability to identify patients for whom
+the added toxicity of chemotherapy is justified by a genuine survival benefit versus those for whom monotherapy
+provides equivalent long-term outcomes with better tolerability [9, 13].
+Third, safety data comparing monotherapy and combination therapy in the PD-L1-high subgroup specifically are
+sparse. Most NMAs either do not report adverse events stratified by PD-L1 expression [6–8] or provide only aggregate safety data across PD-L1 strata [3, 13]. Detailed reporting of treatment-related deaths, discontinuation rates, and
+immune-related adverse event profiles is available from only a few studies [10–12], and these evaluate combination
+partners (ipilimumab, epacadostat) other than chemotherapy. The consequence is that the incremental toxicity burden of adding chemotherapy to pembrolizumab — particularly in older patients and those with ECOG performance
+status 1 — cannot be precisely quantified for the PD-L1-high population from existing data, weakening the riskbenefit assessment that underpins treatment selection. Long-term quality-of-life and patient-reported outcome data
+are similarly absent from all included sources, leaving the tolerability comparison between strategies incomplete.
+Recommendations for Future Research
+• Prospective randomized non-inferiority trial of pembrolizumab monotherapy versus pembrolizumab–
+chemotherapy in PD-L1 TPS ≥50% NSCLC. The trial should enroll treatment-naive patients with metastatic
+NSCLC, PD-L1 TPS ≥50%, and no targetable driver alterations. The primary endpoint should be overall
+survival with a pre-specified non-inferiority margin (e.g., HR upper bound 1.20). Stratification by tumor
+burden, histology, and performance status would enable prospective subgroup analyses. This design is
+justified by the consistent NMA signal of equivalent OS between strategies [2, 4, 8] and addresses the most
+critical evidence gap. The EA5163/S1709 INSIGNA trial has explored related sequencing questions [10], but a
+definitive non-inferiority comparison remains needed.
+12
+• Biomarker-stratified observational cohort study integrating tumor mutational burden, gene expression signatures, and composite clinical scores. Given the repeated observation that PD-L1 TPS alone is insufficient
+for treatment individualization [9, 13], a prospective registry enrolling patients receiving either monotherapy
+or chemo-immunotherapy in routine practice should collect baseline tumor mutational burden, inflammatory
+gene signatures, neutrophil-to-lymphocyte ratio, and imaging-based tumor burden metrics. The primary objective would be to develop and validate a predictive model for differential OS benefit. This observational design
+is feasible because both strategies are already in widespread clinical use, and the key barrier is systematic
+biomarker collection rather than treatment randomization.
+• Systematic safety comparison with patient-reported outcomes in PD-L1-high patients receiving monotherapy versus chemo-immunotherapy. A multi-center prospective cohort incorporating standardized adverse
+event grading (CTCAE v5), immune-related adverse event phenotyping, treatment discontinuation tracking,
+and validated patient-reported outcome instruments (e.g., EORTC QLQ-LC13) would address the current absence of quality-of-life data [9, 10]. Focus should include older adults (≥75 years) and patients with ECOG PS
+1–2, populations frequently underrepresented in pivotal trials but commonly encountered in practice [9].
+• Subgroup-focused analyses of existing trial data for patients with liver metastases, brain metastases,
+and high tumor burden. Pooled individual patient data meta-analysis of KEYNOTE-024, KEYNOTE-042,
+KEYNOTE-189, and KEYNOTE-407 could provide sufficiently powered subgroup comparisons that individual
+NMAs cannot achieve with aggregate data [1, 14]. Given that liver metastases are associated with poorer
+immunotherapy outcomes and brain metastases represent a growing clinical subpopulation, the absence of
+stratified efficacy data for these groups directly limits evidence-based treatment selection.
+• Cost-effectiveness analysis incorporating real-world effectiveness data and quality-of-life utilities. The
+single included cost-effectiveness study relied on modeled clinical inputs from NMA rather than observed realworld outcomes [18]. A pragmatic economic evaluation using real-world data from health systems in diverse
+geographic settings — including non-US populations underrepresented in the current evidence base — would
+improve the generalizability of value assessments, particularly given the high incremental cost-effectiveness
+ratios reported for pembrolizumab–chemotherapy versus monotherapy ICIs [18].
+References
+1. Herbst R, Jassem J, Abogunrin S, et al (2021) A Network Meta-Analysis of Cancer Immunotherapies Versus
+Chemotherapy for First-Line Treatment of Patients With Non-Small Cell Lung Cancer and High Programmed
+Death-Ligand 1 Expression. Frontiers in Oncology. https://doi.org/10.3389/fonc.2021.676732
+2. Kim JH, Jeong S, Lee J-J, et al (2021) A Bayesian Network Meta-Analysis of First-Line Treatments for NonSmall Cell Lung Cancer with High Programmed Death Ligand-1 Expression. Journal of Clinical Medicine.
+https://doi.org/10.3390/jcm11061492
+3. Liang H, Lin G, Wang W, et al (2020) Feasibility and safety of PD-1/L1 inhibitors for non-small cell lung cancer
+in front-line treatment: a Bayesian network meta-analysis. Translational Lung Cancer Research. https:
+//doi.org/10.21037/tlcr.2020.02.14
+13
+4. Huang S, Huang Z, Huang X, et al (2024) Comparative long-term outcomes of pembrolizumab plus chemotherapy versus pembrolizumab monotherapy as first-line therapy for metastatic non-small-cell lung cancer: a
+systematic review and network meta-analysis. Frontiers in Immunology. https://doi.org/10.3389/fimmu.20
+24.1375136
+5. Zhou Y, Lin Z, Zhang X, et al (2019) First-line treatment for patients with advanced non-small cell lung
+carcinoma and high PD-L1 expression: pembrolizumab or pembrolizumab plus chemotherapy. Journal of
+Immunotherapy for Cancer. https://doi.org/10.1186/s40425-019-0600-6
+6. Pathak R, Lopes G de L, Yu H, et al (2020) Comparative efficacy of chemoimmunotherapy versus immunotherapy for advanced non–small cell lung cancer: A network meta‐analysis of randomized trials. Cancer.
+https://doi.org/10.1002/cncr.33269
+7. Wang Y, Han H, Zhang F, et al (2022) Immune checkpoint inhibitors alone vs immune checkpoint inhibitors—
+combined chemotherapy for NSCLC patients with high PD-L1 expression: a network meta-analysis. British
+Journal of Cancer. https://doi.org/10.1038/s41416-022-01832-4
+8. Li X, Yan S, Yang J, et al (2021) Efficacy and Safety of PD-1/PD-L1 Inhibitors Plus Chemotherapy Versus PD1/PD-L1 Inhibitors in Advanced Non-Small Cell Lung Cancer: A Network Analysis of Randomized Controlled
+Trials. Frontiers in Oncology. https://doi.org/10.3389/fonc.2020.574752
+9. Bachurski P, Chmiel G, Kalinowski P, et al (2026) Optimal First-Line Use of Pembrolizumab in Metastatic
+Driver-Negative NSCLC: Monotherapy Versus Chemo-Immunotherapy (Evidence 2022–2025). Quality in
+Sport. https://doi.org/10.12775/qs.2026.51.68252
+10. Boyer M, Şendur M, Rodríguez-Abreu D, et al (2021) Pembrolizumab Plus Ipilimumab or Placebo for
+Metastatic Non–Small-Cell Lung Cancer With PD-L1 Tumor Proportion Score ≥ 50%: Randomized, DoubleBlind Phase III KEYNOTE-598 Study. Journal of Clinical Oncology. https://doi.org/10.1200/JCO.20.03579
+11. Abreu DR, Reck M, Sendur N, et al (2022) 6MO Pembrolizumab plus ipilimumab or placebo in previously untreated metastatic NSCLC with PD-L1 tumor proportion score ≥50%: KEYNOTE-598 3-year follow-up. Annals
+of Oncology. https://doi.org/10.1016/j.annonc.2022.02.015
+12. Tokito T, Kolesnik O, Sørensen J, et al (2024) Epacadostat plus pembrolizumab versus placebo plus pembrolizumab as first-line treatment for metastatic non-small cell lung cancer with high levels of programmed
+death-ligand 1: a randomized, double-blind phase 2 study. BMC Cancer. https://doi.org/10.1186/s12885-023-
+11203-8
+13. Peng T, Lin H-H, Tsai F-P, Wu T (2021) Immune checkpoint inhibitors for first‐line treatment of advanced
+non‐small‐cell lung cancer: A systematic review and network meta‐analysis. Thoracic Cancer. https://doi.or
+g/10.1111/1759-7714.14148
+14. Siciliano M, Caridà G, Ciliberto D, et al (2022) Efficacy and safety of first-line checkpoint inhibitors-based
+treatments for non-oncogene-addicted non-small-cell lung cancer: a systematic review and meta-analysis.
+ESMO Open. https://doi.org/10.1016/j.esmoop.2022.100465
+14
+15. Cao R, Ma J, Zhang S, et al (2019) Rational application of the first‐line chemotherapy and immune checkpoint
+inhibitors in advanced nonsmall cell lung cancer: A meta‐analysis. Cancer Medicine. https://doi.org/10.100
+2/cam4.2407
+16. Li L, Xu F, Chen Y, et al (2020) Indirect comparison between immunotherapy alone and immunotherapy plus
+chemotherapy as first-line treatment for advanced non-small cell lung cancer: a systematic review. BMJ
+Open. https://doi.org/10.1136/bmjopen-2019-034010
+17. chuangjie zheng, jiahao tao, linheng jiang, et al (2022) Immune checkpoint inhibitors, alone or in combination with chemotherapy, as first-line treatment for advanced non-small cell lung cancer in patients with
+PD-L1≥50a systematic review and network meta-analysis. https://doi.org/10.37766/inplasy2022.4.0011
+18. DataSheet1.docx. https://doi.org/10.3389/fphar.2021.788569.s001
+15

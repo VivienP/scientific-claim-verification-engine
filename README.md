@@ -54,7 +54,7 @@ Verdicts: `supported` · `partially_supported` · `unsupported` · `not_addresse
 | Lactate-ISF, 25 expert-annotated claims | **full pipeline** | 16/25 verdict agreement (64%) | [eval/e2e/](eval/e2e/reference_paper_v1_results.md) |
 | Valsci paper (bioinformatics), 11 external claims | resolver | 10/11 correct source (91%) | [benchmarks/real_papers/valsci_brice_2025/](benchmarks/real_papers/valsci_brice_2025/README.md) |
 | SciFact dev | verifier, oracle inputs | F1 = 0.94 | binary, [scripts/eval_scifact.py](scripts/eval_scifact.py) |
-| Real AI-for-science tools, 59 claims | resolver | 72.9% citation found rate | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
+| Real AI-for-science tools, 187 claims across 6 outputs | full pipeline | 84.5% citation found rate; 67 supported / 29 partial / 31 unsupported / 60 not_addressed; 24 numeric checks (4 flagged) | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
 
 ## Pipeline
 

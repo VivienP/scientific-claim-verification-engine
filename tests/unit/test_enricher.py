@@ -434,3 +434,185 @@ class TestConflictingEvidenceFlagIntegration:
         ev = enricher.enrich_one(_make_cv_multi("partially_supported", n_sources=2))
         # GENERAL mode does not surface evidence-quality fields.
         assert ev.copilot.conflicting_evidence_flag is None
+
+
+# ---------------------------------------------------------------------------
+# enrich_all_async — tests target failure modes only
+#   (ordering, exception isolation, concurrency cap, parallelism reality)
+# ---------------------------------------------------------------------------
+
+
+def _cv_n(idx: int, verdict: str = "unsupported") -> ClaimVerification:
+    """Build a CV with a unique claim_id for ordering / isolation tests."""
+    claim = Claim(
+        claim_id=f"cl-async-{idx:03d}",
+        claim_text=f"Claim number {idx}.",
+        cited_authors=["X"],
+        cited_year=2022,
+        claim_type="factual_qualitative",
+    )
+    source = ResolvedSource(
+        found=True,
+        doi="10.1234/source",
+        title="t",
+        abstract="a",
+        similarity_score=0.7,
+    )
+    source_set = ResolvedSourceSet(sources=(source,), citation_markers=(1,))
+    result = VerificationResult(status=verdict, explanation="x", confidence=0.4)  # type: ignore[arg-type]
+    return ClaimVerification(
+        claim=claim,
+        source=source,
+        source_set=source_set,
+        result=result,
+        fetch_method="abstract",
+    )
+
+
+class TestEnrichAllAsync:
+    """Async batch tests. Stub all sub-components; focus on orchestration."""
+
+    async def test_empty_input_returns_empty(self, tmp_path: Path) -> None:
+        enricher = CopilotEnricher(CopilotConfig(db_path=tmp_path / "c.db"))
+        result = await enricher.enrich_all_async([])
+        assert result == []
+
+    @patch("src.copilot.enricher.extract_rationale", side_effect=_stub_rationale)
+    @patch("src.copilot.enricher.classify_source", side_effect=_stub_classify)
+    @patch("src.copilot.enricher.find_primary_source_doi", side_effect=_stub_lookup)
+    @patch("src.copilot.enricher.generate_fix", side_effect=_stub_fix)
+    async def test_preserves_input_order(
+        self,
+        mock_fix: MagicMock,
+        mock_lookup: MagicMock,
+        mock_classify: MagicMock,
+        mock_rationale: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        # Unique claim_ids; the async return must come back in input order
+        # even though enrichment runs concurrently.
+        cvs = [_cv_n(i) for i in range(10)]
+        enricher = CopilotEnricher(CopilotConfig(db_path=tmp_path / "c.db", concurrency=4))
+        results = await enricher.enrich_all_async(cvs)
+        assert [ev.base.claim.claim_id for ev in results] == [
+            f"cl-async-{i:03d}" for i in range(10)
+        ]
+
+    @patch("src.copilot.enricher.extract_rationale", side_effect=_stub_rationale)
+    @patch("src.copilot.enricher.classify_source", side_effect=_stub_classify)
+    @patch("src.copilot.enricher.find_primary_source_doi", side_effect=_stub_lookup)
+    @patch("src.copilot.enricher.generate_fix", side_effect=_stub_fix)
+    async def test_drops_failed_claims_and_continues(
+        self,
+        mock_fix: MagicMock,
+        mock_lookup: MagicMock,
+        mock_classify: MagicMock,
+        mock_rationale: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        # Make extract_rationale raise on claim index 2 only. The other 4
+        # must still be enriched and returned in original order (minus the
+        # failed one). Mirrors sync enrich_all's "drop on failure" semantics.
+        original = _stub_rationale
+
+        def _flaky(cv: ClaimVerification, **kw: object) -> tuple[str, ProvenanceStep]:
+            if cv.claim.claim_id == "cl-async-002":
+                raise RuntimeError("synthetic failure")
+            return original(cv, **kw)
+
+        mock_rationale.side_effect = _flaky
+        cvs = [_cv_n(i) for i in range(5)]
+        enricher = CopilotEnricher(CopilotConfig(db_path=tmp_path / "c.db", concurrency=2))
+        results = await enricher.enrich_all_async(cvs)
+        # 4/5 returned, claim cl-async-002 dropped, order otherwise preserved.
+        assert len(results) == 4
+        assert [ev.base.claim.claim_id for ev in results] == [
+            "cl-async-000",
+            "cl-async-001",
+            "cl-async-003",
+            "cl-async-004",
+        ]
+
+    async def test_concurrency_cap_is_respected(self, tmp_path: Path) -> None:
+        # Replace extract_rationale with a stub that records the maximum
+        # number of in-flight calls. Cap=3, run 12 claims; max in-flight
+        # must never exceed 3 even though gather schedules all 12 tasks.
+        import threading
+
+        in_flight = 0
+        max_in_flight = 0
+        lock = threading.Lock()
+
+        def _slow_rationale(cv: ClaimVerification, **_: object) -> tuple[str, ProvenanceStep]:
+            nonlocal in_flight, max_in_flight
+            with lock:
+                in_flight += 1
+                max_in_flight = max(max_in_flight, in_flight)
+            try:
+                # Tiny sleep so concurrent tasks actually overlap before
+                # any single call returns.
+                import time as _t
+
+                _t.sleep(0.05)
+                return _stub_rationale(cv)
+            finally:
+                with lock:
+                    in_flight -= 1
+
+        with (
+            patch("src.copilot.enricher.extract_rationale", side_effect=_slow_rationale),
+            patch("src.copilot.enricher.classify_source", side_effect=_stub_classify),
+            patch("src.copilot.enricher.find_primary_source_doi", side_effect=_stub_lookup),
+            patch("src.copilot.enricher.generate_fix", side_effect=_stub_fix),
+        ):
+            cvs = [_cv_n(i) for i in range(12)]
+            enricher = CopilotEnricher(CopilotConfig(db_path=tmp_path / "c.db", concurrency=3))
+            results = await enricher.enrich_all_async(cvs)
+
+        assert len(results) == 12
+        assert max_in_flight <= 3, f"semaphore breached: peak in-flight = {max_in_flight}"
+        # Sanity: parallelism actually happened (peak > 1). Otherwise we'd
+        # be silently testing serial execution and the cap is moot.
+        assert max_in_flight >= 2, "no observable parallelism — to_thread may have serialised"
+
+    @patch("src.copilot.enricher.extract_rationale", side_effect=_stub_rationale)
+    @patch("src.copilot.enricher.classify_source", side_effect=_stub_classify)
+    @patch("src.copilot.enricher.find_primary_source_doi", side_effect=_stub_lookup)
+    @patch("src.copilot.enricher.generate_fix", side_effect=_stub_fix)
+    async def test_async_faster_than_sync_under_simulated_latency(
+        self,
+        mock_fix: MagicMock,
+        mock_lookup: MagicMock,
+        mock_classify: MagicMock,
+        mock_rationale: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Falsifier: if to_thread silently serialises, async time ≈ sync time.
+
+        With 8 concurrent claims each waiting 50ms in extract_rationale,
+        sync run >= 400ms, async run with concurrency=8 should be <= ~150ms
+        (roughly one call's latency + overhead). We assert async < sync/2
+        which is a generous-but-strict floor.
+        """
+        import time as _t
+
+        def _slow_rationale(cv: ClaimVerification, **_: object) -> tuple[str, ProvenanceStep]:
+            _t.sleep(0.05)
+            return _stub_rationale(cv)
+
+        mock_rationale.side_effect = _slow_rationale
+        cvs = [_cv_n(i) for i in range(8)]
+        enricher = CopilotEnricher(CopilotConfig(db_path=tmp_path / "c.db", concurrency=8))
+
+        t0 = _t.perf_counter()
+        sync_results = enricher.enrich_all(cvs)
+        sync_elapsed = _t.perf_counter() - t0
+
+        t0 = _t.perf_counter()
+        async_results = await enricher.enrich_all_async(cvs)
+        async_elapsed = _t.perf_counter() - t0
+
+        assert len(sync_results) == 8 and len(async_results) == 8
+        assert async_elapsed < sync_elapsed / 2, (
+            f"async did not parallelise: sync={sync_elapsed:.3f}s, async={async_elapsed:.3f}s"
+        )

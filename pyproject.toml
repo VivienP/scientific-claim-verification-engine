@@ -21,6 +21,12 @@ dependencies = [
 edison = [
     "edison-client",
 ]
+mcp = [
+    # Anthropic MCP SDK — installed only when an agent will consume the
+    # verification engine via stdio / SSE / streamable-http. The lite
+    # FastAPI is independent and does not need this.
+    "mcp>=1.12.0",
+]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -29,6 +35,13 @@ dev = [
     "ruff>=0.4.0",
     "python-dotenv>=1.0.0",
 ]
+
+[project.scripts]
+# Console entrypoint for the MCP wrapper. Configure Claude Desktop /
+# Claude Agent SDK to spawn `copilot-mcp` with COPILOT_API_KEY +
+# COPILOT_API_BASE_URL set in the env block. Requires the `mcp` extra:
+#   pip install -e '.[mcp]'
+copilot-mcp = "src.mcp_server.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

@@ -5,6 +5,8 @@
 
 > Run any scientific text — paper drafts, AI summaries, literature reviews — through the pipeline; get back one verdict per cited claim, grounded in the actual cited source, with full provenance.
 
+**Three ways to consume the engine**: as a Python library ([Quick Start](#quick-start) below), as an HTTP service for on-prem deployment ([HTTP API](#http-api-on-prem-deployment)), or as an [MCP server](#mcp-server-agent-callable) — Claude Desktop, Claude Agent SDK, and any MCP-compatible agent can call `verify_text` directly.
+
 ## Example
 
 **Input:** a claim from an AI-generated literature review — *"Smith et al. (2023) showed that treatment X reduced biomarker Y by 40%."*
@@ -140,6 +142,42 @@ Endpoints (all require `X-API-Key: $COPILOT_API_KEY` except `/health`):
 | `GET` | `/runs/{run_id}/copilot_report.html` | Self-contained Copilot HTML (path-confined) — see [docs/output-schema.md](docs/output-schema.md#6-copilot-enrichment) for the per-claim Copilot fields surfaced in the HTML |
 
 Programmatic factory: `from src.api import create_app; app = create_app()`. Client example: [`examples/api_run.py`](examples/api_run.py). Container hardening: non-root uid 10001, `read_only: true`, `cap_drop: ALL`, exact-pinned Python deps. Single-tenant Phase C; multi-tenant Postgres-backed JobStore is deferred to Phase D.
+
+## MCP server (agent-callable)
+
+For AI agents (Claude Desktop, Claude Agent SDK, any MCP client), the engine ships a thin MCP wrapper at [`src/mcp_server/`](src/mcp_server/). It speaks JSON-RPC over stdio (default) or streamable HTTP and forwards tool calls to the lite API above — agents never see the polling loop.
+
+**Tools exposed**: `verify_text(text, mode, copilot_mode, wait, timeout_seconds)`, `get_job_status(job_id)`, `get_health()`. **Resource**: `report://{run_id}` returns the Copilot HTML.
+
+```bash
+# Install with the mcp extra
+pip install -e '.[mcp]'
+
+# Required env (matches the lite API)
+export COPILOT_API_KEY="$(openssl rand -hex 32)"
+export COPILOT_API_BASE_URL="http://127.0.0.1:8000"  # or your VPC URL
+
+# Stdio transport — what Claude Desktop spawns
+copilot-mcp
+```
+
+Claude Desktop config (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "scve": {
+      "command": "copilot-mcp",
+      "env": {
+        "COPILOT_API_BASE_URL": "http://127.0.0.1:8000",
+        "COPILOT_API_KEY": "<same key as the lite API>"
+      }
+    }
+  }
+}
+```
+
+The MCP server requires the lite API to be running (locally or remotely). It is a stateless adapter — provenance is captured by the underlying API in `reports/runs/api-{job_id[:8]}/provenance.jsonl`, not by the MCP layer (consistent with the [`provenance-first`](.claude/rules/provenance-first.md) rule).
 
 ## Limitations
 

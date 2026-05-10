@@ -179,6 +179,9 @@ def build_report(
     total_cost = _compute_cost(provenance_steps)
     stats["total_cost_usd"] = total_cost
     stats["usage_by_stage"] = _compute_usage_by_stage(provenance_steps)  # type: ignore[assignment]
+    stats["cross_modal_disagreements"] = sum(
+        1 for s in provenance_steps if s.operation == "verify_cross_modal" and s.confidence is None
+    )
 
     claim_records = []
     for claim in claims:

@@ -140,6 +140,8 @@ python -m ruff check src tests scripts
 
 Canary controls (contradiction detection, weak resolution, numeric inconsistency): use `benchmarks/canary/input.txt` as the input text in the Quick Start snippet above.
 
+Claude Code workflows: `/eval` (SciFact dev metrics), `/dogfood` (run pipeline on real AI-tool output), `/skillify-failure` (convert dogfood failures into draft regression tests + rules + prompt patches). Agents and rules under [`.claude/`](.claude/).
+
 ## License & Contact
 
 Apache 2.0 — see [LICENSE](LICENSE). Dataset under `eval/e2e/` is CC BY-NC.

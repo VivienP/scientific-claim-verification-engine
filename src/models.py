@@ -18,6 +18,7 @@ OperationType = Literal[
     "chunk_paper",
     "select_passages",
     "verify",
+    "verify_cross_modal",
     "aggregate",
     "numeric_extract",
     "numeric_check",

@@ -332,6 +332,91 @@ class TestPhase1ReportFields:
         assert report["summary"]["numeric_checks_run"] == 2
         assert report["summary"]["numeric_inconsistencies_flagged"] == 1
 
+    def test_cross_modal_disagreements_count_in_summary(self, tmp_path: Path) -> None:
+        """Counts ProvenanceSteps with operation=verify_cross_modal AND confidence=None.
+
+        Disagreement records emit confidence=None; agreement records preserve
+        primary's confidence. The summary count surfaces disagreements only.
+        """
+        from src.report import build_report
+
+        claims = [_make_claim("c1"), _make_claim("c2"), _make_claim("c3")]
+        sources = {"c1": _make_source(), "c2": _make_source(), "c3": _make_source()}
+        results = {
+            "c1": _make_result(),
+            "c2": _make_result(),
+            "c3": _make_result(),
+        }
+        steps = [
+            _make_step("s1", "c1", operation="verify"),
+            _make_step("s2", "c2", operation="verify"),
+            _make_step("s3", "c3", operation="verify"),
+            # Cross-modal: c1 disagreement (confidence=None), c2 agreement (confidence=0.9)
+            ProvenanceStep(
+                step_id="cm1",
+                claim_id="c1",
+                operation="verify_cross_modal",
+                input_hash="x",
+                output_hash="y",
+                model_id="claude-haiku-4-5-20251001",
+                timestamp=time.time(),
+                tokens_in=200,
+                tokens_out=40,
+                cache_hit=False,
+                confidence=None,
+            ),
+            ProvenanceStep(
+                step_id="cm2",
+                claim_id="c2",
+                operation="verify_cross_modal",
+                input_hash="x",
+                output_hash="y",
+                model_id="claude-haiku-4-5-20251001",
+                timestamp=time.time(),
+                tokens_in=200,
+                tokens_out=40,
+                cache_hit=False,
+                confidence=0.9,
+            ),
+        ]
+
+        run_dir = build_report(
+            "report-cm",
+            "Text.",
+            claims,
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["cross_modal_disagreements"] == 1
+
+    def test_cross_modal_disagreements_zero_when_no_cross_modal_steps(self, tmp_path: Path) -> None:
+        """Field always present in summary, even with no cross-modal activity."""
+        from src.report import build_report
+
+        claims = [_make_claim("c1")]
+        sources = {"c1": _make_source()}
+        results = {"c1": _make_result()}
+        steps = [_make_step("s1", "c1", operation="verify")]
+
+        run_dir = build_report(
+            "report-cm-zero",
+            "Text.",
+            claims,
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["summary"]["cross_modal_disagreements"] == 0
+
     def test_retracted_sources_count_in_summary(self, tmp_path: Path) -> None:
         from src.report import build_report
 

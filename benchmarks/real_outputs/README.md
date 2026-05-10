@@ -48,6 +48,4 @@ Measured across 135 claims on 5 benchmarks (4 from this directory + Valsci Brice
 | `answerthis_lactate` | 28.00% |
 | **Aggregate** | **65.9%** (+17pp vs 48.9% pre-Phase-A.2) |
 
-Per-claim failure breakdown and dominant-mode analysis: [reports/phase_a2/ctran_failure_matrix.md](../../reports/phase_a2/ctran_failure_matrix.md).
-
 CTran is not measured here for the two Elicit Systematic Review benchmarks (GLP-1, PD-1) which post-date the Phase A.2 baseline measurement. Their report.json entries already benefit from the fallback (the verifier change shipped before they ran).

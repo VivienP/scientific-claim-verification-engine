@@ -28,8 +28,6 @@ the `.md` extension. Example: prompt `verify_v1.md` → eval set
 
 ## Train / dev / test isolation
 
-Per [`benchmark-isolation`](../../.claude/rules/benchmark-isolation.md):
-
 - Eval set examples may come from `eval/scifact/train/` or `eval/scifact/dev/`.
 - **Never** seed from `eval/scifact/test/`.
 - Regressions in [`eval/regressions/`](../regressions/) are always safe to use.

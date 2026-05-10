@@ -69,7 +69,7 @@ Question: if the resolver had returned the correct paper, what verdict would the
 
 Method: build an oracle `ResolvedSource` per claim using the abstract of the audited primary source (fetched via PubMed by DOI/PMID, with CrossRef as fallback), then run `verify_claim()` (abstract-only path) on the (claim, oracle_abstract) pair. Skip claims with `primary_source_doi=N/A` or where neither PubMed nor CrossRef returns a relevant abstract.
 
-Result: 5/21 oracle agreements (23.8% when attempted). Across the full 25-claim benchmark this is 5/25 (20.0%) — a 0.3× improvement over the current 1/25 baseline driven by giving the verifier the right source.
+Result: 5/21 oracle agreements (23.8% when attempted). Across the full 25-claim benchmark this is 5/25 (20.0%). The oracle isolates verifier behavior from upstream resolver/retrieval failures — even when the verifier is given the correct source abstract, much of the residual gap is the rubric's preference for `not_addressed` over `unsupported` on absence-of-support cases (see breakdown below).
 
 Failure mode breakdown of the residual gap (oracle disagreements):
 
@@ -111,7 +111,7 @@ The dominant residual gap is the verifier returning `not_addressed` when the sou
 | lactate_review_024 | Microfluidic technology has been used to control the porosi… | supported | partially_supported | — | N | full text unavailable; verifier scored on abstract |
 | lactate_review_025 | The lag time of glucose concentrations in the ISF is around… | partially_supported | partially_supported | — | Y | full text unavailable; verifier scored on abstract |
 
-## Top-3 most informative disagreements
+## Top-3 most informative cases
 
 ### 1. Silent wrong-DOI with year-based "similarity" score (claim 003)
 - **Claim:** *Whole blood-plasma lactate concentration ratio might vary from 63% to 81% depending on plasma water content and hematocrit.*
@@ -125,11 +125,11 @@ The dominant residual gap is the verifier returning `not_addressed` when the sou
 - **Pipeline:** retrieved `10.1186/cc3987` (a 2006 *Critical Care* paper, not Forsythe 2000 *Chest*). Verifier returned `not_addressed`.
 - **Oracle verifier:** with the correct Forsythe 2000 abstract via PubMed, the verifier still returns `not_addressed` rather than `unsupported`. The rubric pushes uncertain or absence-of-support evidence to the abstention verdict, so even on the correct source this consequential error is not flagged. Closing this gap requires the verifier rubric extension.
 
-### 3. The one pipeline success — when verbatim title matches the claim (claim 023)
+### 3. The cleanest positive case — verbatim title match (claim 023)
 - **Claim:** *3D printing has emerged as a promising technique for fabricating microneedle arrays, enabling point-of-care biosensing applications.*
 - **Cited:** Rezapour Sarabi et al. 2022 (DOI `10.3390/mi13071099`).
-- **Pipeline:** resolved correctly, fetched OA PDF from MDPI, BM25 selected the abstract section, verifier returned `supported` — the only pipeline match in the benchmark.
-- **Why this is informative**: the title of the source paper is verbatim the claim (*"3D-Printed Microneedles for Point-of-Care Biosensing Applications"*). When the lexical signal is this strong, the pipeline works. Every other claim requires the resolver to map a different surface form — author + year + topic, not title — and that's where the system falls over. This is a positive control showing the verifier and fetcher work; the gap is upstream.
+- **Pipeline:** resolved correctly, fetched OA PDF from MDPI, BM25 selected the abstract section, verifier returned `supported`.
+- **Why this is informative**: the title of the source paper is verbatim the claim (*"3D-Printed Microneedles for Point-of-Care Biosensing Applications"*). When the lexical signal is this strong, the pipeline produces a clean diagonal match. Several of the 16/25 agreements are abstract-only or partial-class matches; this one is the cleanest illustration of the fulltext + correct-resolution success path.
 
 ## What this benchmark validates
 
@@ -137,5 +137,5 @@ The dominant residual gap is the verifier returning `not_addressed` when the sou
 - The resolver is the dominant first blocker on real-world content. A resolver-only fix caps benchmark agreement at ~9/25; the realistic combined-fix ceiling is in the 16–20/25 range.
 - The headline SciFact F1 = 0.94 measures binary support/contradict on oracle abstracts, with `partially_supported` collapsed to `supported`, so it does not measure the partial-class behavior that dominates this benchmark (12/25 partial claims).
 - The headline `similarity_score` field in the resolver output is publication-year proximity, not text similarity. A score of 1.0 means same year as the query, not high content match.
-- The single agreement (`lactate_review_023`) flagged `resolution_low_confidence = True` despite resolving correctly. The current low-confidence signal is noisy enough that a naive "filter low-confidence" rule would suppress the only success.
+- Claim 023 (`lactate_review_023`) flagged `resolution_low_confidence = True` despite resolving correctly. The current low-confidence signal is noisy enough that a naive "filter low-confidence" rule would suppress correct verdicts.
 - This is the first benchmark in the repo that measures the full pipeline against domain-expert-validated ground truth on a bibliography-cited document.

@@ -45,10 +45,9 @@ flowchart TD
 
 **Legend** — yellow = LLM call · green = deterministic Python · blue = I/O.
 
-The deterministic-only steps are protected by
-[`.claude/rules/no-llm-in-deterministic.md`](../.claude/rules/no-llm-in-deterministic.md):
-no LLM may be added to chunk-selection, audit-trail fallback, numeric checks,
-or aggregation. Same input always produces the same verdict.
+Deterministic steps stay LLM-free by design: no LLM may be added to
+chunk-selection, audit-trail fallback, numeric checks, or aggregation.
+Same input always produces the same verdict.
 
 ---
 
@@ -80,9 +79,8 @@ Hard caps (deterministic post-LLM):
 - `title_only` mode → verdict capped at `partially_supported`, confidence ≤ 0.7.
 - `citing_paper_context` mode → verdict capped at `partially_supported`, confidence ≤ 0.6.
 - `multi_source` mode → aggregator returns `partially_supported` whenever any
-  one source disagrees with another (per
-  [.claude/rules/cross-modal-disagreement.md](../.claude/rules/cross-modal-disagreement.md)
-  philosophy applied to multi-source).
+  one source disagrees with another (cross-modal disagreement philosophy
+  applied to multi-source).
 
 ---
 
@@ -111,8 +109,8 @@ The blue path is the Phase A.2 addition. Pre-fix it would have produced
 saw nothing despite the pipeline having seen everything.
 
 CTran impact across 135 claims on 5 benchmarks: **48.9% → 65.9% (+17pp)**.
-See [reports/phase_a2/ctran_failure_matrix.md](../reports/phase_a2/ctran_failure_matrix.md)
-for the per-bucket breakdown.
+Per-benchmark breakdown: see the CTran table in
+[benchmarks/real_outputs/README.md](../benchmarks/real_outputs/README.md#claim-transparency-ctran).
 
 ---
 
@@ -145,9 +143,8 @@ Replay invariant: re-running the pipeline on the same input text with the
 same model should produce identical `input_hash` / `output_hash` chains for
 the deterministic steps. LLM steps drift, but the chain shape is preserved.
 
-See [.claude/rules/provenance-first.md](../.claude/rules/provenance-first.md)
-for the provenance schema and Phase 0–3 storage rules (JSONL append; graph DB
-deferred to Phase 4+).
+Provenance schema (Phase 0–3): JSONL append at
+`reports/runs/{run_id}/provenance.jsonl`; graph DB deferred to Phase 4+.
 
 ---
 
@@ -200,4 +197,4 @@ is deferred to Phase D.
 - [src/models.py](../src/models.py) — frozen dataclasses, type-checked
 - [src/pipeline.py](../src/pipeline.py) — verifier routing logic
 - [src/verify.py](../src/verify.py) — verifier modes + audit-trail fallback
-- [reports/phase_a2/ctran_failure_matrix.md](../reports/phase_a2/ctran_failure_matrix.md) — CTran baseline + lift
+- [benchmarks/real_outputs/README.md](../benchmarks/real_outputs/README.md#claim-transparency-ctran) — CTran baseline + lift

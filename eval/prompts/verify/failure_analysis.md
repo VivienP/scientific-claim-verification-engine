@@ -8,6 +8,6 @@ Required content:
 2. **Category:** extraction-miss / false-positive / wrong-status / wrong-confidence / hallucinated-evidence.
 3. **Hypothesis:** prompt ambiguity / missing examples / wrong framing / structural issue.
 
-Reference:
-- Rule: [`benchmark-isolation`](../../../.claude/rules/benchmark-isolation.md) — never use test split for selection.
-- Rule: [`offline-tests`](../../../.claude/rules/offline-tests.md) — eval sets must run offline.
+Reference rules:
+- Never use the test split for prompt selection.
+- Eval sets must run offline (no real API calls).

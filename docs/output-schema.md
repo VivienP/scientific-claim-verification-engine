@@ -154,7 +154,7 @@ When the claim contains a quantitative assertion (OR/CI triple, p-value/CI), the
 }
 ```
 
-The comparison step itself contains **zero LLM calls** (`.claude/rules/no-llm-in-deterministic.md`) — same input always yields same verdict. The LLM is only used to *extract* the numbers from text.
+The comparison step itself contains **zero LLM calls** — same input always yields same verdict. The LLM is only used to *extract* the numbers from text.
 
 ---
 
@@ -295,6 +295,4 @@ A minimal real entry (excerpted from [benchmarks/real_outputs/elicit_psilocybin/
 ## See also
 
 - [docs/architecture.md](architecture.md) — pipeline + verifier-routing diagrams
-- [.claude/rules/provenance-first.md](../.claude/rules/provenance-first.md) — provenance invariants
-- [.claude/rules/no-llm-in-deterministic.md](../.claude/rules/no-llm-in-deterministic.md) — numeric-engine determinism
-- [.claude/rules/cross-modal-disagreement.md](../.claude/rules/cross-modal-disagreement.md) — high-confidence verdict cross-check
+- [src/models.py](../src/models.py) — frozen dataclasses for `Claim`, `ResolvedSource`, `VerificationResult`, `ProvenanceStep`

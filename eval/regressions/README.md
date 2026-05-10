@@ -28,7 +28,7 @@ eval/regressions/
 {
   "regression_id": "9c7f3a-elicit-claim-12",
   "captured_at": "2026-05-11T14:32:00Z",
-  "source_run": "reports/dogfood/2026-05-11/elicit/",
+  "source_run": "reports/dogfood/<date>/<run-id>/",
   "claim_id": "claim-12-from-report.json",
   "claim_text": "Lactate concentration in interstitial fluid is approximately 1.7 mmol/L",
   "expected_verdict": "partially_supported",
@@ -49,7 +49,6 @@ be filled before the test is meaningful), `expected_doi` / `actual_doi`
 
 ## Why separate from `eval/scifact/dev.jsonl`
 
-Per [`.claude/rules/benchmark-isolation.md`](../../.claude/rules/benchmark-isolation.md):
 SciFact is a public benchmark used for external comparability. Mixing internal
 regressions with SciFact dev would break that. Future re-evaluation of SciFact
 on different splits or with different metrics must remain possible.

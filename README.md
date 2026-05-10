@@ -74,10 +74,10 @@ Full schema (nested fields, Copilot enrichment, worked example): [docs/output-sc
 | Benchmark | Scope | Result | Detail |
 | --- | --- | --- | --- |
 | Lactate-ISF, 25 expert-annotated claims | **full pipeline** | 16/25 verdict agreement (64%) | [eval/e2e/](eval/e2e/reference_paper_v1_results.md) |
-| Valsci paper (bioinformatics), 11 external claims | resolver | 10/11 correct source (91%) | [benchmarks/real_papers/valsci_brice_2025/](benchmarks/real_papers/valsci_brice_2025/README.md) |
+| Valsci paper (bioinformatics), 11 external claims | resolver | 11/11 correct source (100%) | [benchmarks/real_papers/valsci_brice_2025/](benchmarks/real_papers/valsci_brice_2025/README.md) |
 | SciFact dev | verifier, oracle inputs | F1 = 0.94 | binary, [scripts/eval_scifact.py](scripts/eval_scifact.py) |
 | Real AI-for-science tools, 187 claims across 6 outputs | full pipeline | 84.5% citation found rate; 67 supported / 29 partial / 31 unsupported / 60 not_addressed; 24 numeric checks (4 flagged) | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
-| Claim Transparency (CTran) across 135 claims, 5 benchmarks | audit trail | 65.9% transparent (+17pp vs pre-fix baseline) | [reports/phase_a2/](reports/phase_a2/ctran_failure_matrix.md) |
+| Claim Transparency (CTran) across 135 claims, 5 benchmarks | audit trail | 65.9% transparent (+17pp vs pre-fix baseline) | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md#claim-transparency-ctran) |
 
 ## Pipeline
 
@@ -177,7 +177,7 @@ Claude Desktop config (`claude_desktop_config.json`):
 }
 ```
 
-The MCP server requires the lite API to be running (locally or remotely). It is a stateless adapter — provenance is captured by the underlying API in `reports/runs/api-{job_id[:8]}/provenance.jsonl`, not by the MCP layer (consistent with the [`provenance-first`](.claude/rules/provenance-first.md) rule).
+The MCP server requires the lite API to be running (locally or remotely). It is a stateless adapter — provenance is captured by the underlying API in `reports/runs/api-{job_id[:8]}/provenance.jsonl`, not by the MCP layer.
 
 ## Limitations
 
@@ -202,7 +202,7 @@ python -m ruff check src tests scripts
 
 Canary controls (contradiction detection, weak resolution, numeric inconsistency): use `benchmarks/canary/input.txt` as the input text in the Quick Start snippet above.
 
-Claude Code workflows: `/eval` (SciFact dev metrics), `/dogfood` (run pipeline on real AI-tool output), `/skillify-failure` (convert dogfood failures into draft regression tests + rules + prompt patches). Agents and rules under [`.claude/`](.claude/).
+Internal Claude Code workflows used during development: `/eval` (SciFact dev metrics), `/dogfood` (run pipeline on real AI-tool output), `/skillify-failure` (convert dogfood failures into draft regression tests + rules + prompt patches).
 
 ## License & Contact
 

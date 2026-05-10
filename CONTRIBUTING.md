@@ -50,7 +50,7 @@ All three must pass clean before a PR is accepted. The CI pipeline enforces this
 If you're adding a new pipeline module, read [README.md](README.md) for the
 overall data flow and follow the existing modules in [src/](src/) as
 reference — every module emits a `ProvenanceStep` (see [src/models.py](src/models.py))
-and respects the rules in [.claude/rules/](.claude/rules/).
+and follows the project's provenance and determinism conventions.
 
 ## Reporting bugs
 

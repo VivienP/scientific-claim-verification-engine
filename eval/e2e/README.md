@@ -49,7 +49,7 @@ The 25 hand-labeled verdict annotations in `reference_paper_v1_verdicts.json` ar
 
 > Perrelle, V. (2023). *Exploring Activity-Induced Lactate Pharmacokinetics: Implications for Minimally-Invasive Monitoring*. De Vinci Innovation Center.
 
-The source paper and its annotations are the original work of Vivien Perrelle. The benchmark data is released under the same MIT licence as the rest of this repository. If you use this benchmark in published work, please cite the source paper above.
+The source paper and its annotations are the original work of Vivien Perrelle. The benchmark dataset under `eval/e2e/` is released under CC BY-NC (the rest of the repository is Apache 2.0; see top-level [LICENSE](../../LICENSE)). If you use this benchmark in published work, please cite the source paper above.
 
 ## Time budget
 

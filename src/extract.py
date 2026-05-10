@@ -124,7 +124,17 @@ def _attempt_partial_recovery(response_text: str) -> list[dict[str, Any]]:
             break
         try:
             obj, end_pos = decoder.raw_decode(cleaned, pos)
-        except json.JSONDecodeError:
+        except json.JSONDecodeError as exc:
+            # Expected exit for truncated payloads — the recovered count is
+            # logged by the caller as ``extract_partial_recovery``. Debug-level
+            # here so the structlog rule is satisfied without spamming a
+            # warning on every truncation (which is the function's normal exit).
+            logger.debug(
+                "extract_partial_recovery_truncation",
+                position=pos,
+                recovered_so_far=len(recovered),
+                error=str(exc),
+            )
             break
         if isinstance(obj, dict):
             recovered.append(obj)

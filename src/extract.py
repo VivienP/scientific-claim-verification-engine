@@ -256,7 +256,19 @@ def extract_claims(
                             ),
                         )
                     )
-                except (ValueError, TypeError):
+                except (ValueError, TypeError) as exc:
+                    # Partial-recovery only — log and drop the malformed
+                    # object rather than aborting the whole batch. CLAUDE.md
+                    # requires every except to log; without this, a recovered
+                    # claim with e.g. cited_year=={} silently disappears,
+                    # masking the truncation damage we run partial recovery
+                    # to surface.
+                    logger.warning(
+                        "extract_partial_recovery_skip_malformed_claim",
+                        claim_text_preview=claim_text[:80],
+                        error_type=type(exc).__name__,
+                        error=str(exc),
+                    )
                     continue
 
     output_hash = _hash(repr(claims))

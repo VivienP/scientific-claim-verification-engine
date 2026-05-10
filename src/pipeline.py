@@ -255,10 +255,15 @@ def verify_one_claim(
            b. Abstract present, no full-text → :func:`verify_claim`.
            c. Title-only, no abstract → :func:`verify_claim_title_only`
               (hard-capped to ``partially_supported``).
-        3. If the resulting verdict has ``evidence_quality == 'no_evidence'``
-           and ``citing_paper_text`` is provided, attempt
+        3. If the resulting verdict has ``evidence_quality`` in
+           ``{'no_evidence', 'passages_searched_no_quote'}`` and
+           ``citing_paper_text`` is provided, attempt
            :func:`verify_claim_citing_context` as a last-resort
            internal-consistency check (capped to ``partially_supported``).
+           ``passages_searched_no_quote`` was added in Phase A.2 — the
+           verifier saw passages but didn't quote any, which is just as
+           weak a signal as ``no_evidence`` for the purposes of falling
+           back to citing-paper context.
 
     The function never raises on missing data: a fully unresolvable claim
     returns a ``ClaimVerification`` whose ``result.status`` is

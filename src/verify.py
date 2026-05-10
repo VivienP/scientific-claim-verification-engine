@@ -15,12 +15,17 @@ from anthropic.types import TextBlock
 
 from src.models import (
     Claim,
-    EvidenceQuality,
     PaperChunk,
     ProvenanceStep,
     ResolvedSource,
     VerificationResult,
     VerificationStatus,
+)
+from src.verify_citing_context import verify_claim_citing_context
+from src.verify_fulltext import (
+    _MAX_FALLBACK_PASSAGE_CHARS,
+    _truncate_passage,
+    verify_claim_fulltext,
 )
 from src.verify_multi import (
     _aggregate_multi_source_verdicts,
@@ -46,6 +51,7 @@ from src.verify_prompts import (
     _parse_cache_hit,
     _strip_fences,
 )
+from src.verify_title_only import verify_claim_title_only
 
 # Re-export all symbols that tests import from this module path.
 __all__ = [
@@ -54,6 +60,7 @@ __all__ = [
     "_CITING_CONTEXT_SYSTEM_PROMPT",
     "_CITING_CONTEXT_WINDOW_CHARS",
     "_FULLTEXT_SYSTEM_PROMPT",
+    "_MAX_FALLBACK_PASSAGE_CHARS",
     "_PARSE_ERROR_RESULT",
     "_SHORT_CIRCUIT_RESULT",
     "_SYSTEM_PROMPT",
@@ -68,6 +75,7 @@ __all__ = [
     "_make_short_circuit_step",
     "_parse_cache_hit",
     "_strip_fences",
+    "_truncate_passage",
     "verify_claim",
     "verify_claim_citing_context",
     "verify_claim_fulltext",
@@ -77,184 +85,6 @@ __all__ = [
 ]
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
-
-# Cap each fallback passage at this many characters when populating
-# ``source_passages`` from the BM25-selected chunks. The full text is already
-# in ``provenance.jsonl`` (input_hash references it); this is just the visible
-# audit-trail surface that lands in report.json and the copilot HTML report.
-# 800 chars is enough to show ~150 words of context per passage — long enough
-# to be useful, short enough to keep a 3-passage block under one screen.
-_MAX_FALLBACK_PASSAGE_CHARS = 800
-
-
-def _truncate_passage(text: str, limit: int = _MAX_FALLBACK_PASSAGE_CHARS) -> str:
-    """Truncate a passage to ``limit`` characters with an ellipsis suffix.
-
-    Pure function. Returns ``text`` unchanged if it already fits.
-    """
-    text = text.strip()
-    if len(text) <= limit:
-        return text
-    # Try to break on a word boundary in the last 80 chars so we don't end
-    # mid-word. Falls back to hard truncate if no boundary is found.
-    boundary = text.rfind(" ", limit - 80, limit)
-    cut = boundary if boundary > 0 else limit
-    return text[:cut].rstrip() + "…"
-
-
-def verify_claim_fulltext(
-    claim: Claim,
-    source: ResolvedSource,
-    passages: list[PaperChunk],
-    *,
-    model_id: str = MODEL_ID,
-    api_key: str | None = None,
-) -> tuple[VerificationResult, ProvenanceStep]:
-    """Verify a claim against top-k full-text passages via Claude API.
-
-    Falls back to verify_claim() (abstract-only) if passages is empty.
-    Uses _FULLTEXT_SYSTEM_PROMPT (>1024 tokens, prompt-cached).
-    Returns VerificationResult with verification_depth="fulltext",
-    fulltext_available=True, source_passages and source_section populated,
-    retraction_status mirrored from source.retraction_status.
-    Never raises. Falls back to a parse-error result on malformed responses.
-    """
-    if not passages:
-        abstract_result, step = verify_claim(claim, source, model_id=model_id, api_key=api_key)
-        result = dataclasses.replace(
-            abstract_result,
-            fulltext_available=True,
-            verification_depth="abstract",
-            retrieval_status="no_passage_found",
-            retraction_status=source.retraction_status,
-        )
-        return (
-            result,
-            dataclasses.replace(
-                step,
-                input_hash=_hash(repr((claim, source, passages))),
-                output_hash=_hash(repr(result)),
-                confidence=result.confidence,
-            ),
-        )
-
-    ts = time.time()
-    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-    client = anthropic.Anthropic(api_key=effective_key)
-
-    user_message = f"<claim>{claim.claim_text}</claim>\n" + _build_passages_block(passages)
-
-    response = client.messages.create(
-        model=model_id,
-        # max_tokens=2048: full-text verifier may quote up to 3 source_passages
-        # plus a multi-sentence explanation. Observed parse errors on claim 003
-        # were caused by truncated JSON when 1024 was insufficient.
-        max_tokens=2048,
-        system=[
-            {
-                "type": "text",
-                "text": _FULLTEXT_SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": user_message}],
-    )
-
-    tokens_in: int = response.usage.input_tokens
-    tokens_out: int = response.usage.output_tokens
-    cache_hit = _parse_cache_hit(response.usage)
-
-    logger.info(
-        "verify_fulltext_llm_call",
-        model_id=model_id,
-        claim_id=claim.claim_id,
-        passage_count=len(passages),
-        tokens_in=tokens_in,
-        tokens_out=tokens_out,
-        cache_hit=cache_hit,
-    )
-
-    first_block = response.content[0] if response.content else None
-    response_text = first_block.text if isinstance(first_block, TextBlock) else ""
-
-    try:
-        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
-        status_raw = str(parsed["status"])
-        if status_raw not in _VALID_STATUSES:
-            raise ValueError(f"Invalid status: {status_raw}")
-        status: VerificationStatus = status_raw  # type: ignore[assignment]
-        raw_passages = parsed.get("source_passages", [])
-        llm_quoted_passages = (
-            [str(p) for p in raw_passages] if isinstance(raw_passages, list) else []
-        )
-        source_section_raw = parsed.get("source_section")
-        source_section = str(source_section_raw) if source_section_raw else None
-
-        # CTran-transparency fallback: when the LLM returns no quoted passages
-        # (typically because the verdict is unsupported/not_addressed and the
-        # model chose not to quote), populate source_passages with the BM25
-        # passages that WERE shown to the verifier. This preserves the audit
-        # trail — an auditor inspecting the run can see which passages the
-        # verifier examined, not just which it agreed with. Phase A.2 fix
-        # (was the dominant CTran-failure mode at 50% of failures across the
-        # 5-document benchmark; see reports/phase_a2/ctran_failure_matrix.md).
-        if llm_quoted_passages:
-            source_passages = llm_quoted_passages
-            evidence_quality: EvidenceQuality = "quoted_passage"
-        else:
-            source_passages = [_truncate_passage(p.text) for p in passages]
-            evidence_quality = "passages_searched_no_quote"
-
-        result = VerificationResult(
-            status=status,
-            explanation=str(parsed["explanation"]),
-            confidence=float(parsed["confidence"]),
-            source_passages=source_passages,
-            source_section=source_section,
-            fulltext_available=True,
-            verification_depth="fulltext",
-            retrieval_status="passage_found",
-            evidence_quality=evidence_quality,
-            retraction_status=source.retraction_status,
-        )
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        logger.error(
-            "verify_fulltext_parse_error",
-            claim_id=claim.claim_id,
-            raw_response=response_text[:200],
-            error=str(exc),
-        )
-        # Same audit-trail fallback as the success path: surface the BM25
-        # passages that were considered, so a parse error does not erase
-        # the evidence the verifier saw.
-        result = VerificationResult(
-            status="not_addressed",
-            explanation="Parse error.",
-            confidence=0.0,
-            source_passages=[_truncate_passage(p.text) for p in passages],
-            source_section=None,
-            fulltext_available=True,
-            verification_depth="fulltext",
-            retrieval_status="passage_found",
-            evidence_quality="passages_searched_no_quote",
-            retraction_status=source.retraction_status,
-        )
-
-    step = ProvenanceStep(
-        step_id=str(uuid.uuid4()),
-        claim_id=claim.claim_id,
-        operation="verify",
-        input_hash=_hash(repr((claim, source, passages))),
-        output_hash=_hash(repr(result)),
-        model_id=model_id,
-        timestamp=ts,
-        tokens_in=tokens_in,
-        tokens_out=tokens_out,
-        cache_hit=cache_hit,
-        confidence=result.confidence,
-    )
-
-    return result, step
 
 
 def verify_claim_fulltext_with_numeric(
@@ -291,247 +121,6 @@ def verify_claim_fulltext_with_numeric(
         result = dataclasses.replace(result, numeric_check=numeric_result)
 
     return result, [verify_step, *numeric_steps]
-
-
-def verify_claim_citing_context(
-    claim: Claim,
-    source: ResolvedSource,
-    citing_paper_text: str,
-    *,
-    model_id: str = MODEL_ID,
-    api_key: str | None = None,
-) -> tuple[VerificationResult, ProvenanceStep]:
-    """Verify a claim against the citing paper's own internal context.
-
-    S3-P1 last-resort verifier: when the cited source cannot be retrieved
-    (Layers 1-4 failed — no abstract, no full text, no informative title),
-    check whether the citing paper's own surrounding text is consistent with
-    the claim being attributed to the citation. This is internal-consistency
-    evidence, NOT third-party verification — and is capped at
-    `partially_supported` accordingly.
-
-    The prompt explicitly tells the LLM that supported is forbidden; a
-    deterministic post-LLM guard re-applies the cap so prompt non-compliance
-    cannot leak `supported` verdicts.
-
-    Returns a `VerificationResult` with:
-        verification_depth = "citing_paper_context"
-        evidence_quality   = "citing_paper_context"
-        confidence         <= _CITING_CONTEXT_MAX_CONFIDENCE
-    The explanation is prefixed with "[Internal-consistency only]" so the
-    Medical Writer audit consumer sees the contract distinction at a glance.
-    """
-    ts = time.time()
-    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-    client = anthropic.Anthropic(api_key=effective_key)
-
-    citation_label = ", ".join(claim.cited_authors) or "(unattributed)"
-    if claim.cited_year is not None:
-        citation_label = f"{citation_label} ({claim.cited_year})"
-    context = _extract_citing_context_window(citing_paper_text, claim.claim_text)
-    user_message = (
-        f"<claim>{claim.claim_text}</claim>\n"
-        f"<cited_reference>{citation_label}</cited_reference>\n"
-        f"<citing_paper_context>{context}</citing_paper_context>"
-    )
-
-    response = client.messages.create(
-        model=model_id,
-        max_tokens=512,
-        system=[
-            {
-                "type": "text",
-                "text": _CITING_CONTEXT_SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": user_message}],
-    )
-
-    tokens_in: int = response.usage.input_tokens
-    tokens_out: int = response.usage.output_tokens
-    cache_hit = _parse_cache_hit(response.usage)
-
-    logger.info(
-        "verify_citing_context_llm_call",
-        model_id=model_id,
-        claim_id=claim.claim_id,
-        tokens_in=tokens_in,
-        tokens_out=tokens_out,
-        cache_hit=cache_hit,
-    )
-
-    first_block = response.content[0] if response.content else None
-    response_text = first_block.text if isinstance(first_block, TextBlock) else ""
-
-    try:
-        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
-        status_raw = str(parsed["status"])
-        if status_raw not in _VALID_STATUSES:
-            raise ValueError(f"Invalid status: {status_raw}")
-        confidence = float(parsed["confidence"])
-        # Hard cap: internal consistency cannot establish supported.
-        if status_raw == "supported":
-            status_raw = "partially_supported"
-        confidence = min(confidence, _CITING_CONTEXT_MAX_CONFIDENCE)
-        status: VerificationStatus = status_raw  # type: ignore[assignment]
-        raw_explanation = str(parsed["explanation"])
-        explanation = (
-            raw_explanation
-            if "internal-consistency" in raw_explanation.lower()
-            else f"[Internal-consistency only] {raw_explanation}"
-        )
-        result = VerificationResult(
-            status=status,
-            explanation=explanation,
-            confidence=confidence,
-            verification_depth="citing_paper_context",
-            evidence_quality="citing_paper_context",
-            retraction_status=source.retraction_status,
-        )
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        logger.error(
-            "verify_citing_context_parse_error",
-            claim_id=claim.claim_id,
-            raw_response=response_text[:200],
-            error=str(exc),
-        )
-        result = VerificationResult(
-            status="not_addressed",
-            explanation="Parse error.",
-            confidence=0.0,
-            verification_depth="citing_paper_context",
-            evidence_quality="no_evidence",
-            retraction_status=source.retraction_status,
-        )
-
-    step = ProvenanceStep(
-        step_id=str(uuid.uuid4()),
-        claim_id=claim.claim_id,
-        operation="verify",
-        input_hash=_hash(repr((claim, source, len(citing_paper_text)))),
-        output_hash=_hash(repr(result)),
-        model_id=model_id,
-        timestamp=ts,
-        tokens_in=tokens_in,
-        tokens_out=tokens_out,
-        cache_hit=cache_hit,
-        confidence=result.confidence,
-    )
-
-    return result, step
-
-
-def verify_claim_title_only(
-    claim: Claim,
-    source: ResolvedSource,
-    *,
-    model_id: str = MODEL_ID,
-    api_key: str | None = None,
-) -> tuple[VerificationResult, ProvenanceStep]:
-    """Verify a claim against the source title (and optionally journal) only.
-
-    Bug B fix (S1-P1-B): when the resolver finds the right paper but neither
-    CrossRef nor PubMed exposes an abstract (common for IEEE proceedings,
-    Elsevier paywalls, and older journals), the previous `verify_claim`
-    short-circuited to `not_addressed`. For claims whose target title is
-    near-verbatim with the claim text (e.g. "Porosity control of polylactic
-    acid porous microneedles using microfluidic technology"), the title is
-    informative enough to warrant `partially_supported` rather than
-    `not_addressed`.
-
-    Hard guarantees enforced post-LLM (defensive against prompt non-compliance):
-        - status `supported` is downgraded to `partially_supported`
-        - confidence is clamped to <= _TITLE_ONLY_MAX_CONFIDENCE (0.7)
-        - evidence_quality is always `title_only`
-        - verification_depth is always `title_only`
-    """
-    ts = time.time()
-    effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
-    client = anthropic.Anthropic(api_key=effective_key)
-
-    title = source.title or ""
-    user_message = f"<claim>{claim.claim_text}</claim>\n<title>{title}</title>"
-
-    response = client.messages.create(
-        model=model_id,
-        max_tokens=512,
-        system=[
-            {
-                "type": "text",
-                "text": _TITLE_ONLY_SYSTEM_PROMPT,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
-        messages=[{"role": "user", "content": user_message}],
-    )
-
-    tokens_in: int = response.usage.input_tokens
-    tokens_out: int = response.usage.output_tokens
-    cache_hit = _parse_cache_hit(response.usage)
-
-    logger.info(
-        "verify_title_only_llm_call",
-        model_id=model_id,
-        claim_id=claim.claim_id,
-        tokens_in=tokens_in,
-        tokens_out=tokens_out,
-        cache_hit=cache_hit,
-    )
-
-    first_block = response.content[0] if response.content else None
-    response_text = first_block.text if isinstance(first_block, TextBlock) else ""
-
-    try:
-        parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
-        status_raw = str(parsed["status"])
-        if status_raw not in _VALID_STATUSES:
-            raise ValueError(f"Invalid status: {status_raw}")
-        confidence = float(parsed["confidence"])
-        # Hard cap: title-only evidence cannot establish supported.
-        if status_raw == "supported":
-            status_raw = "partially_supported"
-        confidence = min(confidence, _TITLE_ONLY_MAX_CONFIDENCE)
-        status: VerificationStatus = status_raw  # type: ignore[assignment]
-        result = VerificationResult(
-            status=status,
-            explanation=str(parsed["explanation"]),
-            confidence=confidence,
-            verification_depth="title_only",
-            evidence_quality="title_only",
-            retraction_status=source.retraction_status,
-        )
-    except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
-        logger.error(
-            "verify_title_only_parse_error",
-            claim_id=claim.claim_id,
-            raw_response=response_text[:200],
-            error=str(exc),
-        )
-        result = VerificationResult(
-            status="not_addressed",
-            explanation="Parse error.",
-            confidence=0.0,
-            verification_depth="title_only",
-            evidence_quality="no_evidence",
-            retraction_status=source.retraction_status,
-        )
-
-    step = ProvenanceStep(
-        step_id=str(uuid.uuid4()),
-        claim_id=claim.claim_id,
-        operation="verify",
-        input_hash=_hash(repr((claim, source))),
-        output_hash=_hash(repr(result)),
-        model_id=model_id,
-        timestamp=ts,
-        tokens_in=tokens_in,
-        tokens_out=tokens_out,
-        cache_hit=cache_hit,
-        confidence=result.confidence,
-    )
-
-    return result, step
 
 
 def verify_claim(

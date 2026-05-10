@@ -78,6 +78,14 @@ _URL_RE = re.compile(r"https?://\S+")
 _PMID_RE = re.compile(r"\bPMID\s*:?\s*(\d+)", re.IGNORECASE)
 _PMCID_RE = re.compile(r"\bPMC(\d+)", re.IGNORECASE)
 _PAGE_TRAILER_RE = re.compile(r"\(cited on pages?[^)]*\)[\s.]*$", re.IGNORECASE | re.DOTALL)
+# PDF text extraction (e.g. pymupdf) interleaves page numbers and breaks
+# long URLs across line boundaries. Both artefacts corrupt downstream DOI
+# extraction. Stripped before any field-level extraction runs.
+_PAGE_NUMBER_LINE_RE = re.compile(r"^\s*\d{1,4}\s*$", re.MULTILINE)
+# Collapse `https://...\n<continuation>` when the continuation does not
+# start a new bibliography entry (`\d+\.` or `[\d+]`). The negative
+# lookahead protects entry boundaries.
+_URL_LINE_WRAP_RE = re.compile(r"(https?://\S+)\n(?!\s*(?:\[\d+\]|\d+\.\s))(\S+)")
 # Smart-quote pair (U+2018 LEFT, U+2019 RIGHT) used by LaTeX-rendered bibliographies.
 _LSQUO = chr(0x2018)
 _RSQUO = chr(0x2019)
@@ -102,6 +110,33 @@ class BibEntry:
 
 def _strip_trailers(text: str) -> str:
     return _PAGE_TRAILER_RE.sub("", text).strip()
+
+
+def _clean_pdf_artefacts(text: str) -> str:
+    """Strip pymupdf-style page number lines and collapse URL line-wraps.
+
+    Two artefacts dominate PDF text extraction of journal bibliographies:
+    1. Page numbers appear as digit-only lines between bibliography entries.
+       When unstripped, they get included in the previous entry's body and
+       contaminate DOI extraction (e.g. `10.1038/s41591-022-01744-z` becomes
+       `10.1038/s41591-022-01744-z12`).
+    2. Long URLs wrap across line breaks (e.g. `https://doi.or\ng/10.1177/...`).
+       The default DOI regex sees these as broken URLs and either misses the
+       DOI or captures only a fragment.
+
+    Order matters: strip page numbers first so they cannot be mistaken for
+    URL continuations. The URL-wrap regex uses a negative lookahead to avoid
+    eating the next entry's leading number.
+    """
+    cleaned = _PAGE_NUMBER_LINE_RE.sub("", text)
+    # Apply URL-wrap collapse iteratively for URLs split into 3+ fragments.
+    # Cap iterations defensively to avoid infinite loops on pathological input.
+    for _ in range(8):
+        new = _URL_LINE_WRAP_RE.sub(r"\1\2", cleaned)
+        if new == cleaned:
+            break
+        cleaned = new
+    return cleaned
 
 
 def _extract_title(body: str) -> str:
@@ -286,7 +321,7 @@ def parse_bibliography(text: str) -> dict[int, BibEntry]:
     header_match = _REFERENCES_HEADER_RE.search(text)
     if header_match is None:
         return {}
-    body = text[header_match.end() :]
+    body = _clean_pdf_artefacts(text[header_match.end() :])
 
     matches = list(_ENTRY_NUMBER_RE.finditer(body))
     if not matches:

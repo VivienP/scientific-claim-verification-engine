@@ -299,6 +299,89 @@ class TestParseBibliographyRobustness:
         assert entries[5].doi == "10.1073/pnas.0507655102"  # Hirsch H-index
         assert entries[10].doi == "10.1162/qss_a_00146"  # Nicholson Scite
 
+    def test_pymupdf_page_numbers_stripped(self) -> None:
+        """PDF text extraction inserts page numbers as digit-only lines between
+        entries. They must not get appended to the previous entry's DOI.
+        """
+        text = (
+            "References\n\n"
+            "1.\nSmith A (2022) Paper one. Journal A. https://doi.org/10.1111/aaa\n"
+            "12\n"
+            "2.\nDoe B (2023) Paper two. Journal B. https://doi.org/10.2222/bbb\n"
+            "13\n"
+        )
+        entries = parse_bibliography(text)
+        assert entries[1].doi == "10.1111/aaa", (
+            f"page number contaminated DOI: got {entries[1].doi!r}"
+        )
+        assert entries[2].doi == "10.2222/bbb"
+
+    def test_url_line_wrap_collapsed(self) -> None:
+        """Long DOI URLs wrap mid-domain or mid-suffix in PDF text extraction.
+        The parser must rejoin them for clean DOI extraction.
+        """
+        text = (
+            "References\n\n"
+            "1.\nSmith A (2025) Paper. Journal. https://doi.or\ng/10.1177/20451253251377187\n\n"
+            "2.\nDoe B (2024) Other. Journal. https://doi.org/10\n.1016/j.medj.2024.01.005\n"
+        )
+        entries = parse_bibliography(text)
+        assert entries[1].doi == "10.1177/20451253251377187", (
+            f"wrap-after-domain not joined: got {entries[1].doi!r}"
+        )
+        assert entries[2].doi == "10.1016/j.medj.2024.01.005", (
+            f"wrap-after-prefix not joined: got {entries[2].doi!r}"
+        )
+
+    def test_url_wrap_does_not_eat_next_entry(self) -> None:
+        """The URL-wrap fix must respect entry boundaries — a numbered entry
+        line right after a URL must NOT be treated as URL continuation.
+        """
+        text = (
+            "References\n\n"
+            "1.\nSmith A. Paper. https://doi.org/10.1111/aaa\n"
+            "2.\nDoe B. Paper. https://doi.org/10.2222/bbb\n"
+        )
+        entries = parse_bibliography(text)
+        # Entry 1's DOI must not absorb '2.' from the next entry start.
+        assert entries[1].doi == "10.1111/aaa"
+        assert len(entries) == 2
+
+    def test_real_elicit_input_parses(self) -> None:
+        """End-to-end regression on the Elicit Report-mode PDF text extraction.
+
+        Elicit Report exports use parens-year (`Author (YEAR) Title`) format
+        with page-number lines and URL line-wraps from the PDF text layer.
+        All 10 references must resolve to clean DOIs.
+        """
+        from pathlib import Path
+
+        repo_root = Path(__file__).resolve().parents[2]
+        fixture = repo_root / "benchmarks" / "real_outputs" / "elicit_psilocybin" / "input.txt"
+        if not fixture.exists():
+            return
+        text = fixture.read_text(encoding="utf-8")
+        entries = parse_bibliography(text)
+        assert len(entries) == 10, (
+            f"expected 10 entries, got {len(entries)}: {sorted(entries.keys())}"
+        )
+        expected_dois = {
+            1: "10.1056/NEJMoa2206443",
+            2: "10.1016/S2215-0366(16)30065-7",
+            3: "10.1177/20451253251377187",
+            4: "10.1007/s00213-017-4771-x",
+            5: "10.1038/s41591-022-01744-z",
+            6: "10.1176/appi.ajp.20231063",
+            7: "10.1038/s41386-023-01648-7",
+            8: "10.1038/s41598-017-13282-7",
+            9: "10.1016/j.medj.2024.01.005",
+            10: "10.1016/j.jad.2023.01.108",
+        }
+        for n, expected in expected_dois.items():
+            assert entries[n].doi == expected, (
+                f"entry [{n}] doi mismatch: got {entries[n].doi!r}, expected {expected!r}"
+            )
+
     def test_year_extraction_skips_arxiv_id_prefix(self) -> None:
         """arXiv preprint IDs of the form `arXiv:YYMM.NNNNN` start with a
         year-like 4-digit token (e.g. `2005.11401` for May 2020). A naive

@@ -29,7 +29,10 @@ class TestExtractClaimsHappyPath:
         mock_response.usage.output_tokens = 50
         mock_response.usage.cache_read_input_tokens = 0
         mock_response.usage.cache_creation_input_tokens = 100
-        mock_client.messages.create.return_value = mock_response
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_stream_ctx
+        mock_stream_ctx.get_final_message.return_value = mock_response
+        mock_client.messages.stream.return_value = mock_stream_ctx
 
         from src.extract import extract_claims
 
@@ -60,7 +63,10 @@ class TestExtractClaimsHappyPath:
         mock_response.usage.output_tokens = 50
         mock_response.usage.cache_read_input_tokens = 0
         mock_response.usage.cache_creation_input_tokens = 100
-        mock_client.messages.create.return_value = mock_response
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_stream_ctx
+        mock_stream_ctx.get_final_message.return_value = mock_response
+        mock_client.messages.stream.return_value = mock_stream_ctx
 
         from src.extract import extract_claims
 
@@ -79,7 +85,10 @@ class TestExtractClaimsHappyPath:
         mock_response.usage.output_tokens = 10
         mock_response.usage.cache_read_input_tokens = 200
         mock_response.usage.cache_creation_input_tokens = 0
-        mock_client.messages.create.return_value = mock_response
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_stream_ctx
+        mock_stream_ctx.get_final_message.return_value = mock_response
+        mock_client.messages.stream.return_value = mock_stream_ctx
 
         from src.extract import extract_claims
 
@@ -110,7 +119,10 @@ class TestExtractClaimsHappyPath:
         mock_response.usage.output_tokens = 50
         mock_response.usage.cache_read_input_tokens = 0
         mock_response.usage.cache_creation_input_tokens = 100
-        mock_client.messages.create.return_value = mock_response
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_stream_ctx
+        mock_stream_ctx.get_final_message.return_value = mock_response
+        mock_client.messages.stream.return_value = mock_stream_ctx
 
         from src.extract import extract_claims
 
@@ -131,7 +143,10 @@ class TestExtractClaimsEdgeCases:
         mock_response.usage.output_tokens = 5
         mock_response.usage.cache_read_input_tokens = 0
         mock_response.usage.cache_creation_input_tokens = 50
-        mock_client.messages.create.return_value = mock_response
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_stream_ctx
+        mock_stream_ctx.get_final_message.return_value = mock_response
+        mock_client.messages.stream.return_value = mock_stream_ctx
 
         from src.extract import extract_claims
 
@@ -151,7 +166,10 @@ class TestExtractClaimsEdgeCases:
         mock_response.usage.output_tokens = 50
         mock_response.usage.cache_read_input_tokens = 100
         mock_response.usage.cache_creation_input_tokens = 0
-        mock_client.messages.create.return_value = mock_response
+        mock_stream_ctx = MagicMock()
+        mock_stream_ctx.__enter__.return_value = mock_stream_ctx
+        mock_stream_ctx.get_final_message.return_value = mock_response
+        mock_client.messages.stream.return_value = mock_stream_ctx
 
         from src.extract import extract_claims
 

@@ -152,6 +152,7 @@ def extract_claims(
     *,
     model_id: str = MODEL_ID,
     api_key: str | None = None,
+    max_output_tokens: int = 4096,
 ) -> tuple[list[Claim], ProvenanceStep]:
     """Extract verifiable scientific claims from free-form scientific text.
 
@@ -160,6 +161,10 @@ def extract_claims(
     Input text wrapped in <text>...</text> to prevent prompt injection.
     On malformed LLM response: returns ([], provenance_step), logs structlog.error.
     ProvenanceStep.claim_id = "__extract__:{sha256(text)[:8]}".
+
+    max_output_tokens caps the LLM JSON response length. Default 4096 fits typical
+    2-page inputs. Raise (e.g. 8192) for dense systematic-review-style inputs that
+    would otherwise truncate the response.
     """
     ts = time.time()
     claim_id = f"__extract__:{_hash(text)[:8]}"
@@ -168,9 +173,10 @@ def extract_claims(
     effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=effective_key)
 
-    response = client.messages.create(
+    # Streaming avoids connection drops on long generations (>4096 output tokens).
+    with client.messages.stream(
         model=model_id,
-        max_tokens=4096,
+        max_tokens=max_output_tokens,
         system=[
             {
                 "type": "text",
@@ -179,7 +185,8 @@ def extract_claims(
             }
         ],
         messages=[{"role": "user", "content": f"<text>{text}</text>"}],
-    )
+    ) as stream:
+        response = stream.get_final_message()
 
     tokens_in: int = response.usage.input_tokens
     tokens_out: int = response.usage.output_tokens

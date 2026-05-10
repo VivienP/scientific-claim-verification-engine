@@ -1,0 +1,796 @@
+What is the evidence for psilocybin in treatment-resistant depression?
+Evidence from multiple trials including the largest randomized controlled trial demonstrates that psilocybin pro-
+duces rapid, robust antidepressant effects in treatment-resistant depression, though sustained response is limited
+and serious adverse events including suicidal ideation occurred in a minority of patients.
+Abstract
+Psilocybin demonstrates robust short-term antidepressant effects in treatment-resistant depression across 10 studies
+comprising 5 open-label trials, 2 randomized controlled trials, and 3 secondary analyses. In the largest randomized
+trial (n=233), a single 25 mg dose reduced depression scores significantly more than 1 mg control at 3 weeks (MADRS
+difference -6.6, 95% CI -10.2 to -2.9, P<0.001) [1], with response rates of 37% versus 18% [1]. Open-label studies
+reported even larger effect sizes ranging from Hedges' g=1.27 to 3.1 at 1-3 weeks [2, 3], though these likely reflect
+placebo and expectancy effects alongside genuine treatment response. Depression reductions occurred within 1
+week [2, 4, 5] and remained statistically significant at 6 months in follow-up studies (Cohen's d=1.4-1.5) [4, 5], but
+sustained response rates at 12 weeks were only 20% in the randomized trial [1], indicating substantial relapse over
+time. The quality of the acute psychedelic experience predicted clinical outcomes [2–4, 6], while comorbid PTSD
+was associated with reduced treatment response [6].
+Safety profiles were generally favorable in smaller studies with no serious adverse events [2–4, 7], but the largest trial
+identified serious adverse events including suicidal ideation, intentional self-injury, and psychiatric hospitalization
+[1], with worsening suicidal state in 14% of the 25 mg group [1]. Transient anxiety during dosing was universal [2, 4],
+and common adverse events included headache (24%) and nausea (22%) [1]. The evidence base consists primarily of
+patients with unipolar depression [1, 2, 4–6, 8] who had failed 2-5 previous treatments [1, 2, 4, 6], with systematic ex-
+clusion of psychotic disorders [2, 4, 5], active substance use [2, 9], and high suicide risk in most studies [1]. Psilocybin
+shows promise for treatment-resistant depression based on convergent short-term efficacy findings, but durability of
+response, optimal dosing strategies, and safety in broader clinical populations require further investigation in larger
+controlled trials with extended follow-up and active comparators.
+1
+
+Flow Diagram
+Paper search
+We performed a semantic search across over 138 million academic papers from the Elicit search engine, which in-
+cludes all of Semantic Scholar and OpenAlex.
+We ran this query: ”What is the evidence for psilocybin in treatment-resistant depression?”
+The search returned 50 total results from Elicit.
+We retrieved 50 papers most relevant to the query for screening.
+Screening
+We screened in sources based on their abstracts that met these criteria:
+• Population Age and Diagnosis: Does the study include adults (≥18 years) diagnosed with treatment-resistant
+depression defined as failure to respond to at least two adequate trials of antidepressant medications?
+• Psilocybin Intervention: Does the intervention involve psilocybin administration in any form (pure psilocy-
+bin, psilocybin-containing mushrooms, or synthetic psilocybin)?
+• Depression Outcome Measures: Does the study measure depression-related outcomes using validated scales
+(e.g., MADRS, HAM-D, BDI, PHQ-9)?
+• Study Design: Is the study design a randomized controlled trial, controlled clinical trial, cohort study, case-
+control study, systematic review, or meta-analysis?
+2
+
+• Clinical Population Focus: Does the study focus on a clinical population rather than solely on healthy volun-
+teers or recreational use?
+• Treatment-Resistant Depression Focus: Is psilocybin used primarily for treatment-resistant depression
+(rather than primarily for other conditions like anxiety, PTSD, or addiction without specific focus on
+treatment-resistant depression)?
+• Treatment-Resistant Population: Do the participants have depression that is characterized as treatment-
+resistant (rather than treatment-naive depression)?
+• Study Size: If the study is a case report or case series, does it include 5 or more participants?
+We considered all screening questions together and made a holistic judgement about whether to screen in each paper.
+At abstract screening, the number of papers excluded for each primary reason was:
+• Other / below screening threshold: n = 40
+Data extraction
+We asked a large language model to extract each data column below from each paper. We gave the model the
+extraction instructions shown below for each column.
+• Study Design:
+Extract study design and methodological details relevant to assessing evidence quality for psilocybin in
+treatment-resistant depression, including:
+• Study design type (RCT, open-label, pilot, etc.)
+• Sample size and randomization details
+• Study duration and follow-up periods
+• Control/comparison conditions (if any)
+• Setting and location
+• TRD Population:
+Extract how treatment-resistant depression was defined and characterized in this study, including:
+• Specific criteria for treatment resistance (number of failed treatments, types of treatments)
+• Depression severity at baseline (MADRS, HAM-D, etc. scores)
+• Primary diagnosis (unipolar vs bipolar depression)
+• Key exclusion criteria and comorbidities (especially PTSD, substance use, psychosis)
+• Participant demographics and baseline characteristics
+• Psilocybin Protocol:
+Extract all details about the psilocybin intervention protocol for treating treatment-resistant depression, in-
+cluding:
+• Psilocybin dose(s) and formulation (synthetic vs natural)
+• Number and timing of dosing sessions
+• Psychological support structure (preparation, integration sessions)
+• Concomitant medications (discontinuation requirements, ongoing SSRIs)
+• Setting and supervision during dosing sessions
+3
+
+• Depression Outcomes:
+Extract all depression-related efficacy outcomes and results for psilocybin treatment of treatment-resistant
+depression, including:
+• Primary and secondary depression measures used (MADRS, QIDS, PHQ-9, etc.)
+• Baseline and follow-up scores at all timepoints
+• Effect sizes (Cohen's d, Hedges' g) and confidence intervals
+• Response and remission rates with definitions used
+• Statistical significance and p-values
+• Time to response and durability of effects
+• Safety Profile:
+Extract safety and tolerability data for psilocybin treatment in treatment-resistant depression patients, includ-
+ing:
+• All adverse events (mild, moderate, severe) with frequencies
+• Serious adverse events and hospitalizations
+• Suicidal ideation or behavior changes
+• Study discontinuations due to adverse events
+• Acute psychological distress during dosing sessions
+• Any safety concerns specific to the TRD population
+• Response Predictors:
+Extract factors that predicted or moderated treatment response to psilocybin in treatment-resistant depression,
+including:
+• Baseline characteristics associated with better/worse outcomes
+• Psychedelic experience factors (mystical experiences, oceanic boundlessness, etc.)
+• Individual variability in response patterns
+• Subgroup analyses (by comorbidity, treatment resistance level, etc.)
+• Factors affecting durability of response
+• Any mechanistic insights about who benefits most
+Results
+Characteristics of Included Studies
+The systematic review included 10 studies examining psilocybin for treatment-resistant depression, comprising 5
+open-label trials, 2 randomized controlled trials, 2 secondary analyses, and 1 pilot trial. Sample sizes ranged from 7
+to 233 participants. Two studies involved neuroimaging analyses of previously conducted trials.
+4
+
+Study
+Full text
+retrieved?
+Study Design
+Sample Size
+TRD Criteria
+Primary
+Diagnosis
+Follow-up
+Duration
+R. Carhart-
+Harris et al.,
+2016 [2]
+Yes
+Open-label
+feasibility
+trial [2]
+12 [2]
+≥2 failed
+treatments,
+≥6 weeks
+each [2]
+Unipolar
+depression
+[2]
+3 months [2]
+G. Goodwin
+et al., 2022 [1]
+Yes
+Phase 2
+double-blind
+RCT [1]
+233 [1]
+2-4 failed
+treatments,
+≥8 weeks
+each [1]
+Major
+depressive
+disorder
+without
+psychotic
+features [1]
+12 weeks [1]
+R. Carhart-
+Harris et al.,
+2017 [4]
+Yes
+Open-label
+feasibility
+study [4]
+20 [4]
+≥2 failed
+treatments,
+≥6 weeks
+each [4]
+Unipolar
+depression
+[4]
+6 months [4]
+G. Goodwin
+et al., 2023 [7]
+Yes
+Phase II
+open-label
+study [7]
+19 [7]
+2-4 failed
+treatments
+for current
+episode [7]
+Unipolar
+depression
+(MDD
+without
+psychotic
+features) [7]
+3 weeks [7]
+R. Carhart-
+Harris et al.,
+2017a [8]
+Yes
+Open-label
+clinical trial
+with fMRI [8]
+19 (16
+analyzed) [8]
+Not explicitly
+stated [8]
+Unipolar
+depression
+[8]
+5 weeks [8]
+J. Rosenblat
+et al., 2024 [9]
+No
+Randomized
+clinical trial
+[9]
+30 [9]
+High levels of
+treatment
+resistance in
+MDD or
+bipolar II
+disorder [9]
+Major
+depressive or
+bipolar II
+disorder [9]
+6 months [9]
+G. Goodwin
+et al., 2023a
+[10]
+No
+Phase 2 RCT
+(secondary
+analysis) [10]
+233 [10]
+Not specified
+[10]
+Not specified
+[10]
+3 weeks [10]
+S. Aaronson
+et al., 2025 [6]
+No
+Open-label
+trial [6]
+12 [6]
+≥5 failed
+treatments
+[6]
+Unipolar
+depression
+(implied) [6]
+12 weeks [6]
+Sally Meikle
+et al., 2025 [3]
+No
+Open-label,
+single-arm
+pilot trial [3]
+7 [3]
+Not specified
+[3]
+Not specified
+[3]
+20 weeks [3]
+Richard E.
+Daws et al.,
+2022 [5]
+Yes
+Open-label
+trial and
+phase II RCT
+with fMRI [5]
+19
+(open-label),
+59 (RCT) [5]
+Mean 4.6
+failed
+medications
+[5]
+Unipolar
+depression
+[5]
+6 months
+(open-label),
+3 weeks
+(RCT) [5]
+5
+
+The studies enrolled participants with moderate to severe depression at baseline. In studies reporting MADRS scores,
+baseline means ranged from 31.7 to 33 [1, 7]. Studies using the QIDS-SR16 reported baseline scores of 18.9 [8], while
+one study using the Beck Depression Inventory reported a mean baseline score of 34.81 [5]. Most participants had
+failed multiple previous treatments, with one study requiring failure of at least five treatments for inclusion [6].
+Depression severity was typically classified as severe in 57.9% to 100% of participants [2, 7]. Key exclusion criteria
+across studies included current or past psychotic disorders [2, 4, 5], while some studies excluded those with substance
+use disorders [2, 9] or at clinically significant risk for suicide [1].
+Psilocybin Treatment Protocols
+Psilocybin doses and administration varied across studies. The most common protocol involved two dosing sessions
+of 10 mg and 25 mg administered 7 days apart [2–4]. The largest randomized trial compared single doses of 25 mg,
+10 mg, and 1 mg (control) [1]. One study specifically examined severe TRD using a single 25 mg dose [6], while
+another investigated one, two, or three 25 mg sessions over 6 months [9].
+Study
+Psilocybin
+Formulation
+Dose(s)
+Number of
+Sessions
+Psychological
+Support
+Concomitant
+Medications
+R.
+Carhart-Harris
+et al., 2016 [2]
+Synthetic [2]
+10 mg, 25 mg [2]
+2 sessions, 7
+days apart [2]
+4-hour
+preparation,
+support during
+and after
+sessions [2]
+May need to
+withdraw
+antidepressants
+[2]
+G. Goodwin et
+al., 2022 [1]
+Synthetic
+(COMP360) [1]
+25 mg, 10 mg, or
+1 mg (control)
+[1]
+Single
+administration
+[1]
+3 preparation
+sessions, 2
+integration
+sessions [1]
+Discontinued ≥2
+weeks before
+dosing, off for 3
+weeks
+post-dosing [1]
+R.
+Carhart-Harris
+et al., 2017 [4]
+Synthetic
+(capsules) [4]
+10 mg, 25 mg [4]
+2 sessions, 7
+days apart [4]
+Preparation,
+acute support,
+integration [4]
+Discontinued ≥2
+weeks before
+trial (one
+exception) [4]
+G. Goodwin et
+al., 2023 [7]
+Synthetic
+(COMP360) [7]
+25 mg [7]
+Single
+administration
+[7]
+3 preparation
+sessions,
+integration
+sessions at Day
+2 and Week 1 [7]
+Continued on
+prescribed SSRI
+throughout
+study [7]
+R.
+Carhart-Harris
+et al., 2017a [8]
+Not specified [8]
+10 mg, 25 mg [8]
+2 sessions, 1
+week apart [8]
+Not mentioned
+[8]
+Not mentioned
+[8]
+J. Rosenblat et
+al., 2024 [9]
+Not mentioned
+[9]
+25 mg [9]
+1, 2, or 3
+sessions [9]
+Preparation and
+integration
+psychotherapy
+sessions [9]
+Not mentioned
+[9]
+6
+
+Study
+Psilocybin
+Formulation
+Dose(s)
+Number of
+Sessions
+Psychological
+Support
+Concomitant
+Medications
+G. Goodwin et
+al., 2023a [10]
+Synthetic [10]
+25 mg, 10 mg, or
+1 mg (control)
+[10]
+Single dose [10]
+Psychological
+support from
+trained
+therapists [10]
+Not mentioned
+[10]
+S. Aaronson et
+al., 2025 [6]
+Synthetic [6]
+25 mg [6]
+Single dose
+during 8-hour
+dosing day [6]
+3 pre-treatment
+sessions,
+support during
+dosing, 3
+post-treatment
+integration
+sessions [6]
+Discontinued ≥2
+weeks before
+dosing, off for
+≥3 weeks
+post-dosing [6]
+Sally Meikle et
+al., 2025 [3]
+Not mentioned
+[3]
+25 mg [3]
+2 sessions [3]
+3 preparatory
+sessions, 6
+integration
+sessions [3]
+Not mentioned
+[3]
+Richard E. Daws
+et al., 2022 [5]
+Synthetic [5]
+Open-label: 10
+mg, 25 mg; RCT:
+25 mg or 1 mg
+[5]
+Open-label: 2
+sessions, 7 days
+apart; RCT: 2
+sessions, 3
+weeks apart [5]
+Not explicitly
+mentioned [5]
+Exclusion of
+SSRI contraindi-
+cations in RCT
+[5]
+All studies providing details employed psychological support structures including preparation sessions before dosing
+and integration sessions afterward. Dosing sessions lasted 6-8 hours [1, 6] in supervised settings with trained ther-
+apists present [1, 7]. Most studies required discontinuation of concomitant antidepressants at least 2 weeks before
+dosing [1, 4, 6], with one notable exception examining psilocybin adjunct to ongoing SSRI treatment [7].
+Effects on Depression Severity
+Short-term Outcomes (1-3 Weeks)
+Studies consistently demonstrated rapid reductions in depression severity. In the first open-label trial, mean QIDS
+scores decreased by 11.8 points at 1 week post-treatment (95% CI -9.15 to -14.35, p=0.002, Hedges' g=3.1) [2]. The
+largest randomized controlled trial found that 25 mg psilocybin reduced MADRS scores by 12.0 points at week 3,
+compared to 5.4 points with 1 mg control (difference -6.6, 95% CI -10.2 to -2.9, P<0.001) [1]. The 10 mg dose showed
+intermediate effects with a reduction of 7.9 points, though this did not differ significantly from the 1 mg control
+(difference -2.5, 95% CI -6.2 to 1.2, P=0.18) [1].
+In the study examining psilocybin adjunct to SSRIs, participants experienced a mean MADRS reduction of 14.9 points
+at week 3 (95% CI -20.7 to -9.2) [7]. The severe TRD study reported MADRS least-squares mean changes of -15.8 at
+week 3 (95% CI -25.4 to -6.3) [6]. A pilot trial found a mean QIDS change of -7.14 at 3 weeks (p=0.02, Hedges' g=-1.27,
+95% CI -2.40 to -0.37) [3].
+Neuroimaging studies corroborated clinical findings. One study using the Beck Depression Inventory reported a
+mean reduction of 21.0 points at 1 week (Cohen's d=1.78, P<0.001) [5]. Another found QIDS-SR16 scores decreased
+from baseline 18.9±3 to 8.8±6.2 at 1 week post-treatment (p<0.001) [8].
+7
+
+Medium-term Outcomes (5 Weeks to 3 Months)
+Clinical improvements remained substantial at intermediate timepoints. At 5 weeks, the extended follow-up study
+reported Cohen's d=2.3 for QIDS-SR16 reductions (p<0.001) [4], with 47% of patients meeting response criteria (≥50%
+reduction) [8]. At 3 months, the original feasibility study showed mean QIDS reductions of 9.2 points (95% CI -5.69
+to -12.71, p=0.003, Hedges' g=2) [2], with 58% maintaining response [2].
+Long-term Outcomes (6 Months to 1 Year)
+Longer-term follow-up revealed persistent but attenuating effects. At 6 months, effect sizes remained significant
+with Cohen's d=1.4 (p<0.001) for QIDS-SR16 [4] and Cohen's d=1.07 (P<0.001) for BDI [5]. The severe TRD study
+reported maintained improvements at 12 weeks with MADRS least-squares mean change of -17.2 (95% CI -25.2 to
+-9.1) [6]. However, the largest RCT found sustained response rates at 12 weeks were only 20% for 25 mg, 5% for 10
+mg, and 10% for 1 mg control [1], indicating substantial relapse over time.
+Response and Remission Rates
+Response and remission rates varied across studies and timepoints. At 3 weeks in the largest RCT, response rates
+(≥50% MADRS reduction) were 37% for 25 mg, 19% for 10 mg, and 18% for 1 mg [1]. Remission rates (MADRS ≤10)
+were 29% for 25 mg, 9% for 10 mg, and 8% for 1 mg [1]. The SSRI adjunct study found both response and remission
+in 42.1% of participants at week 3 [7].
+Earlier open-label studies reported higher rates: 67% achieved remission at 1 week in the initial feasibility trial [2],
+while the 6-month follow-up study found 9 of 20 patients (45%) met response criteria at week 5, with 4 achieving
+remission (20%) [4].
+The pilot trial revealed marked individual variability: two participants showed sustained response, three relapsed,
+and two exhibited no substantial improvement [3]. This heterogeneity in outcomes underscores the need for under-
+standing response predictors.
+Safety and Tolerability
+The safety profile of psilocybin in treatment-resistant depression populations was generally favorable across studies,
+though certain adverse events occurred consistently.
+Study
+Common Adverse
+Events
+Serious Adverse
+Events
+Suicidal
+Ideation/Behavior
+Discontinuations
+R. Carhart-Harris et
+al., 2016 [2]
+Transient anxiety
+(100%),
+confusion/thought
+disorder (75%),
+nausea (33%),
+headache (33%) [2]
+None [2]
+Not mentioned [2]
+None [2]
+8
+
+Study
+Common Adverse
+Events
+Serious Adverse
+Events
+Suicidal
+Ideation/Behavior
+Discontinuations
+G. Goodwin et al.,
+2022 [1]
+Headache (24%),
+nausea (22%),
+dizziness (6%),
+fatigue (6%); overall
+77% had any AE [1]
+Suicidal ideation,
+intentional
+self-injury,
+hospitalization for
+severe depression
+[1]
+Worsening in 14%
+(25 mg), 17% (10
+mg), 9% (1 mg) [1]
+6% (25 mg), 12% (10
+mg), 13% (1 mg) [1]
+R. Carhart-Harris et
+al., 2017 [4]
+Transient anxiety
+(n=15), headaches
+(n=8), nausea (n=5),
+paranoia (n=3) [4]
+None [4]
+Significantly
+reduced at 1 and 2
+weeks
+post-treatment [4]
+One patient chose
+not to complete
+follow-up [4]
+G. Goodwin et al.,
+2023 [7]
+TEAEs in 63.2%;
+most mild and
+resolved on day of
+onset [7]
+None [7]
+No increase during
+study [7]
+None [7]
+R. Carhart-Harris et
+al., 2017a [8]
+Not mentioned [8]
+Not mentioned [8]
+Not mentioned [8]
+Not mentioned [8]
+J. Rosenblat et al.,
+2024 [9]
+Transient [9]
+None [9]
+Not mentioned [9]
+Not mentioned [9]
+G. Goodwin et al.,
+2023a [10]
+Not mentioned [10]
+Not mentioned [10]
+Not mentioned [10]
+Not mentioned [10]
+S. Aaronson et al.,
+2025 [6]
+Not mentioned [6]
+Not mentioned [6]
+Not mentioned [6]
+Not mentioned [6]
+Sally Meikle et al.,
+2025 [3]
+Consistent with
+previous studies [3]
+None [3]
+Not mentioned [3]
+Not mentioned [3]
+Richard E. Daws et
+al., 2022 [5]
+Not mentioned [5]
+Not mentioned [5]
+Not mentioned [5]
+Not mentioned [5]
+Transient anxiety during drug onset was universal in studies reporting this outcome [2, 4]. Headache and nausea
+were the most frequently reported treatment-emergent adverse events, affecting 22-33% of participants [1, 2]. These
+events were typically mild and resolved within hours to days [2, 7]. Confusion or thought disorder occurred in 75%
+of participants in one study but was transient [2]. No patients required tranquilizing medications during sessions in
+the initial feasibility trial [2].
+The largest randomized trial identified serious adverse events including suicidal ideation, intentional self-injury, and
+hospitalization for severe depression [1]. Worsening of suicidal state occurred in 14% of the 25 mg group, 17% of the
+10 mg group, and 9% of the 1 mg control group [1]. In contrast, another study found suicidal ideation was significantly
+reduced at 1 and 2 weeks post-treatment [4], while the SSRI adjunct study reported no increase in suicidal ideation
+during the study [7]. Study discontinuation rates due to adverse events ranged from 6% to 13% in the largest trial
+[1], while most other studies reported no discontinuations [2, 7].
+Factors Associated with Treatment Response
+Several factors emerged as potential predictors or moderators of treatment response, though findings varied across
+studies.
+9
+
+Psychedelic Experience Characteristics: The quality and intensity of the acute psychedelic experience correlated
+with clinical outcomes in multiple studies. One study found that reductions in depressive symptoms at 5 weeks were
+predicted by the quality of the acute psychedelic experience [2], with significant relationships between the ”USB”
+factor (experience of unity, spiritual experience, blissful state) and symptom changes [4]. The Oceanic Boundlessness
+dimension of the psychedelic experience correlated with post-dosing antidepressant responses in severe TRD [6]. A
+pilot trial identified mindset prior to dosing, spiritual experiences, and perceptual shifts during dosing as predictors
+of treatment trajectory, while treatment expectations were not a reliable predictor [3]. The intensity of altered or
+mystical states of consciousness was noted as correlating with therapeutic outcomes [7].
+Neural Mechanisms: Neuroimaging studies identified brain connectivity changes associated with treatment re-
+sponse. Increased ventromedial prefrontal cortex-bilateral inferior lateral parietal cortex resting-state functional
+connectivity predicted response at 5 weeks, as did decreased parahippocampal-prefrontal cortex connectivity [8].
+Decreased brain network modularity was associated with improved clinical outcomes and predicted sustained im-
+provements in depression severity [5], with early-phase modularity changes being predictive of long-term response
+[5]. Changes in network flexibility, particularly in the executive and salience networks, were identified as key com-
+ponents of the therapeutic mechanism [5].
+Comorbidity Effects: Patients with comorbid PTSD (n=5) showed significantly less antidepressant effect of psilocy-
+bin [6], suggesting this comorbidity may moderate treatment response. Studies generally excluded individuals with
+psychotic disorders [2, 4, 5] and some excluded substance use disorders [2, 9], limiting knowledge about psilocybin's
+effects in these populations.
+Dose Effects: Pharmacokinetic research showed dose-dependent increases in receptor occupancy and subjective
+effects [1], with the 25 mg dose demonstrating superior efficacy to 10 mg and 1 mg in the largest trial [1]. Repeated
+doses were associated with further reductions in MADRS scores compared to baseline [9], though specific dose-
+response relationships require further investigation.
+Individual Variability: One pilot study documented diverse response patterns, with two participants showing sus-
+tained response, three experiencing relapse, and two exhibiting no substantial improvement [3]. This heterogeneity
+suggests important individual differences in treatment response that warrant further study.
+Synthesis
+The evidence base for psilocybin in treatment-resistant depression reveals consistently robust short-term effects
+across diverse study designs and populations, but substantial heterogeneity in sustained response rates and concern-
+ing safety signals in the largest randomized trial merit careful interpretation.
+Short-term Efficacy: Convergent Evidence Across Study Designs
+Effect sizes for depression reduction at 1-3 weeks were remarkably consistent across methodologically diverse studies.
+Open-label trials reported effect sizes ranging from Hedges' g=1.27 to 3.1 [2, 3], while the phase 2 RCT demonstrated
+a statistically significant 6.6-point greater MADRS reduction with 25 mg versus 1 mg control (P<0.001) [1]. Even
+accounting for potential placebo effects in open-label designs and the active control effect of 1 mg psilocybin, the
+convergence of findings across blinded and unblinded studies supports genuine short-term antidepressant efficacy.
+The response occurred within 1 week in most studies [2, 4, 5], distinguishing psilocybin from conventional antide-
+pressants which typically require weeks to months for therapeutic effects.
+Durability: Attenuation Over Time
+The apparent contradiction between open-label studies showing sustained effects at 6 months (Cohen's d=1.4-1.5) [4,
+10
+
+5] and the RCT showing only 20% sustained response at 12 weeks [1] may reflect several factors. First, open-label
+designs likely capture additional placebo effects and expectancy biases that inflate durability estimates. Second, the
+RCT's stringent definition of sustained response (meeting criteria at week 3 and all subsequent visits) may under-
+estimate partial or fluctuating responses that still represent clinical improvement. Third, sample enrichment may
+have occurred in open-label studies through selective reporting or participant retention, while the RCT's systematic
+follow-up captured all patterns including non-responders and relapsers.
+The trajectory data suggest initial benefit followed by gradual relapse for many patients. Effect sizes decreased from
+2.3 at week 5 to 1.5 at 3 months and 1.4 at 6 months in one study [4], indicating statistical significance was maintained
+but clinical magnitude diminished. This pattern suggests psilocybin may provide a ”window of opportunity” for
+neuroplastic change rather than indefinite symptom suppression, aligning with proposed ”reset” mechanisms [8]
+and neural network integration changes [5]. Repeated dosing strategies showed promise for enhancing durability
+[9], though optimal timing and frequency remain undefined.
+Dose-Response and Protocol Optimization
+The 25 mg dose demonstrated clear superiority to 1 mg control [1], while 10 mg showed intermediate effects that
+did not reach statistical significance versus control [1]. This suggests a dose threshold for reliable therapeutic effects
+between 10-25 mg in single-dose paradigms. However, the two-dose protocol (10 mg followed by 25 mg seven
+days later) used in multiple successful studies [2–4] may provide advantages over single dosing through gradual
+dose escalation and repeated psychedelic experiences. The feasibility of repeated dosing over 6 months [9, 9] and
+preliminary evidence for cumulative benefits [9] warrant investigation of maintenance dosing strategies.
+The demonstration that psilocybin can be administered safely adjunct to ongoing SSRI treatment [7, 7] has important
+clinical implications, as antidepressant withdrawal may be problematic or contraindicated for many TRD patients.
+While SSRIs theoretically attenuate 5-HT2A receptor activation, therapeutic effects were observed in this paradigm
+[7], suggesting either incomplete receptor blockade or therapeutic mechanisms beyond acute 5-HT2A agonism.
+Safety Considerations and Clinical Vigilance
+The divergent safety findings between the largest RCT showing serious adverse events including suicidal ideation
+and self-injury [1] and smaller studies showing no serious events [2–4, 7] likely reflect several factors. First, the
+larger sample (n=233) provided greater statistical power to detect rare serious events occurring at 1-2% base rates.
+Second, the 12-week follow-up period captured delayed-onset events beyond the acute treatment phase when most
+smaller studies ended follow-up. Third, the RCT's systematic safety monitoring may have identified events that went
+unreported or were attributed to underlying depression in less rigorous designs.
+The finding that worsening suicidal state occurred across all dose groups including 1 mg control (9-17%) [1] suggests
+these events may represent the natural course of severe TRD rather than psilocybin-specific toxicity. However, the
+numerical trend toward higher rates in active treatment groups (14-17% vs 9%) and the occurrence of intentional
+self-injury and hospitalization indicate careful patient selection and monitoring protocols are essential. Studies
+excluding patients at significant suicide risk [1] demonstrated favorable safety profiles [2, 4, 7], suggesting this
+exclusion criterion should be maintained in clinical applications.
+The universal occurrence of transient anxiety during drug onset [2, 4] and high rates of thought disorder or confusion
+(75%) [2] underscore the necessity of trained therapeutic support during dosing sessions. The lack of serious adverse
+events during supervised dosing sessions across all studies [1–4, 7] validates the safety of the therapeutic model
+when properly implemented.
+Predictors and Mechanisms: Toward Personalized Treatment
+11
+
+The quality and content of the acute psychedelic experience consistently predicted treatment outcomes across studies
+[2–4, 6, 7], suggesting therapeutic effects depend partially on subjective phenomenology rather than pharmacology
+alone. This aligns with the importance of ”set and setting” in psychedelic therapy and supports the integration of
+preparatory and integration psychotherapy [1–4, 6, 7] as essential treatment components rather than mere safety
+measures.
+The identification of comorbid PTSD as a negative predictor [6] suggests trauma-related symptoms may interfere
+with psilocybin's antidepressant mechanisms or that depression secondary to PTSD represents a distinct syndrome
+requiring modified treatment approaches. This finding requires replication but has immediate clinical relevance for
+patient selection.
+Neural mechanisms involving decreased network modularity [5], increased default mode network connectivity [8],
+and changes in executive and salience network flexibility [5] provide convergent evidence for psilocybin's effects
+on large-scale brain network organization. These findings support theoretical models proposing therapeutic benefit
+through enhanced neural flexibility and integration, potentially explaining both rapid onset (acute network pertur-
+bation) and gradual relapse (reversion to maladaptive patterns without sustained neuroplastic consolidation).
+Population Considerations
+The evidence base encompasses general TRD (≥2 failed treatments) [1, 2, 4] and severe TRD (≥5 failed treatments)
+[6], with both populations demonstrating treatment response. However, baseline characteristics varied substantially,
+with mean failed medications ranging from 2 to 4.6 [1, 2, 4, 5]. Most studies enrolled primarily unipolar depression
+[1, 2, 4–6, 8], with only one study explicitly including bipolar II disorder [9]. The generalizability of findings to
+bipolar depression, psychotic depression, and depression with active substance use disorders remains unknown due
+to systematic exclusion of these populations [1, 2, 9].
+Most participants were White (78-92%) [1, 7] and many studies were conducted in single countries or limited geo-
+graphic regions, raising questions about cross-cultural generalizability of psychedelic therapy paradigms that may
+depend on cultural context and expectancy effects.
+References
+1.
+Goodwin G, Aaronson S, Alvarez O, et al (2022) Single-Dose Psilocybin for a Treatment-Resistant Episode of
+Major Depression. New England Journal of Medicine. https://doi.org/10.1056/NEJMoa2206443
+2.
+Carhart-Harris R, Bolstridge M, Rucker J, et al (2016) Psilocybin with psychological support for treatment-
+resistant depression: an open-label feasibility study. Lancet psychiatry. https://doi.org/10.1016/S2215-
+0366(16)30065-7
+3.
+Meikle S, Carter O, Liknaitzky P, et al (2025) Psilocybin with psychotherapeutic support for treatment-
+resistant depression: a pilot clinical trial. Therapeutic Advances in Psychopharmacology. https://doi.or
+g/10.1177/20451253251377187
+4.
+Carhart-Harris R, Bolstridge M, Bolstridge M, et al (2017) Psilocybin with psychological support for treatment-
+resistant depression: six-month follow-up. Psychopharmacology. https://doi.org/10.1007/s00213-017-4771-x
+5.
+Daws RE, Timmermann C, Giribaldi B, et al (2022) Increased global integration in the brain after psilocybin
+therapy for depression. Nature Medicine. https://doi.org/10.1038/s41591-022-01744-z
+12
+
+6.
+Aaronson S, Vaart A van der, Miller TM, et al (2025) Single-Dose Psilocybin for Depression With Severe
+Treatment Resistance: An Open-Label Trial. American Journal of Psychiatry. https://doi.org/10.1176/appi.a
+jp.20231063
+7.
+Goodwin G, Croal M, Feifel D, et al (2023) Psilocybin for treatment resistant depression in patients taking a
+concomitant SSRI medication. Neuropsychopharmacology. https://doi.org/10.1038/s41386-023-01648-7
+8.
+Carhart-Harris R, Roseman L, Bolstridge M, et al (2017) Psilocybin for treatment-resistant depression: fMRI-
+measured brain mechanisms. Scientific Reports. https://doi.org/10.1038/s41598-017-13282-7
+9.
+Rosenblat J, Meshkat S, Doyle Z, et al (2024) Psilocybin-assisted psychotherapy for treatment resistant de-
+pression: A randomized clinical trial evaluating repeated doses of psilocybin. i Medicina. https://doi.org/10
+.1016/j.medj.2024.01.005
+10.
+Goodwin G, Aaronson S, Alvarez O, et al (2023) Single-dose psilocybin for a treatment-resistant episode
+of major depression: Impact on patient-reported depression severity, anxiety, function, and quality of life.
+Journal of Affective Disorders. https://doi.org/10.1016/j.jad.2023.01.108
+13

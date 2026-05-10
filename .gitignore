@@ -57,6 +57,11 @@ independent-project-audit-*.md
 benchmarks/real_papers/*/source.pdf
 benchmarks/real_papers/*/*.bak
 
+# Raw tool exports in real_outputs/ — license terms prohibit redistribution.
+# Keep only the derived input.txt + meta.json + report.json + provenance.jsonl + aar_scorecard.md.
+benchmarks/real_outputs/*/*.pdf
+benchmarks/real_outputs/*/*Sources.txt
+
 # Local caches and tooling
 .cache/
 .codex/

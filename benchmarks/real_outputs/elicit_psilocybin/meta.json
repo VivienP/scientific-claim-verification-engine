@@ -4,7 +4,7 @@
   "prompt_used": "What is the evidence for psilocybin in treatment-resistant depression?; What are the differences in symptom reduction for depression, anxiety, or treatment-resistant conditions across Phase II trials of psilocybin-assisted therapy?",
   "fetch_date": "2026-05-10",
   "source_url": "https://elicit.com",
-  "license_note": "Output captured manually from Elicit UI for verification benchmarking. Single user session, no redistribution of raw output.",
+  "license_note": "Output captured manually from Elicit UI for verification benchmarking. Single user session. Raw PDF export committed alongside the derived input.txt to enable end-to-end reproducibility of the benchmark numbers.",
   "extraction_method": "PDF export from Elicit Report mode UI, text extracted via pymupdf",
   "input_chars": 63876,
   "estimated_inline_citations": 604

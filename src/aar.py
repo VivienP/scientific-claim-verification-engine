@@ -72,12 +72,17 @@ def _is_valid_hash(value: object) -> bool:
 def _claim_is_transparent(verification: dict[str, Any]) -> bool:
     """A claim's verdict is transparent when the auditor can see source evidence.
 
-    Two paths qualify:
+    Three paths qualify:
       1. ``source_passages`` is a non-empty list of verbatim quotes —
          the strongest signal.
       2. ``evidence_quality`` is in {abstract_only, quoted_passage,
          title_only} — the source was at least retrieved and the
          verifier saw something concrete.
+      3. ``evidence_quality`` is ``passages_searched_no_quote`` — fulltext
+         was retrieved and BM25-selected passages were shown to the
+         verifier, but the verifier didn't quote any (verdict was usually
+         unsupported / no_evidence). This still satisfies transparency
+         because the auditor can see what evidence was searched.
 
     citing_paper_context is *not* counted as transparent because the
     cited source itself was not seen — the verdict is internal-
@@ -88,7 +93,12 @@ def _claim_is_transparent(verification: dict[str, Any]) -> bool:
     if isinstance(passages, list) and passages:
         return True
     evidence_quality = verification.get("evidence_quality")
-    return evidence_quality in {"abstract_only", "quoted_passage", "title_only"}
+    return evidence_quality in {
+        "abstract_only",
+        "quoted_passage",
+        "title_only",
+        "passages_searched_no_quote",
+    }
 
 
 def compute_aar(

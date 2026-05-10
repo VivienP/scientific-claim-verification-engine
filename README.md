@@ -45,7 +45,7 @@ print(f"Report: {run_dir}")
 - **`report.json`** — one record per claim: verdict, cited source, retrieval status, evidence quality, source quotes, numeric check result.
 - **`provenance.jsonl`** — append-only audit trail: every extraction, resolution, verification, and aggregation step, with token and cache usage.
 
-Verdicts: `supported` · `partially_supported` · `unsupported` · `not_addressed`. Abstention is explicit — the pipeline never forces weak evidence into `unsupported`.
+Verdicts: `supported` · `partially_supported` · `unsupported` · `not_addressed`. Abstention is explicit — the pipeline never forces weak evidence into `unsupported`. Evidence quality is one of `quoted_passage` · `passages_searched_no_quote` · `abstract_only` · `title_only` · `citing_paper_context` · `no_evidence`. Full per-claim schema (V1 + Copilot enrichment): [docs/output-schema.md](docs/output-schema.md).
 
 ## Track Record
 
@@ -54,21 +54,25 @@ Verdicts: `supported` · `partially_supported` · `unsupported` · `not_addresse
 | Lactate-ISF, 25 expert-annotated claims | **full pipeline** | 16/25 verdict agreement (64%) | [eval/e2e/](eval/e2e/reference_paper_v1_results.md) |
 | Valsci paper (bioinformatics), 11 external claims | resolver | 10/11 correct source (91%) | [benchmarks/real_papers/valsci_brice_2025/](benchmarks/real_papers/valsci_brice_2025/README.md) |
 | SciFact dev | verifier, oracle inputs | F1 = 0.94 | binary, [scripts/eval_scifact.py](scripts/eval_scifact.py) |
-| Real AI-for-science tools, 59 claims | resolver | 72.9% citation found rate | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
+| Real AI-for-science tools, 187 claims across 6 outputs | full pipeline | 84.5% citation found rate; 67 supported / 29 partial / 31 unsupported / 60 not_addressed; 24 numeric checks (4 flagged) | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
+| Claim Transparency (CTran) across 135 claims, 5 benchmarks | audit trail | 65.9% transparent (+17pp vs pre-fix baseline) | [reports/phase_a2/](reports/phase_a2/ctran_failure_matrix.md) |
 
 ## Pipeline
 
 ```text
 input text
-  -> extract claims          (LLM, citation-anchored)
+  -> extract claims          (LLM, citation-anchored; partial-recovery on truncated responses)
   -> resolve citations       (multi-source: bib DOI → CrossRef → OpenAlex → PubMed)
   -> enrich metadata         (PubMed PMID, Europe PMC OA discovery)
   -> fetch full text         (OA URL → PMC → Europe PMC → Unpaywall PDF)
   -> chunk and select        (deterministic IMRAD sections + BM25 token-budget)
   -> verify                  (route by retrieval depth: full-text / abstract / title-only / multi-source)
+  -> audit-trail fallback    (surface BM25 passages as `passages_searched_no_quote` when LLM didn't quote)
   -> deterministic numeric   (OR/CI consistency, p-value/CI null-crossing)
   -> report.json + provenance.jsonl
 ```
+
+End-to-end diagrams (verifier routing, audit-trail logic, multi-source aggregation): [docs/architecture.md](docs/architecture.md).
 
 ## Public API
 
@@ -113,7 +117,7 @@ Endpoints (all require `X-API-Key: $COPILOT_API_KEY` except `/health`):
 | `GET` | `/health` | Load-balancer probe (no auth) |
 | `POST` | `/verify` | Submit a job; returns `202` + `{job_id, poll_url}` |
 | `GET` | `/jobs/{job_id}` | Status + result envelope |
-| `GET` | `/runs/{run_id}/copilot_report.html` | Self-contained Copilot HTML (path-confined) |
+| `GET` | `/runs/{run_id}/copilot_report.html` | Self-contained Copilot HTML (path-confined) — see [docs/output-schema.md](docs/output-schema.md#6-copilot-enrichment) for the per-claim Copilot fields surfaced in the HTML |
 
 Programmatic factory: `from src.api import create_app; app = create_app()`. Client example: [`examples/api_run.py`](examples/api_run.py). Container hardening: non-root uid 10001, `read_only: true`, `cap_drop: ALL`, exact-pinned Python deps. Single-tenant Phase C; multi-tenant Postgres-backed JobStore is deferred to Phase D.
 

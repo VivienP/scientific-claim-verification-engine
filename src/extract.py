@@ -93,6 +93,55 @@ def _parse_cache_hit(usage: Usage) -> bool | None:
     return None
 
 
+_CLAIMS_ARRAY_START_RE = re.compile(r'"claims"\s*:\s*\[')
+
+
+def _attempt_partial_recovery(response_text: str) -> list[dict[str, Any]]:
+    """Salvage as many complete claim objects as possible from a truncated response.
+
+    Premium Systematic Review outputs occasionally exceed ``max_output_tokens``,
+    leaving the JSON payload truncated mid-object. The default ``json.loads``
+    failure discards every claim — including all the ones the LLM emitted
+    completely before truncation. This helper iterates objects via
+    ``json.JSONDecoder.raw_decode`` and stops cleanly at the first un-parseable
+    position, returning whatever was fully decoded.
+
+    Returns an empty list when no ``"claims": [`` array marker is found, which
+    is the right behavior for genuinely malformed responses (vs. truncated ones).
+    """
+    cleaned = _strip_fences(response_text)
+    array_match = _CLAIMS_ARRAY_START_RE.search(cleaned)
+    if not array_match:
+        return []
+    decoder = json.JSONDecoder()
+    pos = array_match.end()
+    recovered: list[dict[str, Any]] = []
+    while pos < len(cleaned):
+        # Skip whitespace and inter-object commas. Stop on closing bracket.
+        while pos < len(cleaned) and cleaned[pos] in " \t\n\r,":
+            pos += 1
+        if pos >= len(cleaned) or cleaned[pos] == "]":
+            break
+        try:
+            obj, end_pos = decoder.raw_decode(cleaned, pos)
+        except json.JSONDecodeError as exc:
+            # Expected exit for truncated payloads — the recovered count is
+            # logged by the caller as ``extract_partial_recovery``. Debug-level
+            # here so the structlog rule is satisfied without spamming a
+            # warning on every truncation (which is the function's normal exit).
+            logger.debug(
+                "extract_partial_recovery_truncation",
+                position=pos,
+                recovered_so_far=len(recovered),
+                error=str(exc),
+            )
+            break
+        if isinstance(obj, dict):
+            recovered.append(obj)
+        pos = end_pos
+    return recovered
+
+
 def extract_claims(
     text: str,
     *,
@@ -154,10 +203,14 @@ def extract_claims(
         parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
         raw_claims: list[dict[str, Any]] = parsed["claims"]
         for raw in raw_claims:
+            claim_text = str(raw["claim_text"]).strip()
+            if not claim_text:
+                logger.warning("extract_empty_claim_text", raw_claim=raw)
+                continue
             claims.append(
                 Claim(
                     claim_id=str(uuid.uuid4()),
-                    claim_text=str(raw["claim_text"]),
+                    claim_text=claim_text,
                     cited_authors=list(raw.get("cited_authors", [])),
                     cited_year=int(raw["cited_year"])
                     if raw.get("cited_year") is not None
@@ -166,7 +219,7 @@ def extract_claims(
                     if raw.get("claim_type")
                     else "factual_qualitative",  # type: ignore[arg-type]
                     citation_markers=_parse_citation_markers(
-                        raw.get("citation_markers"), str(raw["claim_text"])
+                        raw.get("citation_markers"), claim_text
                     ),
                 )
             )
@@ -176,7 +229,57 @@ def extract_claims(
             raw_response=response_text[:200],
             error=str(exc),
         )
+        # Reset any claims appended by the happy-path loop before it raised,
+        # then attempt partial recovery. Better to verify N claims out of M
+        # than 0 out of M when the only damage is a truncated trailing object.
         claims = []
+        recovered = _attempt_partial_recovery(response_text)
+        if recovered:
+            logger.warning(
+                "extract_partial_recovery",
+                recovered_count=len(recovered),
+                response_length=len(response_text),
+            )
+            for raw in recovered:
+                raw_text = raw.get("claim_text")
+                if raw_text is None:
+                    continue
+                claim_text = str(raw_text).strip()
+                if not claim_text:
+                    continue
+                try:
+                    cited_year = (
+                        int(raw["cited_year"]) if raw.get("cited_year") is not None else None
+                    )
+                    claim_type = (
+                        str(raw["claim_type"]) if raw.get("claim_type") else "factual_qualitative"
+                    )
+                    claims.append(
+                        Claim(
+                            claim_id=str(uuid.uuid4()),
+                            claim_text=claim_text,
+                            cited_authors=list(raw.get("cited_authors", [])),
+                            cited_year=cited_year,
+                            claim_type=claim_type,  # type: ignore[arg-type]
+                            citation_markers=_parse_citation_markers(
+                                raw.get("citation_markers"), claim_text
+                            ),
+                        )
+                    )
+                except (ValueError, TypeError) as exc:
+                    # Partial-recovery only — log and drop the malformed
+                    # object rather than aborting the whole batch. CLAUDE.md
+                    # requires every except to log; without this, a recovered
+                    # claim with e.g. cited_year=={} silently disappears,
+                    # masking the truncation damage we run partial recovery
+                    # to surface.
+                    logger.warning(
+                        "extract_partial_recovery_skip_malformed_claim",
+                        claim_text_preview=claim_text[:80],
+                        error_type=type(exc).__name__,
+                        error=str(exc),
+                    )
+                    continue
 
     output_hash = _hash(repr(claims))
 

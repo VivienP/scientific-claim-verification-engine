@@ -1,16 +1,1209 @@
-# PLACEHOLDER — paste Elicit Systematic Review PDF here, then replace this header.
-#
-# Run config:
-#   - Mode: Systematic review
-#   - Source: Clinical trials
-#   - Format: General Review
-#   - Query: "In adults with type 2 diabetes, what is the effect of GLP-1 receptor agonists compared to placebo on major adverse cardiovascular events (MACE)?"
-#
-# Workflow once the PDF is exported:
-#   1. Save the PDF in this directory.
-#   2. Drop me the PDF filename and I will:
-#      - Run pymupdf to extract text
-#      - Replace this placeholder with the extracted text
-#      - Update meta.json (input_chars, estimated_inline_citations)
-#      - Run the decision gate (extract_claims with max_output_tokens=8192)
-#      - If >= 35 claims, launch the full pipeline run
+In adults with type 2 diabetes, what is the effect of GLP-1 receptor agonists
+compared to placebo on major adverse cardiovascular events (MACE)?
+GLP-1 receptor agonists reduce major adverse cardiovascular events by approximately 13–27% compared to placebo
+in adults with type 2 diabetes at elevated cardiovascular risk, a benefit that is consistent across multiple agents,
+routes of administration, and patient subgroups.
+Abstract
+Five major cardiovascular outcome trials—LEADER (liraglutide, n=9,340), EXSCEL (exenatide, n=14,752), SUSTAIN
+6 (subcutaneous semaglutide, n=3,297), AMPLITUDE-O (efpeglenatide, n=4,076), and SOUL (oral semaglutide,
+n=9,650)—evaluated GLP-1 receptor agonists versus placebo in adults with type 2 diabetes at elevated cardiovascular
+risk. Four of five trials demonstrated statistically superior reductions in three-point MACE (cardiovascular death,
+nonfatal myocardial infarction, nonfatal stroke), with hazard ratios ranging from 0.73 (efpeglenatide) [1] to 0.87
+(liraglutide) [2]. Subcutaneous semaglutide (HR 0.74; 95% CI, 0.58–0.95) [3] and oral semaglutide (HR 0.86; 95% CI,
+0.77–0.96; P=0.006) [4] also showed significant benefit. EXSCEL did not achieve superiority (HR 0.91; 95% CI, 0.83–
+1.00; P=0.06) [5], though sensitivity analyses adjusting for unbalanced drop-in of cardioprotective medications in the
+placebo arm yielded a significant result (HR 0.85; P=0.008) [6]. A dose-response relationship was demonstrated with
+efpeglenatide (all P for trend ≤0.018) [7]. Cardiovascular benefit was consistent across subgroups defined by blood
+pressure [8], kidney function [9], age [10], triglyceride levels [11], ejection fraction [12], and concomitant SGLT2
+inhibitor use (P-interaction=0.66) [13]. Gastrointestinal adverse events were the most common side effects across all
+trials [1, 2, 4], with no significant increase in pancreatitis [2, 5]. Taken together, GLP-1 receptor agonists—including
+both human GLP-1-based and exendin-based agents, administered subcutaneously or orally—reduce MACE by
+approximately 13–27% in adults with type 2 diabetes and established or high-risk cardiovascular disease.
+1
+
+Flow Diagram
+Paper search
+We performed a semantic search across over 138 million academic papers from the Elicit search engine, which in-
+cludes all of Semantic Scholar and OpenAlex.
+We ran this query: ”In adults with type 2 diabetes, what is the effect of GLP-1 receptor agonists compared to placebo
+on major adverse cardiovascular events (MACE)?”
+The search returned 1,000 total results from Elicit.
+2
+
+We retrieved 1000 papers most relevant to the query for screening.
+Screening
+Abstract screening
+We screened in sources based on their abstracts that met these criteria:
+• Population - Type 2 Diabetes: Does this study include adults (≥18 years) with confirmed type 2 diabetes
+mellitus as the study population (excluding studies focused on type 1 diabetes, gestational diabetes, or pediatric
+populations)?
+• Intervention - GLP-1 Receptor Agonist: Does this study evaluate a GLP-1 receptor agonist (such as exenatide,
+liraglutide, semaglutide, dulaglutide, etc.) as monotherapy or add-on therapy?
+• Comparison - Placebo Control: Does this study include a placebo control group (not limited to active com-
+parators only)?
+• Outcomes - Cardiovascular Events: Does this study report major adverse cardiovascular events (MACE) or
+individual cardiovascular endpoints such as cardiovascular death, myocardial infarction, stroke, or hospital-
+ization for heart failure (not limited to only surrogate cardiovascular markers)?
+• Study Design - Randomized Controlled Trial: Is this study a randomized controlled trial (not an observational
+study, case report, case series, conference abstract, or editorial)?
+• Study Duration: Was the GLP-1 receptor agonist treatment duration at least 12 weeks?
+• Effect Isolation: Can the effects of the GLP-1 receptor agonist be isolated in this study (i.e., is this not a fixed-
+dose combination product where the GLP-1 receptor agonist effects cannot be separated from other active
+ingredients)?
+Papers that failed any strict criterion were automatically excluded. For the remaining papers, we considered all
+screening questions together and made a holistic judgement about whether to screen in each paper.
+45 papers passed abstract screening and moved to full-text screening.
+At abstract screening, the number of papers excluded for each primary reason was:
+• Population - Type 2 Diabetes: n = 63
+• Intervention - GLP-1 Receptor Agonist: n = 83
+• Comparison - Placebo Control: n = 272
+• Outcomes - Cardiovascular Events: n = 27
+• Study Design - Randomized Controlled Trial: n = 510
+Full-text screening
+We then screened papers based on their full text using these additional criteria:
+• Population - Type 2 Diabetes: Does this study include adults (≥18 years) with confirmed type 2 diabetes
+mellitus as the study population (excluding studies focused on type 1 diabetes, gestational diabetes, or pediatric
+populations)?
+• Intervention - GLP-1 Receptor Agonist: Does this study evaluate a GLP-1 receptor agonist (such as exenatide,
+liraglutide, semaglutide, dulaglutide, etc.) as monotherapy or add-on therapy?
+• Comparison - Placebo Control: Does this study include a placebo control group (not limited to active com-
+parators only)?
+3
+
+• Outcomes - Cardiovascular Events: Does this study report major adverse cardiovascular events (MACE) or
+individual cardiovascular endpoints such as cardiovascular death, myocardial infarction, stroke, or hospital-
+ization for heart failure (not limited to only surrogate cardiovascular markers)?
+• Study Design - Randomized Controlled Trial: Is this study a randomized controlled trial (not an observational
+study, case report, case series, conference abstract, or editorial)?
+• Study Duration: Was the GLP-1 receptor agonist treatment duration at least 12 weeks?
+• Effect Isolation: Can the effects of the GLP-1 receptor agonist be isolated in this study (i.e., is this not a fixed-
+dose combination product where the GLP-1 receptor agonist effects cannot be separated from other active
+ingredients)?
+Papers that failed any strict criterion were automatically excluded. For the remaining papers, we considered all
+screening questions together and made a holistic judgement about whether to include each paper in the final analysis.
+23 papers passed full-text screening and moved to data extraction.
+At full-text screening, the number of papers excluded for each primary reason was:
+• Comparison - Placebo Control: n = 1
+• Outcomes - Cardiovascular Events: n = 1
+• Study Design - Randomized Controlled Trial: n = 2
+• No full text: n = 17
+• Other / below screening threshold: n = 1
+Data extraction
+We asked a large language model to extract each data column below from each paper. We gave the model the
+extraction instructions shown below for each column.
+• Study Design:
+Extract study design characteristics relevant to assessing cardiovascular outcomes in type 2 diabetes, including:
+• Study type (RCT, open-label, etc.)
+• Randomization method and blinding
+• Total sample size
+• Median follow-up duration
+• Number of study sites and countries
+• Primary vs secondary analysis (specify if MACE was primary or secondary endpoint)
+• GLP-1 RA Intervention:
+Extract details about the GLP-1 receptor agonist intervention for cardiovascular outcomes in type 2 diabetes,
+including:
+• Specific GLP-1 RA name (liraglutide, exenatide, efpeglenatide, etc.)
+• Dose and dosing regimen
+• Route of administration
+• Duration of treatment
+• Comparison to placebo or other control
+• Concomitant standard care/background therapy
+4
+
+• Population Characteristics:
+Extract baseline characteristics of adults with type 2 diabetes relevant to cardiovascular risk, including:
+• Mean age and percentage male
+• Diabetes duration (mean years)
+• Baseline HbA1c
+• Percentage with established cardiovascular disease
+• Percentage with specific CV risk factors (hypertension, dyslipidemia, smoking)
+• Baseline renal function if reported
+• Inclusion/exclusion criteria related to cardiovascular risk
+• MACE Definition:
+Extract the specific definition of major adverse cardiovascular events (MACE) used in each study, including:
+• Exact components included in primary MACE composite (CV death, nonfatal MI, nonfatal stroke, etc.)
+• Definition of expanded MACE if reported
+• Time-to-first-event vs recurrent events analysis
+• Any variations from standard 3-point MACE definition
+• MACE Results:
+Extract results for major adverse cardiovascular events comparing GLP-1 receptor agonists to placebo in type
+2 diabetes, including:
+• Primary MACE composite: number of events, event rates, hazard ratio with 95% CI, p-value
+• Individual MACE components: CV death, nonfatal MI, nonfatal stroke (events, HR, 95% CI)
+• Time-to-event analysis results
+• Whether superiority or non-inferiority was demonstrated
+• Expanded MACE results if reported
+• Other CV Outcomes:
+Extract results for other cardiovascular outcomes beyond primary MACE in type 2 diabetes studies, including:
+• All-cause mortality (events, HR, 95% CI)
+• Heart failure hospitalization
+• Coronary revascularization
+• Hospitalization for unstable angina
+• Any other CV endpoints reported
+• Specify if these were prespecified secondary endpoints
+• Safety Outcomes:
+Extract safety and adverse event data for GLP-1 receptor agonists vs placebo in adults with type 2 diabetes,
+including:
+• Most common adverse events leading to discontinuation
+• Gastrointestinal adverse events (nausea, vomiting, diarrhea)
+• Pancreatitis incidence
+• Serious adverse events
+• Any safety signals of special interest
+5
+
+• Overall discontinuation rates
+• Statistical Analysis:
+Extract statistical analysis methods used for cardiovascular outcomes in type 2 diabetes studies, including:
+• Primary analysis approach (intention-to-treat, per-protocol)
+• Time-to-event analysis methods
+• Handling of competing risks
+• Multiple testing adjustments
+• Non-inferiority margins if applicable
+• Cox proportional hazards assumptions
+Results
+Characteristics of Included Studies
+The 23 sources encompass five major cardiovascular outcome trials (CVOTs) of GLP-1 receptor agonists—LEADER
+(liraglutide), EXSCEL (exenatide), SUSTAIN 6/PIONEER 6 (semaglutide), AMPLITUDE-O (efpeglenatide), and SOUL
+(oral semaglutide)—along with multiple prespecified secondary analyses, post hoc analyses, and one trial design pa-
+per. All primary trials were randomized, double-blind, placebo-controlled, and used three-point MACE (cardiovas-
+cular death, nonfatal myocardial infarction, nonfatal stroke) as their primary endpoint. The table below summarizes
+the characteristics of all included sources.
+Study
+Full text
+retrieved?
+Analysis
+Type
+Trial
+GLP-1 RA
+Dose /
+Route
+Sample
+Size
+Median
+Follow-up
+Population
+CV Risk
+H.
+Gerstein
+et al.,
+2021
+Yes
+Primary
+CVOT [1]
+AMPLITUDE-
+O
+Efpeglenatide
+[1]
+4 or 6 mg
+weekly
+SC [1]
+4,076 [1]
+1.81 years
+[1]
+89.6% es-
+tablished
+CVD [1]
+S. Marso
+et al.,
+2016
+Yes
+Primary
+CVOT [2]
+LEADER
+Liraglutide
+[2]
+1.8 mg
+daily SC
+[2]
+9,340 [2]
+3.8 years
+[2]
+81.3% es-
+tablished
+CVD [2]
+R.
+Holman
+et al.,
+2017
+Yes
+Primary
+CVOT [5]
+EXSCEL
+Exenatide
+[5]
+2 mg
+weekly
+SC [5]
+14,752 [5]
+3.2 years
+[5]
+73.1% es-
+tablished
+CVD [5]
+M.
+Husain et
+al., 2020
+Yes
+Pooled
+post hoc
+[3]
+SUSTAIN
+6 +
+PIONEER
+6
+Semaglutide
+[3]
+0.5–1.0
+mg
+weekly
+SC; 14 mg
+daily oral
+[3]
+6,480 [3]
+2.1 yr /
+1.3 yr [3]
+Prior MI
+34.3%,
+prior
+stroke/TIA
+15.8% [3]
+6
+
+Study
+Full text
+retrieved?
+Analysis
+Type
+Trial
+GLP-1 RA
+Dose /
+Route
+Sample
+Size
+Median
+Follow-up
+Population
+CV Risk
+S. Verma
+et al.,
+2019
+Yes
+Post hoc
+(LEADER)
+[14]
+LEADER
+Liraglutide
+[14]
+Up to 1.8
+mg daily
+[14]
+9,340 [14]
+3.8 years
+[14]
+Age ≥50
+with CVD
+or ≥60
+with risk
+factors
+[14]
+S. Verma
+et al.,
+2018
+Yes
+Post hoc
+(LEADER)
+[15]
+LEADER
+Liraglutide
+[15]
+1.8 mg or
+max
+tolerated
+[15]
+9,340 [15]
+3.8 years
+[15]
+Polyvascular
+disease
+sub-
+groups
+[15]
+J. Buse et
+al., 2020
+Yes
+Mediation
+analysis
+(LEADER)
+[16]
+LEADER
+Liraglutide
+[16]
+1.8 mg
+daily [16]
+9,340 [16]
+3.8 years
+[16]
+HbA1c
+≥7%, high
+CV risk
+[16]
+J. Mann et
+al., 2017
+Yes
+Prespecified
+sec-
+ondary
+(LEADER)
+[17]
+LEADER
+Liraglutide
+[17]
+Not
+specified
+[17]
+9,340 [17]
+3.84 years
+[17]
+Mean
+eGFR 80
+mL/min/1.73
+m² [17]
+R. Mentz
+et al.,
+2018
+Yes
+Prespecified
+subgroup
+(EXSCEL)
+[18]
+EXSCEL
+Exenatide
+[18]
+2 mg
+weekly
+[18]
+14,752
+[18]
+Not
+specified
+[18]
+~70% with
+known
+CVD [18]
+L.A.
+Leiter et
+al., 2020
+Yes
+Post hoc
+(LEADER
++
+SUSTAIN
+6) [8]
+LEADER
++
+SUSTAIN
+6
+Liraglutide
+/
+Semaglu-
+tide [8]
+SC
+injection
+[8]
+9,340 /
+3,297 [8]
+3.8 yr /
+2.1 yr [8]
+Stage 1
+HTN
+~30%,
+Stage 2
+~41–43%
+[8]
+J. Mann et
+al., 2018
+Yes
+Post hoc
+(LEADER)
+[19]
+LEADER
+Liraglutide
+[19]
+1.8 mg
+daily [19]
+9,340
+(implied)
+[19]
+Not
+specified
+[19]
+eGFR <60:
+mean
+45.7;
+eGFR ≥60:
+mean 90.8
+[19]
+MD N.
+Marx et
+al., 2025
+Yes
+Prespecified
+(SOUL)
+[13]
+SOUL
+Oral
+semaglu-
+tide [13]
+3→7→14
+mg daily
+oral [13]
+9,650 [13]
+47.5
+months
+[13]
+ASCVD
+or CKD;
+mean age
+65–67 yr
+[13]
+J.S. Neves
+et al.,
+2024
+Yes
+Post hoc
+(EXSCEL)
+[12]
+EXSCEL
+Exenatide
+[12]
+Once
+weekly
+[12]
+14,752
+[12]
+Not
+specified
+[12]
+Stratified
+by LVEF
+[12]
+7
+
+Study
+Full text
+retrieved?
+Analysis
+Type
+Trial
+GLP-1 RA
+Dose /
+Route
+Sample
+Size
+Median
+Follow-up
+Population
+CV Risk
+M.
+Husain et
+al., 2020a
+Yes
+Combined
+post hoc
+(SUSTAIN
++ PIO-
+NEER)
+[20]
+SUSTAIN
++
+PIONEER
+Semaglutide
+[20]
+0.5–1.0
+mg SC;
+3–14 mg
+oral [20]
+Large
+pooled
+cohort
+[20]
+Up to 2
+years [20]
+Mean age
+59.9 yr;
+eGFR 88.7
+[20]
+P. Rossing
+et al.,
+2023
+Yes
+Post hoc
+(SUSTAIN
+6 +
+PIONEER
+6) [9]
+SUSTAIN
+6 +
+PIONEER
+6
+Semaglutide
+[9]
+0.5–1.0
+mg SC; 14
+mg oral
+[9]
+6,461 [9]
+2.1 yr /
+15.9 mo
+[9]
+Stratified
+by eGFR
+and
+UACR [9]
+M.
+Gilbert et
+al., 2018
+Yes
+Post hoc
+(LEADER)
+[10]
+LEADER
+Liraglutide
+[10]
+Not
+specified
+[10]
+9,340 [10]
+Not
+specified
+[10]
+Stratified
+by age;
+~17 yr
+diabetes
+duration
+in ≥75 yr
+group
+[10]
+S. Verma
+et al.,
+2023
+Yes
+Post hoc
+(SUSTAIN
+6 +
+PIONEER
+6) [11]
+SUSTAIN
+6 +
+PIONEER
+6
+Semaglutide
+[11]
+0.5–1.0
+mg SC; 14
+mg oral
+[11]
+6,417 [11]
+2 yr / 15.9
+mo [11]
+Mean age
+65.4 yr;
+mean
+eGFR 75.0
+[11]
+A. Bethel
+et al.,
+2020
+Yes
+Sensitivity
+analysis
+(EXSCEL)
+[6]
+EXSCEL
+Exenatide
+[6]
+2 mg
+weekly
+[6]
+14,752 [6]
+3.2 years
+[6]
+~70% with
+previous
+CVD [6]
+R.
+Holman
+et al.,
+2016
+Yes
+Trial
+design
+paper
+[21]
+EXSCEL
+Exenatide
+[21]
+2 mg
+weekly
+SC [21]
+~14,000
+[21]
+Expected
+>3 yr [21]
+~70% with
+estab-
+lished
+CVD [21]
+S. Verma
+et al.,
+2020
+Yes
+Post hoc
+(LEADER
++
+SUSTAIN
+6) [22]
+LEADER
++
+SUSTAIN
+6
+Liraglutide
+/
+Semaglu-
+tide [22]
+Liraglutide
+1.8 mg;
+semaglu-
+tide
+0.5–1.0
+mg [22]
+9,340 /
+3,297 [22]
+Not
+specified
+[22]
+Microvascular
+disease
+sub-
+groups
+[22]
+H.
+Gerstein
+et al.,
+2023
+Yes
+Dose-
+response
+(AMPLITUDE-
+O) [7]
+AMPLITUDE-
+O
+Efpeglenatide
+[7]
+4 mg and
+6 mg
+weekly
+SC [7]
+4,076 [7]
+1.8 years
+[7]
+89.5% es-
+tablished
+CVD [7]
+8
+
+Study
+Full text
+retrieved?
+Analysis
+Type
+Trial
+GLP-1 RA
+Dose /
+Route
+Sample
+Size
+Median
+Follow-up
+Population
+CV Risk
+K.
+Gooding
+et al.,
+2024
+Yes
+Post hoc
+(EXSCEL)
+[23]
+EXSCEL
+Exenatide
+[23]
+2 mg
+weekly
+SC [23]
+14,752
+[23]
+3.2 years
+[23]
+73.1% es-
+tablished
+CVD;
+median
+diabetes
+12 yr [23]
+Unveiling
+CV
+Benefits,
+2025
+No
+Narrative
+review of
+SOUL [4]
+SOUL
+Oral
+semaglu-
+tide [4]
+3→7→14
+mg daily
+oral [4]
+9,650 [4]
+49.5
+months
+[4]
+75% estab-
+lished
+CVD;
+mean age
+66 yr [4]
+Across the five CVOTs, sample sizes ranged from 4,076 (AMPLITUDE-O) [1] to 14,752 (EXSCEL) [5], and median
+follow-up ranged from 1.81 years [1] to approximately 4 years (LEADER [2] and SOUL [4]). All trials enrolled
+high-cardiovascular-risk populations, though the proportion with established cardiovascular disease varied from
+approximately 73% in EXSCEL [5] to nearly 90% in AMPLITUDE-O [1]. The GLP-1 RA agents included human GLP-
+1-based molecules (liraglutide, semaglutide) and exendin-based molecules (exenatide, efpeglenatide), administered
+via subcutaneous injection or orally (semaglutide only) [4, 13]. All trials used standard three-point MACE as the
+primary composite endpoint [1, 2, 4, 5, 13], employed intention-to-treat analyses [1, 2, 4, 5, 13], and applied Cox
+proportional hazards models for time-to-first-event analysis.
+Effects on MACE
+Primary MACE Outcomes Across Trials
+Trial
+GLP-1 RA
+Events (Drug vs.
+Placebo)
+HR (95% CI)
+Noninferiority
+Superiority
+LEADER
+Liraglutide
+608 (13.0%) vs.
+694 (14.9%) [2]
+0.87 (0.78–0.97)
+[2]
+P<0.001 [2]
+P=0.01 [2]
+EXSCEL
+Exenatide
+839 (11.4%) vs.
+905 (12.2%) [5]
+0.91 (0.83–1.00)
+[5]
+P<0.001 [5]
+P=0.06 [5]
+SUSTAIN 6
+SC semaglutide
+—
+0.74 (0.58–0.95)
+[3]
+—
+Demonstrated
+[3]
+PIONEER 6
+Oral
+semaglutide
+—
+0.79 (0.57–1.11)
+[3]
+—
+Not
+demonstrated
+[3]
+AMPLITUDE-O
+Efpeglenatide
+(combined)
+189 (7.0%) vs.
+125 (9.2%) [1]
+0.73 (0.58–0.92)
+[1]
+P<0.001 [1]
+P=0.007 [1]
+SOUL
+Oral
+semaglutide
+579 (12.0%) vs.
+668 (13.8%) [4]
+0.86 (0.77–0.96)
+[4]
+Met [4]
+P=0.006 [4]
+Four of the five CVOTs demonstrated both noninferiority and superiority for MACE reduction. LEADER showed a
+9
+
+13% relative risk reduction with liraglutide (HR 0.87; 95% CI, 0.78–0.97; P=0.01 for superiority) [2]. AMPLITUDE-
+O demonstrated the largest point estimate of benefit with efpeglenatide (HR 0.73; 95% CI, 0.58–0.92; P=0.007) [1],
+though this trial had the shortest follow-up (1.81 years) [1] and highest proportion of patients with established CVD
+(89.6%) [1]. SUSTAIN 6 demonstrated superiority for subcutaneous semaglutide (HR 0.74; 95% CI, 0.58–0.95) [3], and
+the SOUL trial confirmed superiority for oral semaglutide over a longer follow-up of approximately 4 years (HR
+0.86; 95% CI, 0.77–0.96; P=0.006) [4]. EXSCEL was the sole trial that met noninferiority but failed to demonstrate
+superiority for once-weekly exenatide (HR 0.91; 95% CI, 0.83–1.00; P=0.06) [5].
+Individual MACE Components
+Data on individual MACE components were reported in varying detail. In LEADER, cardiovascular death was signif-
+icantly reduced (HR 0.78; 95% CI, 0.66–0.93; P=0.007), while nonfatal MI and nonfatal stroke showed nonsignificant
+trends toward benefit [2]. In EXSCEL, none of the individual components differed significantly between groups
+[5]. In the AMPLITUDE-O dose-response analysis, the 6 mg efpeglenatide dose reduced cardiovascular death (HR
+0.55; 95% CI, 0.35–0.88; P=0.012) and nonfatal MI (HR 0.64; 95% CI, 0.43–0.96; P=0.033), but not nonfatal stroke (HR
+0.79; 95% CI, 0.47–1.34; P=0.38) [7]. Combined semaglutide data showed a significant reduction in fatal and nonfatal
+stroke (HR 0.68; 95% CI, 0.46–1.00), while MI was not significantly reduced (HR 0.89; 95% CI, 0.67–1.18) [3].
+All-Cause Mortality and Other Cardiovascular Outcomes
+Trial
+All-Cause Mortality HR
+(95% CI)
+HF Hospitalization HR
+(95% CI)
+Expanded MACE HR (95%
+CI)
+LEADER
+0.85 (0.74–0.97) [2]
+0.87 (0.73–1.05) [2]
+Not specified [2]
+EXSCEL
+0.86 (0.77–0.97), nominal
+P=0.016 [6]
+0.94 (0.78–1.13) [23]
+Not significant [5]
+AMPLITUDE-O
+0.78 (0.58–1.06) [1]
+0.61 (0.38–0.98) [1]
+0.79 (0.65–0.96) [1]
+SUSTAIN 6 + PIONEER 6
+Not reported [3]
+1.03 (0.75–1.40) [3]
+Not reported [3]
+SOUL
+Not reported [4]
+0.82, P=0.013 [4]
+Not reported [4]
+Liraglutide significantly reduced all-cause mortality by 15% (HR 0.85; 95% CI, 0.74–0.97) [2], while exenatide showed
+a nominally significant 14% reduction (HR 0.86; P=0.016) [6]. For heart failure hospitalization, results were generally
+neutral across semaglutide trials (HR 1.03) [3] and EXSCEL (HR 0.94) [23], but significant reductions were observed
+in AMPLITUDE-O (HR 0.61; 95% CI, 0.38–0.98) [1] and SOUL (HR 0.82; P=0.013) [4].
+Dose-Response Relationship
+The AMPLITUDE-O dose-response analysis revealed a graded relationship between efpeglenatide dose and cardio-
+vascular outcomes. The 6 mg dose showed a significant 35% MACE reduction (HR 0.65; 95% CI, 0.50–0.86; P=0.003),
+while the 4 mg dose showed a nonsignificant 18% reduction (HR 0.82; 95% CI, 0.63–1.06; P=0.14) [7]. A clear dose-
+response trend was observed across all primary and secondary outcomes (all P for trend ≤0.018) [7]. This dose-
+response pattern extended to kidney outcomes: the composite renal endpoint showed HR 0.63 for 6 mg (P<0.0001)
+and HR 0.73 for 4 mg (P=0.0009) [7].
+10
+
+Renal Outcomes
+Renal outcomes were reported as secondary endpoints in several trials. In LEADER, the composite renal outcome
+(new-onset persistent macroalbuminuria, persistent doubling of serum creatinine, end-stage renal disease, or renal
+death) was significantly reduced with liraglutide (HR 0.78; 95% CI, 0.67–0.92; P=0.003), driven primarily by reduced
+new-onset macroalbuminuria (HR 0.74; 95% CI, 0.60–0.91; P=0.004) [17]. AMPLITUDE-O similarly showed a signifi-
+cant reduction in the composite renal outcome (HR 0.68; 95% CI, 0.57–0.79; P<0.001) [1].
+Mediation Analysis
+An exploratory mediation analysis from LEADER identified HbA1c (up to 41–83% mediation depending on analytical
+method) and urinary albumin-to-creatinine ratio (up to 29–33% mediation) as potential mediators of liraglutide's
+cardiovascular benefit [16]. Mediation effects were small for body weight, systolic blood pressure, LDL cholesterol,
+confirmed hypoglycemia, sulfonylurea use, and insulin use [16].
+Subgroup Analyses
+Multiple post hoc and prespecified subgroup analyses examined whether the cardiovascular benefits of GLP-1 RAs
+were consistent across clinically relevant subpopulations.
+Subgroup
+Trial(s)
+Key Findings
+Baseline blood pressure categories
+LEADER, SUSTAIN 6
+No heterogeneity across BP
+categories for MACE (P-interaction
+= 0.06 and 0.40) [8]
+CKD (eGFR <60 vs. ≥60)
+LEADER
+Greater MACE reduction in eGFR
+<60 (HR 0.69; 95% CI, 0.57–0.85) vs.
+eGFR ≥60 (HR 0.94; 95% CI,
+0.83–1.07; P-interaction=0.01) [19]
+Kidney function (eGFR/UACR)
+SUSTAIN 6 + PIONEER 6
+Consistent MACE reduction across
+all eGFR and UACR subgroups
+(P-interaction >0.05) [9]
+Polyvascular disease
+LEADER
+HR 0.82 (95% CI, 0.66–1.02) for
+polyvascular; HR 0.82 (95% CI,
+0.71–0.95) for single vascular [15]
+Age (≥75 vs. 60–74 yr)
+LEADER
+34% MACE reduction in ≥75 yr vs.
+lesser reduction in 60–74 yr
+(P-interaction=0.054) [10]
+Microvascular disease
+LEADER, SUSTAIN 6
+Patients with microvascular disease
+had higher baseline MACE risk (HR
+1.15 in LEADER, 1.56 in SUSTAIN 6)
+[22]; benefit of GLP-1 RA consistent
+regardless of microvascular disease
+status [22]
+Baseline triglycerides
+SUSTAIN 6 + PIONEER 6
+Consistent MACE reduction across
+TG levels [11]
+11
+
+Subgroup
+Trial(s)
+Key Findings
+CV risk continuum
+SUSTAIN + PIONEER pooled
+Reduced relative and absolute risk
+across entire CV risk continuum;
+relative risk reduction tended to be
+largest with low CV risk score,
+while absolute risk reduction was
+greatest at intermediate-to-high CV
+risk [20]
+LVEF (<40% vs. ≥40%)
+EXSCEL
+MACE HR 0.96 (0.70–1.31) for LVEF
+<40% vs. 0.84 (0.71–0.98) for LVEF
+≥40% (P-interaction=0.47) [12]
+Concomitant SGLT2i use
+SOUL
+HR 0.89 (0.71–1.11) with SGLT2i vs.
+0.84 (0.74–0.95) without
+(P-interaction=0.66) [13]
+Concomitant SU use
+EXSCEL
+No modification by SU use or SU
+type (P-interaction=0.88 and 0.78)
+[23]
+First vs. recurrent MACE
+LEADER
+15.7% reduction in total (first +
+recurrent) MACE (HR 0.84; 95% CI,
+0.76–0.93) [14]
+The cardiovascular benefits of GLP-1 RAs appear broadly consistent across most subgroups examined. An apparent
+exception was the LEADER post hoc analysis stratifying by baseline eGFR, which showed a significantly greater
+MACE reduction in patients with eGFR <60 (HR 0.69) than those with eGFR ≥60 (HR 0.94; P-interaction=0.01) [19].
+However, this interaction was not confirmed when eGFR was analyzed as a continuous variable (P-interaction=0.61)
+or across finer eGFR subgroups (P-interaction=0.13) [19], and pooled semaglutide data from SUSTAIN 6 and PIONEER
+6 showed consistent benefit across all kidney function categories (P-interaction >0.05) [9]. Concomitant use of
+SGLT2 inhibitors did not attenuate the MACE benefit of oral semaglutide in the SOUL trial (P-interaction=0.66) [13],
+suggesting additive cardiovascular protection.
+Safety Outcomes
+Trial
+GI Adverse Events
+Pancreatitis
+Serious AEs
+Discontinuation
+Rate
+LEADER
+Nausea, vomiting,
+diarrhea more
+common with
+liraglutide [2]
+18 vs. 23 (NS) [2]
+More common with
+liraglutide [2]
+Higher with
+liraglutide [2]
+EXSCEL
+Not detailed [5]
+No significant
+difference [5]
+No significant
+difference [5]
+Up to 45% overall [5]
+AMPLITUDE-O
+Nausea, vomiting,
+diarrhea, bloating
+more frequent with
+efpeglenatide [1]
+Slightly higher, NS
+[1]
+Severe GI events
+more common [1]
+5.4% vs. 3.6% [1]
+12
+
+Trial
+GI Adverse Events
+Pancreatitis
+Serious AEs
+Discontinuation
+Rate
+SOUL
+GI AEs: 16.6% vs.
+8.2% [4]
+No significant
+increase [4]
+Similar between
+groups [4]
+Adherence: 82.5% vs.
+87.7% [4]
+LEADER (age ≥75)
+GI disorders 46.6%
+vs. 33.0% [10]
+Not reported [10]
+63.5% in ≥75 yr
+group [10]
+Not reported [10]
+Gastrointestinal adverse events were consistently the most common side effects across all GLP-1 RA trials and the
+most frequent reason for treatment discontinuation [1, 2, 4]. In the SOUL trial, gastrointestinal events occurred in
+16.6% of semaglutide-treated patients versus 8.2% with placebo [4]. Pancreatitis rates were numerically similar or
+nonsignificantly different between treatment groups across all trials [1, 2, 4, 5]. In LEADER, gallstone disease was
+more common with liraglutide [2]. The safety profile of oral semaglutide was not altered by concomitant SGLT2
+inhibitor use [13]. In the EXSCEL trial, no safety signal was detected based on left ventricular ejection fraction,
+though serious adverse events were numerically more frequent in participants with LVEF <40% receiving exenatide
+(25.3% vs. 18.5% with placebo) [12]. The high overall discontinuation rate of up to 45% in EXSCEL [5] is notable and
+may have reduced the power to detect a superiority signal.
+Sensitivity Analyses and Methodological Considerations
+The EXSCEL trial warrants particular attention given its failure to achieve statistical superiority. A key methodolog-
+ical consideration was the unbalanced drop-in of open-label glucose-lowering medications, with 38.1% of placebo pa-
+tients versus 28.8% of exenatide patients receiving additional therapies during follow-up, including SGLT2 inhibitors
+(10.3% vs. 8.1%) and open-label GLP-1 RAs (3.4% vs. 2.4%) [6]. When inverse probability of treatment weighting was
+applied to account for this imbalance, the MACE hazard ratio decreased from 0.91 (P=0.061) to 0.85 (P=0.008), and the
+all-cause mortality HR decreased from 0.86 (P=0.016) to 0.81 (P=0.012) [6]. This analysis suggests that the observed
+MACE result in EXSCEL may have been attenuated by greater use of cardioprotective drop-in medications in the
+placebo group, and that the true treatment effect of exenatide may be larger than the primary analysis indicated.
+Synthesis
+The overall evidence from five major CVOTs consistently supports that GLP-1 receptor agonists reduce MACE in
+adults with type 2 diabetes at elevated cardiovascular risk, though the magnitude and statistical significance of this
+benefit varied across trials. Four of five trials demonstrated statistical superiority for the primary MACE endpoint,
+with hazard ratios ranging from 0.73 (efpeglenatide, AMPLITUDE-O) [1] to 0.87 (liraglutide, LEADER) [2]. The SOUL
+trial, reporting most recently with a longer follow-up of nearly 4 years, demonstrated a 14% MACE reduction with
+oral semaglutide (HR 0.86; P=0.006) [4], establishing efficacy via the oral route.
+The apparent outlier—EXSCEL's failure to reach statistical superiority (HR 0.91; P=0.06) [5] —can be substantially
+explained by trial-specific factors rather than a true lack of efficacy for exenatide. First, EXSCEL enrolled a broader
+population with a lower baseline cardiovascular risk (73.1% with established CVD [5] vs. 81–90% in other trials [1,
+2]), diluting the population most likely to benefit. Second, the high discontinuation rate (up to 45%) [5] reduced on-
+treatment exposure. Third, and perhaps most importantly, the greater drop-in of open-label cardioprotective glucose-
+lowering medications in the placebo arm attenuated the between-group difference; IPTW correction produced a
+MACE HR of 0.85 (P=0.008) [6], fully consistent with the other trials. In the prespecified subgroup with established
+cardiovascular disease, exenatide achieved statistical significance for MACE reduction (P=0.047) [18].
+13
+
+The consistency of benefit across subgroups is notable. GLP-1 RA cardiovascular benefit was maintained regardless of
+baseline blood pressure category [8], triglyceride levels [11], microvascular disease status [22], age [10], and ejection
+fraction [12]. The benefit persisted when SGLT2 inhibitors were used concomitantly (P-interaction=0.66) [13], a
+finding of increasing clinical relevance as dual therapy becomes more common. The suggestion of enhanced benefit
+in patients with CKD in one LEADER analysis (P-interaction=0.01 for eGFR <60 vs. ≥60) [19] was not confirmed as a
+continuous interaction [19] and was not replicated in semaglutide trials [9], making it more likely a chance subgroup
+finding, though patients with CKD clearly derive at minimum comparable benefit.
+The dose-response relationship demonstrated with efpeglenatide (P for trend ≤0.018 across all outcomes) [7] has
+potential class-wide implications, suggesting that titration to higher doses may optimize cardiovascular and renal
+benefit. Mechanistically, the mediation analysis from LEADER points to glycemic control (HbA1c mediating up
+to 41–83% of the effect) and possibly albuminuria reduction (29–33%) as key pathways, while weight loss, blood
+pressure, and lipid changes appear to contribute minimally [16]. This aligns with the concordant renal benefits
+observed across liraglutide (HR 0.78 for composite renal outcome) [17] and efpeglenatide (HR 0.68) [1], suggesting a
+shared cardiorenal mechanism.
+In aggregate, the evidence supports a cardiovascular class effect for GLP-1 receptor agonists in patients with type 2
+diabetes and established or high-risk cardiovascular disease, with both human GLP-1-based (liraglutide, semaglutide)
+and exendin-based (exenatide, efpeglenatide) agents demonstrating benefit. The magnitude of MACE reduction
+across the class is approximately 13–27%, driven primarily by reductions in cardiovascular death and myocardial
+infarction rather than stroke, with consistent safety profiles characterized predominantly by gastrointestinal adverse
+events.
+References
+1.
+Gerstein H, Sattar N, Rosenstock J, et al (2021) Cardiovascular and Renal Outcomes with Efpeglenatide in
+Type 2 Diabetes. New England Journal of Medicine. https://doi.org/10.1056/NEJMoa2108269
+2.
+Marso S, Daniels GH, Brown-Frandsen K, et al (2016) Liraglutide and Cardiovascular Outcomes in Type 2
+Diabetes. New England Journal of Medicine. https://doi.org/10.1056/NEJMoa1603827
+3.
+Husain M, Bain S, Jeppesen O, et al (2020) Semaglutide (SUSTAIN and PIONEER) reduces cardiovascular
+events in type 2 diabetes across varying cardiovascular risk. Diabetes, obesity and metabolism. https://doi.
+org/10.1111/dom.13955
+4.
+(2025) Unveiling Cardiovascular Benefits of Oral Semaglutide in High-Risk Type 2 Diabetes: Findings from the
+SOUL Trial. Texila international journal of academic research. https://doi.org/10.21522/tijar.2014.12.02.art012
+5.
+Holman R, Bethel A, Mentz R, et al (2017) Effects of Once‐Weekly Exenatide on Cardiovascular Outcomes in
+Type 2 Diabetes. New England Journal of Medicine. https://doi.org/10.1056/NEJMoa1612917
+6.
+Bethel A, Stevens SR, Buse J, et al (2020) Exploring the Possible Impact of Unbalanced Open-Label Drop-In
+of Glucose-Lowering Medications on EXSCEL Outcomes. Circulation. https://doi.org/10.1161/CIRCULATIO
+NAHA.119.043353
+14
+
+7.
+Gerstein H, Li Z, Ramasundarahettige C, et al (2023) Exploring the Relationship Between Efpeglenatide Dose
+and Cardiovascular Outcomes in Type 2 Diabetes: Insights From the AMPLITUDE-O Trial. Circulation. https:
+//doi.org/10.1161/CIRCULATIONAHA.122.063716
+8.
+Leiter LA, Bain S, Bhatt DL, et al (2020) The effect of glucagon‐like peptide‐1 receptor agonists liraglutide and
+semaglutide on cardiovascular and renal outcomes across baseline blood pressure categories: Analysis of the
+LEADER and SUSTAIN 6 trials. Diabetes, obesity and metabolism. https://doi.org/10.1111/dom.14079
+9.
+Rossing P, Bain SC, Bosch‐Traberg H, et al (2023) Effect of semaglutide on major adverse cardiovascular events
+by baseline kidney parameters in participants with type 2 diabetes and at high risk of cardiovascular disease:
+SUSTAIN 6 and PIONEER 6 post hoc pooled analysis. Cardiovascular Diabetology. https://doi.org/10.1186/
+s12933-023-01949-7
+10.
+Gilbert M, Bain S, Franek E, et al (2018) Effect of Liraglutide on Cardiovascular Outcomes in Elderly Patients:
+A Post Hoc Analysis of a Randomized Controlled Trial. Annals of Internal Medicine. https://doi.org/10.732
+6/M18-1569
+11.
+Verma S, David J, Leiter LA, et al (2023) Semaglutide reduces the risk of major adverse cardiovascular events
+consistently across baseline triglyceride levels in patients with type 2 diabetes: Post hoc analyses of the
+SUSTAIN 6 and PIONEER 6 trials. Diabetes, obesity and metabolism. https://doi.org/10.1111/dom.15081
+12.
+Neves JS, Leite A, Mentz RJ, et al (2024) Cardiovascular outcomes with exenatide in type 2 diabetes according
+to ejection fraction: The EXSCEL trial. European Journal of Heart Failure. https://doi.org/10.1002/ejhf.3478
+13.
+Marx MN, Deanfield MJE, Mann MJFE, et al (2025) Oral Semaglutide and Cardiovascular Outcomes in Peo-
+ple With Type 2 Diabetes, According to SGLT2i Use: Prespecified Analyses of the SOUL Randomized Trial.
+Circulation. https://doi.org/10.1161/CIRCULATIONAHA.125.074545
+14.
+Verma S, Bain S, Buse J, et al (2019) Occurence of First and Recurrent Major Adverse Cardiovascular Events
+With Liraglutide Treatment Among Patients With Type 2 Diabetes and High Risk of Cardiovascular Events:
+A Post Hoc Analysis of a Randomized Clinical Trial. JAMA cardiology. https://doi.org/10.1001/jamacardio.2
+019.3080
+15.
+Verma S, Bhatt DL, Bain S, et al (2018) Effect of Liraglutide on Cardiovascular Events in Patients With Type
+2 Diabetes Mellitus and Polyvascular Disease: Results of the LEADER Trial. Circulation. https://doi.org/10.1
+161/CIRCULATIONAHA.118.033898
+16.
+Buse J, Bain S, Mann J, et al (2020) Cardiovascular Risk Reduction With Liraglutide: An Exploratory Mediation
+Analysis of the LEADER Trial. Diabetes Care. https://doi.org/10.2337/dc19-2251
+17.
+Mann J, Ørsted DD, Brown-Frandsen K, et al (2017) Liraglutide and Renal Outcomes in Type 2 Diabetes. New
+England Journal of Medicine. https://doi.org/10.1056/NEJMoa1616011
+15
+
+18.
+Mentz R, Thompson VP, Aguilar D, et al (2018) Effects of Once-Weekly Exenatide on Clinical Outcomes in
+Patients With Preexisting Cardiovascular Disease. Circulation. https://doi.org/10.1161/CIRCULATIONAHA
+.118.036811
+19.
+Mann J, Fonseca V, Mosenzon O, et al (2018) Effects of Liraglutide Versus Placebo on Cardiovascular Events
+in Patients With Type 2 Diabetes Mellitus and Chronic Kidney Disease. Circulation. https://doi.org/10.1161/
+CIRCULATIONAHA.118.036418
+20.
+Husain M, Bain S, Holst A, et al (2020) Effects of semaglutide on risk of cardiovascular events across a contin-
+uum of cardiovascular risk: combined post hoc analysis of the SUSTAIN and PIONEER trials. Cardiovascular
+Diabetology. https://doi.org/10.1186/s12933-020-01106-4
+21.
+Holman R, Bethel MA, George J, et al (2016) Rationale and design of the EXenatide Study of Cardiovascular
+Event Lowering (EXSCEL) trial. American Heart Journal. https://doi.org/10.1016/j.ahj.2015.12.009
+22.
+Verma S, Bain S, Honoré JB, et al (2020) Impact of microvascular disease on cardiovascular outcomes in
+type 2 diabetes: Results from the LEADER and SUSTAIN 6 clinical trials. Diabetes, obesity and metabolism.
+https://doi.org/10.1111/dom.14140
+23.
+Gooding K, Stevens S, Lokhnygina Y, et al (2024) Are the cardiovascular properties of GLP-1 receptor agonists
+differentially modulated by sulfonylureas? insights from post-hoc analysis of EXSCEL. Diabetes Research and
+Clinical Practice. https://doi.org/10.1016/j.diabres.2024.111685
+16

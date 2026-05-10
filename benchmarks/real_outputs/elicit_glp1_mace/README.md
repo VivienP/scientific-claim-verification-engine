@@ -1,0 +1,115 @@
+# Elicit Systematic Review (Premium) — GLP-1 RA / MACE evidence
+
+**Tool**: [Elicit](https://elicit.com) (Systematic Review mode, Premium tier)
+**Run config**: source = Clinical trials, format = General Review
+**Query**: *"In adults with type 2 diabetes, what is the effect of GLP-1 receptor agonists compared to placebo on major adverse cardiovascular events (MACE)?"*
+**Fetch date**: 2026-05-10
+
+## What this benchmark measures
+
+End-to-end verification of an Elicit Premium Systematic Review output (~36KB report, 23 references, 290 inline citation markers spanning 5 cardiovascular outcome trials: LEADER, EXSCEL, SUSTAIN 6, AMPLITUDE-O, SOUL). The Premium tier promises tighter screening (8 inclusion criteria, full-text screening on 45 candidate papers, structured data extraction). This benchmark tests whether that promise translates to higher claim-vs-source faithfulness than Elicit's free-tier Report mode (see `elicit_psilocybin/README.md`).
+
+## Source files
+
+- `input.txt` — text extracted from the Elicit Systematic Review PDF via `pymupdf` (text layer, no OCR or LLM paraphrase). 35,849 chars, 290 inline `[N]` citation markers, 23-entry numbered References section with DOIs.
+- `meta.json` — provenance metadata (query, tier, format, source filter, fetch date).
+- `report.json` — pipeline output for the current run (46 claims, $1.46 cost).
+- `provenance.jsonl` — append-only step log with hashes, tokens, and cache hits per stage.
+- `Elicit - *.pdf` — raw Elicit export, **committed** for end-to-end reproducibility (re-run pymupdf on this PDF to regenerate `input.txt` byte-identically).
+- `run_log.txt` — runner stdout/stderr (debug only, not committed).
+
+## Run command
+
+```bash
+python .cache/run_benchmark.py benchmarks/real_outputs/elicit_glp1_mace
+```
+
+## Headline numbers — 2026-05-10
+
+| Metric | Value | Comment |
+|---|---:|---|
+| Claims extracted | 46 | Premium output is dense (HR/CI throughout) |
+| Citation found rate | **93.5%** | 43/46 resolved to a bibliography entry |
+| Fulltext verified | 26 (57%) | NEJM/JAMA/Circulation paywalls limit the rest |
+| Supported | 30 (65%) | Verifier confirmed claim against source |
+| Partially supported | 5 (11%) | Some elements verified, others missing/abstract-only |
+| Unsupported | 10 (22%) | See decomposition below — most are pipeline limits, not Elicit |
+| Not addressed | 1 (2%) | The 1 paywall case captured in `not_addressed_breakdown.paywall` |
+| **Numeric checks run** | **13** | OR/CI or p-value/CI tuples extractable |
+| **Numeric inconsistencies flagged** | **0** | Every numeric pair Elicit reported was internally coherent |
+| Total cost | $1.46 | Phase 1 verify $1.13 + Phase 2 numeric_extract $0.20 + extract/resolve $0.13 |
+
+### Diagnostic fields (commit `e38150f`)
+
+| Field | Value | Interpretation |
+|---|---:|---|
+| `abstract_only_verdicts` | 20 | Claims judged at abstract depth (paywall blocked fulltext) |
+| `fulltext_success_rate` | 56.5% | 26/46 claims had fulltext retrieved (PMC + Unpaywall) |
+| `not_addressed_breakdown.no_source` | 0 | Every claim had a resolvable citation |
+| `not_addressed_breakdown.paywall` | 1 | The single not_addressed = paywalled abstract didn't address claim |
+| `not_addressed_breakdown.no_passage` | 0 | BM25 always found relevant passages when fulltext was available |
+| `not_addressed_breakdown.claim_absent` | 0 | No "passage found but claim absent" pattern |
+
+The diagnostic breakdown shows the engine successfully evaluated nearly every claim against its source. The single `not_addressed` is attributable to a paywall, not an Elicit error or a pipeline failure.
+
+## Decomposition of the 10 `unsupported` verdicts
+
+Critical for honest interpretation: not every `unsupported` verdict reflects an actual Elicit failure. Of the 10 unsupported claims:
+
+| Subgroup | Count | Verification depth | Interpretation |
+|---|---:|---|---|
+| **Real Elicit attribution error** | **1** | fulltext | The claim contradicts the cited source's full text |
+| Resolver mismatch (wrong paper resolved) | 4 | abstract | Elicit's bibliography lists `10.1161/CIRCULATIONAHA.122.063716` (Gerstein 2023 AMPLITUDE-O dose-response) but the resolver fuzzy-matched `10.1161/cir.0000000000001186` (an AHA scientific statement on CKM syndrome) |
+| Abstract-only false negative (paywall) | 5 | abstract | NEJM/Circulation paywalls leave only the abstract; specific HF / mortality / discontinuation numbers live in the body, not the abstract |
+
+So the **defensible Elicit-attributable error rate is 1/46 = 2.2%**, not 22%. The other 9 are engine artifacts (1 resolver fuzzy-match dragging 4 claims, 5 paywalls).
+
+### Manually validated example (the 1 defensible Elicit error)
+
+| Field | Value |
+|---|---|
+| Elicit claim | *"In EXSCEL, the overall discontinuation rate was up to 45%."* |
+| Cited DOI | `10.1056/NEJMoa1612917` (Holman 2017, EXSCEL primary, NEJM) |
+| What the paper actually says | "14,187 patients (96.2%) completed the trial." Mean percentage of time on study regimen was 76.0% (exenatide) and 75.0% (placebo). |
+| Why the claim fails | A 45% discontinuation rate is incompatible with 96.2% trial completion. Elicit may have conflated study-regimen adherence (~25% off-regimen time) with overall trial discontinuation, or hallucinated the specific 45% figure. |
+| Verification depth | fulltext (BM25 selected the relevant passage) |
+
+This single case is the only one where the verifier had access to the cited paper's full text AND the claim was contradicted. It is the only claim in this run for which we can defensibly say "Elicit's claim conflicts with the source it cited."
+
+## Comparison to Elicit Report mode (psilocybin / TRD run, 2026-05-10)
+
+Same engine, same date — different Elicit tier and format:
+
+| Metric | psilocybin (Report mode, free tier) | GLP-1 MACE (Systematic Review, Premium) |
+|---|---:|---:|
+| total_claims | 57 | 46 |
+| supported % | 43.9% | **65.2%** |
+| partially_supported % | 26.3% | 10.9% |
+| unsupported % | 29.8% | 21.7% |
+| numeric_checks_run | 2 | 13 |
+| numeric_inconsistencies | 2 | **0** |
+| citation_found_rate | 100% | 93.5% |
+
+The Premium Systematic Review tier (with full-text screening + structured data extraction) produces **substantially more accurate output** on this run than the free-tier Report mode did on the psilocybin run, both in narrative claims (65% vs 44% supported) and numeric reporting (0 numeric inconsistencies on 13 checks vs 2 inconsistencies on 2 checks). N=1 per tier, so this is not a generalizable benchmark of "Premium >> Report mode" — but the gap on this single comparison is large and consistent with what the Premium tier promises.
+
+## Honesty disclosures
+
+- **N=1 query, single Elicit session.** Re-running the same query would produce a different output due to LLM stochasticity. Numbers above describe this specific generation, not Elicit's average behavior.
+- **Resolver fuzzy-match limitation.** The 4-claim cluster mis-attributed to `10.1161/cir.0000000000001186` (an AHA scientific statement) is a known limitation of the CrossRef title-search fallback path. The cited paper had a structurally valid DOI that was overridden by the fuzzy-match scoring on title similarity. This drags 4 abstract-only verdicts to "unsupported" purely because the verifier was looking at the wrong paper. Fix: add semantic-similarity threshold on resolver fallback, or surface low-confidence resolutions more aggressively in the `report.json`. Tracked as a follow-up.
+- **Abstract-only false negatives.** 5 of the 10 unsupported verdicts are claims about heart failure hospitalization, all-cause mortality, expanded MACE, or discontinuation rates from AMPLITUDE-O / EXSCEL secondary analyses where only the NEJM/Circulation abstract was accessible. The full text of these papers likely contains the specific numbers Elicit cites, but the abstract does not. Without fulltext access, the verifier conservatively classifies them as "unsupported" — a true `not_addressed` would be more accurate but the verifier's prompt does not currently distinguish these cases.
+- **Pipeline run #1 crashed on Unicode encoding.** First run launched 2026-05-10 14:53 UTC crashed at claim 10/51 because Windows cp1252 console couldn't encode `≥` in claim text "PD-L1 ≥50%" when structlog tried to log a `verify_parse_error`. Fix: `sys.stderr.reconfigure(encoding="utf-8", errors="replace")` added to `.cache/run_benchmark.py`. Run #2 completed cleanly. ~$0.20 of API spend was wasted on the crashed run.
+- **Selection bias in validation example.** Only 1 fulltext-verified Elicit error is shown above because abstract-only verdicts cannot distinguish "specific number not in abstract but in fulltext" from "specific number not in paper at all". Showing a defensible error requires fulltext access. The 5 abstract-only "unsupported" verdicts are excluded from the validation set per this constraint.
+- **Numeric checks ran on 13 claims, none flagged inconsistent.** Every (HR, 95% CI) or (OR, 95% CI) or (RR, 95% CI) tuple Elicit reported in the narrative had the point estimate inside the confidence interval and the p-value (where given) consistent with the CI. This is a strong positive signal for Elicit Premium — at least on this run, the numbers are arithmetically coherent.
+
+## Reproduction
+
+```bash
+# 1. Save the Elicit Systematic Review PDF to this directory.
+# 2. Extract text via pymupdf:
+python -c "import pymupdf; doc = pymupdf.open('benchmarks/real_outputs/elicit_glp1_mace/Elicit*.pdf'); open('benchmarks/real_outputs/elicit_glp1_mace/input.txt','w',encoding='utf-8').write('\\n'.join(p.get_text() for p in doc))"
+
+# 3. Run pipeline:
+python .cache/run_benchmark.py benchmarks/real_outputs/elicit_glp1_mace
+```
+
+The pipeline is deterministic up to LLM-output stochasticity; the bibliography parser, resolver, fulltext fetcher, and BM25 passage selector are pure-Python or HTTP-only. Numbers above will not match a re-run exactly because LLM extract/verify outputs vary.

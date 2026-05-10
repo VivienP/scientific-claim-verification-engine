@@ -133,10 +133,11 @@ logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 
 # Citing-paper DOI detection — see `detect_citing_paper_doi`. The head
-# window is large enough to catch journal headers and DOI lines that
-# typically appear within the first kilobyte but small enough to never
-# overlap with the bibliography section in a real paper.
-_CITING_DOI_HEAD_BYTES = 4096
+# window is large enough to catch journal headers, cover-page metadata,
+# and table-of-contents preambles that some tool exports prepend before
+# the actual paper content, but still small enough to never overlap with
+# the bibliography section in a real paper.
+_CITING_DOI_HEAD_BYTES = 8192
 _DOI_URL_RE = re.compile(
     r"https?://(?:dx\.)?doi\.org/(10\.\d{4,9}/\S+)",
     re.IGNORECASE,
@@ -148,9 +149,12 @@ def detect_citing_paper_doi(text: str) -> str | None:
 
     Scans the first ``_CITING_DOI_HEAD_BYTES`` of ``text`` for a DOI URL
     (``https://doi.org/...`` or ``https://dx.doi.org/...``). The head
-    window is the natural location for a journal-format paper's
-    self-DOI line; restricting to this window guarantees we never pick
-    up a bibliography entry by mistake.
+    window is sized to cover not only journal-format papers (DOI in the
+    first kilobyte) but also tool exports (Elicit, Edison) that prepend
+    cover pages, query metadata, or tables of contents before the actual
+    paper content — a 4KB window misses the DOI in those cases and leaves
+    the self-citation recursion guard inactive, which can lead the
+    verifier to evaluate claims against the citing paper itself.
 
     Returns the bare DOI suffix (``10.xxxx/yyyy``), trailing punctuation
     stripped. Returns ``None`` when no URL is present in the head.
@@ -163,8 +167,20 @@ def detect_citing_paper_doi(text: str) -> str | None:
     head = text[:_CITING_DOI_HEAD_BYTES]
     match = _DOI_URL_RE.search(head)
     if match is None:
+        logger.info(
+            "citing_doi_detection",
+            found=False,
+            head_window_bytes=_CITING_DOI_HEAD_BYTES,
+        )
         return None
-    return match.group(1).rstrip(".,;:)")
+    citing_doi = match.group(1).rstrip(".,;:)")
+    logger.info(
+        "citing_doi_detection",
+        found=True,
+        citing_doi=citing_doi,
+        head_window_bytes=_CITING_DOI_HEAD_BYTES,
+    )
+    return citing_doi
 
 
 @dataclass(frozen=True)
@@ -239,10 +255,15 @@ def verify_one_claim(
            b. Abstract present, no full-text → :func:`verify_claim`.
            c. Title-only, no abstract → :func:`verify_claim_title_only`
               (hard-capped to ``partially_supported``).
-        3. If the resulting verdict has ``evidence_quality == 'no_evidence'``
-           and ``citing_paper_text`` is provided, attempt
+        3. If the resulting verdict has ``evidence_quality`` in
+           ``{'no_evidence', 'passages_searched_no_quote'}`` and
+           ``citing_paper_text`` is provided, attempt
            :func:`verify_claim_citing_context` as a last-resort
            internal-consistency check (capped to ``partially_supported``).
+           ``passages_searched_no_quote`` was added in Phase A.2 — the
+           verifier saw passages but didn't quote any, which is just as
+           weak a signal as ``no_evidence`` for the purposes of falling
+           back to citing-paper context.
 
     The function never raises on missing data: a fully unresolvable claim
     returns a ``ClaimVerification`` whose ``result.status`` is
@@ -309,9 +330,15 @@ def verify_one_claim(
             result, verify_step = verify_claim(claim, source, api_key=config.api_key)
             steps.append(verify_step)
 
+    # Citing-context fallback fires when the verifier produced no actionable
+    # evidence. Both ``no_evidence`` (no passages were ever shown to the LLM,
+    # or LLM produced parse-errored output pre-Phase A.2) and
+    # ``passages_searched_no_quote`` (Phase A.2: passages were shown but the
+    # LLM didn't quote any) qualify — in both cases the verdict is too weak
+    # to be useful, so we try the citing-paper-context path next.
     if (
         config.enable_citing_context_fallback
-        and result.evidence_quality == "no_evidence"
+        and result.evidence_quality in {"no_evidence", "passages_searched_no_quote"}
         and citing_paper_text is not None
         and len(claim.claim_text) >= 20
     ):

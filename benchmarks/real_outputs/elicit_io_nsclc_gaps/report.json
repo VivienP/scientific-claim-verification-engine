@@ -1,0 +1,1273 @@
+{
+  "report_id": "elicit_io_nsclc_gaps_rerun_4ebdcbe4",
+  "timestamp": 1778420047.061742,
+  "input_text": "What is the effectiveness of PD-1 inhibitor monotherapy compared to combination therapy as first-line treatment for PD-L1-high metastatic non-small\ncell lung cancer in terms of overall survival and progression-free survival?\nIn PD-L1-high metastatic NSCLC, PD-1 inhibitor\u2013chemotherapy combination therapy consistently improves\nprogression-free survival over PD-1 inhibitor monotherapy, but overall survival is similar between the two\nstrategies, with combination therapy carrying greater toxicity \u2014 though this conclusion rests entirely on indirect\ncomparisons, as no direct head-to-head randomized trial has been completed.\nAbstract\nAcross 18 included sources \u2014 predominantly network meta-analyses and indirect comparisons of randomized controlled trials \u2014 PD-1 inhibitor monotherapy and PD-1 inhibitor\u2013chemotherapy combination therapy both significantly improve overall survival and progression-free survival relative to chemotherapy alone in patients with PDL1-high (TPS \u226550%) metastatic NSCLC [1\u20133]. Combination therapy consistently demonstrates superior progressionfree survival compared with monotherapy, with hazard ratios ranging from 0.55 to 0.81 across analyses [2, 4\u20137].\nHowever, no statistically significant overall survival difference between the two strategies has been identified in the\nPD-L1-high subgroup: median OS is approximately 22\u201326 months with either approach [2, 4, 8, 9]. Combination\ntherapy is associated with higher rates of grade 3\u20135 treatment-related adverse events [9\u201311].\nNo completed randomized trial has directly compared PD-1 inhibitor monotherapy with PD-1 inhibitor\u2013\nchemotherapy in PD-L1-high disease; all comparisons are indirect, anchored through a chemotherapy common\ncomparator [2, 4, 5]. The two available head-to-head RCTs evaluated other combination partners (ipilimumab\nand epacadostat) added to pembrolizumab and found no efficacy benefit [10, 12]. Consequently, whether the PFS\nadvantage of chemo-immunotherapy translates into a meaningful long-term survival benefit in PD-L1-high patients,\nor whether monotherapy provides equivalent OS with lower toxicity, remains formally unresolved. Critical gaps\ninclude the absence of validated predictive biomarkers beyond PD-L1 TPS for differential treatment selection [9,\n13], insufficient safety and quality-of-life data stratified by PD-L1 expression [6, 8], and underrepresentation of key\nclinical subgroups such as patients with liver metastases, brain metastases, or advanced age [1, 14].\n1\nFlow Diagram\nPaper search\nWe performed a semantic search across over 138 million academic papers from the Elicit search engine, which includes all of Semantic Scholar and OpenAlex.\nWe ran this query: \u201dWhat is the effectiveness of PD-1 inhibitor monotherapy compared to combination therapy as\nfirst-line treatment for PD-L1-high metastatic non-small cell lung cancer in terms of overall survival and progression2\nfree survival?\u201d\nThe search returned 1,000 total results from Elicit.\nWe retrieved 1000 papers most relevant to the query for screening.\nScreening\nAbstract screening\nWe screened in sources based on their abstracts that met these criteria:\n\u2022 Population - NSCLC and PD-L1 Status: Does this study include patients with histologically or cytologically\nconfirmed metastatic (stage IV) non-small cell lung cancer with PD-L1-high expression (\u226550% tumor proportion score or equivalent high expression threshold)?\n\u2022 Intervention Comparison: Does this study compare PD-1 inhibitor monotherapy versus PD-1 inhibitor combination therapy as first-line treatment for metastatic disease?\n\u2022 Outcome Measures: Does this study report overall survival and/or progression-free survival outcomes?\n\u2022 Study Design Quality: Is this study a randomized controlled trial, systematic review, or meta-analysis (not a\ncase report, case series, editorial, or conference abstract)?\n\u2022 Population Age: Does this study include adult patients (\u226518 years) rather than focusing on pediatric populations?\n\u2022 PD-L1 Expression Level: Does this study focus on patients with PD-L1-high tumors rather than PD-L1-low\nor PD-L1-negative tumors?\n\u2022 Treatment Comparison Type: Does this study compare different PD-1 inhibitor approaches (monotherapy\nvs combination) rather than comparing PD-1 inhibitors to non-PD-1 inhibitor treatments (e.g., chemotherapy\nalone, targeted therapy)?\n\u2022 Study Design - Comparative: Does this study include comparison groups rather than being a single-arm study\nwithout comparators?\nPapers that failed any strict criterion were automatically excluded. For the remaining papers, we considered all\nscreening questions together and made a holistic judgement about whether to screen in each paper.\n37 papers passed abstract screening and moved to full-text screening.\nAt abstract screening, the number of papers excluded for each primary reason was:\n\u2022 Population - NSCLC and PD-L1 Status: n = 428\n\u2022 Intervention Comparison: n = 303\n\u2022 Outcome Measures: n = 3\n\u2022 Study Design Quality: n = 118\n\u2022 PD-L1 Expression Level: n = 103\n\u2022 Treatment Comparison Type: n = 6\n\u2022 Study Design - Comparative: n = 1\n\u2022 Other / below screening threshold: n = 1\nFull-text screening\nWe then screened papers based on their full text using these additional criteria:\n3\n\u2022 Population - NSCLC and PD-L1 Status: Does this study include patients with histologically or cytologically\nconfirmed metastatic (stage IV) non-small cell lung cancer with PD-L1-high expression (\u226550% tumor proportion score or equivalent high expression threshold)?\n\u2022 Intervention Comparison: Does this study compare PD-1 inhibitor monotherapy versus PD-1 inhibitor combination therapy as first-line treatment for metastatic disease?\n\u2022 Outcome Measures: Does this study report overall survival and/or progression-free survival outcomes?\n\u2022 Study Design Quality: Is this study a randomized controlled trial, systematic review, or meta-analysis (not a\ncase report, case series, editorial, or conference abstract)?\n\u2022 Population Age: Does this study include adult patients (\u226518 years) rather than focusing on pediatric populations?\n\u2022 PD-L1 Expression Level: Does this study focus on patients with PD-L1-high tumors rather than PD-L1-low\nor PD-L1-negative tumors?\n\u2022 Treatment Comparison Type: Does this study compare different PD-1 inhibitor approaches (monotherapy\nvs combination) rather than comparing PD-1 inhibitors to non-PD-1 inhibitor treatments (e.g., chemotherapy\nalone, targeted therapy)?\n\u2022 Study Design - Comparative: Does this study include comparison groups rather than being a single-arm study\nwithout comparators?\nPapers that failed any strict criterion were automatically excluded. For the remaining papers, we considered all\nscreening questions together and made a holistic judgement about whether to include each paper in the final analysis.\n18 papers passed full-text screening and moved to data extraction.\nAt full-text screening, the number of papers excluded for each primary reason was:\n\u2022 Population - NSCLC and PD-L1 Status: n = 1\n\u2022 Intervention Comparison: n = 2\n\u2022 PD-L1 Expression Level: n = 2\n\u2022 No full text: n = 12\n\u2022 Other / below screening threshold: n = 2\nData extraction\nWe asked a large language model to extract each data column below from each paper. We gave the model the\nextraction instructions shown below for each column.\n\u2022 Treatment Comparison:\nExtract details about the specific PD-1 inhibitor treatments being compared for first-line therapy in PD-L1-high\nmetastatic NSCLC, including:\n\u2022 Specific PD-1 inhibitor monotherapy (drug name, dose, schedule)\n\u2022 Specific combination therapy (PD-1 inhibitor + additional agents, doses, schedules)\n\u2022 Whether this was a direct head-to-head comparison or indirect comparison\n\u2022 Control/reference treatment if applicable\n\u2022 Study Population:\nExtract patient population characteristics relevant to PD-L1-high metastatic NSCLC first-line treatment, including:\n4\n\u2022 PD-L1 expression threshold used (\u226550%, \u22651%, etc.)\n\u2022 Confirmation of metastatic/advanced stage NSCLC\n\u2022 Confirmation of first-line treatment setting\n\u2022 Histology (squamous, non-squamous, mixed)\n\u2022 EGFR/ALK mutation status\n\u2022 Sample size for each treatment arm\n\u2022 Overall Survival:\nExtract all overall survival data comparing PD-1 inhibitor monotherapy vs combination therapy in PD-L1-high\nmetastatic NSCLC, including:\n\u2022 Median OS for each treatment group (months)\n\u2022 Hazard ratio with 95% confidence intervals\n\u2022 P-value for OS comparison\n\u2022 Follow-up duration\n\u2022 Number of events/deaths in each group\n\u2022 Any subgroup OS analyses by PD-L1 expression level\n\u2022 Progression-Free Survival:\nExtract all progression-free survival data comparing PD-1 inhibitor monotherapy vs combination therapy in\nPD-L1-high metastatic NSCLC, including:\n\u2022 Median PFS for each treatment group (months)\n\u2022 Hazard ratio with 95% confidence intervals\n\u2022 P-value for PFS comparison\n\u2022 PFS assessment method (RECIST, investigator vs independent review)\n\u2022 Any subgroup PFS analyses by PD-L1 expression level\n\u2022 Study Design:\nExtract study methodology details that affect interpretation of monotherapy vs combination therapy comparisons, including:\n\u2022 Study type (RCT, meta-analysis, network meta-analysis, observational)\n\u2022 Randomization and blinding approach\n\u2022 Primary vs secondary endpoint analysis\n\u2022 Statistical methods used for comparison\n\u2022 Risk of bias assessment if provided\n\u2022 Safety Profile:\nExtract safety data comparing PD-1 inhibitor monotherapy vs combination therapy in PD-L1-high metastatic\nNSCLC, including:\n\u2022 Grade 3-5 adverse events (percentage in each group)\n\u2022 Treatment-related deaths (percentage in each group)\n\u2022 Treatment discontinuation rates due to toxicity\n\u2022 Specific immune-related adverse events if reported\n\u2022 Any safety-related study modifications or early stopping\n5\n\u2022 Patient Characteristics:\nExtract baseline patient characteristics that may moderate effectiveness of monotherapy vs combination therapy in PD-L1-high metastatic NSCLC, including:\n\u2022 Age distribution and median age\n\u2022 Performance status (ECOG 0 vs 1+)\n\u2022 Smoking history\n\u2022 Presence of brain metastases\n\u2022 Presence of liver metastases\n\u2022 Tumor burden indicators if reported\n\u2022 Key Findings:\nExtract the study's main conclusions about effectiveness of PD-1 inhibitor monotherapy vs combination therapy for PD-L1-high metastatic NSCLC, including:\n\u2022 Authors' primary conclusion about comparative effectiveness\n\u2022 Clinical significance interpretation by authors\n\u2022 Recommendations for clinical practice\n\u2022 Limitations or caveats mentioned by authors\n\u2022 Future research recommendations if provided\nSummary of Current Evidence\nThe included studies consistently demonstrate that both PD-1 inhibitor monotherapy and PD-1 inhibitor-based\ncombination therapy (typically with platinum-based chemotherapy) significantly improve overall survival and\nprogression-free survival compared with chemotherapy alone in patients with PD-L1-high (TPS \u226550%) metastatic\nNSCLC [1\u20133]. A recurring finding across network meta-analyses and indirect comparisons is that combination therapy yields superior objective response rates and progression-free survival relative to monotherapy in PD-L1-high\npatients [4\u20137], whereas overall survival differences between these two strategies are not statistically significant in\nthis subgroup [2, 4, 8, 15]. The KEYNOTE-598 trial established that adding ipilimumab to pembrolizumab confers no\nefficacy benefit and increases toxicity [10, 11]. Current guidelines accordingly treat pembrolizumab monotherapy\nand pembrolizumab\u2013chemotherapy as complementary first-line options for PD-L1-high disease, with selection\nguided by clinical context [9].\nEvidence Map\n6\nStudy Study Type Research Focus Key Finding Identified Limitation\nR. Herbst et al., 2021 Network meta-analysis of RCTs [1] Comparison of multiple CIT regimens vs chemotherapy in PD-L1-high NSCLC across histology networks [1] Atezolizumab, pembrolizumab, and cemiplimab monotherapies significantly improved OS vs chemotherapy in the mixed-histology network; pembrolizumab plus chemotherapy improved OS in non-squamous network [1] Lack of individual patient data for most trials; heterogeneity in PD-L1 assay methods; most included trials were open-label [1, 1]\nLingling Li et al., 2020 Systematic review with indirect comparison [16] IO monotherapy vs IO plus chemotherapy as first-line treatment for advanced NSCLC [16] IC yielded significantly better PFS than IO when PD-L1 \u226550% (HR 1.81, 95% CI 1.18\u20132.78); no significant OS difference in PD-L1 \u226550% subgroup [16, 16] Indirect comparison only; no head-to-head trial data; limited ability to assess treatment-related deaths across strategies [16]\nPatryk Bachurski et al., 2026 Narrative review of RCTs, NMAs, and real-world cohorts [9] Pembrolizumab monotherapy vs pembrolizumab\u2013chemotherapy in driver-negative metastatic NSCLC [9] Combination therapy improves PFS (HR 0.59, 95% CI 0.43\u20130.81) but does not clearly improve OS compared with monotherapy in PD-L1-high disease [9, 9] Reliance on cross-trial and real-world comparisons; simple PD-L1 cutoffs insufficient for full individualization [9]\n7\nJ. H. Kim et al., 2021 Bayesian network meta-analysis [2] Frontline treatments for advanced NSCLC with high PD-L1 expression [2] ICI plus chemotherapy failed to demonstrate significant OS superiority over ICI monotherapy (HR 0.978, 95% CrI 0.771\u20131.259) [2]; ICI plus chemotherapy significantly improved PFS vs monotherapy (HR 0.571, 95% CrI 0.454\u20130.709) [2] Aggregated rather than individual patient data; limited studies in certain treatment nodes; variability in PD-L1 measurement methods [2]\nShibo Huang et al., 2024 Systematic review and network meta-analysis [4] Pembrolizumab plus chemotherapy vs pembrolizumab monotherapy for metastatic NSCLC [4] In PD-L1 \u226550%, combination improved PFS (median 10.41 vs 7.41 months, HR 0.81, P=0.02) but not OS (median 22.54 vs 22.62 months, HR 0.89, P=0.24) [4, 4] Only five studies included; potential errors in reconstructing individual patient data from Kaplan-Meier curves; heterogeneity in baseline characteristics [4]\nYixin Zhou et al., 2019 Meta-analysis with indirect comparison [5] Pembrolizumab plus chemotherapy vs pembrolizumab monotherapy in PD-L1 TPS \u226550% advanced NSCLC [5] Combination therapy superior for ORR (RR 1.62) and PFS (HR 0.55, 95% CI 0.32\u20130.97); trend toward improved OS but not significant (HR 0.76, P=0.184) [5, 5] Indirect comparison relying on published aggregate data; short median follow-up (7.8\u201323.9 months); lack of head-to-head trial data [5]\nHengrui Liang et al., 2020 Bayesian network meta-analysis [3] Efficacy and safety of PD-1/L1 inhibitors in first-line advanced NSCLC [3] Pembrolizumab plus chemotherapy (HR 0.39) and pembrolizumab monotherapy (HR 0.67) both significantly improved PFS vs chemotherapy in PD-L1 \u226550% [3] Indirect comparisons only; subgroup analyses based solely on PD-L1 expression may lack accuracy; focus limited to high-grade adverse events [3]\n8\nXiang Li et al., 2021 Network meta-analysis of RCTs [8] PD-1/PD-L1 inhibitors plus chemotherapy vs monotherapy in advanced NSCLC [8] PD-1 inhibitors plus chemotherapy improved PFS (HR 0.72, 95% CI 0.63\u20130.83) but not OS (HR 0.94, 95% CI 0.82\u20131.07) in PD-L1 \u226550% [8, 8] Distinction between PD-1 and PD-L1 inhibitor classes complicates pooled interpretation; ongoing trials may alter conclusions; safety data not stratified by PD-L1 level [8]\nM. Boyer et al., 2021 Phase III RCT (KEYNOTE-598) [10] Pembrolizumab plus ipilimumab vs pembrolizumab monotherapy in PD-L1 TPS \u226550% metastatic NSCLC [10] No improvement in OS (HR 1.08, P=0.74) or PFS (HR 1.06, P=0.72) with addition of ipilimumab; greater toxicity with combination (grade 3\u20135 AEs: 62.4% vs 50.2%) [10, 10, 10] Evaluates pembrolizumab\u2013ipilimumab rather than pembrolizumab\u2013chemotherapy; study stopped early for futility; does not assess pembrolizumab\u2013chemotherapy combinations [10]\nM. Siciliano et al., 2022 Systematic review and Bayesian NMA [14] Ranking of first-line ICI-based regimens for non-oncogene-addicted NSCLC [14] Cemiplimab ranked first for OS in PD-L1 >50% (HR 0.33, 95% CrI 0.14\u20130.75); atezolizumab/bevacizumab/CT ranked first for PFS [14, 14] Heterogeneity in included data; potential biases from crossover in RCTs; limited safety profile characterization in PD-L1-high subgroup [14]\nZheng Chuangjie et al., 2022 Systematic review and network meta-analysis [17] ICI alone vs ICI plus chemotherapy in PD-L1 \u226550% NSCLC [17] Primary outcome was PFS; OS data not reported [17, 17] No sensitivity analysis performed; limited detail on included studies and outcomes; OS not evaluated [17]\n9\nT. Peng et al., 2021 Network meta-analysis [13] First-line ICIs for advanced NSCLC across PD-L1 subgroups [13] Pembrolizumab plus platinum-based chemotherapy ranked best for PFS in PD-L1 \u226550% (HR 0.39, 95% CI 0.27\u20130.56); atezolizumab ranked best for OS in this subgroup [13, 13] Heterogeneity from different treatment regimens; no data on tumor mutational burden; limited safety reporting [13]\nR. Pathak et al., 2020 Network meta-analysis [6] Chemoimmunotherapy vs ICI for first-line advanced NSCLC [6] Chemo-ICI showed significantly improved PFS (HR 0.59, 95% CrI 0.41\u20130.85) and ORR vs single-agent ICI in PD-L1-high tumors; no significant OS difference [6, 6] No safety data assessed; potential misclassification bias from differences in PD-L1 testing assays; no assessment for publication bias [6]\nT. Tokito et al., 2024 Phase II RCT [12] Epacadostat plus pembrolizumab vs pembrolizumab alone in PD-L1 \u226550% metastatic NSCLC [12] No improvement in ORR (32.5% vs 39.0%), PFS (6.7 vs 6.2 months, HR 1.10), or OS (HR 0.74, P=0.205) with epacadostat addition [12, 12] Small sample size (n=154); short follow-up (median ~7 months); study downsized from phase III to phase II and discontinued early [12]\nYimin Wang et al., 2022 Network meta-analysis [7] ICI alone vs chemo-ICI in high PD-L1 expression NSCLC [7] Chemo-ICI significantly improved ORR (OR 1.7) and PFS (HR 0.59, 95% CI 0.48\u20130.74) vs ICI; no significant OS difference (HR 0.82, 95% CI 0.6\u20131.1) [7, 7] Reliance on published aggregate results rather than individual patient data; limited subgroup data for squamous histology and PD-L1 inhibitor subsets [7]\n10\nRui Cao et al., 2019 Meta-analysis [15] ICIs vs chemotherapy vs combination as first-line treatment for advanced NSCLC [15] In PD-L1 \u226550%, similar OS between pembrolizumab monotherapy and combination therapy; combination improved PFS and ORR [15, 15] Study-level evidence with potential inter-study heterogeneity; no detailed safety data for PD-L1-high subgroup [15]\nD. Rodr\u00edguez Abreu et al., 2022 Phase III RCT follow-up (KEYNOTE-598) [11] 3-year follow-up of pembrolizumab plus ipilimumab vs pembrolizumab plus placebo in PD-L1 TPS \u226550% [11] No OS or PFS benefit from adding ipilimumab; median PFS 8.2 vs 8.4 months (HR 0.99); higher grade 3\u20135 treatment-related AEs with combination (35.1% vs 20.3%) [11, 11] Ipilimumab and placebo discontinued per DMC recommendation; subsequent pembro monotherapy in both arms complicates long-term analysis; does not evaluate chemoimmunotherapy combinations [11]\nDataSheet1.docx (cost-effectiveness analysis) Markov model with network meta-analysis [18] Cost-effectiveness of cemiplimab, pembrolizumab, and atezolizumab monotherapies and pembrolizumab\u2013chemotherapy in PD-L1 \u226550% NSCLC [18] Cemiplimab was cost-effective compared with pembrolizumab and dominant over atezolizumab; pembrolizumab plus chemotherapy had ICERs of $190,994\u2013$393,359/QALY vs monotherapies [18] No head-to-head trial data; relied on modeled estimates from NMA; histology not specified; limited patient characteristic granularity [18]\nThe evidence base is dominated by network meta-analyses and indirect comparisons (14 of 18 sources), with only\nthree primary RCTs (KEYNOTE-598 and its follow-up, and the epacadostat trial) providing direct head-to-head data,\nnone of which compared pembrolizumab monotherapy with pembrolizumab\u2013chemotherapy [10\u201312]. The NMAs\nconsistently converge on the finding that combination therapy improves PFS (hazard ratios ranging from 0.55 to 0.81\nacross analyses) but does not significantly improve OS in PD-L1-high disease [2, 4, 6, 8]. However, almost all comparisons between monotherapy and chemo-immunotherapy are indirect, linked through a common chemotherapy\ncomparator, which introduces structural uncertainty that cannot be resolved without a direct randomized comparison.\n11\nGaps in the Evidence Base\nThe most consequential gap is the absence of any completed, adequately powered, randomized controlled trial\ndirectly comparing PD-1 inhibitor monotherapy with PD-1 inhibitor\u2013chemotherapy in patients with PD-L1 TPS\n\u226550%. All efficacy comparisons between these strategies in the included literature derive from indirect methods\n\u2014 network meta-analyses anchored to a chemotherapy common comparator [2, 4, 5, 7] \u2014 or from cross-trial\nreal-world comparisons subject to substantial confounding [9]. The only direct head-to-head RCTs examined\npembrolizumab\u2013ipilimumab versus pembrolizumab alone (KEYNOTE-598) [10] and pembrolizumab\u2013epacadostat\nversus pembrolizumab alone [12], neither of which evaluated the clinically relevant pembrolizumab\u2013chemotherapy\ncomparator. This means that the central clinical question \u2014 whether the PFS advantage of combination therapy\ntranslates into meaningful long-term survival benefit or merely shifts disease control forward without altering\nthe OS trajectory \u2014 remains formally unanswered. The consequence is that clinician decision-making between\nmonotherapy and chemo-immunotherapy in PD-L1-high disease continues to rely on indirect evidence and clinical\njudgment rather than definitive trial data.\nSecond, the evidence base lacks adequate characterization of patient subgroups most likely to benefit differentially\nfrom monotherapy versus combination therapy. While several sources note that tumor burden, performance status,\nage, and histology may modify the relative benefit of these strategies [5, 9, 10], no included study provides prospective, biomarker-stratified subgroup analyses of monotherapy versus chemo-immunotherapy within the PD-L1-high\npopulation. Most NMAs do not report baseline characteristics such as liver metastases, brain metastases, or tumor\nburden in sufficient detail to perform meaningful moderator analyses [2, 6, 8, 13]. Only two studies explicitly discuss\nliver metastases as a clinical modifier [1, 14], and brain metastases subgroups are reported in only a few analyses\n[10, 12, 14]. The absence of validated predictive biomarkers beyond PD-L1 TPS \u2014 such as tumor mutational burden,\ngene expression profiles, or composite clinical-molecular scores \u2014 limits the ability to identify patients for whom\nthe added toxicity of chemotherapy is justified by a genuine survival benefit versus those for whom monotherapy\nprovides equivalent long-term outcomes with better tolerability [9, 13].\nThird, safety data comparing monotherapy and combination therapy in the PD-L1-high subgroup specifically are\nsparse. Most NMAs either do not report adverse events stratified by PD-L1 expression [6\u20138] or provide only aggregate safety data across PD-L1 strata [3, 13]. Detailed reporting of treatment-related deaths, discontinuation rates, and\nimmune-related adverse event profiles is available from only a few studies [10\u201312], and these evaluate combination\npartners (ipilimumab, epacadostat) other than chemotherapy. The consequence is that the incremental toxicity burden of adding chemotherapy to pembrolizumab \u2014 particularly in older patients and those with ECOG performance\nstatus 1 \u2014 cannot be precisely quantified for the PD-L1-high population from existing data, weakening the riskbenefit assessment that underpins treatment selection. Long-term quality-of-life and patient-reported outcome data\nare similarly absent from all included sources, leaving the tolerability comparison between strategies incomplete.\nRecommendations for Future Research\n\u2022 Prospective randomized non-inferiority trial of pembrolizumab monotherapy versus pembrolizumab\u2013\nchemotherapy in PD-L1 TPS \u226550% NSCLC. The trial should enroll treatment-naive patients with metastatic\nNSCLC, PD-L1 TPS \u226550%, and no targetable driver alterations. The primary endpoint should be overall\nsurvival with a pre-specified non-inferiority margin (e.g., HR upper bound 1.20). Stratification by tumor\nburden, histology, and performance status would enable prospective subgroup analyses. This design is\njustified by the consistent NMA signal of equivalent OS between strategies [2, 4, 8] and addresses the most\ncritical evidence gap. The EA5163/S1709 INSIGNA trial has explored related sequencing questions [10], but a\ndefinitive non-inferiority comparison remains needed.\n12\n\u2022 Biomarker-stratified observational cohort study integrating tumor mutational burden, gene expression signatures, and composite clinical scores. Given the repeated observation that PD-L1 TPS alone is insufficient\nfor treatment individualization [9, 13], a prospective registry enrolling patients receiving either monotherapy\nor chemo-immunotherapy in routine practice should collect baseline tumor mutational burden, inflammatory\ngene signatures, neutrophil-to-lymphocyte ratio, and imaging-based tumor burden metrics. The primary objective would be to develop and validate a predictive model for differential OS benefit. This observational design\nis feasible because both strategies are already in widespread clinical use, and the key barrier is systematic\nbiomarker collection rather than treatment randomization.\n\u2022 Systematic safety comparison with patient-reported outcomes in PD-L1-high patients receiving monotherapy versus chemo-immunotherapy. A multi-center prospective cohort incorporating standardized adverse\nevent grading (CTCAE v5), immune-related adverse event phenotyping, treatment discontinuation tracking,\nand validated patient-reported outcome instruments (e.g., EORTC QLQ-LC13) would address the current absence of quality-of-life data [9, 10]. Focus should include older adults (\u226575 years) and patients with ECOG PS\n1\u20132, populations frequently underrepresented in pivotal trials but commonly encountered in practice [9].\n\u2022 Subgroup-focused analyses of existing trial data for patients with liver metastases, brain metastases,\nand high tumor burden. Pooled individual patient data meta-analysis of KEYNOTE-024, KEYNOTE-042,\nKEYNOTE-189, and KEYNOTE-407 could provide sufficiently powered subgroup comparisons that individual\nNMAs cannot achieve with aggregate data [1, 14]. Given that liver metastases are associated with poorer\nimmunotherapy outcomes and brain metastases represent a growing clinical subpopulation, the absence of\nstratified efficacy data for these groups directly limits evidence-based treatment selection.\n\u2022 Cost-effectiveness analysis incorporating real-world effectiveness data and quality-of-life utilities. The\nsingle included cost-effectiveness study relied on modeled clinical inputs from NMA rather than observed realworld outcomes [18]. A pragmatic economic evaluation using real-world data from health systems in diverse\ngeographic settings \u2014 including non-US populations underrepresented in the current evidence base \u2014 would\nimprove the generalizability of value assessments, particularly given the high incremental cost-effectiveness\nratios reported for pembrolizumab\u2013chemotherapy versus monotherapy ICIs [18].\nReferences\n1. Herbst R, Jassem J, Abogunrin S, et al (2021) A Network Meta-Analysis of Cancer Immunotherapies Versus\nChemotherapy for First-Line Treatment of Patients With Non-Small Cell Lung Cancer and High Programmed\nDeath-Ligand 1 Expression. Frontiers in Oncology. https://doi.org/10.3389/fonc.2021.676732\n2. Kim JH, Jeong S, Lee J-J, et al (2021) A Bayesian Network Meta-Analysis of First-Line Treatments for NonSmall Cell Lung Cancer with High Programmed Death Ligand-1 Expression. Journal of Clinical Medicine.\nhttps://doi.org/10.3390/jcm11061492\n3. Liang H, Lin G, Wang W, et al (2020) Feasibility and safety of PD-1/L1 inhibitors for non-small cell lung cancer\nin front-line treatment: a Bayesian network meta-analysis. Translational Lung Cancer Research. https:\n//doi.org/10.21037/tlcr.2020.02.14\n13\n4. Huang S, Huang Z, Huang X, et al (2024) Comparative long-term outcomes of pembrolizumab plus chemotherapy versus pembrolizumab monotherapy as first-line therapy for metastatic non-small-cell lung cancer: a\nsystematic review and network meta-analysis. Frontiers in Immunology. https://doi.org/10.3389/fimmu.20\n24.1375136\n5. Zhou Y, Lin Z, Zhang X, et al (2019) First-line treatment for patients with advanced non-small cell lung\ncarcinoma and high PD-L1 expression: pembrolizumab or pembrolizumab plus chemotherapy. Journal of\nImmunotherapy for Cancer. https://doi.org/10.1186/s40425-019-0600-6\n6. Pathak R, Lopes G de L, Yu H, et al (2020) Comparative efficacy of chemoimmunotherapy versus immunotherapy for advanced non\u2013small cell lung cancer: A network meta\u2010analysis of randomized trials. Cancer.\nhttps://doi.org/10.1002/cncr.33269\n7. Wang Y, Han H, Zhang F, et al (2022) Immune checkpoint inhibitors alone vs immune checkpoint inhibitors\u2014\ncombined chemotherapy for NSCLC patients with high PD-L1 expression: a network meta-analysis. British\nJournal of Cancer. https://doi.org/10.1038/s41416-022-01832-4\n8. Li X, Yan S, Yang J, et al (2021) Efficacy and Safety of PD-1/PD-L1 Inhibitors Plus Chemotherapy Versus PD1/PD-L1 Inhibitors in Advanced Non-Small Cell Lung Cancer: A Network Analysis of Randomized Controlled\nTrials. Frontiers in Oncology. https://doi.org/10.3389/fonc.2020.574752\n9. Bachurski P, Chmiel G, Kalinowski P, et al (2026) Optimal First-Line Use of Pembrolizumab in Metastatic\nDriver-Negative NSCLC: Monotherapy Versus Chemo-Immunotherapy (Evidence 2022\u20132025). Quality in\nSport. https://doi.org/10.12775/qs.2026.51.68252\n10. Boyer M, \u015eendur M, Rodr\u00edguez-Abreu D, et al (2021) Pembrolizumab Plus Ipilimumab or Placebo for\nMetastatic Non\u2013Small-Cell Lung Cancer With PD-L1 Tumor Proportion Score \u2265 50%: Randomized, DoubleBlind Phase III KEYNOTE-598 Study. Journal of Clinical Oncology. https://doi.org/10.1200/JCO.20.03579\n11. Abreu DR, Reck M, Sendur N, et al (2022) 6MO Pembrolizumab plus ipilimumab or placebo in previously untreated metastatic NSCLC with PD-L1 tumor proportion score \u226550%: KEYNOTE-598 3-year follow-up. Annals\nof Oncology. https://doi.org/10.1016/j.annonc.2022.02.015\n12. Tokito T, Kolesnik O, S\u00f8rensen J, et al (2024) Epacadostat plus pembrolizumab versus placebo plus pembrolizumab as first-line treatment for metastatic non-small cell lung cancer with high levels of programmed\ndeath-ligand 1: a randomized, double-blind phase 2 study. BMC Cancer. https://doi.org/10.1186/s12885-023-\n11203-8\n13. Peng T, Lin H-H, Tsai F-P, Wu T (2021) Immune checkpoint inhibitors for first\u2010line treatment of advanced\nnon\u2010small\u2010cell lung cancer: A systematic review and network meta\u2010analysis. Thoracic Cancer. https://doi.or\ng/10.1111/1759-7714.14148\n14. Siciliano M, Carid\u00e0 G, Ciliberto D, et al (2022) Efficacy and safety of first-line checkpoint inhibitors-based\ntreatments for non-oncogene-addicted non-small-cell lung cancer: a systematic review and meta-analysis.\nESMO Open. https://doi.org/10.1016/j.esmoop.2022.100465\n14\n15. Cao R, Ma J, Zhang S, et al (2019) Rational application of the first\u2010line chemotherapy and immune checkpoint\ninhibitors in advanced nonsmall cell lung cancer: A meta\u2010analysis. Cancer Medicine. https://doi.org/10.100\n2/cam4.2407\n16. Li L, Xu F, Chen Y, et al (2020) Indirect comparison between immunotherapy alone and immunotherapy plus\nchemotherapy as first-line treatment for advanced non-small cell lung cancer: a systematic review. BMJ\nOpen. https://doi.org/10.1136/bmjopen-2019-034010\n17. chuangjie zheng, jiahao tao, linheng jiang, et al (2022) Immune checkpoint inhibitors, alone or in combination with chemotherapy, as first-line treatment for advanced non-small cell lung cancer in patients with\nPD-L1\u226550a systematic review and network meta-analysis. https://doi.org/10.37766/inplasy2022.4.0011\n18. DataSheet1.docx. https://doi.org/10.3389/fphar.2021.788569.s001\n15\n",
+  "summary": {
+    "total_claims": 25,
+    "supported": 8,
+    "unsupported": 2,
+    "not_addressed": 9,
+    "partially_supported": 6,
+    "citation_found_rate": 0.6,
+    "verifiability_status": "verifiable",
+    "fulltext_verified": 13,
+    "no_passage_found": 0,
+    "fulltext_unavailable": 12,
+    "resolution_low_confidence": 0,
+    "retracted_sources": 0,
+    "numeric_checks_run": 8,
+    "numeric_inconsistencies_flagged": 2,
+    "abstract_only_verdicts": 4,
+    "fulltext_success_rate": 0.7222222222222222,
+    "not_addressed_breakdown": {
+      "no_source": 7,
+      "paywall": 1,
+      "no_passage": 0,
+      "claim_absent": 1
+    },
+    "total_cost_usd": 0.637401,
+    "usage_by_stage": {
+      "extract": {
+        "tokens_in": 10055,
+        "tokens_out": 3048,
+        "cost_usd": 0.07588500000000001,
+        "n_steps": 1,
+        "n_cache_hits": 0
+      },
+      "resolve": {
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0.0,
+        "n_steps": 25,
+        "n_cache_hits": 0
+      },
+      "verify": {
+        "tokens_in": 125559,
+        "tokens_out": 5586,
+        "cost_usd": 0.46046699999999996,
+        "n_steps": 25,
+        "n_cache_hits": 0
+      },
+      "numeric_extract": {
+        "tokens_in": 16708,
+        "tokens_out": 3395,
+        "cost_usd": 0.101049,
+        "n_steps": 13,
+        "n_cache_hits": 0
+      },
+      "numeric_check": {
+        "tokens_in": 0,
+        "tokens_out": 0,
+        "cost_usd": 0.0,
+        "n_steps": 8,
+        "n_cache_hits": 0
+      }
+    },
+    "cross_modal_disagreements": 0
+  },
+  "claims": [
+    {
+      "claim_id": "1a67361c-505b-4adf-afa6-0b2934ac362c",
+      "claim_text": "Both PD-1 inhibitor monotherapy and PD-1 inhibitor\u2013chemotherapy combination therapy both significantly improve overall survival and progression-free survival relative to chemotherapy alone in patients with PD-L1-high (TPS \u226550%) metastatic NSCLC.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "e9dd7bc6-4f95-4e77-b273-7a6fd6fc72ce",
+      "claim_text": "Combination therapy consistently demonstrates superior progression-free survival compared with monotherapy, with hazard ratios ranging from 0.55 to 0.81 across analyses.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "9bb87301-b3b3-460b-8a74-65211190139b",
+      "claim_text": "No statistically significant overall survival difference between combination therapy and monotherapy has been identified in the PD-L1-high subgroup: median OS is approximately 22\u201326 months with either approach.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "a37f935c-de54-4af0-9f40-9f8a6ce0144f",
+      "claim_text": "Combination therapy is associated with higher rates of grade 3\u20135 treatment-related adverse events.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "301d8c72-6b85-4aa7-bbf9-3716af832956",
+      "claim_text": "The NMAs consistently converge on the finding that combination therapy improves PFS (hazard ratios ranging from 0.55 to 0.81 across analyses) but does not significantly improve OS in PD-L1-high disease.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "cf1d6f3c-93a1-4da0-8c08-3cb12926fe52",
+      "claim_text": "Indirect comparison (Li et al., 2020) yielded significantly better PFS than IO monotherapy when PD-L1 \u226550% (HR 1.81, 95% CI 1.18\u20132.78); no significant OS difference in PD-L1 \u226550% subgroup.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Li"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1136/bmjopen-2019-034010",
+        "title": "Indirect comparison between immunotherapy alone and immunotherapy plus chemotherapy as first-line treatment for advanced non-small cell lung cancer: a systematic review",
+        "abstract": "Indirect comparison between immunotherapy alone and immunotherapy plus chemotherapy as first-line treatment for advanced non-small cell lung cancer: a systematic review. Li L(1), Xu F(2), Chen Y(1), Ren X(3), Liu Y(1), Chen Y(1), Xia S(4). OBJECTIVES: Use of immune checkpoint inhibitors as first-line treatment for advanced (stage IIIB/IV) non-small cell lung cancer (NSCLC) remains controversial. Clinical trials comparing single-drug immunotherapy (IO) with immunotherapy plus chemotherapy (IC) are lacking. We aimed to compare the efficacy of IO alone with that of IC as first-line treatment for advanced NSCLC. DESIGN: Systematic review. DATA SOURCES: PubMed, the Cochrane Library and Embase for related studies on NSCLC; ClinicalTrials.gov, American Society of Clinical Oncology Meeting Library and World Conference on Lung Cancer for relevant conference abstracts (to July 2019). ELIGIBILITY CRITERIA: Articles meeting the following criteria were selected: (1) randomised controlled trials on NSCLC treatment, (2) all individuals in the studies had not received treatment previously and (3) research on IO monotherapy using programmed death-1/programmed death ligand-1 (PD-L1) inhibitors or IC. DATA EXTRACTION AND SYNTHESIS: After reading the original literature, two reviewers independently extracted the relevant information. The primary outcomes were progression-free survival (PFS), overall survival (OS) and objective response rate (ORR). We also extracted data on treatment-related adverse events and immune-related adverse events (irAEs). RESULTS: Overall, 10 randomised controlled clinical trials (n=5765) were included. As first-line treatment for advanced NSCLC, IC tended to yield better PFS, OS and ORR than did IO. Furthermore, IC yielded significantly better PFS than IO when tumour PD-L1 expression was at least 50% (HR: 1.81, 95% CI: 1.18 to 2.78) and yielded a better OS and PFS when tumour PD-L1 expression was at least 1%; IO resulted in fewer adverse events than did IC. However, the incidence of irAEs was higher for IO than for IC. CONCLUSIONS: The findings of the indirect comparison indicate that IC as first-line treatment for advanced NSCLC is significantly more effective than IO in patients with PD-L1 expression in at least 50% of tumour cells. TRIAL REGISTRATION NUMBER: CRD 42018116589. commercial re-use. See rights and permissions. Published by BMJ. Conflict of interest statement: Competing interests: None declared.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://bmjopen.bmj.com/content/bmjopen/10/11/e034010.full.pdf",
+        "pmcid": "PMC7682470",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The passage explicitly supports the PFS finding (HR 1.81, 95% CI 1.18\u20132.78) for PD-L1 \u226550%, and also supports no significant OS difference in the PD-L1 \u226550% subgroup (HR: 1.20, 95% CI: 0.89 to 1.64). However, the claim states the comparison 'yielded significantly better PFS than IO monotherapy,' which is correct, but the framing of the claim implies IC is better (HR >1 favoring IC when IO is the reference), which matches the source. The OS part of the claim is also supported. Both elements are present in the passage, making this fully supported in content. However, the claim attributes these findings to 'Li et al., 2020' which matches the paper. Given both the PFS and OS claims are explicitly supported in the text, this should be supported \u2014 but note the PFS claim's direction: HR 1.81 means IO is worse than IC (i.e., IO has more progression events), so IC yields significantly better PFS, which matches the claim. The OS finding of no significant difference in PD-L1 \u226550% is also explicitly stated.",
+        "confidence": 0.95,
+        "source_passages": [
+          "Subgroup analysis according to PD-L1 expression (online supplemental figure 3 and figure 2) showed that IO was inferior to IC in terms of PFS (HR: 1.81, 95% CI: 1.18 to 2.78), and the difference was statistically significant.",
+          "In the high PD-L1 subgroup (\u226550%), the HR was 0.71 (95% CI: 0.60 to 0.84) for IO and 0.59 (95% CI: 0.46 to 0.77) for IC. However, there was no significant difference between IO and IC (HR: 1.20, 95% CI: 0.89 to 1.64)."
+        ],
+        "source_section": "results",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": true,
+          "extracted": [
+            {
+              "raw_text": "HR 1.81",
+              "value": 1.81,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for PFS, indirect comparison vs IO monotherapy when PD-L1 \u226550%"
+            },
+            {
+              "raw_text": "1.18",
+              "value": 1.18,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for HR 1.81"
+            },
+            {
+              "raw_text": "2.78",
+              "value": 2.78,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for HR 1.81"
+            },
+            {
+              "raw_text": "50%",
+              "value": 50.0,
+              "unit": "%",
+              "role": "comparator",
+              "context": "PD-L1 expression threshold for PFS subgroup analysis"
+            },
+            {
+              "raw_text": "50%",
+              "value": 50.0,
+              "unit": "%",
+              "role": "comparator",
+              "context": "PD-L1 expression threshold for OS subgroup with no significant difference"
+            }
+          ],
+          "explanation": "OR/CI internally consistent: 1.18 <= 1.81 <= 2.78, CI ratio within plausibility bounds."
+        }
+      }
+    },
+    {
+      "claim_id": "a33e8654-8282-462d-9eca-5f7754cf5525",
+      "claim_text": "Bachurski et al. (2026) found that combination therapy improves PFS (HR 0.59, 95% CI 0.43\u20130.81) but does not clearly improve OS compared with monotherapy in PD-L1-high disease.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Bachurski"
+      ],
+      "cited_year": 2026,
+      "source": {
+        "found": true,
+        "doi": "10.12775/qs.2026.51.68252",
+        "title": "Optimal First-Line Use of Pembrolizumab in Metastatic Driver-Negative NSCLC: Monotherapy Versus Chemo-Immunotherapy (Evidence 2022\u20132025)",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "unsupported",
+        "explanation": "The passages do not contain the specific HR of 0.59 (95% CI 0.43\u20130.81) for PFS cited in the claim. The passages do confirm that combination therapy does not clearly improve OS compared with monotherapy in PD-L1-high disease, but the specific PFS hazard ratio reported in the paper (from the NMA by Huang et al.) is HR 0.81 (95% CI 0.67\u20130.97), not HR 0.59 (0.43\u20130.81). The claimed value HR 0.59 (0.43\u20130.81) appears nowhere in the provided passages and may correspond to a different study or subgroup.",
+        "confidence": 0.82,
+        "source_passages": [
+          "PD-L1 TPS \u226550%: o PFS: 10.41 vs 7.41 months (pembro-chemo vs pembro-mono), HR 0.81 (95% CI 0.67- 0.97). [3]",
+          "OS: 22.54 vs 22.62 months, HR 0.89 (0.73-1.08) - no significant OS difference. [3]",
+          "In PD-L1-high disease (TPS \u226550%), combination therapy achieves higher response rates and longer PFS but does not clearly improve overall survival compared with monotherapy after adjustment for cross-trial and real-world confounding."
+        ],
+        "source_section": "results",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": true,
+          "extracted": [
+            {
+              "raw_text": "HR 0.59",
+              "value": 0.59,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for PFS with combination therapy vs monotherapy in PD-L1-high disease"
+            },
+            {
+              "raw_text": "0.43",
+              "value": 0.43,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for HR 0.59"
+            },
+            {
+              "raw_text": "0.81",
+              "value": 0.81,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for HR 0.59"
+            }
+          ],
+          "explanation": "OR/CI internally consistent: 0.43 <= 0.59 <= 0.81, CI ratio within plausibility bounds."
+        }
+      }
+    },
+    {
+      "claim_id": "c04dac19-e2b9-4824-be5b-e1c377d8b791",
+      "claim_text": "Kim et al. (2021) found that ICI plus chemotherapy failed to demonstrate significant OS superiority over ICI monotherapy (HR 0.978, 95% CrI 0.771\u20131.259); ICI plus chemotherapy significantly improved PFS vs monotherapy (HR 0.571, 95% CrI 0.454\u20130.709).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Kim"
+      ],
+      "cited_year": 2021,
+      "source": {
+        "found": true,
+        "doi": "10.3390/jcm11061492",
+        "title": "A Bayesian Network Meta-Analysis of First-Line Treatments for Non-Small Cell Lung Cancer with High Programmed Death Ligand-1 Expression",
+        "abstract": "A Bayesian Network Meta-Analysis of First-Line Treatments for Non-Small Cell Lung Cancer with High Programmed Death Ligand-1 Expression. Kim JH(1), Jeong SY(2)(3), Lee JJ(3)(4), Park ST(2)(3), Kim HS(1)(3). We performed a Bayesian network meta-analysis (NMA) to suggest frontline treatments for advanced non-small cell lung cancer (NSCLC) showing high programmed death ligand-1 (PD-L1) expression. A total of 5237 patients from 22 studies were included. In terms of progression-free survival, immune checkpoint inhibitors (ICIs) plus bevacizumab plus chemotherapy had the highest surface under the cumulative ranking curve (SUCRA) value (98.1%), followed by ICI plus chemotherapy (82.9%). In terms of overall survival (OS), dual immunotherapy plus chemotherapy had the highest SUCRA value (79.1%), followed by ICI plus bevacizumab plus chemotherapy (73.4%). However, there was no significant difference in survival outcomes among treatment regimens combined with immunotherapy. Moreover, ICI plus chemotherapy failed to reveal a significant OS superiority to ICI monotherapy (hazard ratio = 0.978, 95% credible internal: 0.771-1.259). In conclusion, this NMA indicates that ICI plus chemotherapy with/without bevacizumab might to be the best options in terms of OS for advanced NSCLC with high PD-L1 expression. However, considering that there was no significant difference in survival outcomes among treatment regimens incorporating immunotherapy and that ICI plus chemotherapy failed to show significant survival benefits over ICI monotherapy, ICI monotherapy may be reasonable as first-line treatment for advanced NSCLC with high PD-L1 expression. Conflict of interest statement: The authors declare no conflict of interest.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.mdpi.com/2077-0383/11/6/1492/pdf?version=1646812491",
+        "pmcid": "PMC8950568",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly states both findings: (1) ICI plus doublet chemotherapy failed to show significant OS superiority over ICI monotherapy with HR = 0.978, 95% CrI: 0.771\u20131.259, and (2) ICI plus doublet chemotherapy had significantly better PFS over ICI monotherapy with HR = 0.571, 95% CrI: 0.454\u20130.709, matching the claim exactly.",
+        "confidence": 0.99,
+        "source_passages": [
+          "ICI plus doublet chemotherapy failed to show a signi\ufb01cant superiority over ICI monotherapy (HR = 0.978, 95% CrI: 0.771\u20131.259).",
+          "ICI plus doublet chemotherapy had a signi\ufb01cantly better PFS over ICI monotherapy (HR = 0.571, 95% CrI: 0.454\u20130.709)."
+        ],
+        "source_section": "results",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": true,
+          "extracted": [
+            {
+              "raw_text": "HR 0.978",
+              "value": 0.978,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for OS: ICI plus chemotherapy vs ICI monotherapy"
+            },
+            {
+              "raw_text": "0.771",
+              "value": 0.771,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CrI lower bound for OS HR 0.978"
+            },
+            {
+              "raw_text": "1.259",
+              "value": 1.259,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CrI upper bound for OS HR 0.978"
+            },
+            {
+              "raw_text": "HR 0.571",
+              "value": 0.571,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for PFS: ICI plus chemotherapy vs ICI monotherapy"
+            },
+            {
+              "raw_text": "0.454",
+              "value": 0.454,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CrI lower bound for PFS HR 0.571"
+            },
+            {
+              "raw_text": "0.709",
+              "value": 0.709,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CrI upper bound for PFS HR 0.571"
+            }
+          ],
+          "explanation": "OR/CI internally consistent: 0.771 <= 0.978 <= 1.259, CI ratio within plausibility bounds."
+        }
+      }
+    },
+    {
+      "claim_id": "fbba95e6-afec-4be2-a726-f18e80f1e7f9",
+      "claim_text": "Huang et al. (2024) found that in PD-L1 \u226550%, combination improved PFS (median 10.41 vs 7.41 months, HR 0.81, P=0.02) but not OS (median 22.54 vs 22.62 months, HR 0.89, P=0.24).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Huang"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.3389/fimmu.2024.1375136",
+        "title": "Comparative long-term outcomes of pembrolizumab plus chemotherapy versus pembrolizumab monotherapy as first-line therapy for metastatic non-small-cell lung cancer: a systematic review and network meta-analysis",
+        "abstract": "Comparative long-term outcomes of pembrolizumab plus chemotherapy versus pembrolizumab monotherapy as first-line therapy for metastatic non-small-cell lung cancer: a systematic review and network meta-analysis. Huang S(1), Huang Z(1), Huang X(1), Luo R(1), Liang W(1), Qin T(1). INTRODUCTION: This systematic review and network meta-analysis(NMA) was designed to compare the long-term outcomes of pembrolizumab monotherapy and pembrolizumab plus chemotherapy as first-line therapy for metastatic non-small-cell lung cancer(NSCLC). MATERIALS AND METHODS: Four databases(Medline, Embase, Web of Science and CENTRAL were searched published from establishment of database to August 17, 2023, for articles studying pembrolizumab monotherapy or pembrolizumab plus chemotherapy for non-small cell lung cancer (NSCLC). Network meta-analyses of progression-free survival(PFS), overall survival(OS), objective response rate(ORR), treatment-related adverse events(trAEs) and immune-related adverse events(irAEs) were performed. RESULTS: A total of five studies were considered for NMA. This NMA includes a cohort of 2878 patients diagnosed with advanced NSCLC. Among them, 791 patients received pembrolizumab monotherapy, 1337 patients received chemotherapy, and 748 patients received pembrolizumab plus chemotherapy. The IPDformKM software was utilized to reconstruct Kaplan-Meier curves for OS and PFS, offering a lucid and intuitive depiction of oncological outcomes. For patients who have high levels of programmed death-ligand 1(PD-L1) expression (\u226550%), pembrolizumab plus chemotherapy was more effective than using pembrolizumab alone as first-line therapy in terms of PFS (median survival time: 10.41 months versus 7.41 months, HR: 0.81, 95%CI 0.67 to 0.97, P=0.02) and ORR (RR:1.74, 95% CI: 1.25-2.43). Nevertheless, there was no statistically significant difference observed between the two groups in terms of OS (median survival time: 22.54 months versus 22.62 months, HR: 0.89, 95%CI 0.73 to 1.08, P=0.24). Furthermore, pembrolizumab plus chemotherapy provided a more advantageous long-term survival advantage in terms of OS (median survival time: 20.88 months versus 13.60 months, HR: 0.77, 95%CI: 0.62 to 0.95, P=0.015) compared to pembrolizumab monotherapy in patients with low PD-L1 expression levels (1% to 49%). With regards to safety, there was no statistically significant disparity between the two groups in relation to any irAEs (RD=0.02, 95% CI: -0.12 to 0.16) or Grade\u2265 3 irAEs (RD=0.01, 95% CI: -0.10 to 0.12). Nevertheless, pembrolizumab plus chemotherapy exhibited a greater likelihood of encountering any trAEs (RD=0.23, 95% CI: 0.17 to 0.30) and Grade\u2265 3 trAEs (RD=0.28, 95% CI: 0.21 to 0.35) in comparison to pembrolizumab monotherapy. CONCLUSIONS: The present network meta-analysis reported comparative long-term outcomes of pembrolizumab plus chemotherapy versus pembrolizumab monotherapy as first-line therapy for metastatic non-small-cell lung cancer. Pembrolizumab plus chemotherapy led to improved PFS and ORR in patients with advanced NSCLC who had a PD-L1 expression level of 50% or above. However, there was no noticeable benefit in terms of OS when pembrolizumab was paired with chemotherapy compared to utilizing pembrolizumab alone. In addition, pembrolizumab plus chemotherapy offered a greater long-term survival benefit in terms of OS when compared to utilizing pembrolizumab alone in patients with PD-L1 expression levels ranging from 1% to 49%. Furthermore, the increased effectiveness of pembrolizumab plus chemotherapy was accompanied by an increase in adverse side effects. SYSTEMATIC REVIEW REGISTRATION: https://www.crd.york.ac.uk/prospero/, identifier CRD42024501740. Conflict of interest statement: The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://europepmc.org/articles/PMC11273333?pdf=render",
+        "pmcid": "PMC11273333",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly reports that in PD-L1 \u226550% patients, pembrolizumab plus chemotherapy improved PFS (median 10.41 vs 7.41 months, HR 0.81, P=0.02) but not OS (median 22.54 vs 22.62 months, HR 0.89, P=0.24), exactly matching the claim.",
+        "confidence": 0.99,
+        "source_passages": [
+          "For patients who have high levels of programmed death-ligand 1(PD-L1) expression (\u226550%), pembrolizumab plus chemotherapy was more effective than using pembrolizumab alone as first-line therapy in terms of PFS (median survival time: 10.41 months versus 7.41 months, HR: 0.81, 95%CI 0.67 to 0.97, P=0.02) and ORR (RR:1.74, 95% CI: 1.25-2.43).",
+          "Nevertheless, there was no statistically significant difference observed between the two groups in terms of OS (median survival time: 22.54 months versus 22.62 months, HR: 0.89, 95%CI 0.73 to 1.08, P=0.24)."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "37ddafbb-9e58-4494-9500-8a9bb9fdd731",
+      "claim_text": "Zhou et al. (2019) found that combination therapy was superior for ORR (RR 1.62) and PFS (HR 0.55, 95% CI 0.32\u20130.97); trend toward improved OS but not significant (HR 0.76, P=0.184).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Zhou"
+      ],
+      "cited_year": 2019,
+      "source": {
+        "found": true,
+        "doi": "10.1186/s40425-019-0600-6",
+        "title": "First-line treatment for patients with advanced non-small cell lung carcinoma and high PD-L1 expression: pembrolizumab or pembrolizumab plus chemotherapy",
+        "abstract": "First-line treatment for patients with advanced non-small cell lung carcinoma and high PD-L1 expression: pembrolizumab or pembrolizumab plus chemotherapy. Zhou Y(1)(2)(3), Lin Z(1)(2)(4), Zhang X(1)(2)(5), Chen C(1)(2)(6), Zhao H(1)(2)(4), Hong S(7)(8)(9), Zhang L(10)(11)(12). Pembrolizumab monotherapy has become the preferred treatment for patients with advanced non-small cell lung carcinoma (NSCLC) and a programmed cell death-ligand 1 (PD-L1) tumor proportion score (TPS) of at least 50%. However, little is known about the value of adding chemotherapy to pembrolizumab in this setting. Therefore, we performed an indirect comparison for pembrolizumab plus chemotherapy versus pembrolizumab, using the frequentist methods. The primary outcomes were overall survival (OS), progression-free survival (PFS) and objective response rate (ORR). Data were retrieved from randomized trials comparing pembrolizumab plus chemotherapy or pembrolizumab monotherapy against chemotherapy. Five trials involving 1289 patients were included. Direct meta-analysis showed that both pembrolizumab plus chemotherapy (ORR: relative risk (RR) 2.16; PFS: hazard ratio (HR) 0.36; OS: HR 0.51) and pembrolizumab alone (ORR: RR 1.33; PFS: HR, 0.65; OS: HR 0.67) improved clinical outcomes compared with chemotherapy. Indirect comparison showed that pembrolizumab plus chemotherapy was superior to pembrolizumab alone, in terms of ORR (RR 1.62, 1.18-2.23) and PFS (HR 0.55, 0.32-0.97). A trend towards improved OS was also observed (HR 0.76, 0.51-1.14). In conclusion, the addition of chemotherapy to pembrolizumab further improves the outcomes of patients with advanced NSCLC and a PD-L1 TPS of at least 50%. Conflict of interest statement: ETHICS APPROVAL AND CONSENT TO PARTICIPATE: Not applicable. CONSENT FOR PUBLICATION: Not applicable. COMPETING INTERESTS: Li Zhang has received research support from AstraZeneca, Eli Lilly and company, and Roche. No other disclosures were reported. PUBLISHER\u2019S NOTE: Springer Nature remains neutral with regard to jurisdictional claims in published maps and institutional affiliations.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://jitc.bmj.com/content/jitc/7/1/120.full.pdf",
+        "pmcid": "PMC6500047",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly reports the indirect comparison results showing combination therapy was superior for ORR (RR 1.62, 95% CI 1.18\u20132.23) and PFS (HR 0.55, 95% CI 0.32\u20130.97), with a trend toward improved OS that was not statistically significant (HR 0.76, P=0.184), exactly matching the claim.",
+        "confidence": 0.99,
+        "source_passages": [
+          "The results indicated that patients treated with pembrolizumab plus chemotherapy had better clinical outcomes including ORR (RRpem + chemo/pem 1.62, 95% CI 1.18\u20132.23; P = 0.003) and PFS (HRpem + chemo/pem 0.55, 95% CI 0.32\u20130.97; P = 0.037) than those treated with pembrolizumab alone.",
+          "However, there was only a trend towards improved OS with the three-drug combination therapy (HRpem + chemo/pem 0.76, 95% CI 0.51\u20131.14; P = 0.184)."
+        ],
+        "source_section": "results",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": false,
+          "extracted": [
+            {
+              "raw_text": "RR 1.62",
+              "value": 1.62,
+              "unit": null,
+              "role": "primary",
+              "context": "relative risk for objective response rate (ORR) with combination therapy"
+            },
+            {
+              "raw_text": "HR 0.55",
+              "value": 0.55,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for progression-free survival (PFS) with combination therapy"
+            },
+            {
+              "raw_text": "0.32",
+              "value": 0.32,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for HR 0.55 (PFS)"
+            },
+            {
+              "raw_text": "0.97",
+              "value": 0.97,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for HR 0.55 (PFS)"
+            },
+            {
+              "raw_text": "HR 0.76",
+              "value": 0.76,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for overall survival (OS) with combination therapy, trend not significant"
+            },
+            {
+              "raw_text": "P=0.184",
+              "value": 0.184,
+              "unit": null,
+              "role": "p_value",
+              "context": "p-value for overall survival (OS) hazard ratio"
+            }
+          ],
+          "explanation": "OR/CI inconsistent: OR=1.62 outside CI [0.32, 0.97]"
+        }
+      }
+    },
+    {
+      "claim_id": "00042024-7716-4f44-ba32-c97374d8b761",
+      "claim_text": "Liang et al. (2020) found that pembrolizumab plus chemotherapy (HR 0.39) and pembrolizumab monotherapy (HR 0.67) both significantly improved PFS vs chemotherapy in PD-L1 \u226550%.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Liang"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1190/segam2020-3427858.1",
+        "title": "FWI Imaging: Full-wavefield imaging through full-waveform inversion",
+        "abstract": "PreviousNext No AccessSEG Technical Program Expanded Abstracts 2020FWI Imaging: Full-wavefield imaging through full-waveform inversionAuthors: Zhigang ZhangZedong WuZhiyuan WeiJiawei MeiRongxin HuangPing WangZhigang ZhangCGG, Zedong WuCGG, Zhiyuan WeiCGG, Jiawei MeiCGG, Rongxin HuangCGG, and Ping WangCGGhttps://doi.org/10.1190/segam2020-3427858.1 SectionsAboutPDF/ePub ToolsAdd to favoritesDownload CitationsTrack CitationsPermissions ShareFacebookTwitterLinked InRedditEmail AbstractFull wavefield data that includes transmitted waves, primary reflections, and their multiples, has been widely used for velocity model building through full-waveform inversion (FWI). However, migrating full wavefield data to image the subsurface remains very challenging. Higher order scattering energy potentially helps infill illumination holes of primary reflections, but it also introduces crosstalk noise into the migration image when imaging algorithms cannot properly handle this higher order scattering energy. With the advancement of high-performance computing and progress in FWI algorithms to tackle problems such as cycle-skipping and amplitude mismatch, FWI has found success using different data types in a variety of geologic settings. Here we take a step further to modify the FWI workflow to output the subsurface image or reflectivity directly, eliminating the need to go through the time-consuming seismic imaging process that involves preprocessing, velocity model building, and migration. Compared with a conventional reverse-time migration image, the reflectivity image directly output from FWI provides additional structural information with more balanced illumination, since FWI by nature is a least-squares fitting process of the full wavefield data.This paper was accepted into the Technical Program but was not presented at the 2020 SEG Annual Meeting.Keywords: full-waveform inversion, least-squares migration, multiples, imaging, interpretationPermalink: https://doi.org/10.1190/segam2020-3427858.1FiguresReferencesRelatedDetailsCited byAcquisition and near-surface impacts on VSP mini-batch FWI and RTM imaging in desert environmentVladimir Kazei, Hong Liang, and Ali AlDawood1 March 2023 | The Leading Edge, Vol. 42, No. 3Enhancing salt model resolution and subsalt imaging with elastic FWIZhigang Zhang, Zedong Wu, Zhiyuan Wei, Jiawei Mei, Rongxin Huang, and Ping Wang1 March 2023 | The Leading Edge, Vol. 42, No. 3Toward high-fidelity imaging: Dynamic matching FWI and its applicationsYi Huang, Jian Mao, James Sheng, Mike Perz, Yang He, Feng Hao, Faqi Liu, Bin Wang, Seet Li Yong, Daniel Chaikin, Adriana Citlali Ramirez, Matt Hart, and Henrik Roende1 February 2023 | The Leading Edge, Vol. 42, No. 2Pushing seismic resolution to the limit with FWI imagingZhiyuan Wei, Jiawei Mei, Zedong Wu, Zhigang Zhang, Rongxin Huang, and Ping Wang3 January 2023 | The Leading Edge, Vol. 42, No. 1Superior resolution through multiparameter FWI imaging: A new philosophy in seismic processing and imagingJames McLeman, Tom Rayment, Tim Burgess, Karen Dancer, Gary Hampson, and Alex Pauli3 January 2023 | The Leading Edge, Vol. 42, No. 1From FWI to ultra-high-resolution imagingIsabel Espin, Nicolas Salaun, Hao Jiang, and Mathieu Reinier3 January 2023 | The Leading Edge, Vol. 42, No. 1FWI for the complex Walker Ridge salt province using streamer dataDorothy Ren, Xin He, Siyun Xu, Fei Gao, Feng Lin, and Jiawei Mei15 August 2022Next-generation resolution through multiparameter FWI imagingTom Rayment, James McLeman, Karen Dancer, and Tim Burgess15 August 2022Unlocking the potential of WAZ data for subsalt imaging using FWI: A case study in the Perdido areaVivek Vandrasi, Zhihua Su, Shouting Huang, Yogesh Agnihotri, and Sabaresan Mothi15 August 2022Pushing the boundary of WAZ streamer data for subsalt imaging: A case study in deepwater Mexico CampecheYi Chen, Kendra Pyke, Juan Wang, Jasmeen Moubarak, Earl Manning, Jessica Kopp, Rongzhang Chen, Chang Chen, Ravi Kumar, Minshen Wang, and Sabaresan Mothi15 August 2022Assessing FWI imaging's potential to tackle illumination issues and internal multiples in the Brazilian presaltCyril Dolymnyj, Filipe Rudrigues, Amanda Porto, Leandro Galves, and Asdrubal Ovalles15 August 2022Full-waveform inversion and FWI imaging for land dataJames Sheng, Cristina Reta-Tang, Faqi Liu, Alfredo V\u00e1zquez Cant\u00fa, and Alejandro Cabrales Vargas15 August 2022High-resolution FWI of converted-wave data \u2014 A case study from the Edvard Grieg fieldPer Eivind Dhelie, Vidar Danielsen, Jon Andre Haugen, Emilie Davenne, Knut Richard Straith, Alireza Roodaki, Manuel Peiro, Alexis Fotsoh, Wenlei Gao, Nabil Masmoudi, and Andrew Ratcliffe15 August 2022One more stride forward in Thunder Horse subsalt imaging with elastic FWIBunmi Elebiju, Qingsong Li, Ken Hartman, Francis Rollins, Ye Feng, Karl Kaiser, Werner Schinagl, Chi Chen, Alex Yanjun Hao, Zhiyuan Wei, and Jiawei Mei15 August 2022Towards more accurate reservoir imaging using FWI: An OBN case study at TrionZhen Wang, Sen Mei, Zhuocheng Yang, Joakim Blanch, Ezequiel Genova, Juan-Mauricio Florez-Nino, Humberto Salazar-Soto, and Alfredo Vazquez-Cantu15 August 2022Elastic FWI for large impedance contrastsZedong Wu, Zhiyuan Wei, Zhigang Zhang, Jiawei Mei, Rongxin Huang, and Ping Wang15 August 2022Waveform inversion of seismic first arrivals acquired on irregular surfaceXiang Li, Gang Yao, Fenglin Niu, Di Wu, and Nengchao Liu4 April 2022 | GEOPHYSICS, Vol. 87, No. 3Least-squares reverse time migration with a multiplicative Cauchy constraintGang Yao, Bo Wu, Nuno V. da Silva, Henry A. Debens, Di Wu, and Jingjie Cao26 April 2022 | GEOPHYSICS, Vol. 87, No. 3Innovative application of full-waveform inversion applied to extended wide-azimuth marine streamer seismic data in a complex salt environmentPeter Lanzarone, Xukai Shen, Andrew Brenders, Ganyuan Xia, Joe Dellinger, Gabriel Ritter, and John Etgen25 February 2022 | GEOPHYSICS, Vol. 87, No. 3Efficient Progressive Transfer Learning for Full-Waveform Inversion With Extrapolated Low-Frequency Reflection Seismic DataIEEE Transactions on Geoscience and Remote Sensing, Vol. 60Generating High\u2010Fidelity Reflection Images Directly From Full\u2010Waveform Inversion: Hikurangi Subduction Zone Case Study7 October 2021 | Geophysical Research Letters, Vol. 48, No. 19Paradigm shift: Recent advances in model building and imaging at ShenziBrad Wray, Lin Zheng, Fabian Rozario, Xue Zhang, Nicolas Chazalnoel, and Cheryl Mifflin1 September 20214D FWI using towed-streamer data: A case study near Laverda oil fieldNanxin Li, Ziqin Yu, Robert To, Min Wang, Yi Xie, and David Dickinson1 September 2021Sim-source for 4D: Learnings from processing the first ISS OBN monitor survey at AtlantisJing Yang, Xin He, Jiawei Mei, Rongxin Huang, Qingsong Li, Kang Fu, and Jean-Paul van Gestel1 September 2021Solving subsalt imaging challenges in Green Canyon using OBN and FWI imagingJianlei Liu, Min Yang, Jacob Deeds, Joel Luckow, Thomas Cheriyan, Pierre-Olivier Ariston, Zhuocheng Yang, Meisen Mei, and Zhigang Zhang1 September 2021Wave-equation traveltime and amplitude for Kirchhoff migrationYu Pu, Gang Liu, Diancheng Wang, Hui Huang, and Ping Wang1 September 2021FWI imaging: Revealing the unprecedented resolution of seismic dataZhiyuan Wei, Jiawei Mei, Zedong Wu, Zhigang Zhang, Rongxin Huang, and Ping Wang1 September 2021Exploring the full potential of a sparse nodes survey in the western Gulf of MexicoFeng Lin, Dorothy Ren, Jiawei Mei, Zhiguang Xue, Joakim Blanch, Marcus Cahoj, Jon Jarvis, and Alex Kostin1 September 2021The first high-end OBC imaging for fractured basement in Bohai Bay, ChinaJianfeng Zhang, Zhiliang Wang, Yitao Chen, Yonghe Guo, Zhi Kang Fong, Jiang Li, and Yao Wu1 September 2021Improving seismic images for frontier exploration in East Coast Canada: Lessons learnedJun Cai, Jin Tan, Xiaojing Liu, Pengfei Dong, Timmy Dy, and Weiping Gou1 September 2021Learnings from an FWI imaging study using 3D and 4D data over a postsalt field in Campos BasinSamanta Bortoni, Sergio Barragan, Greg\u00f3rio Azevedo, Luis Cypriano, Andr\u00e9 Ferreira, Wendel Moreira, Paula dos Reis, and Wilson Filho1 September 2021Ten years of time-lapse seismic on Atlantis FieldJean-Paul van Gestel1 July 2021 | The Leading Edge, Vol. 40, No. 7Full-waveform inversion for full-wavefield imaging: Decades in the makingRongxin Huang, Zhigang Zhang, Zedong Wu, Zhiyuan Wei, Jiawei Mei, and Ping Wang3 May 2021 | The Leading Edge, Vol. 40, No. 5Shenzi OBN: An imaging step changeCheryl Mifflin, Drew Eddy, Brad Wray, Lin Zheng, Nicolas Chazalnoel, and Rongxin Huang3 May 2021 | The Leading Edge, Vol. 40, No. 5 SEG Technical Program Expanded Abstracts 2020ISSN (print):1052-3812 ISSN (online):1949-4645Copyright: 2020 Pages: 3887 publication data\u00a9 2020 Published in electronic format with permission by the Society of Exploration GeophysicistsPublisher:Society of Exploration Geophysicists HistoryPublished Online: 30 Sep 2020 CITATION INFORMATION Zhigang Zhang, Zedong Wu, Zhiyuan Wei, Jiawei Mei, Rongxin Huang, and Ping Wang, (2020), \"FWI Imaging: Full-wavefield imaging through full-waveform inversion,\" SEG Technical Program Expanded Abstracts : 656-660. https://doi.org/10.1190/segam2020-3427858.1 Plain-Language Summary Keywordsfull-waveform inversionleast-squares migrationmultiplesimaginginterpretationPDF DownloadLoading ...",
+        "similarity_score": 1.0,
+        "title_match_score": 1.0,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "unsupported",
+        "explanation": "The source abstract is a geophysics paper about full-waveform inversion (FWI) for seismic imaging, authored by Zhang et al. (2020), and is entirely unrelated to the clinical claim about pembrolizumab plus chemotherapy improving progression-free survival in PD-L1 \u226550% patients. The source contains no oncology, immunotherapy, or clinical trial data whatsoever.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "d91693c6-91c1-4582-a937-1b728ca5dfe2",
+      "claim_text": "Li et al. (2021) found that PD-1 inhibitors plus chemotherapy improved PFS (HR 0.72, 95% CI 0.63\u20130.83) but not OS (HR 0.94, 95% CI 0.82\u20131.07) in PD-L1 \u226550%.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Li"
+      ],
+      "cited_year": 2021,
+      "source": {
+        "found": true,
+        "doi": "10.3389/fonc.2020.574752",
+        "title": "Efficacy and Safety of PD-1/PD-L1 Inhibitors Plus Chemotherapy Versus PD-1/PD-L1 Inhibitors in Advanced Non-Small Cell Lung Cancer: A Network Analysis of Randomized Controlled Trials",
+        "abstract": "Efficacy and Safety of PD-1/PD-L1 Inhibitors Plus Chemotherapy Versus PD-1/PD-L1 Inhibitors in Advanced Non-Small Cell Lung Cancer: A Network Analysis of Randomized Controlled Trials. Li X(1), Yan S(1), Yang J(2), Wang Y(1), Lv C(1), Li S(1), Zhao J(3), Yang Y(1), Zhuo M(3), Wu N(1). Immune checkpoint inhibitors (ICIs) are recommended as first-line treatment for late-stage non-small cell lung cancer (NSCLC), either as monotherapy or in combination with chemotherapy. However, efficacy and safety comparisons between ICIs as monotherapy and ICIs with chemotherapy are lacking. We searched PubMed, Embase, and Cochrane Library for randomized controlled trials published before February 29th, 2020, with the search terms \"immunotherapy\" and \"chemotherapy\". 10 eligible trials were identified with a total of 5,956 patients. Of these patients, 3,204 received immune therapy and 2,752 received chemotherapy. PD-1 inhibitors with chemotherapy improved OS (HR 0.84, 0.77-0.92), PFS (HR 0.80, 0.75-0.85), and objective response rate (ORR) (odds ratio (OR) 2.55, 1.20-5.28) compared to PD-1 inhibitors as monotherapy. In contrast, PD-L1 inhibitors plus chemotherapy showed no significant differences in OS, PFS, or ORR compared with PD-L1 inhibitors as monotherapy. When patients were stratified according to PD-L1 expression level, patients with high PD-L1 expression (\u2265 50%) receiving PD-1 inhibitors plus chemotherapy had improved PFS, but not other outcomes, compared to PD-1 inhibitors as monotherapy. In these patients, PD-L1 inhibitors plus chemotherapy showed no significant difference in survival compared with PD-L1 inhibitors. In the low PD-L1 expression group (1%-49%), PD-1 inhibitors plus chemotherapy improved OS and PFS, but no advantage was observed in PD-L1 inhibitors plus chemotherapy in OS, PFS, or ORR compared with PD-L1 inhibitor monotherapy. When comparing PD-1/PD-L1 inhibitors plus chemotherapy with PD-1/PD-L1 inhibitors monotherapy, no significant differences were observed in the rate of immune-related adverse events (AEs). In summary, for treating patients with late-stage NSCLC, PD-1 inhibitors plus chemotherapy have improved efficacy compared with PD-1 inhibitor monotherapy, but PD-L1 inhibitors plus chemotherapy have similar efficacy as PD-L1 monotherapy. Survival benefits of PD-1/PD-L1 inhibitors combined with chemotherapy were particularly significant in patients with low PD-L1 expression levels. SYSTEMATIC REVIEW REGISTRATION: PROSPERO, identifier CRD42020166678 (https://www.crd.york.ac.uk/prospero/display_record.php?RecordID=166678). Conflict of interest statement: The authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://europepmc.org/articles/PMC7873939?pdf=render",
+        "pmcid": "PMC7873939",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly reports that in patients with high PD-L1 expression (\u226550%), PD-1 inhibitors plus chemotherapy improved PFS (HR 0.72, 95% CI 0.63\u20130.83) but did not significantly improve OS (HR 0.86, 95% CI 0.73\u20131.03) compared with PD-1 inhibitors monotherapy. However, the claim states the OS HR is 0.94 (95% CI 0.82\u20131.07), which matches the combined PD-1/PD-L1 inhibitors figure, not the PD-1 inhibitors-specific figure. The PFS values (HR 0.72, 0.63\u20130.83) exactly match. The OS figure cited in the claim (HR 0.94, 0.82\u20131.07) corresponds to the overall PD-1/PD-L1 inhibitors plus chemotherapy vs monotherapy comparison in PD-L1 \u226550%, not specifically PD-1 inhibitors. The claim conflates two separate comparisons for PFS and OS, but the directional conclusion (improved PFS, not OS) is supported for both comparisons.",
+        "confidence": 0.75,
+        "source_passages": [
+          "PD-1 inhibitors plus chemotherapy did not signi\ufb01cantly improve OS compared with PD-1 inhibitors (HR 0.86, 0.73\u20131.03), but did signi\ufb01cantly improve PFS (HR 0.72, 0.63\u20130.83).",
+          "In patients with high PD-L1 expression levels (\u226550%), PD-1/PD-L1 inhibitors plus chemotherapy did not signi\ufb01cantly improve OS compared to PD-1/PD-L1 inhibitors as monotherapy (HR 0.94, 0.82\u20131.07), but did signi\ufb01cantly improve PFS (HR 0.78, 0.70\u20130.86)."
+        ],
+        "source_section": "results",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": true,
+          "extracted": [
+            {
+              "raw_text": "HR 0.72",
+              "value": 0.72,
+              "unit": null,
+              "role": "primary",
+              "context": "HR for PFS with PD-1 inhibitors plus chemotherapy in PD-L1 \u226550%"
+            },
+            {
+              "raw_text": "0.63",
+              "value": 0.63,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for PFS HR 0.72"
+            },
+            {
+              "raw_text": "0.83",
+              "value": 0.83,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for PFS HR 0.72"
+            },
+            {
+              "raw_text": "HR 0.94",
+              "value": 0.94,
+              "unit": null,
+              "role": "primary",
+              "context": "HR for OS with PD-1 inhibitors plus chemotherapy in PD-L1 \u226550%"
+            },
+            {
+              "raw_text": "0.82",
+              "value": 0.82,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for OS HR 0.94"
+            },
+            {
+              "raw_text": "1.07",
+              "value": 1.07,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for OS HR 0.94"
+            },
+            {
+              "raw_text": "50%",
+              "value": 50.0,
+              "unit": "%",
+              "role": "primary",
+              "context": "PD-L1 expression threshold for subgroup analysis"
+            }
+          ],
+          "explanation": "OR/CI internally consistent: 0.63 <= 0.72 <= 0.83, CI ratio within plausibility bounds."
+        }
+      }
+    },
+    {
+      "claim_id": "a6fe217a-caf8-4024-bdae-1f30a5a6de71",
+      "claim_text": "Boyer et al. (2021) (KEYNOTE-598) found no improvement in OS (HR 1.08, P=0.74) or PFS (HR 1.06, P=0.72) with addition of ipilimumab to pembrolizumab; greater toxicity with combination (grade 3\u20135 AEs: 62.4% vs 50.2%).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Boyer"
+      ],
+      "cited_year": 2021,
+      "source": {
+        "found": true,
+        "doi": "10.1200/jco.20.03579",
+        "title": "Pembrolizumab Plus Ipilimumab or Placebo for Metastatic Non\u2013Small-Cell Lung Cancer With PD-L1 Tumor Proportion Score \u2265 50%: Randomized, Double-Blind Phase III KEYNOTE-598 Study",
+        "abstract": "Pembrolizumab Plus Ipilimumab or Placebo for Metastatic Non-Small-Cell Lung Cancer With PD-L1 Tumor Proportion Score \u2265 50%: Randomized, Double-Blind Phase III KEYNOTE-598 Study. Boyer M(1), \u015eendur MAN(2), Rodr\u00edguez-Abreu D(3), Park K(4), Lee DH(5), \u00c7i\u00e7in I(6), Yumuk PF(7), Orlandi FJ(8), Leal TA(9), Molinier O(10), Soparattanapaisarn N(11), Langleben A(12), Califano R(13), Medgyasszay B(14), Hsia TC(15), Otterson GA(16), Xu L(17), Piperdi B(17), Samkari A(17), Reck M(18); KEYNOTE-598 Investigators. Comment in Nat Rev Clin Oncol. 2021 Apr;18(4):194. doi: 10.1038/s41571-021-00483-3. PURPOSE: Pembrolizumab monotherapy is standard first-line therapy for metastatic non-small-cell lung cancer (NSCLC) with programmed death ligand 1 (PD-L1) tumor proportion score (TPS) \u2265 50% without actionable driver mutations. It is not known whether adding ipilimumab to pembrolizumab improves efficacy over pembrolizumab alone in this population. METHODS: In the randomized, double-blind, phase III KEYNOTE-598 trial (ClinicalTrials.gov identifier: NCT03302234), eligible patients with previously untreated metastatic NSCLC with PD-L1 TPS \u2265 50% and no sensitizing EGFR or ALK aberrations were randomly allocated 1:1 to ipilimumab 1 mg/kg or placebo every 6 weeks for up to 18 doses; all participants received pembrolizumab 200 mg every 3 weeks for up to 35 doses. Primary end points were overall survival and progression-free survival. RESULTS: Of the 568 participants, 284 were randomly allocated to each group. Median overall survival was 21.4 months for pembrolizumab-ipilimumab versus 21.9 months for pembrolizumab-placebo (hazard ratio, 1.08; 95% CI, 0.85 to 1.37; P = .74). Median progression-free survival was 8.2 months for pembrolizumab-ipilimumab versus 8.4 months for pembrolizumab-placebo (hazard ratio, 1.06; 95% CI, 0.86 to 1.30; P = .72). Grade 3-5 adverse events occurred in 62.4% of pembrolizumab-ipilimumab recipients versus 50.2% of pembrolizumab-placebo recipients and led to death in 13.1% versus 7.5%. The external data and safety monitoring committee recommended that the study be stopped for futility and that participants discontinue ipilimumab and placebo. CONCLUSION: Adding ipilimumab to pembrolizumab does not improve efficacy and is associated with greater toxicity than pembrolizumab monotherapy as first-line treatment for metastatic NSCLC with PD-L1 TPS \u2265 50% and no targetable EGFR or ALK aberrations. These data do not support use of pembrolizumab-ipilimumab in place of pembrolizumab monotherapy in this population. Conflict of interest statement: Michael BoyerHonoraria: AstraZenecaConsulting or Advisory Role: Merck Sharp & Dohme, AstraZeneca, Bristol-Myers Squibb, JanssenResearch Funding: Merck Sharp & Dohme, Pfizer, Boehringer Ingelheim, Lilly, Genentech/Roche, AstraZeneca, Bristol-Myers Squibb, Amgen, Ascentage Pharma, Novartis, Janssen, Merck SeronoTravel, Accommodations, Expenses: Merck Sharp & Dohme, Genentech/Roche Mehmet A. N. \u015eendurResearch Funding: Merck Sharp & Dohme Delvys Rodr\u00edguez-AbreuConsulting or Advisory Role: Roche, Bristol-Myers Squibb, Merck Sharp & Dohme, AstraZeneca Spain, NovartisResearch Funding: Merck Sharp & DohmeSpeakers' Bureau: Roche, Bristol-Myers Squibb, Merck Sharp & DohmeTravel, Accommodations, Expenses: Roche, Bristol-Myers Squibb, Merck Sharp & Dohme Keunchil ParkConsulting or Advisory Role: AstraZeneca, Lilly, Ono Pharmaceutical, Bristol-Myers Squibb, Merck Sharp & Dohme, Blueprint Medicines, Amgen, Merck KGaA, LOXO, Abbvie, Daiichi Sankyo, Boehringer Ingelheim, Johnson & Johnson, Eisai, Puma BiotechnologySpeakers' Bureau: Boehringer Ingelheim, AZDResearch Funding: AstraZeneca, Merck Sharp & Dohme Dae Ho LeeHonoraria: AstraZeneca/MedImmune, Boehringer Ingelheim, Bristol-Myers Squibb, Chong Kun Dang Pharmaceutical, CJ Healthcare, Lilly, Janssen, Merck, Merck Sharp & Dohme, Mundipharma, Novartis, Ono Pharmaceutical, Pfizer, Roche/Genentech, Samyang, ST Cube, Takeda, Abbvie, Menarini, Green CrossConsulting or Advisory Role: ST CubeResearch Funding: Merck Sharp & DohmeTravel, Accommodations, Expenses: Takeda, Blueprint Medicines Irfan \u00c7i\u00e7inConsulting or Advisory Role: Pfizer, Merck Sharp & Dohme, Roche, Novartis/Ipsen, Lilly, Bristol-Myers Squibb, SERVIER, Abdi Ibrahim, Nobelpharma, Abbvie, Teva, Janssen OncologyResearch Funding: Merck Sharp & DohmeSpeakers' Bureau: Novartis, Roche, Bristol-Myers Squibb, Pfizer, Abdi Ibrahim Perran Fulden YumukConsulting or Advisory Role: Takeda, Roche, Bristol-Myers SquibbSpeakers' Bureau: Novo Nordisk, Nestle Health Science, Bristol-Myers Squibb, Roche, AstraZenecaResearch Funding: Roche, Merck, Merck Sharp & Dohme, Novartis Francisco J. OrlandiHonoraria: Roche/GenentechConsulting or Advisory Role: AstraZeneca, Roche/Genentech, Bristol-Myers Squibb, Merck Sharp & Dohme, Lilly, Pfizer, Novartis, SanofiSpeakers' Bureau: AstraZeneca/MedImmune, RocheResearch Funding: AstraZeneca/MedImmune, Amgen, Genentech/Roche, Boehringer Ingelheim, Astellas Medivation, Merck Sharp & Dohme, Bristol-Myers Squibb, Celltrion, Pfizer, mAbxience, Nektar, SanofiTravel, Accommodations, Expenses: Pfizer, Merck Sharp & Dohme, AstraZeneca/MedImmune, Roche, Bristol-Myers Squibb, Genentech/Roche Ticiana A. LealConsulting or Advisory Role: Takeda, Abbvie, AstraZeneca, Genentech, Bayer, BeyondSpring Pharmaceuticals, Bristol-Myers Squibb, Merck & Co, InvisionFirst Lung, NovocureTravel, Accommodations, Expenses: Takeda, Abbvie, Bristol-Myers Squibb, Genentech, Mirati Therapeutics, AstraZeneca, Merck & Co Olivier MolinierConsulting or Advisory Role: AstraZeneca, Bristol-Myers Squibb, TakedaResearch Funding: Merck Sharp & DohmeTravel, Accommodations, Expenses: Boehringer Ingelheim Nopadol SoparattanapaisarnResearch Funding: Merck Sharp & Dohme Adrian LanglebenResearch Funding: Merck Sharp & Dohme Raffaele CalifanoStock and Other Ownership Interests: The Christie Private CareHonoraria: AstraZeneca, Boehringer Ingelheim, Lilly Oncology, Roche, Pfizer, Merck Sharp & Dohme, BMS, Takeda, NovartisConsulting or Advisory Role: AstraZeneca, Boehringer Ingelheim, Lilly Oncology, Roche, Pfizer, Merck Sharp & Dohme, BMS, Takeda, NovartisSpeakers' Bureau: AstraZeneca, Roche, Pfizer, Merck Sharp & Dohme, BMS, Takeda, and NovartisResearch Funding: Roche, AstraZeneca, Pfizer, Clovis, Lilly Oncology, Merck Sharp & Dohme, BMS, Abbvie, Takeda, and NovartisTravel, Accommodations, Expenses: Roche, Lilly Oncology, Merck Sharp & Dohme, Takeda Balazs MedgyasszayResearch Funding: Merck Sharp & Dohme Te-Chun HsiaResearch Funding: Merck Sharp & Dohme Gregory A. OttersonConsulting or Advisory Role: Takeda, Novocure, Guardant Health, Bristol-Myers Squibb, AstraZenecaResearch Funding: Genentech/Roche, Pfizer, Bristol-Myers Squibb, Novartis, Merck, AstraZeneca, Celgene Lu XuEmployment: Merck Sharp & DohmeStock and Other Ownership Interests: Merck & Co, Inc, Kenilworth, NJ, USA Bilal PiperdiEmployment: Merck Sharp & Dohme Corp, a subsidiary of Merck & Co, Inc, Kenilworth, NJ, USAStock and Other Ownership Interests: Merck & Co, Inc, Kenilworth, NJ, USA Ayman SamkariEmployment: Merck Sharp & Dohme Corp, a subsidiary of Merck & Co, Inc, Kenilworth, NJ, USAStock and Other Ownership Interests: Merck & Co, Inc, Kenilworth, NJ, USA Martin ReckConsulting or Advisory Role: Lilly, Merck Sharp & Dohme, Merck Serono, Bristol-Myers Squibb, AstraZeneca, Boehringer Ingelheim, Pfizer, Novartis, Roche/Genentech, Abbvie, Amgen, Mirati Therapeutics, Samsung BioepisResearch Funding: Merck Sharp & DohmeSpeakers' Bureau: Roche/Genentech, Lilly, Merck Sharp & Dohme, Merck Serono, AstraZeneca, Bristol-Myers Squibb, Boehringer Ingelheim, Celgene, Pfizer, Novartis, Amgen, Mirati TherapeuticsNo other potential conflicts of interest were reported.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The abstract explicitly reports OS HR 1.08 (P=0.74) and PFS HR 1.06 (P=0.72), directly matching the claim's values. It also confirms grade 3-5 adverse events in 62.4% of the pembrolizumab-ipilimumab group versus 50.2% of the pembrolizumab-placebo group, fully corroborating the claimed toxicity figures.",
+        "confidence": 0.99,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "91315d5a-b385-4450-80ce-8edabd79ee65",
+      "claim_text": "Siciliano et al. (2022) found that cemiplimab ranked first for OS in PD-L1 >50% (HR 0.33, 95% CrI 0.14\u20130.75); atezolizumab/bevacizumab/CT ranked first for PFS.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Siciliano"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.esmoop.2022.100465",
+        "title": "Efficacy and safety of first-line checkpoint inhibitors-based treatments for non-oncogene-addicted non-small-cell lung cancer: a systematic review and meta-analysis",
+        "abstract": "Efficacy and safety of first-line checkpoint inhibitors-based treatments for non-oncogene-addicted non-small-cell lung cancer: a systematic review and meta-analysis. Siciliano MA(1), Carid\u00e0 G(1), Ciliberto D(2), d'Apolito M(1), Pelaia C(1), Caracciolo D(1), Riillo C(1), Correale P(3), Galvano A(4), Russo A(4), Barbieri V(5), Tassone P(1), Tagliaferri P(6). BACKGROUND: Frontline immune checkpoint inhibitors (ICI)-based regimens in non-oncogene-addicted non-small-cell lung cancer (NSCLC) have been deeply investigated. To rank the available therapeutic options, we carried out a systematic review and Bayesian meta-analysis. METHODS: A comprehensive search for randomized controlled trials (RCTs) of ICI regimens, and a pairwise and a network meta-analysis (NMA) with an all-comers and a stratified strategy were conducted. Endpoints were overall survival (OS), progression-free survival (PFS), objective response rate (ORR) and treatment-related adverse events (TRAEs). RESULTS: Nineteen RCTs involving 17 treatment regimens were included. For the all-comers population, pembrolizumab/chemotherapy (CT) and cemiplimab were most likely the best treatments. For programmed death-ligand 1 (PD-L1) <1% nivolumab/ipilimumab with/without CT, for PD-L1 >1% and 1%-49% pembrolizumab/CT and for PD-L1 >50% cemiplimab ranked first for OS. In non-squamous (NSQ), pembrolizumab with/without CT ranked first for OS; cemiplimab ranked worse than the unselected population. In squamous (SQ), pooled hazard ratio (HR) showed a better chance in improving efficacy for combination strategy, while monotherapy did not, except for cemiplimab that ranked second. Atezolizumab/CT/bevacizumab ranked first in most subgroups for PFS. Direct comparison showed a non-statistically significant benefit of ICI regimens for the liver metastases cohort in OS, with a good ranking for pembrolizumab/CT and atezolizumab/bevacizumab/CT. Regarding brain metastases, all ICI regimens demonstrated an improvement in OS and PFS compared to CT. Nivolumab/ipilimumab/CT ranked better in this subset. CONCLUSIONS: Our meta-analysis updated on the most recent findings demonstrates that different ICI treatments rank differently in specific NSCLC settings (histology, biomarker and clinical presentation) offering a novel challenging scenario for clinical decision making and research planning. Conflict of interest statement: Disclosure The authors have declared no conflicts of interest.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://europepmc.org/articles/PMC9271478?pdf=render",
+        "pmcid": "PMC9271478",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The passage from the abstract confirms that cemiplimab ranked first for OS in the PD-L1 >50% subgroup and that atezolizumab/CT/bevacizumab (referred to as 'Atezolizumab/CT/bevacizumab') ranked first in most subgroups for PFS. However, the specific HR value (0.33, 95% CrI 0.14\u20130.75) for cemiplimab in the PD-L1 >50% OS ranking is not provided in the passages, so the quantitative portion of the claim cannot be fully verified.",
+        "confidence": 0.75,
+        "source_passages": [
+          "For programmed death-ligand 1 (PD-L1) <1% nivolumab/ipilimumab with/without CT, for PD-L1 >1% and 1%-49% pembrolizumab/CT and for PD-L1 >50% cemiplimab ranked first for OS.",
+          "Atezolizumab/CT/bevacizumab ranked first in most subgroups for PFS."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": true,
+          "extracted": [
+            {
+              "raw_text": "HR 0.33",
+              "value": 0.33,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for cemiplimab OS in PD-L1 >50%"
+            },
+            {
+              "raw_text": "0.14",
+              "value": 0.14,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CrI lower bound for cemiplimab OS HR in PD-L1 >50%"
+            },
+            {
+              "raw_text": "0.75",
+              "value": 0.75,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CrI upper bound for cemiplimab OS HR in PD-L1 >50%"
+            }
+          ],
+          "explanation": "OR/CI internally consistent: 0.14 <= 0.33 <= 0.75, CI ratio within plausibility bounds."
+        }
+      }
+    },
+    {
+      "claim_id": "5c5c183c-2619-4945-ad3a-174025bc4b7f",
+      "claim_text": "Peng et al. (2021) found that pembrolizumab plus platinum-based chemotherapy ranked best for PFS in PD-L1 \u226550% (HR 0.39, 95% CI 0.27\u20130.56); atezolizumab ranked best for OS in this subgroup.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Peng"
+      ],
+      "cited_year": 2021,
+      "source": {
+        "found": true,
+        "doi": "10.1111/1759-7714.14148",
+        "title": "Immune checkpoint inhibitors for first\u2010line treatment of advanced non\u2010small\u2010cell lung cancer: A systematic review and network meta\u2010analysis",
+        "abstract": "Immune checkpoint inhibitors for first-line treatment of advanced non-small-cell lung cancer: A systematic review and network meta-analysis. Peng TR(1), Lin HH(2), Tsai FP(1), Wu TW(1)(3). OBJECTIVE: Currently, several immune checkpoint inhibitors (ICIs) treatment for advanced non-small-cell lung cancer (NSCLC) have been investigated; their overall efficacy and safety remain unclear. METHODS: We searched electronic databases such as PubMed, EMBASE, and the Cochrane library. The randomized controlled trials (RCTs) that compared ICIs with or without chemotherapy to chemotherapy in advanced NSCLC. We collected and compaired thier parameters, including overall survival (OS), progression-free survival (PFS), objective response rate (ORR), and treatment-related adverse events (TRAEs) of grade \u22653. RESULTS: A total of 15 RCTs involving 8869 patients with NSCLC were included. Pembrolizumab plus platinum-based chemotherapy had higher OS and PFS than platinum-based chemotherapy (hazard ratio [HR] 0.55, 95% CI 0.46-0.67; HR 0.54, 95% CI 0.41-0.70, respectively). Pembrolizumab plus platinum-based chemotherapy had higher ranked ORR than platinum-based chemotherapy (odds ratio [OR] 2.92, 95% CI 1.99-4.22). In terms of OS, atezolizumab, pembrolizumab plus platinum-based chemotherapy, and nivolumab plus ipilimumab ranked as the best treatments for patients with programmed death-ligand 1 (PD-L1) expression levels of \u226550%, 1-49%, and <1%, respectively. In terms of PFS, pembrolizumab plus platinum-based chemotherapy ranked as the best treatment for patients with any PD-L1 expression levels. However, ipilimumab plus platinum-based chemotherapy, nivolumab plus platinum-based chemotherapy, and atezolizumab plus platinum-based chemotherapy have higher TRAEs of grade \u22653 than platinum-based chemotherapy. CONCLUSIONS: Pembrolizumab plus platinum-based chemotherapy prevailed in rank in OS, PFS, and ORR benefit. The TRAEs of pembrolizumab plus platinum-based chemotherapy were more than ICI monotherapy and chemotherapy. John Wiley & Sons Australia, Ltd. Conflict of interest statement: All authors declare no conflict to declare.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1111/1759-7714.14148",
+        "pmcid": "PMC8563153",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The passage confirms that pembrolizumab plus platinum-based chemotherapy ranked best for PFS across all PD-L1 expression levels, and that atezolizumab ranked best for OS in the PD-L1 \u226550% subgroup. However, the specific HR of 0.39 (95% CI 0.27\u20130.56) cited in the claim for pembrolizumab plus platinum-based chemotherapy in PD-L1 \u226550% PFS is not explicitly stated in the provided passages as a network meta-analysis result for that subgroup \u2014 the overall PFS HR reported is 0.54 (95% CI 0.41\u20130.70) for the full population, and the subgroup PFS rankings are mentioned qualitatively. The claim's specific numeric value (HR 0.39, 95% CI 0.27\u20130.56) appears in Table 2 as the individual trial result from Socinski et al. for PD-L1 \u226550% PFS, not as the network meta-analysis summary estimate for pembrolizumab plus PBC in that subgroup.",
+        "confidence": 0.72,
+        "source_passages": [
+          "In terms of OS, atezolizumab, pembrolizumab plus platinum\u2010based chemotherapy, and nivolumab plus ipilimumab ranked as the best treatments for patients with programmed death\u2010ligand 1 (PD\u2010L1) expression levels of \u226550%, 1\u201349%, and <1%, respectively.",
+          "In terms of PFS, pembrolizumab plus platinum\u2010based chemotherapy ranked as the best treatment for patients with any PD\u2010L1 expression levels."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": true,
+          "extracted": [
+            {
+              "raw_text": "HR 0.39",
+              "value": 0.39,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for PFS with pembrolizumab plus platinum-based chemotherapy in PD-L1 \u226550% subgroup"
+            },
+            {
+              "raw_text": "0.27",
+              "value": 0.27,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for HR 0.39"
+            },
+            {
+              "raw_text": "0.56",
+              "value": 0.56,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for HR 0.39"
+            }
+          ],
+          "explanation": "OR/CI internally consistent: 0.27 <= 0.39 <= 0.56, CI ratio within plausibility bounds."
+        }
+      }
+    },
+    {
+      "claim_id": "4799092a-ca21-4876-bf60-fb5292373c77",
+      "claim_text": "Pathak et al. (2020) found that chemo-ICI showed significantly improved PFS (HR 0.59, 95% CrI 0.41\u20130.85) and ORR vs single-agent ICI in PD-L1-high tumors; no significant OS difference.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Pathak"
+      ],
+      "cited_year": 2020,
+      "source": {
+        "found": true,
+        "doi": "10.1002/cncr.33269",
+        "title": "Comparative efficacy of chemoimmunotherapy versus immunotherapy for advanced non\u2013small cell lung cancer: A network meta\u2010analysis of randomized trials",
+        "abstract": "Comparative efficacy of chemoimmunotherapy versus immunotherapy for advanced non-small cell lung cancer: A network meta-analysis of randomized trials. Pathak R(1), De Lima Lopes G(2), Yu H(3), Aryal MR(3)(4), Ji W(3), Frumento KS(5), Wallis CJD(6), Klaassen Z(7)(8), Park HS(9), Goldberg SB(1). BACKGROUND: To the authors' knowledge, in the absence of head-to-head trials, it is unclear whether chemoimmunotherapy provides an additional overall survival (OS) benefit compared with immunotherapy alone in the first-line treatment of patients with advanced non-small cell lung cancer (NSCLC). The authors conducted a systematic literature review and network meta-analysis (NMA) to compare the efficacy of chemoimmunotherapy versus ICI. METHODS: MEDLINE, Excerpta Medica dataBASE (EMBASE), Cochrane Central Register of Controlled Trials, and ClinicalTrials.gov were searched from inception to April 2020. Phase 3 trials evaluating the efficacy of first-line ICI or chemoimmunotherapy and reporting efficacy outcomes (OS, progression-free survival [PFS], and the overall response rate [ORR]) stratified by programmed death-ligand 1 (PD-L1) status were included. NMA with a Bayesian random effects model was performed. RESULTS: A total of 12 eligible trials comprising 7845 patients were included. In patients who were negative for PD-L1 (tumor proportion score [TPS] <1%), NMA comparing chemoimmunotherapy with dual-agent ICI failed to demonstrate a statistically significant difference with regard to OS, PFS, or the ORR. In patients with low PD-L1 (TPS 1%-49%), there was no statistically significant difference observed between chemoimmunotherapy compared with either single-agent ICI or dual-agent ICI with regard to OS or the ORR. In patients with high PD-L1 (TPS \u226550%), chemoimmunotherapy was found to be associated with an improved PFS and ORR compared with single-agent ICI, but not with dual-agent ICI. No differences in OS were observed with chemoimmunotherapy when compared with either single-agent or dual-agent ICIs. CONCLUSIONS: Although chemoimmunotherapy appears to improve the ORR and PFS in patients with PD-L1-high tumors when compared with single-agent ICI, it does not appear to confer an OS benefit over single-agent or dual-agent ICI for patients with advanced NSCLC regardless of PD-L1 status. Prospective trials are needed to validate these findings.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://onlinelibrary.wiley.com/doi/pdfdirect/10.1002/cncr.33269",
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The abstract confirms that chemoimmunotherapy showed improved PFS and ORR vs single-agent ICI in PD-L1-high (TPS \u226550%) tumors, and no significant OS difference \u2014 consistent with the claim's directional assertions. However, the abstract does not report the specific HR of 0.59 (95% CrI 0.41\u20130.85) for PFS; this numeric value cannot be verified from the abstract alone, making the support partial.",
+        "confidence": 0.82,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "abstract_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "12cca986-3600-4f91-9f92-f1abdc4da07f",
+      "claim_text": "Tokito et al. (2024) found no improvement in ORR (32.5% vs 39.0%), PFS (6.7 vs 6.2 months, HR 1.10), or OS (HR 0.74, P=0.205) with epacadostat addition to pembrolizumab.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Tokito"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.1186/s12885-023-11203-8",
+        "title": "Epacadostat plus pembrolizumab versus placebo plus pembrolizumab as first-line treatment for metastatic non-small cell lung cancer with high levels of programmed death-ligand 1: a randomized, double-blind phase 2 study",
+        "abstract": "Epacadostat plus pembrolizumab versus placebo plus pembrolizumab as first-line treatment for metastatic non-small cell lung cancer with high levels of programmed death-ligand 1: a randomized, double-blind phase 2 study. Tokito T(1), Kolesnik O(2), S\u00f8rensen J(3), Artac M(4), Quintela ML(5), Lee JS(6), Hussein M(7), Pless M(8), Paz-Ares L(9), Leopold L(10), Daniel J(10), Munteanu M(10), Samkari A(11), Xu L(11), Butts C(12). BACKGROUND: Pembrolizumab is a first-line therapy for certain patients with advanced/metastatic non-small cell lung cancer (NSCLC). Combining pembrolizumab with other immunotherapies may enhance tumor cell killing and clinical outcomes. Epacadostat is a selective inhibitor of indoleamine 2,3-dioxygenase 1, an immuno-regulatory enzyme involved in tryptophan to kynurenine metabolism that inhibits T cell-mediated immune responses. METHODS: In this randomized phase II study, patients with metastatic NSCLC expressing high (\u2265 50%) programmed death-ligand 1 (PD-L1) levels received pembrolizumab 200 mg every 21 days plus oral epacadostat 100 mg twice daily (combination) or matching placebo (control). The primary objective was objective response rate (ORR); secondary objectives were progression-free survival (PFS), overall survival (OS), duration of response (DOR) and safety/tolerability. RESULTS: 154 patients were randomized (77 per group). Median (range) follow-up was 6.8 months (0.1-11.4) and 7.0 months (0.2-11.9) in the combination and control groups, respectively Confirmed ORR was similar between groups (combination: 32.5%, 95% CI 22.2-44.1; control: 39.0%, 95% CI 28.0-50.8; difference: - 6.5, 95% CI - 21.5 to 8.7; 1-sided P = 0.8000). Median (range) DOR was 6.2 months (1.9 + to 6.5 +) and not reached (1.9 + to 8.6 +) in the combination and control groups, respectively. Although not formally tested, median PFS was 6.7 and 6.2 months for the combination and control groups, respectively, and median OS was not reached in either group. Circulating kynurenine levels increased from C1D1 to C2D1 (P < 0.01) in the control group and decreased from C1D1 to C2D1 (P < 0.01) in the combination group but were not normalized in most patients. The most frequent serious adverse events (AEs) (\u2265 2%) were pneumonia (4.0%), anemia (2.7%), atelectasis (2.7%) and pneumonitis (2.7%) in the combination group and pneumonia (3.9%), pneumonitis (2.6%) and hypotension (2.6%) in the control group. Two deaths due to drug-related AEs were reported, both in the control group. CONCLUSIONS: Addition of epacadostat to pembrolizumab therapy for PD-L1-high metastatic NSCLC was generally well tolerated but did not demonstrate an improved therapeutic effect. Evaluating higher doses of epacadostat that normalize kynurenine levels when given in combination with checkpoint inhibitors may be warranted. TRIAL REGISTRATION: ClinicalTrials.gov, NCT03322540. Registered 10/26/2017. Conflict of interest statement: TT has received honorarium from Merck Sharp & Dohme, Chugai, and AstraZeneca. OK and JS have nothing to disclose. MA reports honoraria from Roche, Pfizer, Amgen, and Merck & Co., Inc. MLQ reports travel expenses from Merck Sharp & Dohme, Roche, Pfizer, Ipsen, Astellas, Lilly, and AstraZeneca; advisory board participation for Roche, Boehringer Ingelheim, Bristol Myers Squibb, AstraZeneca, Takeda, Eusa Pharma, and Pfizer; and conference participation for Astellas, Vifor, Roche, AstraZeneca, Bristol-Myers Squibb, Janssen, Ipsen, and Pfizer. J-SL has nothing to disclose. MH reports a consulting or advisory role with IntegraConnect. MP reports advisory board participation for AstraZeneca, Boehringer Ingelheim, Bristol-Myers Squibb, Merck & Co., Inc., Merck Sharp & Dohme, Pfizer, Roche, and Takeda. LP-A reports honoraria from Advanced Accelerator Applications, Amgen, AstraZeneca, Bayer, Blueprint Medicines, Boehringer Ingelheim, Bristol-Myers Squibb, Celgene, Eli Lilly and Company, Incyte Corporation, Ipsen, Merck & Co., Inc., Merck Sharp & Dohme, Novartis, Pfizer, PharmaMar, S.A., Roche, Sanofi, Servier Laboratoires, Sysmex Corporation, and Takeda; research funding from AstraZeneca, Bristol-Myers Squibb, Merck Sharp & Dohme, and Pfizer; a leadership role at Altum Sequencing and is an officer/board of directors role at Gen\u00f3mica. LL, JD, and MM report employment and stock ownership with Incyte Corporation. AS and LX are salaried employees of Merck & Co., Inc., Rahway, NJ, USA and own stock in the company. CB reports no conflicts to disclose.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://europepmc.org/articles/PMC11270761?pdf=render",
+        "pmcid": "PMC11270761",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly reports ORR of 32.5% vs 39.0%, median PFS of 6.7 vs 6.2 months with HR 1.10, and OS HR of 0.74, all consistent with the claim. The passage confirms no improvement with epacadostat addition to pembrolizumab.",
+        "confidence": 0.97,
+        "source_passages": [
+          "Confirmed ORR was similar between groups (combination: 32.5%, 95% CI 22.2\u201344.1; control: 39.0%, 95% CI 28.0\u201350.8; difference: \u2212 6.5, 95% CI \u2212 21.5 to 8.7; 1-sided P = 0.8000).",
+          "Median PFS was 6.7 months for the combination group and 6.2 months for the control group (HR 1.10, 95% CI 0.69\u20131.76).",
+          "The median OS was not reached in either group (combination: 13 events; control: 17 events; HR 0.74, 95% CI 0.36\u20131.52)"
+        ],
+        "source_section": "results",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "23a27499-353f-488f-9f21-9fc8ea048fbc",
+      "claim_text": "Wang et al. (2022) found that chemo-ICI significantly improved ORR (OR 1.7) and PFS (HR 0.59, 95% CI 0.48\u20130.74) vs ICI alone; no significant OS difference (HR 0.82, 95% CI 0.6\u20131.1).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Wang"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.1038/s41416-022-01832-4",
+        "title": "Immune checkpoint inhibitors alone vs immune checkpoint inhibitors\u2014combined chemotherapy for NSCLC patients with high PD-L1 expression: a network meta-analysis",
+        "abstract": "Immune checkpoint inhibitors alone vs immune checkpoint inhibitors-combined chemotherapy for NSCLC patients with high PD-L1 expression: a network meta-analysis. Wang Y(#)(1), Han H(#)(2), Zhang F(2), Lv T(2), Zhan P(2), Ye M(2), Song Y(3)(4), Liu H(5). BACKGROUND: We indirectly compared the effects of immune checkpoint inhibitors alone (ICI) and ICI-combined chemotherapy (chemo-ICI) in patients with non-small cell lung cancer who had high programmed death-ligand 1 (PD-L1) expression (defined as tumour proportion score \u226550% or TC3/IC3) through network meta-analyses. METHODS: Through literature searches, we shortlisted 22 randomised controlled trials encompassing 4289 patients, with objective response rate (ORR), progression-free survival (PFS), and overall survival (OS) set as the primary outcomes. The dichotomous data for ORR and hazard ratios (HRs) and their 95% confidence intervals (CIs) for OS and PFS were extracted. RESULTS: We found that chemo-ICI had significantly improved ORR (OR 1.7, 95% CI 1.1-2.5) and PFS (HR 0.59, 95% CI: 0.48-0.74) relative to ICI. Although no significant difference in OS was observed, the analyses revealed that the chemo-ICI patients tended to undergo fewer progression events than ICI patients (HR 0.82, 95% CI 0.6-1.1). In subgroup analysis, the non-squamous, PD-1 inhibitor and first-line treatment cohorts exhibited significant differences in ORR and PFS, but not in OS. However, in the squamous, PD-L1 inhibitor, and previously treated cohorts, PFS, OS and ORR were not different between chemo-ICI and ICI patients. CONCLUSIONS: In conclusion, for non-squamous NSCLC patients, accepting PD-1 as the first-line treatment may be a relatively better option. Conflict of interest statement: The authors declare no competing interests.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.nature.com/articles/s41416-022-01832-4.pdf",
+        "pmcid": "PMC9427994",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly reports that chemo-ICI significantly improved ORR (OR 1.7, 95% CI 1.1\u20132.5) and PFS (HR 0.59, 95% CI 0.48\u20130.74) relative to ICI alone, and that no significant OS difference was observed (HR 0.82, 95% CI 0.6\u20131.1), exactly matching all three values and directions stated in the claim.",
+        "confidence": 0.99,
+        "source_passages": [
+          "We found that chemo-ICI had signi\ufb01cantly improved ORR (OR 1.7, 95% CI 1.1\u20132.5) and PFS (HR 0.59, 95% CI: 0.48\u20130.74) relative to ICI.",
+          "Although no signi\ufb01cant difference in OS was observed, the analyses revealed that the chemo-ICI patients tended to undergo fewer progression events than ICI patients (HR 0.82, 95% CI 0.6\u20131.1)."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": {
+          "check_type": "or_ci_consistency",
+          "consistent": false,
+          "extracted": [
+            {
+              "raw_text": "OR 1.7",
+              "value": 1.7,
+              "unit": null,
+              "role": "primary",
+              "context": "odds ratio for ORR with chemo-ICI vs ICI alone"
+            },
+            {
+              "raw_text": "HR 0.59",
+              "value": 0.59,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for PFS with chemo-ICI vs ICI alone"
+            },
+            {
+              "raw_text": "0.48",
+              "value": 0.48,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for PFS HR 0.59"
+            },
+            {
+              "raw_text": "0.74",
+              "value": 0.74,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for PFS HR 0.59"
+            },
+            {
+              "raw_text": "HR 0.82",
+              "value": 0.82,
+              "unit": null,
+              "role": "primary",
+              "context": "hazard ratio for OS with chemo-ICI vs ICI alone"
+            },
+            {
+              "raw_text": "0.6",
+              "value": 0.6,
+              "unit": null,
+              "role": "ci_low",
+              "context": "95% CI lower bound for OS HR 0.82"
+            },
+            {
+              "raw_text": "1.1",
+              "value": 1.1,
+              "unit": null,
+              "role": "ci_high",
+              "context": "95% CI upper bound for OS HR 0.82"
+            }
+          ],
+          "explanation": "OR/CI inconsistent: OR=1.7 outside CI [0.48, 0.74]"
+        }
+      }
+    },
+    {
+      "claim_id": "14041dc1-77f4-4d4e-a96f-ccf1d27a4c23",
+      "claim_text": "Cao et al. (2019) found similar OS between pembrolizumab monotherapy and combination therapy in PD-L1 \u226550%; combination improved PFS and ORR.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Cao"
+      ],
+      "cited_year": 2019,
+      "source": {
+        "found": true,
+        "doi": "10.1002/cam4.2407",
+        "title": "Rational application of the first\u2010line chemotherapy and immune checkpoint inhibitors in advanced nonsmall cell lung cancer: A meta\u2010analysis",
+        "abstract": "Rational application of the first-line chemotherapy and immune checkpoint inhibitors in advanced nonsmall cell lung cancer: A meta-analysis. Cao R(1), Ma JT(1), Zhang SL(1), Sun L(1), Liu Y(1), Zhang XY(1), Jing W(1), Huang LT(1), Han CB(1). OBJECTIVE: To compare the relative efficacy of immune checkpoint inhibitors (ICIs) or chemotherapy (CT) alone, or their combination modality in the first-line treatment of advanced nonsmall cell lung cancer (NSCLC). METHODS: This meta-analysis was performed on the eligible randomized controlled trials (RCTs) after searching web databases and meeting abstracts. The main research endpoints were the comparisons of median overall survival (mOS), the OS rate of 6 months (OSR6m), 1 year (OSR1y) and 2 years (OSR2y), median progression-free survival (mPFS), the PFS rate of 6 months (PFSR6m) and 1-year (PFSR1y), objective response rates (ORR), and treatment-related adverse events (TRAEs). RESULTS: Eleven RCTs comprising 6278 cases were included. In the subgroup of programmed death-ligand 1 (PD-L1) \u226550%, compared with chemotherapy, the ICIs showed similar OSR6m (P > 0.05), but significantly improved efficacy in mOS, OSR1y, OSR2y, and ORR (all P < 0.05), also had less grade \u2265 3 TRAEs. Compared with pembrolizumab alone, pembrolizumab plus CT in the subgroup of PD-L1 \u2265 50% had similar mOS, OSR6m, OSR1y, and PFSR1y (all P > 0.05), but significantly improved mPFS, PFSR6m, and ORR (all P < 0.05 for interaction). Compared with the CT group, ICIs plus CT group with PD-L1 \u2265 50% or <1% showed significant benefit in OS, PFS, and ORR (all P < 0.05). However, in the ICIs plus CT group with 1% \u2264 PD-L1 \u2264 49%, only PFS and ORR showed significant benefit compared with CT group (all P < 0.05), but not for results of OS. CONCLUSIONS: The findings support the rationale for using pembrolizumab alone in the first-line treatment of PD-L1 \u2265 50% advanced NSCLC due to the similar OS and lower grade \u2265 3 TRAEs. However, the combination of ICIs and chemotherapy is strongly recommended in patients with PD-L1 \u2264 49% for significant survival benefit. Conflict of interest statement: The authors declare no conflict of interest.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://europepmc.org/articles/PMC6718602?pdf=render",
+        "pmcid": "PMC6718602",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Parse error.",
+        "confidence": 0.0,
+        "source_passages": [
+          "Cancer Medicine. 2019;8:5033\u20135046. \ufeff | 5033 wileyonlinelibrary.com/journal/cam4 Received: 26 March 2019 | Revised: 5 June 2019 | Accepted: 24 June 2019 DOI: 10.1002/cam4.2407 O R I G I N A L R E S E A R C H Rational application of the first\u2010line chemotherapy and immune checkpoint inhibitors in advanced nonsmall cell lung cancer: A meta\u2010analysis Rui Cao | Jie\u2010Tao Ma | Shu\u2010Ling Zhang | Li Sun | Yang Liu | Xiang\u2010Yan Zhang | Wei Jing | Le\u2010Tian Huang | Cheng\u2010Bo Han This is an open access article under the terms of the Creative Commons Attribution License, which permits use, distribution and reproduction in any medium, provided the original work is properly cited. \u00a9 2019 The Authors. Cancer Medicine published by John Wiley & Sons Ltd. Department of Oncology, Shengjing Hospital of China Medical\u2026"
+        ],
+        "source_section": null,
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "passages_searched_no_quote",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "0172e9e4-b9a2-41a1-b75d-9947c734d11e",
+      "claim_text": "The KEYNOTE-598 3-year follow-up (Abreu et al., 2022) found no OS or PFS benefit from adding ipilimumab; median PFS 8.2 vs 8.4 months (HR 0.99); higher grade 3\u20135 treatment-related AEs with combination (35.1% vs 20.3%).",
+      "claim_type": "factual_numeric",
+      "cited_authors": [
+        "Abreu"
+      ],
+      "cited_year": 2022,
+      "source": {
+        "found": true,
+        "doi": "10.1016/j.annonc.2022.02.015",
+        "title": "6MO Pembrolizumab plus ipilimumab or placebo in previously untreated metastatic NSCLC with PD-L1 tumor proportion score \u226550%: KEYNOTE-598 3-year follow-up",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The title directly references KEYNOTE-598 3-year follow-up and matches the study design described in the claim (pembrolizumab plus ipilimumab vs placebo in previously untreated metastatic NSCLC with PD-L1 TPS \u226550%), making it consistent with the claim; however, the specific numeric values (median PFS 8.2 vs 8.4 months, HR 0.99, AE rates of 35.1% vs 20.3%) and the conclusion of no OS or PFS benefit cannot be verified from the title alone.",
+        "confidence": 0.65,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "title_only",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "title_only",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "50621613-ac92-4754-9472-5421f2cc7c0e",
+      "claim_text": "The cost-effectiveness analysis found that cemiplimab was cost-effective compared with pembrolizumab and dominant over atezolizumab; pembrolizumab plus chemotherapy had ICERs of $190,994\u2013$393,359/QALY vs monotherapies.",
+      "claim_type": "factual_numeric",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": true,
+        "doi": "10.3389/fphar.2021.788569.s001",
+        "title": "DataSheet1.docx",
+        "abstract": null,
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "3ae37634-91a5-4caf-926e-623432169e1c",
+      "claim_text": "Only two studies explicitly discuss liver metastases as a clinical modifier.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "f6f20078-2145-411b-8681-14c497290b08",
+      "claim_text": "Brain metastases subgroups are reported in only a few analyses.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [],
+      "cited_year": null,
+      "source": {
+        "found": false,
+        "doi": null,
+        "title": null,
+        "abstract": null,
+        "similarity_score": null,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": null,
+        "pmcid": null,
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "not_addressed",
+        "explanation": "Source not found or abstract unavailable.",
+        "confidence": 1.0,
+        "source_passages": [],
+        "source_section": null,
+        "fulltext_available": false,
+        "verification_depth": "abstract",
+        "retrieval_status": "fulltext_unavailable",
+        "evidence_quality": "no_evidence",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "36307be4-83b1-462c-89c8-183e1a33565d",
+      "claim_text": "Herbst et al. (2021) found that atezolizumab, pembrolizumab, and cemiplimab monotherapies significantly improved OS vs chemotherapy in the mixed-histology network; pembrolizumab plus chemotherapy improved OS in non-squamous network.",
+      "claim_type": "factual_qualitative",
+      "cited_authors": [
+        "Herbst"
+      ],
+      "cited_year": 2021,
+      "source": {
+        "found": true,
+        "doi": "10.3389/fonc.2021.676732",
+        "title": "A Network Meta-Analysis of Cancer Immunotherapies Versus Chemotherapy for First-Line Treatment of Patients With Non-Small Cell Lung Cancer and High Programmed Death-Ligand 1 Expression",
+        "abstract": "A Network Meta-Analysis of Cancer Immunotherapies Versus Chemotherapy for First-Line Treatment of Patients With Non-Small Cell Lung Cancer and High Programmed Death-Ligand 1 Expression. Herbst R(1), Jassem J(2), Abogunrin S(3), James D(4), McCool R(5), Belleli R(3), Giaccone G(6), De Marinis F(7). In the absence of head-to-head trials of first-line treatments for metastatic non-small cell lung cancer (NSCLC), synthesis of available evidence is needed. We conducted a systematic literature review and network meta-analysis of randomized controlled trials in patients with stage IV NSCLC and high programmed death-ligand 1 (PD-L1) expression. Patients with other-stage NSCLC or without PD-L1 expression and populations with < 80% stage IV NSCLC were excluded. Outcomes included overall survival (OS), progression-free survival (PFS), objective response rate (ORR), and treatment-related adverse events. English records from MEDLINE and Embase published through October 2020 were eligible, supplemented by hand searches of other sources. Three evidence networks were constructed based on histology (mixed, squamous, non-squamous). OS and PFS results were analyzed applying Bayesian fractional polynomial random-effects models. Hazard ratios over time with 95% credible intervals (CrIs) and expected differences in OS and PFS between each cancer immunotherapy regimen and the chemotherapy common comparator were generated. Seventeen clinical trials were included after screening 32,527 records. Heterogeneity and risk of bias were generally low across trials. In the mixed-histology network of PD-L1-high patients, expected OS was significantly longer with atezolizumab (estimated difference: 10.4 months [95% CrI: 1.9, 18.2]), pembrolizumab (7.2 [2.2, 12.3]), and cemiplimab (13.0 [4.2, 21.0]) versus chemotherapy but not with nivolumab (3.5 [-2.5, 10.6]) or nivolumab plus ipilimumab (6.7 [-0.5, 14.2]) versus chemotherapy. OS improvements were not significant compared with chemotherapy for any regimen in the squamous and non-squamous networks, except pembrolizumab plus chemotherapy in the non-squamous network. All regimens showed significantly longer expected PFS versus chemotherapy in the non-squamous network, whereas the increases were not significant in the mixed or squamous networks. ORR was significantly higher with pembrolizumab and cemiplimab versus chemotherapy in the mixed-histology network, with sintilimab in the non-squamous network, and with combination regimens, including pembrolizumab or atezolizumab, in the squamous and non-squamous networks, except with atezolizumab plus carboplatin, paclitaxel, and bevacizumab. Survival and safety versus chemotherapy were generally similar across cancer immunotherapies and histology networks. These findings may support treatment decisions for patients with high PD-L1 status receiving first-line treatment for NSCLC. De Marinis. Conflict of interest statement: RH reports non-financial support from Genentech/Roche during the conduct of the study; personal fees from Abbvie Pharmaceuticals, personal fees from ARMO Biosciences, grants and personal fees from AstraZeneca, personal fees from Biodesix, personal fees from Bolt Biotherapeutics, personal fees from Bristol Myers Squibb, personal fees from Cybrexa Therapeutics, personal fees from eFFECTOR Therapeutics, Inc., grants and personal fees from Eli Lilly and Company, personal fees from EMD Serono, grants and personal fees from Genentech/Roche, personal fees from Genmab, personal fees from Halozyme Therapeutics, personal fees from Heat Biologics, personal fees from I-Mab Biopharma, personal fees from Immunocore, personal fees from Infinity Pharmaceuticals, personal fees from Junshi Pharmaceuticals, personal fees from Loxo Oncology, grants and personal fees from Merck and Company, personal fees from Mirati Therapeutics, personal fees from Nektar, personal fees from Neon Therapeutics, personal fees from NextCure, personal fees from Novartis, personal fees from Oncternal Therapeutics, personal fees from Pfizer, personal fees from Sanofi, personal fees from Seattle Genetics, personal fees from Shire PLC, personal fees from Spectrum Pharmaceuticals, personal fees from STCube Pharmaceuticals, Inc, personal fees from Symphogen, personal fees from Takeda, personal fees from Tesaro, personal fees from Tocagen, personal fees from WindMIL Therapeutics, personal fees from Xencor, Inc, outside the submitted work. JJ reports personal fees and non-financial support from Roche during the conduct of the study; personal fees from AstraZeneca, personal fees from Pfizer, personal fees from BMS, personal fees from MSD outside the submitted work. SA and RB are employees of F. Hoffmann-La Roche, Ltd, the study sponsor. DJ is an employee of Quantics Biostatistics, and RM is an employee of the York Health Economics Consortium, Ltd, both of which received funding from the study sponsor for this work. FM reports fees as advisor/speaker from AstraZeneca, BMS, Roche/Genentech, Novartis. The remaining authors declare that the research was conducted in the absence of any commercial or financial relationships that could be construed as a potential conflict of interest. The authors declare that this study received funding from F. Hoffmann-La Roche, Ltd. The funder was involved in the study design, collection and analysis of the data.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://www.frontiersin.org/articles/10.3389/fonc.2021.676732/pdf",
+        "pmcid": "PMC8300186",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "partially_supported",
+        "explanation": "The passage explicitly supports that atezolizumab, pembrolizumab, and cemiplimab monotherapies significantly improved OS vs chemotherapy in the mixed-histology network. However, the passage states that 'OS improvements were not significant compared with chemotherapy for any regimen in the squamous and non-squamous networks, except pembrolizumab plus chemotherapy in the non-squamous network' \u2014 which supports the pembrolizumab plus chemotherapy OS improvement in the non-squamous network. The claim is largely supported, but the passage specifies the non-squamous network finding as an exception to non-significance, and the claim's phrasing implies pembrolizumab plus chemotherapy 'improved OS' (significantly) in non-squamous, which is consistent. The partial support arises because the claim does not mention that nivolumab and nivolumab plus ipilimumab did NOT significantly improve OS in the mixed-histology network, which is context needed for completeness, and the non-squamous OS finding is presented as an exception rather than a primary positive finding.",
+        "confidence": 0.85,
+        "source_passages": [
+          "In the mixed-histology network of PD-L1\u2013high patients, expected OS was significantly longer with atezolizumab (estimated difference: 10.4 months [95% CrI: 1.9, 18.2]), pembrolizumab (7.2 [2.2, 12.3]), and cemiplimab (13.0 [4.2, 21.0]) versus chemotherapy but not with nivolumab (3.5 [\u22122.5, 10.6]) or nivolumab plus ipilimumab (6.7 [\u22120.5, 14.2]) versus chemotherapy.",
+          "OS improvements were not significant compared with chemotherapy for any regimen in the squamous and non-squamous networks, except pembrolizumab plus chemotherapy in the non-squamous network."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    },
+    {
+      "claim_id": "ae77640c-c5c4-46e9-97cc-d692c168067f",
+      "claim_text": "The Tokito et al. (2024) study had a small sample size (n=154) and short follow-up (median ~7 months), and was downsized from phase III to phase II and discontinued early.",
+      "claim_type": "methodological",
+      "cited_authors": [
+        "Tokito"
+      ],
+      "cited_year": 2024,
+      "source": {
+        "found": true,
+        "doi": "10.1186/s12885-023-11203-8",
+        "title": "Epacadostat plus pembrolizumab versus placebo plus pembrolizumab as first-line treatment for metastatic non-small cell lung cancer with high levels of programmed death-ligand 1: a randomized, double-blind phase 2 study",
+        "abstract": "Epacadostat plus pembrolizumab versus placebo plus pembrolizumab as first-line treatment for metastatic non-small cell lung cancer with high levels of programmed death-ligand 1: a randomized, double-blind phase 2 study. Tokito T(1), Kolesnik O(2), S\u00f8rensen J(3), Artac M(4), Quintela ML(5), Lee JS(6), Hussein M(7), Pless M(8), Paz-Ares L(9), Leopold L(10), Daniel J(10), Munteanu M(10), Samkari A(11), Xu L(11), Butts C(12). BACKGROUND: Pembrolizumab is a first-line therapy for certain patients with advanced/metastatic non-small cell lung cancer (NSCLC). Combining pembrolizumab with other immunotherapies may enhance tumor cell killing and clinical outcomes. Epacadostat is a selective inhibitor of indoleamine 2,3-dioxygenase 1, an immuno-regulatory enzyme involved in tryptophan to kynurenine metabolism that inhibits T cell-mediated immune responses. METHODS: In this randomized phase II study, patients with metastatic NSCLC expressing high (\u2265 50%) programmed death-ligand 1 (PD-L1) levels received pembrolizumab 200 mg every 21 days plus oral epacadostat 100 mg twice daily (combination) or matching placebo (control). The primary objective was objective response rate (ORR); secondary objectives were progression-free survival (PFS), overall survival (OS), duration of response (DOR) and safety/tolerability. RESULTS: 154 patients were randomized (77 per group). Median (range) follow-up was 6.8 months (0.1-11.4) and 7.0 months (0.2-11.9) in the combination and control groups, respectively Confirmed ORR was similar between groups (combination: 32.5%, 95% CI 22.2-44.1; control: 39.0%, 95% CI 28.0-50.8; difference: - 6.5, 95% CI - 21.5 to 8.7; 1-sided P = 0.8000). Median (range) DOR was 6.2 months (1.9 + to 6.5 +) and not reached (1.9 + to 8.6 +) in the combination and control groups, respectively. Although not formally tested, median PFS was 6.7 and 6.2 months for the combination and control groups, respectively, and median OS was not reached in either group. Circulating kynurenine levels increased from C1D1 to C2D1 (P < 0.01) in the control group and decreased from C1D1 to C2D1 (P < 0.01) in the combination group but were not normalized in most patients. The most frequent serious adverse events (AEs) (\u2265 2%) were pneumonia (4.0%), anemia (2.7%), atelectasis (2.7%) and pneumonitis (2.7%) in the combination group and pneumonia (3.9%), pneumonitis (2.6%) and hypotension (2.6%) in the control group. Two deaths due to drug-related AEs were reported, both in the control group. CONCLUSIONS: Addition of epacadostat to pembrolizumab therapy for PD-L1-high metastatic NSCLC was generally well tolerated but did not demonstrate an improved therapeutic effect. Evaluating higher doses of epacadostat that normalize kynurenine levels when given in combination with checkpoint inhibitors may be warranted. TRIAL REGISTRATION: ClinicalTrials.gov, NCT03322540. Registered 10/26/2017. Conflict of interest statement: TT has received honorarium from Merck Sharp & Dohme, Chugai, and AstraZeneca. OK and JS have nothing to disclose. MA reports honoraria from Roche, Pfizer, Amgen, and Merck & Co., Inc. MLQ reports travel expenses from Merck Sharp & Dohme, Roche, Pfizer, Ipsen, Astellas, Lilly, and AstraZeneca; advisory board participation for Roche, Boehringer Ingelheim, Bristol Myers Squibb, AstraZeneca, Takeda, Eusa Pharma, and Pfizer; and conference participation for Astellas, Vifor, Roche, AstraZeneca, Bristol-Myers Squibb, Janssen, Ipsen, and Pfizer. J-SL has nothing to disclose. MH reports a consulting or advisory role with IntegraConnect. MP reports advisory board participation for AstraZeneca, Boehringer Ingelheim, Bristol-Myers Squibb, Merck & Co., Inc., Merck Sharp & Dohme, Pfizer, Roche, and Takeda. LP-A reports honoraria from Advanced Accelerator Applications, Amgen, AstraZeneca, Bayer, Blueprint Medicines, Boehringer Ingelheim, Bristol-Myers Squibb, Celgene, Eli Lilly and Company, Incyte Corporation, Ipsen, Merck & Co., Inc., Merck Sharp & Dohme, Novartis, Pfizer, PharmaMar, S.A., Roche, Sanofi, Servier Laboratoires, Sysmex Corporation, and Takeda; research funding from AstraZeneca, Bristol-Myers Squibb, Merck Sharp & Dohme, and Pfizer; a leadership role at Altum Sequencing and is an officer/board of directors role at Gen\u00f3mica. LL, JD, and MM report employment and stock ownership with Incyte Corporation. AS and LX are salaried employees of Merck & Co., Inc., Rahway, NJ, USA and own stock in the company. CB reports no conflicts to disclose.",
+        "similarity_score": 1.0,
+        "title_match_score": null,
+        "resolution_low_confidence": false,
+        "oa_url": "https://europepmc.org/articles/PMC11270761?pdf=render",
+        "pmcid": "PMC11270761",
+        "retraction_status": false
+      },
+      "verification": {
+        "status": "supported",
+        "explanation": "The passage explicitly confirms all three components of the claim: n=154 patients were randomized, median follow-up was approximately 6.8\u20137.0 months (~7 months), and the study was originally designed as a phase III study that was amended to a phase II study after data from ECHO-301/KEYNOTE-252 emerged. The passage also confirms the study was terminated early ('Upon study termination, treatments were unblinded').",
+        "confidence": 0.97,
+        "source_passages": [
+          "154 patients were randomized (77 per group). Median (range) follow-up was 6.8 months (0.1\u201311.4) and 7.0 months (0.2\u201311.9) in the combination and control groups, respectively",
+          "This study was originally designed as a phase III study. On May 31, 2018, the protocol was amended to a phase II study after emerging data from the phase III ECHO-301/KEYNOTE-252 study in unresectable or metastatic melanoma showed that addition of epacadostat to pembrolizumab did not improve the primary endpoint of progression-free survival (PFS).",
+          "Upon study termination, treatments were unblinded and epacadostat was discontinued."
+        ],
+        "source_section": "other",
+        "fulltext_available": true,
+        "verification_depth": "fulltext",
+        "retrieval_status": "passage_found",
+        "evidence_quality": "quoted_passage",
+        "retraction_status": false,
+        "numeric_check": null
+      }
+    }
+  ]
+}

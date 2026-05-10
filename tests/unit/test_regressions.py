@@ -64,10 +64,18 @@ def test_collector_finds_jsonl_when_present() -> None:
     """Sanity check: the collector globs the right directory and parses jsonl correctly.
 
     Always passes, regardless of whether any regressions exist yet.
+
+    Schema note: the original `failure_category` field was generalised to also
+    accept `bug_class` for the richer numeric-workflow regression entries
+    (eval/regressions/2026-05-10/elicit_numeric_workflow/). Both serve the same
+    purpose — categorising the failure mode — so we require at least one.
     """
     cases = _collect_cases()
     assert isinstance(cases, list)
     for case in cases:
         assert "regression_id" in case, f"missing regression_id in case: {case}"
-        assert "failure_category" in case, f"missing failure_category in case: {case}"
+        has_category = "failure_category" in case or "bug_class" in case
+        assert has_category, (
+            f"missing categorisation field (failure_category or bug_class) in case: {case}"
+        )
         assert "claim_text" in case, f"missing claim_text in case: {case}"

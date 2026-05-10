@@ -96,7 +96,7 @@ def _compute_summary_stats(
     claims: list[Claim],
     results: dict[str, VerificationResult],
     sources: dict[str, ResolvedSource],
-) -> dict[str, int | float | str]:
+) -> dict[str, int | float | str | dict[str, int]]:
     """Pure helper — compute summary statistics. No I/O."""
     total = len(claims)
 
@@ -134,6 +134,52 @@ def _compute_summary_stats(
         1 for c in claims if ((nc := result_for(c).numeric_check) is not None and not nc.consistent)
     )
 
+    # Diagnostic fields. Goal: make `not_addressed` actionable. Today the count
+    # bundles together (a) paywalled abstracts that didn't address the claim,
+    # (b) fulltext-fetched papers where BM25 found no relevant passage, (c)
+    # passages that were found but the verifier judged didn't address the
+    # claim, and (d) claims whose source never resolved at all. Distinguishing
+    # these is the difference between "fix the pipeline" and "this tool just
+    # cited a paper that doesn't say what it claimed".
+    abstract_only_verdicts = sum(
+        1 for c in claims if source_for(c).found and result_for(c).verification_depth == "abstract"
+    )
+    resolved_count = sum(1 for c in claims if source_for(c).found)
+    fulltext_success_rate = (
+        (fulltext_verified + no_passage_found) / resolved_count if resolved_count > 0 else 0.0
+    )
+    not_addressed_breakdown: dict[str, int] = {
+        "no_source": 0,
+        "paywall": 0,
+        "no_passage": 0,
+        "claim_absent": 0,
+    }
+    for c in claims:
+        if result_for(c).status != "not_addressed":
+            continue
+        if not source_for(c).found:
+            not_addressed_breakdown["no_source"] += 1
+            continue
+        retrieval = result_for(c).retrieval_status
+        if retrieval == "fulltext_unavailable":
+            not_addressed_breakdown["paywall"] += 1
+        elif retrieval == "no_passage_found":
+            not_addressed_breakdown["no_passage"] += 1
+        elif retrieval == "passage_found":
+            not_addressed_breakdown["claim_absent"] += 1
+        else:
+            # Defensive: VerificationResult defaults retrieval_status to one of
+            # the three Literal values, but a deserialized report.json with a
+            # missing/null field could land here. Surface the unaccounted claim
+            # rather than silently dropping it from the breakdown — the four
+            # buckets must sum to `not_addressed` for the diagnostic to be
+            # interpretable.
+            logger.warning(
+                "not_addressed_breakdown_unaccounted",
+                claim_id=c.claim_id,
+                retrieval_status=retrieval,
+            )
+
     return {
         "total_claims": total,
         "supported": supported,
@@ -149,6 +195,9 @@ def _compute_summary_stats(
         "retracted_sources": retracted_sources,
         "numeric_checks_run": numeric_checks_run,
         "numeric_inconsistencies_flagged": numeric_inconsistencies_flagged,
+        "abstract_only_verdicts": abstract_only_verdicts,
+        "fulltext_success_rate": fulltext_success_rate,
+        "not_addressed_breakdown": not_addressed_breakdown,
     }
 
 

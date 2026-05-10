@@ -32,6 +32,8 @@ SectionLabel = Literal["introduction", "methods", "results", "discussion", "othe
 RetrievalStatus = Literal["passage_found", "no_passage_found", "fulltext_unavailable"]
 EvidenceQuality = Literal[
     "quoted_passage",
+    # Fulltext + BM25 found passages, LLM saw them but did not quote any.
+    "passages_searched_no_quote",
     "abstract_only",
     "title_only",
     "citing_paper_context",

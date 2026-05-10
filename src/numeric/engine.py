@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 import uuid
 
@@ -21,56 +22,101 @@ logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 _RATIO_TERMS = ("odds ratio", "hazard ratio", "risk ratio", "relative risk")
 
+RATIO_KEYWORDS_LONG = (
+    "odds ratio",
+    "hazard ratio",
+    "risk ratio",
+    "relative risk",
+    "incidence rate ratio",
+    "rate ratio",
+)
+RATIO_KEYWORDS_SHORT: frozenset[str] = frozenset(
+    {"or", "hr", "rr", "rrr", "ahr", "ihr", "shr", "irr"}
+)
+_WORD_RE: re.Pattern[str] = re.compile(r"[A-Za-z]+")
+
 
 def _hash(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
 
+def _has_ratio_keyword(text: str) -> bool:
+    """Match either a long phrase or a standalone short token (case-insensitive,
+    word-boundary based to avoid hits in 'PRIOR'/'MONITOR')."""
+    t = text.lower()
+    if any(k in t for k in RATIO_KEYWORDS_LONG):
+        return True
+    return bool({w.lower() for w in _WORD_RE.findall(text)} & RATIO_KEYWORDS_SHORT)
+
+
+def _is_ratio_primary(a: NumericAssertion) -> bool:
+    """Return True when the assertion is a ratio-measure primary.
+
+    Exclusions applied before keyword scan:
+    - role must be "primary"
+    - unit == "%" or "%" in raw_text excludes percentages
+    - context containing 'reduction'/'change'/'difference' excludes additive
+      descriptors even when the context mentions a ratio term (e.g. '13%
+      relative risk reduction').
+    """
+    if a.role != "primary":
+        return False
+    if a.unit == "%" or "%" in a.raw_text:
+        return False
+    if _has_ratio_keyword(a.raw_text):
+        return True
+    if _has_ratio_keyword(a.context):
+        ctx_l = a.context.lower()
+        return not ("reduction" in ctx_l or "change" in ctx_l or "difference" in ctx_l)
+    return False
+
+
 def _find_or_ci_triple(
     assertions: list[NumericAssertion],
 ) -> tuple[float, float, float] | None:
-    """Find the first OR/CI triple in the assertion list.
+    """Find a (ratio, ci_low, ci_high) triple via two-step matching.
 
-    Heuristic: a "primary" record whose context mentions "odds ratio" or "OR ",
-    plus an immediately following ci_low and ci_high pair. If multiple primary
-    records exist, prefer the one whose context contains "odds ratio" or "OR".
-    Returns (or_value, ci_low, ci_high) or None.
+    Step 1: pick the first primary that is a ratio measure. No unit=None
+    fallback — Bug B fix.
+
+    Step 2: pair the primary with its CI by:
+      (a) Strong match — CI context contains primary's raw_text (substring,
+          case-insensitive).
+      (b) Window match — CI inside [primary_idx+1, next_primary_idx).
+
+    If neither match yields a ci_low + ci_high pair, return None. This avoids
+    pairing a ratio primary with CIs that belong to a different statistic when
+    multiple primaries are present — Bug A fix.
     """
     primary_idx: int | None = None
     for i, a in enumerate(assertions):
-        if a.role != "primary":
-            continue
-        ctx_lower = a.context.lower()
-        raw_lower = a.raw_text.lower()
-        if "odds ratio" in ctx_lower or "or " in raw_lower or raw_lower.startswith("or"):
+        if _is_ratio_primary(a):
             primary_idx = i
             break
 
     if primary_idx is None:
-        for i, a in enumerate(assertions):
-            if a.role == "primary" and a.unit is None:
-                primary_idx = i
-                break
-
-    if primary_idx is None:
         return None
 
-    or_value = assertions[primary_idx].value
+    primary = assertions[primary_idx]
+    p_raw_l = primary.raw_text.lower()
 
-    ci_low: float | None = None
-    ci_high: float | None = None
-    for a in assertions[primary_idx:]:
-        if a.role == "ci_low" and ci_low is None:
-            ci_low = a.value
-        elif a.role == "ci_high" and ci_high is None:
-            ci_high = a.value
-        if ci_low is not None and ci_high is not None:
-            break
+    next_primary_idx = next(
+        (j for j in range(primary_idx + 1, len(assertions)) if assertions[j].role == "primary"),
+        len(assertions),
+    )
+    window = assertions[primary_idx + 1 : next_primary_idx]
 
-    if ci_low is None or ci_high is None:
-        return None
+    strong_lows = [a for a in assertions if a.role == "ci_low" and p_raw_l in a.context.lower()]
+    strong_highs = [a for a in assertions if a.role == "ci_high" and p_raw_l in a.context.lower()]
+    if strong_lows and strong_highs:
+        return (primary.value, strong_lows[0].value, strong_highs[0].value)
 
-    return or_value, ci_low, ci_high
+    win_lows = [a for a in window if a.role == "ci_low"]
+    win_highs = [a for a in window if a.role == "ci_high"]
+    if win_lows and win_highs:
+        return (primary.value, win_lows[0].value, win_highs[0].value)
+
+    return None
 
 
 def _infer_null_value(assertions: list[NumericAssertion]) -> float:

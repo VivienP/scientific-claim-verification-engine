@@ -29,6 +29,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
+import structlog
+
+logger: structlog.BoundLogger = structlog.get_logger(__name__)
+
 _REFERENCES_HEADER_RE = re.compile(r"\bReferences\b", re.IGNORECASE)
 # Numbered-entry markers come in three real-world shapes. The parser must
 # recognize all three; failing silently on a recognized References section
@@ -68,6 +72,12 @@ _DOI_FIELD_RE = re.compile(
     r"(?=(?:\s+\(|\s+PMID\b|\s+PMC\b|\s*$))",
     re.IGNORECASE | re.DOTALL,
 )
+# Post-strip validation. After whitespace collapse + punctuation rstrip, a
+# well-formed DOI must still match the canonical shape: `10.<registrant>/<suffix>`
+# with a non-trivial suffix. Anything else (truncated, garbage-only, slashless)
+# is treated as missing — sending malformed DOIs to CrossRef can silently
+# match a different paper, the worst possible failure mode.
+_DOI_VALID_RE = re.compile(r"^10\.\d{4,9}/[^\s/]\S{2,}$")
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 # Patterns that contain a year-like 4-digit token but are NOT the
 # publication year. Stripped from the body before year extraction so
@@ -303,8 +313,12 @@ def _extract_doi(body: str) -> str | None:
     if not match:
         return None
     # PDF/plain-text exports sometimes wrap long DOI suffixes across lines.
-    doi = re.sub(r"\s+", "", match.group(1))
-    return doi.rstrip(".,;)")
+    raw = match.group(1)
+    doi = re.sub(r"\s+", "", raw).rstrip(".,;)")
+    if not _DOI_VALID_RE.match(doi):
+        logger.warning("bibliography_doi_malformed", doi_raw=raw, doi_stripped=doi)
+        return None
+    return doi
 
 
 def parse_bibliography(text: str) -> dict[int, BibEntry]:

@@ -265,6 +265,44 @@ class TestCitingContextFallback:
         )
         assert cv.result.status == "not_addressed"  # unchanged
 
+    @patch("src.pipeline.fetch_fulltext")
+    @patch("src.pipeline.verify_claim_fulltext_with_numeric")
+    @patch("src.pipeline.verify_claim_citing_context")
+    def test_fires_when_evidence_quality_is_passages_searched_no_quote(
+        self, mock_cc: MagicMock, mock_ft: MagicMock, mock_fetch: MagicMock
+    ) -> None:
+        """Phase A.2 regression test: the verifier now emits
+        ``passages_searched_no_quote`` instead of ``no_evidence`` when the
+        LLM saw passages but didn't quote any. The citing-context fallback
+        gate must still trigger in that case — otherwise audit-trail-only
+        verdicts (passages shown, none quoted) silently bypass the path
+        designed for exactly that situation.
+        """
+        mock_fetch.return_value = ("full text body", "oa_url_pdf")
+        # Fulltext path returns the new evidence_quality with non-empty
+        # source_passages (BM25 fallback fired in verify_claim_fulltext).
+        mock_ft.return_value = (
+            _result("not_addressed", "passages_searched_no_quote"),
+            [_step()],
+        )
+        mock_cc.return_value = (
+            _result("partially_supported", "citing_paper_context"),
+            _step(),
+        )
+        rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
+        cv = verify_one_claim(
+            _claim(),
+            rs_set,
+            citing_paper_text="Surrounding text for context [30] supports the claim.",
+            config=PipelineConfig(),
+        )
+        # Falsifier: pre-fix this would have been `mock_cc.assert_not_called()`
+        # because the gate read `evidence_quality == "no_evidence"`. Post-fix,
+        # the gate accepts both `no_evidence` and `passages_searched_no_quote`.
+        mock_cc.assert_called_once()
+        assert cv.result.status == "partially_supported"
+        assert cv.fetch_method == "citing_paper_context"
+
 
 class TestRunPipeline:
     @patch("src.pipeline.extract_claims")

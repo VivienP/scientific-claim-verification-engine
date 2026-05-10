@@ -14,6 +14,7 @@ dependencies = [
     "rank-bm25>=0.2.2",
     "pymupdf>=1.24.0",
     "tiktoken>=0.7.0",
+    "jinja2>=3.1.0",
 ]
 
 [project.optional-dependencies]
@@ -64,6 +65,10 @@ select = ["E", "F", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
 "tests/unit/test_openalex.py" = ["E501"]
 "scripts/eval_scifact.py" = ["E501"]
 "scripts/generate_summary.py" = ["E501"]
+# Phase C API tests use Any-typed worker fixtures intentionally (heterogeneous
+# fake objects with attached attributes — Protocol typing would be heavier than
+# the fixture warrants).
+"tests/unit/test_api_app.py" = ["ANN401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -140,9 +140,16 @@ class TestRunPipelineEndToEnd:
 
         httpx_mock.add_callback(respond, is_reusable=True)
 
-    def _setup_llm_mock(self, mock_create: MagicMock) -> None:
-        def respond(**kwargs: object) -> MagicMock:
-            messages: Iterable[Any] = kwargs.get("messages", [])  # type: ignore[assignment]
+    def _setup_llm_mock(self, mock_messages: MagicMock) -> None:
+        """Route both messages.create() and messages.stream() to _llm_router.
+
+        verify.py uses messages.create(); extract.py uses messages.stream()
+        with .get_final_message() inside a `with` block. Both need their
+        mocks driven by the same user-text-based router so the integration
+        test sees a coherent extract → verify chain.
+        """
+
+        def _route(messages: Iterable[Any]) -> MagicMock:
             user_text = ""
             for m in messages:
                 if isinstance(m, dict) and m.get("role") == "user":
@@ -150,7 +157,20 @@ class TestRunPipelineEndToEnd:
                     user_text += content if isinstance(content, str) else ""
             return _llm_router(user_text)
 
-        mock_create.side_effect = respond
+        def respond_create(**kwargs: object) -> MagicMock:
+            return _route(kwargs.get("messages", []))  # type: ignore[arg-type]
+
+        def respond_stream(**kwargs: object) -> MagicMock:
+            ctx = MagicMock()
+            ctx.__enter__.return_value = ctx
+            ctx.__exit__.return_value = False
+            ctx.get_final_message.return_value = _route(
+                kwargs.get("messages", [])  # type: ignore[arg-type]
+            )
+            return ctx
+
+        mock_messages.create.side_effect = respond_create
+        mock_messages.stream.side_effect = respond_stream
 
     @patch("anthropic.Anthropic")
     def test_pipeline_produces_one_claim_verification_with_valid_steps(
@@ -158,7 +178,7 @@ class TestRunPipelineEndToEnd:
     ) -> None:
         self._setup_http_mocks(httpx_mock)
         client_instance = MagicMock()
-        self._setup_llm_mock(client_instance.messages.create)
+        self._setup_llm_mock(client_instance.messages)
         mock_anthropic_cls.return_value = client_instance
 
         cvs, _ = run_pipeline(
@@ -189,7 +209,7 @@ class TestRunPipelineEndToEnd:
     ) -> None:
         self._setup_http_mocks(httpx_mock)
         client_instance = MagicMock()
-        self._setup_llm_mock(client_instance.messages.create)
+        self._setup_llm_mock(client_instance.messages)
         mock_anthropic_cls.return_value = client_instance
 
         _, all_steps = run_pipeline(

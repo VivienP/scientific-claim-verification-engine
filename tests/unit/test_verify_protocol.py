@@ -46,37 +46,41 @@ def _step(
 
 
 class TestProtocolStructuralConformance:
-    """The verifier functions must satisfy the structural Protocol."""
+    """The verifier functions must satisfy the structural Protocol.
 
-    def test_verify_claim_is_single_step_verifier(self) -> None:
-        from src.verify import verify_claim
+    mypy --strict already enforces this statically; the runtime check
+    below is a single belt-and-braces assertion that catches any future
+    refactor that accidentally drops a required method from the verifier
+    surface.
+    """
 
-        assert isinstance(verify_claim, SingleStepVerifier)
+    def test_all_verifiers_match_their_protocol(self) -> None:
+        from src.verify import (
+            verify_claim,
+            verify_claim_citing_context,
+            verify_claim_fulltext,
+            verify_claim_fulltext_with_numeric,
+            verify_claim_multi_source,
+            verify_claim_title_only,
+        )
 
-    def test_verify_claim_fulltext_is_single_step_verifier(self) -> None:
-        from src.verify import verify_claim_fulltext
+        # Tuple typed as `object` to collapse the union of differing function
+        # signatures — only the runtime structural Protocol check matters here.
+        single_step: tuple[object, ...] = (
+            verify_claim,
+            verify_claim_fulltext,
+            verify_claim_title_only,
+            verify_claim_citing_context,
+        )
+        multi_step: tuple[object, ...] = (
+            verify_claim_multi_source,
+            verify_claim_fulltext_with_numeric,
+        )
 
-        assert isinstance(verify_claim_fulltext, SingleStepVerifier)
-
-    def test_verify_claim_title_only_is_single_step_verifier(self) -> None:
-        from src.verify import verify_claim_title_only
-
-        assert isinstance(verify_claim_title_only, SingleStepVerifier)
-
-    def test_verify_claim_citing_context_is_single_step_verifier(self) -> None:
-        from src.verify import verify_claim_citing_context
-
-        assert isinstance(verify_claim_citing_context, SingleStepVerifier)
-
-    def test_verify_claim_multi_source_is_multi_step_verifier(self) -> None:
-        from src.verify import verify_claim_multi_source
-
-        assert isinstance(verify_claim_multi_source, MultiStepVerifier)
-
-    def test_verify_claim_fulltext_with_numeric_is_multi_step_verifier(self) -> None:
-        from src.verify import verify_claim_fulltext_with_numeric
-
-        assert isinstance(verify_claim_fulltext_with_numeric, MultiStepVerifier)
+        for fn in single_step:
+            assert isinstance(fn, SingleStepVerifier), f"{fn} broke SingleStepVerifier"
+        for fn in multi_step:
+            assert isinstance(fn, MultiStepVerifier), f"{fn} broke MultiStepVerifier"
 
 
 class TestAssertVerifierStepsValid:

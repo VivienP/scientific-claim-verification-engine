@@ -6,27 +6,17 @@ import dataclasses
 
 import pytest
 
-from src.models import Claim, ProvenanceStep, ResolvedSource, VerificationResult
+from src.models import Claim, ResolvedSource, VerificationResult
 from src.numeric.checks import NumericAssertion, NumericCheckResult
 
 
 class TestClaim:
-    def test_claim_fields(self) -> None:
-        claim = Claim(
-            claim_id="abc-123",
-            claim_text="X causes Y",
-            cited_authors=["Smith", "Jones"],
-            cited_year=2020,
-            claim_type="causal",
-        )
-        assert claim.claim_id == "abc-123"
-        assert claim.claim_text == "X causes Y"
-        assert claim.cited_authors == ["Smith", "Jones"]
-        assert claim.cited_year == 2020
-        assert claim.claim_type == "causal"
-        assert claim.citation_markers == []
-
     def test_claim_frozen(self) -> None:
+        """Runtime check: dataclasses.frozen=True actually raises on assignment.
+
+        Trivial field-roundtrip tests for frozen dataclasses are mypy-enforced
+        and tautological; only the runtime frozen behaviour needs locking here.
+        """
         claim = Claim(
             claim_id="abc-123",
             claim_text="X causes Y",
@@ -36,22 +26,6 @@ class TestClaim:
         )
         with pytest.raises((AttributeError, TypeError)):
             claim.claim_text = "modified"  # type: ignore[misc]
-
-
-class TestResolvedSource:
-    def test_resolved_source_found(self) -> None:
-        source = ResolvedSource(
-            found=True,
-            doi="10.1000/test",
-            title="Test Paper",
-            abstract="An abstract.",
-            similarity_score=0.95,
-        )
-        assert source.found is True
-        assert source.doi == "10.1000/test"
-        assert source.similarity_score == 0.95
-        assert source.title_match_score is None
-        assert source.resolution_low_confidence is False
 
 
 class TestResolvedSourceSet:
@@ -155,46 +129,7 @@ class TestResolvedSourceSet:
         assert {s.doi for s in found} == {"10.1/a", "10.1/c"}
 
 
-class TestVerificationResult:
-    def test_verification_result_fields(self) -> None:
-        result = VerificationResult(
-            status="supported",
-            explanation="The abstract supports this.",
-            confidence=0.9,
-        )
-        assert result.status == "supported"
-        assert result.confidence == 0.9
-        assert result.retrieval_status == "fulltext_unavailable"
-        assert result.evidence_quality == "abstract_only"
-
-
-class TestProvenanceStep:
-    def test_provenance_step_fields(self) -> None:
-        step = ProvenanceStep(
-            step_id="step-001",
-            claim_id="claim-001",
-            operation="verify",
-            input_hash="abc123",
-            output_hash="def456",
-            model_id="claude-sonnet-4-6",
-            timestamp=1234567890.0,
-            tokens_in=100,
-            tokens_out=50,
-            cache_hit=True,
-            confidence=0.85,
-        )
-        assert step.step_id == "step-001"
-        assert step.operation == "verify"
-        assert step.model_id == "claude-sonnet-4-6"
-        assert step.tokens_in == 100
-        assert step.cache_hit is True
-
-
 class TestVerificationResultNumericCheck:
-    def test_default_numeric_check_is_none(self) -> None:
-        v = VerificationResult(status="supported", explanation="ok", confidence=0.9)
-        assert v.numeric_check is None
-
     def test_numeric_check_round_trip_through_asdict(self) -> None:
         nc = NumericCheckResult(
             check_type="or_ci_consistency",

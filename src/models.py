@@ -21,6 +21,10 @@ OperationType = Literal[
     "aggregate",
     "numeric_extract",
     "numeric_check",
+    "copilot_rationale",
+    "copilot_primary_source",
+    "copilot_primary_lookup",
+    "copilot_fix",
 ]
 VerifiabilityStatus = Literal["verifiable", "no_citations_found", "low_citation_density"]
 SectionLabel = Literal["introduction", "methods", "results", "discussion", "other"]

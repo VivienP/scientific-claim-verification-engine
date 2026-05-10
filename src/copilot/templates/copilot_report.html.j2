@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Copilot Report — {{ run_id }}</title>
+<style>
+  /* --- Reset & base --- */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.5; color: #1a1a2e; background: #f8f9fa; }
+  a { color: #0066cc; }
+  code { font-family: "SFMono-Regular", Consolas, monospace; font-size: 12px; background: #f0f0f0; padding: 1px 4px; border-radius: 3px; }
+
+  /* --- Layout --- */
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+  header { background: #1a1a2e; color: #fff; padding: 20px 0; }
+  header .container { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; }
+  .header-title h1 { font-size: 20px; font-weight: 600; }
+  .header-title p { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+
+  /* --- Cost bar --- */
+  .cost-summary { text-align: right; font-size: 12px; opacity: 0.85; }
+  .cost-summary .cost-main { font-size: 18px; font-weight: 700; opacity: 1; }
+
+  /* --- Summary strip --- */
+  .summary-strip { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 12px 0; }
+  .summary-strip .container { display: flex; gap: 24px; flex-wrap: wrap; align-items: center; }
+  .stat { display: flex; flex-direction: column; align-items: center; }
+  .stat .val { font-size: 22px; font-weight: 700; }
+  .stat .lbl { font-size: 11px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .stat-sep { width: 1px; background: #e0e0e0; height: 36px; }
+  .verdict-bar { flex: 1; min-width: 160px; }
+  .verdict-bar-label { font-size: 11px; color: #666; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .verdict-bar-track { display: flex; height: 12px; border-radius: 6px; overflow: hidden; }
+  .vb-supported { background: #22c55e; }
+  .vb-partial { background: #f59e0b; }
+  .vb-unsupported { background: #ef4444; }
+  .vb-not-addressed { background: #94a3b8; }
+
+  /* --- Claim cards --- */
+  .claims { margin-top: 24px; display: flex; flex-direction: column; gap: 16px; }
+  .claim-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; }
+  .claim-card-header { display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-bottom: 1px solid #f0f0f0; }
+  .claim-number { font-size: 11px; font-weight: 700; color: #888; min-width: 28px; padding-top: 2px; }
+  .claim-text { font-size: 14px; flex: 1; }
+  .verdict-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; }
+  .badge-supported { background: #dcfce7; color: #166534; }
+  .badge-partial { background: #fef3c7; color: #92400e; }
+  .badge-unsupported { background: #fee2e2; color: #991b1b; }
+  .badge-not-addressed { background: #f1f5f9; color: #475569; }
+  .badge-error { background: #f3e8ff; color: #6b21a8; }
+
+  /* --- Card body --- */
+  .claim-card-body { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+  .field-row { display: flex; gap: 8px; align-items: baseline; font-size: 13px; }
+  .field-label { font-size: 11px; font-weight: 600; color: #888; text-transform: uppercase; letter-spacing: 0.4px; min-width: 100px; flex-shrink: 0; }
+  .field-value { color: #1a1a2e; }
+  .rationale { font-style: italic; color: #444; }
+
+  /* --- Source row --- */
+  .source-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .retrieval-badge { font-size: 10px; padding: 1px 7px; border-radius: 10px; }
+  .rb-fulltext { background: #dbeafe; color: #1e40af; }
+  .rb-abstract { background: #e0e7ff; color: #3730a3; }
+  .rb-title-only { background: #fef3c7; color: #92400e; }
+  .rb-citing { background: #f0fdf4; color: #15803d; }
+  .rb-unknown { background: #f1f5f9; color: #475569; }
+
+  /* --- Pharma fields --- */
+  .pharma-fields { display: flex; gap: 16px; flex-wrap: wrap; }
+  .pharma-field { display: flex; flex-direction: column; }
+  .pharma-field .pf-label { font-size: 10px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.4px; }
+  .pharma-field .pf-value { font-size: 13px; color: #1a1a2e; }
+  .risk-high { color: #dc2626; font-weight: 600; }
+  .risk-medium { color: #d97706; font-weight: 600; }
+  .risk-low { color: #16a34a; }
+  .source-type-secondary { color: #dc2626; font-weight: 600; }
+  .source-type-primary { color: #16a34a; }
+
+  /* --- Fix block --- */
+  .fix-block { border: 1px solid #fbbf24; border-radius: 6px; background: #fffbeb; padding: 10px 14px; }
+  .fix-header { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+  .fix-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #92400e; }
+  .fix-action { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #fef3c7; color: #92400e; font-weight: 600; }
+  .fix-confidence { font-size: 11px; color: #888; margin-left: auto; }
+  .fix-risk-high { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #fee2e2; color: #991b1b; font-weight: 600; }
+  .fix-risk-medium { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #fef3c7; color: #92400e; font-weight: 600; }
+  .fix-risk-low { font-size: 11px; padding: 1px 8px; border-radius: 10px; background: #dcfce7; color: #166534; font-weight: 600; }
+  .fix-body { display: flex; flex-direction: column; gap: 5px; font-size: 13px; }
+  .fix-doi { font-family: monospace; font-size: 12px; }
+  .fix-reword { font-style: italic; }
+  .fix-buttons { display: flex; gap: 8px; margin-top: 8px; }
+  .fix-btn { padding: 4px 14px; border-radius: 4px; border: none; cursor: pointer; font-size: 12px; font-weight: 600; }
+  .fix-btn-accept { background: #22c55e; color: #fff; }
+  .fix-btn-reject { background: #e5e7eb; color: #374151; }
+  .fix-btn-accept:hover { background: #16a34a; }
+  .fix-btn-reject:hover { background: #d1d5db; }
+
+  /* --- Provenance hash --- */
+  details.provenance { margin-top: 4px; }
+  details.provenance summary { font-size: 11px; color: #999; cursor: pointer; user-select: none; }
+  .prov-hash { font-family: monospace; font-size: 11px; color: #999; word-break: break-all; }
+
+  /* --- Footer --- */
+  footer { margin-top: 32px; padding: 16px 0; border-top: 1px solid #e0e0e0; font-size: 11px; color: #999; }
+  footer .container { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+
+  /* --- Export session button --- */
+  .export-bar { background: #1a1a2e; padding: 12px 0; position: sticky; bottom: 0; z-index: 100; }
+  .export-bar .container { display: flex; justify-content: space-between; align-items: center; }
+  .export-bar p { color: #aaa; font-size: 12px; }
+  .export-btn { background: #22c55e; color: #fff; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; }
+  .export-btn:hover { background: #16a34a; }
+  #session-status { color: #22c55e; font-size: 12px; }
+
+  /* --- Print --- */
+  @media print {
+    .export-bar { display: none; }
+    .fix-buttons { display: none; }
+    .claim-card { break-inside: avoid; }
+    header { background: #fff; color: #000; border-bottom: 2px solid #000; }
+    .header-title h1 { color: #000; }
+    .header-title p { color: #444; }
+    .cost-summary { color: #444; }
+    body { background: #fff; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="container">
+    <div class="header-title">
+      <h1>Scientific Claim Copilot Report</h1>
+      <p>Run ID: {{ run_id }} &nbsp;·&nbsp; {{ generated_at }} &nbsp;·&nbsp; Mode: {{ mode }}</p>
+    </div>
+    <div class="cost-summary">
+      <div class="cost-main">${{ "%.3f"|format(total_cost_usd) }}</div>
+      <div>{{ n_claims }} claims &nbsp;·&nbsp; {{ runtime_seconds }}s</div>
+      <div>${{ "%.4f"|format(cost_per_claim) }}/claim</div>
+    </div>
+  </div>
+</header>
+
+<div class="summary-strip">
+  <div class="container">
+    <div class="stat">
+      <span class="val">{{ n_claims }}</span>
+      <span class="lbl">Claims</span>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat">
+      <span class="val" style="color:#22c55e;">{{ n_supported }}</span>
+      <span class="lbl">Supported</span>
+    </div>
+    <div class="stat">
+      <span class="val" style="color:#f59e0b;">{{ n_partial }}</span>
+      <span class="lbl">Partial</span>
+    </div>
+    <div class="stat">
+      <span class="val" style="color:#ef4444;">{{ n_unsupported }}</span>
+      <span class="lbl">Unsupported</span>
+    </div>
+    <div class="stat">
+      <span class="val" style="color:#94a3b8;">{{ n_not_addressed }}</span>
+      <span class="lbl">Not addressed</span>
+    </div>
+    <div class="stat-sep"></div>
+    <div class="stat">
+      <span class="val" style="color:#f59e0b;">{{ n_with_fix }}</span>
+      <span class="lbl">Fixes suggested</span>
+    </div>
+    {% if pct_bar_total > 0 %}
+    <div class="verdict-bar">
+      <div class="verdict-bar-label">Verdict distribution</div>
+      <div class="verdict-bar-track">
+        {% if pct_supported > 0 %}<div class="vb-supported" style="width:{{ pct_supported }}%"></div>{% endif %}
+        {% if pct_partial > 0 %}<div class="vb-partial" style="width:{{ pct_partial }}%"></div>{% endif %}
+        {% if pct_unsupported > 0 %}<div class="vb-unsupported" style="width:{{ pct_unsupported }}%"></div>{% endif %}
+        {% if pct_not_addressed > 0 %}<div class="vb-not-addressed" style="width:{{ pct_not_addressed }}%"></div>{% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container">
+  <div class="claims">
+    {% for item in claims %}
+    <div class="claim-card" id="claim-{{ item.claim_id }}">
+      <div class="claim-card-header">
+        <span class="claim-number">#{{ loop.index }}</span>
+        <span class="claim-text">{{ item.claim_text }}</span>
+        <span class="verdict-badge badge-{{ item.verdict_css }}">{{ item.verdict_label }}</span>
+      </div>
+      <div class="claim-card-body">
+
+        {# Rationale #}
+        <div class="field-row">
+          <span class="field-label">Rationale</span>
+          <span class="field-value rationale">{{ item.rationale }}</span>
+        </div>
+
+        {# Source #}
+        <div class="field-row">
+          <span class="field-label">Source</span>
+          <div class="source-row">
+            {% if item.source_doi %}
+              <a href="https://doi.org/{{ item.source_doi }}" target="_blank">{{ item.source_title or item.source_doi }}</a>
+              <code>{{ item.source_doi }}</code>
+            {% else %}
+              <span class="field-value" style="color:#888;">No source resolved</span>
+            {% endif %}
+            <span class="retrieval-badge rb-{{ item.retrieval_css }}">{{ item.retrieval_label }}</span>
+          </div>
+        </div>
+
+        {# Pharma fields — only rendered when present #}
+        {% if item.is_primary_source is not none or item.study_design or item.risk_of_bias %}
+        <div class="field-row">
+          <span class="field-label">Evidence</span>
+          <div class="pharma-fields">
+            {% if item.is_primary_source is not none %}
+            <div class="pharma-field">
+              <span class="pf-label">Source type</span>
+              <span class="pf-value {% if not item.is_primary_source %}source-type-secondary{% else %}source-type-primary{% endif %}">
+                {% if item.is_primary_source %}Primary study{% else %}Secondary source{% endif %}
+              </span>
+            </div>
+            {% endif %}
+            {% if item.study_design and item.study_design != "unknown" %}
+            <div class="pharma-field">
+              <span class="pf-label">Study design</span>
+              <span class="pf-value">{{ item.study_design | replace("_", " ") | title }}</span>
+            </div>
+            {% endif %}
+            {% if item.risk_of_bias and item.risk_of_bias != "unknown" %}
+            <div class="pharma-field">
+              <span class="pf-label">Risk of bias</span>
+              <span class="pf-value risk-{{ item.risk_of_bias }}">{{ item.risk_of_bias | title }}</span>
+            </div>
+            {% endif %}
+            {% if item.primary_source_doi %}
+            <div class="pharma-field">
+              <span class="pf-label">Suggested primary</span>
+              <span class="pf-value"><a href="https://doi.org/{{ item.primary_source_doi }}" target="_blank">{{ item.primary_source_doi }}</a></span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
+        {# Recommended fix #}
+        {% if item.fix %}
+        <div class="fix-block" data-claim-id="{{ item.claim_id }}">
+          <div class="fix-header">
+            <span class="fix-label">Recommended Fix</span>
+            <span class="fix-action">{{ item.fix.action | replace("_", " ") }}</span>
+            {% if item.fix.regulatory_risk_level %}
+            <span class="fix-risk-{{ item.fix.regulatory_risk_level }}">Risk: {{ item.fix.regulatory_risk_level | upper }}</span>
+            {% endif %}
+            <span class="fix-confidence">confidence {{ "%.0f"|format(item.fix.confidence * 100) }}%</span>
+          </div>
+          <div class="fix-body">
+            {% if item.fix.suggested_doi %}
+            <div>
+              <strong>Swap to:</strong>
+              <a class="fix-doi" href="https://doi.org/{{ item.fix.suggested_doi }}" target="_blank">
+                {{ item.fix.suggested_doi_title or item.fix.suggested_doi }}
+              </a>
+              <code>{{ item.fix.suggested_doi }}</code>
+            </div>
+            {% endif %}
+            {% if item.fix.reworded_claim %}
+            <div>
+              <strong>Reword to:</strong>
+              <span class="fix-reword">"{{ item.fix.reworded_claim }}"</span>
+            </div>
+            {% endif %}
+          </div>
+          <div class="fix-buttons">
+            <button class="fix-btn fix-btn-accept" onclick="recordDecision('{{ item.claim_id }}', 'accepted', '{{ item.fix.suggested_doi or "" }}')">Accept</button>
+            <button class="fix-btn fix-btn-reject" onclick="recordDecision('{{ item.claim_id }}', 'rejected', null)">Reject</button>
+          </div>
+        </div>
+        {% endif %}
+
+        {# Provenance hash — collapsible #}
+        <details class="provenance">
+          <summary>Provenance</summary>
+          {% for step in item.provenance_steps %}
+          <div class="prov-hash">{{ step.operation }}: {{ step.input_hash[:16] }}…→{{ step.output_hash[:16] }}…</div>
+          {% endfor %}
+        </details>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<footer>
+  <div class="container">
+    <span>Generated by Locus Lab Copilot · {{ generated_at }}</span>
+    <span>Run ID: {{ run_id }}</span>
+  </div>
+</footer>
+
+<div class="export-bar">
+  <div class="container">
+    <p>Review fixes above, then export your session for the audit trail.</p>
+    <div style="display:flex;gap:12px;align-items:center;">
+      <span id="session-status"></span>
+      <button class="export-btn" onclick="exportSession()">Export Review Session</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// Minimal HITL session manager — no server required.
+// Stores decisions in localStorage; exports as review_session.json.
+const SESSION_KEY = "copilot_session_{{ run_id }}";
+const RUN_ID = "{{ run_id }}";
+const TOTAL_FIXES = {{ n_with_fix }};
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "{}"); } catch { return {}; }
+}
+
+function saveSession(s) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+}
+
+function recordDecision(claimId, action, doi) {
+  const s = getSession();
+  s[claimId] = { claim_id: claimId, action_taken: action, accepted_doi: doi || null,
+                 reviewer_note: null, timestamp: Date.now() / 1000 };
+  saveSession(s);
+  updateStatus(s);
+  // Visual feedback: highlight the card
+  const card = document.getElementById("claim-" + claimId);
+  if (card) {
+    card.style.outline = action === "accepted" ? "2px solid #22c55e" : "2px solid #d1d5db";
+  }
+}
+
+function updateStatus(s) {
+  const n = Object.keys(s).length;
+  const accepted = Object.values(s).filter(d => d.action_taken === "accepted").length;
+  document.getElementById("session-status").textContent =
+    n + "/" + TOTAL_FIXES + " reviewed · " + accepted + " accepted";
+}
+
+function exportSession() {
+  const s = getSession();
+  const decisions = Object.values(s);
+  const payload = {
+    session_id: crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2),
+    run_id: RUN_ID,
+    decisions: decisions,
+    total_fixes_presented: TOTAL_FIXES,
+    total_fixes_accepted: decisions.filter(d => d.action_taken === "accepted").length,
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "review_session_" + RUN_ID + ".json";
+  a.click(); URL.revokeObjectURL(url);
+}
+
+// Restore status on page load
+updateStatus(getSession());
+</script>
+
+</body>
+</html>

@@ -32,3 +32,22 @@ The canary is a controlled four-claim input designed to exercise contradiction d
 - **numeric_checks_run**: claims whose extracted assertions formed an OR/CI or p-value/CI tuple
 - **numeric_inconsistencies_flagged**: subset of `numeric_checks_run` where the deterministic check failed
 - **cost**: total Anthropic API spend (claude-sonnet-4-6, prompt-cached system prompts)
+
+## Claim Transparency (CTran)
+
+Independent of verdict correctness, CTran measures whether each claim's `report.json` entry contains enough evidence for a human auditor to trace the verdict. A claim is *transparent* when `source_passages` is non-empty OR `evidence_quality` is in `{abstract_only, quoted_passage, title_only, passages_searched_no_quote}`.
+
+Measured across 135 claims on 5 benchmarks (4 from this directory + Valsci Brice 2025 from `benchmarks/real_papers/`):
+
+| benchmark | CTran |
+|---|---:|
+| `elicit_psilocybin` | 98.25% |
+| `edison_trem2` | 50.00% |
+| `sakana_ai_scientist` | 50.00% |
+| `valsci_brice_2025` (real_papers) | 47.37% |
+| `answerthis_lactate` | 28.00% |
+| **Aggregate** | **65.9%** (+17pp vs 48.9% pre-Phase-A.2) |
+
+Per-claim failure breakdown and dominant-mode analysis: [reports/phase_a2/ctran_failure_matrix.md](../../reports/phase_a2/ctran_failure_matrix.md).
+
+CTran is not measured here for the two Elicit Systematic Review benchmarks (GLP-1, PD-1) which post-date the Phase A.2 baseline measurement. Their report.json entries already benefit from the fallback (the verifier change shipped before they ran).

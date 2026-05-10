@@ -26,12 +26,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY pyproject.toml ./
 COPY src/ ./src/
 
-RUN pip install --upgrade pip \
+# Exact-pinned dependencies (no `>=` ranges) to make the image reproducible
+# and to block silent supply-chain upgrades within unbounded ranges. Versions
+# match the local development environment as of 2026-05-09. Upgrade by editing
+# this list explicitly; CI-driven SBOM diff reviews will catch unintended
+# changes. (Hash-pinning via `pip-compile --generate-hashes` is the next step
+# once the dependency cadence stabilises.)
+RUN pip install --upgrade "pip==24.2" \
  && pip install --prefix=/install \
-        "fastapi>=0.115" "uvicorn[standard]>=0.34" \
-        "anthropic>=0.40.0" "httpx>=0.27.0" "structlog>=24.1.0" \
-        "rank-bm25>=0.2.2" "pymupdf>=1.24.0" "tiktoken>=0.7.0" \
-        "jinja2>=3.1.0" "pydantic>=2.7" "pydantic-settings>=2.0"
+        "fastapi==0.135.1" "uvicorn[standard]==0.41.0" \
+        "anthropic==0.97.0" "httpx==0.28.1" "structlog==25.5.0" \
+        "rank-bm25==0.2.2" "pymupdf==1.27.2.3" "tiktoken==0.7.0" \
+        "jinja2==3.1.4" "pydantic==2.12.5" "pydantic-settings==2.13.1"
 
 # -----------------------------------------------------------------------------
 # Stage 2 — runtime image

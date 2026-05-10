@@ -8,12 +8,16 @@ from __future__ import annotations
 
 import time
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 
 from src.api.jobs import JobStore
 from src.api.models import VerifyRequest
+
+if TYPE_CHECKING:
+    from src.copilot.models import EnrichedVerification
+    from src.pipeline import ClaimVerification
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -43,11 +47,29 @@ def run_verification_job(
         from src.copilot.models import CopilotMode
         from src.copilot.report_html import build_copilot_report
         from src.pipeline import PipelineConfig, run_pipeline
+        from src.report import build_report
 
         # Step 1 — V1 pipeline.
         pipeline_config = PipelineConfig()
-        cvs, _pipeline_steps = run_pipeline(req.text, config=pipeline_config)
+        cvs, pipeline_steps = run_pipeline(req.text, config=pipeline_config)
         logger.info("api_pipeline_done", job_id=job_id, n_claims=len(cvs))
+
+        # Step 1b — write report.json + provenance.jsonl into run_dir.
+        # Required by .claude/rules/provenance-first.md ("Phase 0-3: append to
+        # reports/runs/{report_id}/provenance.jsonl"). build_report writes both
+        # files atomically and emits the aggregate provenance step.
+        claims = [cv.claim for cv in cvs]
+        sources = {cv.claim.claim_id: cv.source for cv in cvs}
+        results = {cv.claim.claim_id: cv.result for cv in cvs}
+        build_report(
+            report_id=run_dir.name,
+            input_text=req.text,
+            claims=claims,
+            sources=sources,
+            results=results,
+            provenance_steps=pipeline_steps,
+            output_dir=runs_root.parent,
+        )
 
         # Step 2 — optional Copilot enrichment.
         if req.mode == "copilot":
@@ -70,9 +92,9 @@ def run_verification_job(
             )
             logger.info("api_copilot_done", job_id=job_id, html=str(html_path))
 
-            result = _build_copilot_result_summary(enriched, run_dir)
+            result = _build_copilot_result_summary(enriched, run_dir.name)
         else:
-            result = _build_v1_result_summary(cvs, run_dir)
+            result = _build_v1_result_summary(cvs)
 
         store.update(
             job_id,
@@ -98,7 +120,7 @@ def run_verification_job(
         )
 
 
-def _estimate_cost(enriched: list[Any]) -> float:
+def _estimate_cost(enriched: list[EnrichedVerification]) -> float:
     """Sum copilot_steps token usage, convert to USD using Sonnet-4 pricing."""
     total_in = 0
     total_out = 0
@@ -111,21 +133,32 @@ def _estimate_cost(enriched: list[Any]) -> float:
     return round((total_in * 3.0 + total_out * 15.0) / 1_000_000, 4)
 
 
-def _build_v1_result_summary(cvs: list[Any], run_dir: Path) -> dict[str, Any]:
-    """Compact V1 result envelope returned by GET /jobs/{id}."""
+def _build_v1_result_summary(cvs: list[ClaimVerification]) -> dict[str, Any]:
+    """Compact V1 result envelope returned by GET /jobs/{id}.
+
+    The internal run_dir filesystem path is NOT exposed: it would leak the
+    container layout to authenticated callers. Use ``run_id`` (returned at
+    the envelope top-level) to construct any caller-facing URLs.
+    """
     counts: dict[str, int] = {}
     for cv in cvs:
         counts[cv.result.status] = counts.get(cv.result.status, 0) + 1
     return {
         "n_claims": len(cvs),
         "verdict_counts": counts,
-        "run_dir": str(run_dir),
         "report_html_url": None,  # V1 mode does not produce the copilot HTML.
     }
 
 
-def _build_copilot_result_summary(enriched: list[Any], run_dir: Path) -> dict[str, Any]:
-    """Compact Copilot result envelope. The full enriched JSON is on disk."""
+def _build_copilot_result_summary(
+    enriched: list[EnrichedVerification], run_id: str
+) -> dict[str, Any]:
+    """Compact Copilot result envelope. The full enriched JSON is on disk.
+
+    The internal run_dir filesystem path is NOT exposed: it would leak the
+    container layout to authenticated callers. The HTML URL is constructed
+    from ``run_id`` only.
+    """
     counts: dict[str, int] = {}
     n_with_fix = 0
     for ev in enriched:
@@ -136,8 +169,7 @@ def _build_copilot_result_summary(enriched: list[Any], run_dir: Path) -> dict[st
         "n_claims": len(enriched),
         "verdict_counts": counts,
         "n_with_fix": n_with_fix,
-        "run_dir": str(run_dir),
-        "report_html_url": f"/runs/{run_dir.name}/copilot_report.html",
+        "report_html_url": f"/runs/{run_id}/copilot_report.html",
     }
 
 

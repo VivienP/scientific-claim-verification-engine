@@ -162,12 +162,23 @@ def create_app(
         dependencies=[Depends(require_api_key)],
     )
     async def get_report(run_id: str) -> FileResponse:
-        # Resolve and confine to runs_root to defend against path traversal.
+        """Serve the Copilot HTML report for a completed run.
+
+        Path is resolved + confined to ``runs_root`` to defend against
+        traversal payloads in the ``run_id`` URL segment. Requires a
+        valid X-API-Key header. Returns 400 on traversal, 404 when the
+        report has not been generated for this run.
+        """
         runs_root: Path = app.state.runs_root
         candidate = (runs_root / run_id / "copilot_report.html").resolve()
         try:
             candidate.relative_to(runs_root.resolve())
         except ValueError as exc:
+            logger.warning(
+                "api_path_traversal_attempt",
+                run_id=run_id,
+                runs_root=str(runs_root),
+            )
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid run_id (path traversal detected).",

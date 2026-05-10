@@ -92,6 +92,31 @@ run_dir = build_report(
 
 Data models (`Claim`, `ResolvedSource`, `ResolvedSourceSet`, `VerificationResult`, `ProvenanceStep`, `PaperChunk`) are frozen dataclasses in [`src/models.py`](src/models.py). Low-level step-by-step API: [`src/pipeline.py`](src/pipeline.py).
 
+## HTTP API (on-prem deployment)
+
+A FastAPI wrapper around `run_pipeline` and the Copilot enrichment layer is available for biotech ops teams that need to deploy behind a corporate firewall. It exposes async jobs (POST /verify → 202 + job_id; poll GET /jobs/{id}) so requests don't time out at any reverse proxy.
+
+```bash
+# Run locally
+export COPILOT_API_KEY="$(openssl rand -hex 32)"
+export ANTHROPIC_API_KEY="sk-ant-..."
+uvicorn src.api.app:app --host 127.0.0.1 --port 8000
+
+# Or via Docker (read-only rootfs, cap_drop ALL, bound to 127.0.0.1)
+docker compose up
+```
+
+Endpoints (all require `X-API-Key: $COPILOT_API_KEY` except `/health`):
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/health` | Load-balancer probe (no auth) |
+| `POST` | `/verify` | Submit a job; returns `202` + `{job_id, poll_url}` |
+| `GET` | `/jobs/{job_id}` | Status + result envelope |
+| `GET` | `/runs/{run_id}/copilot_report.html` | Self-contained Copilot HTML (path-confined) |
+
+Programmatic factory: `from src.api import create_app; app = create_app()`. Client example: [`examples/api_run.py`](examples/api_run.py). Container hardening: non-root uid 10001, `read_only: true`, `cap_drop: ALL`, exact-pinned Python deps. Single-tenant Phase C; multi-tenant Postgres-backed JobStore is deferred to Phase D.
+
 ## Limitations
 
 - Requires explicit author/year or numbered bracket citation anchors.

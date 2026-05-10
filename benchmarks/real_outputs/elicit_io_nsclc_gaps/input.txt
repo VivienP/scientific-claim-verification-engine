@@ -3,8 +3,8 @@
 # Run config:
 #   - Mode: Systematic review
 #   - Source: Clinical trials
-#   - Format: General Review
-#   - Query: "In adults with type 2 diabetes, what is the effect of GLP-1 receptor agonists compared to placebo on major adverse cardiovascular events (MACE)?"
+#   - Format: Research Gap Analysis
+#   - Query: "What is the effectiveness of PD-1 inhibitor monotherapy compared to combination therapy as first-line treatment for PD-L1-high metastatic non-small cell lung cancer in terms of overall survival and progression-free survival?"
 #
 # Workflow once the PDF is exported:
 #   1. Save the PDF in this directory.

@@ -120,45 +120,25 @@ class TestFindPrimarySourceDoi:
 
 
 class TestFindPrimarySourceDoiProvenance:
-    def test_step_operation(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(json=_SS_RESPONSE_EMPTY)
+    def test_step_shape_and_determinism(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        """One consolidated check on the deterministic-step contract.
 
-        _, _, step = find_primary_source_doi("10.1234/x", db_path=tmp_path / "c.db")
-
-        assert isinstance(step, ProvenanceStep)
-        assert step.operation == "copilot_primary_lookup"
-
-    def test_step_model_id_is_none(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(json=_SS_RESPONSE_EMPTY)
-
-        _, _, step = find_primary_source_doi("10.1234/x", db_path=tmp_path / "c.db")
-
-        assert step.model_id is None
-
-    def test_step_hashes_are_hex_strings(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(json=_SS_RESPONSE_EMPTY)
-
-        _, _, step = find_primary_source_doi("10.1234/x", db_path=tmp_path / "c.db")
-
-        assert len(step.input_hash) == 64
-        assert len(step.output_hash) == 64
-
-    def test_step_tokens_are_none(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
-        httpx_mock.add_response(json=_SS_RESPONSE_EMPTY)
-
-        _, _, step = find_primary_source_doi("10.1234/x", db_path=tmp_path / "c.db")
-
-        assert step.tokens_in is None
-        assert step.tokens_out is None
-
-    def test_same_input_same_output_hash(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        find_primary_source_doi makes HTTP calls but no LLM call: the step
+        must carry the right operation, no model/token data, valid SHA-256
+        hashes, and produce identical hashes for identical inputs.
+        """
         httpx_mock.add_response(json=_SS_RESPONSE_EMPTY)
         httpx_mock.add_response(json=_SS_RESPONSE_EMPTY)
 
         _, _, step1 = find_primary_source_doi("10.1234/x", db_path=tmp_path / "c1.db")
         _, _, step2 = find_primary_source_doi("10.1234/x", db_path=tmp_path / "c2.db")
 
-        assert step1.output_hash == step2.output_hash
+        assert isinstance(step1, ProvenanceStep)
+        assert step1.operation == "copilot_primary_lookup"
+        assert step1.model_id is None
+        assert step1.tokens_in is None and step1.tokens_out is None
+        assert len(step1.input_hash) == 64 and len(step1.output_hash) == 64
+        assert step1.output_hash == step2.output_hash  # determinism on identical input
 
 
 class TestYearScoringPreference:

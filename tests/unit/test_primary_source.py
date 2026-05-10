@@ -276,43 +276,25 @@ class TestClassifySourceStage1:
 
 
 class TestClassifySourceProvenance:
-    def test_step_operation(self) -> None:
-        cv = _make_cv(abstract="A systematic review of 10 RCTs.")
-        _, step = classify_source(cv)
-        assert isinstance(step, ProvenanceStep)
-        assert step.operation == "copilot_primary_source"
+    def test_step_shape_and_determinism(self) -> None:
+        """One consolidated check on the deterministic-step contract.
 
-    def test_step_model_id_is_none(self) -> None:
-        cv = _make_cv(abstract="A meta-analysis of 20 trials.")
-        _, step = classify_source(cv)
-        assert step.model_id is None
-
-    def test_step_tokens_are_none(self) -> None:
-        cv = _make_cv(abstract="An RCT.")
-        _, step = classify_source(cv)
-        assert step.tokens_in is None
-        assert step.tokens_out is None
-
-    def test_step_claim_id_matches(self) -> None:
-        cv = _make_cv(abstract="A cohort study.")
-        _, step = classify_source(cv)
-        assert step.claim_id == cv.claim.claim_id
-
-    def test_step_hashes_are_hex_strings(self) -> None:
-        cv = _make_cv(abstract="In vitro cell culture assay.")
-        _, step = classify_source(cv)
-        assert len(step.input_hash) == 64
-        assert len(step.output_hash) == 64
-
-    def test_same_input_same_output_hash(self) -> None:
-        cv = _make_cv(abstract="A meta-analysis.")
-        _, step1 = classify_source(cv)
-        _, step2 = classify_source(cv)
-        assert step1.output_hash == step2.output_hash
-
-    def test_different_abstract_different_hash(self) -> None:
-        cv1 = _make_cv(abstract="An RCT.")
-        cv2 = _make_cv(abstract="A meta-analysis.")
-        _, step1 = classify_source(cv1)
+        Classify_source is pure-Python (no LLM); the step must carry the
+        right operation, the claim_id of the input, no model/token data,
+        valid SHA-256 hashes, and produce identical hashes for identical
+        inputs but different hashes for different abstracts.
+        """
+        cv1 = _make_cv(abstract="A systematic review of 10 RCTs.")
+        cv2 = _make_cv(abstract="A randomized controlled trial of 200 patients.")
+        _, step1a = classify_source(cv1)
+        _, step1b = classify_source(cv1)
         _, step2 = classify_source(cv2)
-        assert step1.output_hash != step2.output_hash
+
+        assert isinstance(step1a, ProvenanceStep)
+        assert step1a.operation == "copilot_primary_source"
+        assert step1a.model_id is None
+        assert step1a.tokens_in is None and step1a.tokens_out is None
+        assert step1a.claim_id == cv1.claim.claim_id
+        assert len(step1a.input_hash) == 64 and len(step1a.output_hash) == 64
+        assert step1a.output_hash == step1b.output_hash  # determinism
+        assert step1a.output_hash != step2.output_hash  # input-sensitivity

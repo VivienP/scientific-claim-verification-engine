@@ -12,6 +12,7 @@ Output: EnrichedVerification wrapping the unchanged ClaimVerification.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -50,6 +51,13 @@ class CopilotConfig:
     crossref_verify_threshold: float = 0.7
     db_path: Path | None = None
     http_timeout: float = 10.0
+    # Concurrency cap for ``enrich_all_async``. Anthropic accepts dozens of
+    # concurrent requests, but Semantic Scholar is rate-limited to ~1 req/s
+    # without an API key. 8 is a safe default that keeps demo runs fast (a
+    # 20-claim document drops from ~4 min serial to ~1 min) while staying
+    # within the SS throttle for typical fix-and-lookup mixes. Tunable per
+    # deployment; sync ``enrich_all`` ignores this field.
+    concurrency: int = 8
 
 
 # ---------------------------------------------------------------------------
@@ -154,7 +162,13 @@ class CopilotEnricher:
         self,
         cvs: list[ClaimVerification],
     ) -> list[EnrichedVerification]:
-        """Enrich a list of ClaimVerification objects, one at a time."""
+        """Enrich a list of ClaimVerification objects, one at a time.
+
+        Sequential — kept for back-compatibility and for callers that need
+        deterministic single-threaded execution (eg. CI test suites that
+        mock the LLM at module scope). For demo throughput, prefer
+        :meth:`enrich_all_async` which parallelises with a configurable cap.
+        """
         results: list[EnrichedVerification] = []
         for cv in cvs:
             try:
@@ -163,6 +177,49 @@ class CopilotEnricher:
             except Exception:
                 logger.exception("enricher_failed", claim_id=cv.claim.claim_id)
         return results
+
+    async def enrich_all_async(
+        self,
+        cvs: list[ClaimVerification],
+    ) -> list[EnrichedVerification]:
+        """Async batch — enrich claims in parallel under a concurrency cap.
+
+        Each claim's ``enrich_one`` runs on a worker thread (the underlying
+        LLM and HTTP clients are blocking) bounded by ``CopilotConfig.concurrency``.
+        Independence between claims makes this trivially parallel; ordering is
+        preserved (results[i] corresponds to cvs[i] when no exception was
+        raised — failed claims are dropped, mirroring sync ``enrich_all``).
+
+        Why a cap matters:
+        - Anthropic tolerates dozens of concurrent requests, but bursting all
+          claims at once will hit Semantic Scholar's ~1 req/s unkeyed throttle
+          and produce 429s mid-run.
+        - Bounded concurrency also gives back-pressure when the worker thread
+          pool is the wrong place to absorb a 100-claim document.
+
+        Returns:
+            list of EnrichedVerification, in the same order as ``cvs``,
+            with failed claims dropped. May be shorter than the input.
+        """
+        if not cvs:
+            return []
+
+        config = self._config
+        cap = max(1, config.concurrency)
+        sem = asyncio.Semaphore(cap)
+
+        async def _run_one(cv: ClaimVerification) -> EnrichedVerification | None:
+            async with sem:
+                try:
+                    return await asyncio.to_thread(self.enrich_one, cv)
+                except Exception:
+                    logger.exception("enricher_failed", claim_id=cv.claim.claim_id)
+                    return None
+
+        # gather preserves order. Failed claims surface as None and are
+        # filtered out — same lossy semantics as sync ``enrich_all``.
+        outcomes = await asyncio.gather(*(_run_one(cv) for cv in cvs))
+        return [ev for ev in outcomes if ev is not None]
 
 
 # ---------------------------------------------------------------------------

@@ -42,10 +42,30 @@ print(f"Report: {run_dir}")
 
 ## What You Get
 
-- **`report.json`** — one record per claim: verdict, cited source, retrieval status, evidence quality, source quotes, numeric check result.
-- **`provenance.jsonl`** — append-only audit trail: every extraction, resolution, verification, and aggregation step, with token and cache usage.
+Each run writes `report.json` (one entry per claim) and `provenance.jsonl` (append-only audit log; sum `tokens_in + tokens_out` across lines for exact $ cost) under `reports/runs/{run_id}/`.
 
-Verdicts: `supported` · `partially_supported` · `unsupported` · `not_addressed`. Abstention is explicit — the pipeline never forces weak evidence into `unsupported`. Evidence quality is one of `quoted_passage` · `passages_searched_no_quote` · `abstract_only` · `title_only` · `citing_paper_context` · `no_evidence`. Full per-claim schema (V1 + Copilot enrichment): [docs/output-schema.md](docs/output-schema.md).
+```yaml
+# report.json — one entry per claim in claims[]
+claim_id: uuid
+claim_text: string
+source:
+  found: bool
+  doi: string | null
+  similarity_score: 0.0–1.0     # title/author cosine, used as resolution gate
+  oa_url: url | null
+  retraction_status: bool
+verification:
+  status: supported | partially_supported | unsupported | not_addressed
+  evidence_quality: quoted_passage | passages_searched_no_quote
+                  | abstract_only | title_only
+                  | citing_paper_context | no_evidence
+  verification_depth: fulltext | abstract | title_only | citing_paper_context
+  source_passages: [string]      # always populated when evidence_quality != no_evidence
+  numeric_check: object | null   # OR/CI or p-value/CI consistency, deterministic
+  confidence: 0.0–1.0            # LLM self-report — UNRELIABLE; trust evidence_quality
+```
+
+Full schema (nested fields, Copilot enrichment, worked example): [docs/output-schema.md](docs/output-schema.md).
 
 ## Track Record
 

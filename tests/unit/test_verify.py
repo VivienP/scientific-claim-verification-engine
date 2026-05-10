@@ -802,6 +802,130 @@ class TestVerifyClaimFulltext:
         assert system_blocks[0]["cache_control"] == {"type": "ephemeral"}
 
 
+# ---------------------------------------------------------------------------
+# Phase A.2 — verifier audit-trail fallback when LLM returns no quoted passages
+# (the dominant CTran-failure mode at baseline; see
+# reports/phase_a2/ctran_failure_matrix.md)
+# ---------------------------------------------------------------------------
+
+
+class TestFulltextVerifierAuditFallback:
+    """When the LLM returns ``source_passages=[]`` we must surface the BM25
+    chunks instead, so the audit trail shows what the verifier examined.
+    """
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_empty_llm_passages_falls_back_to_bm25_passages(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        # LLM returns a verdict but quotes nothing.
+        mock_response.content = [_text_block(_fulltext_response(status="unsupported", passages=[]))]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 500
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_fulltext
+
+        bm25 = _make_passages(3)
+        result, _ = verify_claim_fulltext(_make_claim(), _make_source(), bm25)
+        # Audit trail: source_passages now mirrors the BM25 input.
+        assert len(result.source_passages) == 3
+        for chunk, projected in zip(bm25, result.source_passages, strict=True):
+            assert chunk.text in projected or projected.startswith(chunk.text[:80])
+        # Evidence quality reflects "passages were searched, none quoted".
+        assert result.evidence_quality == "passages_searched_no_quote"
+        # Status is preserved from the LLM verdict.
+        assert result.status == "unsupported"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_non_empty_llm_passages_take_precedence_over_bm25(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(_fulltext_response(passages=["LLM-chosen quoted sentence."]))
+        ]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 80
+        mock_response.usage.cache_read_input_tokens = 500
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_fulltext
+
+        result, _ = verify_claim_fulltext(_make_claim(), _make_source(), _make_passages(3))
+        # The LLM's quote is surfaced; BM25 chunks are NOT mixed in.
+        assert result.source_passages == ["LLM-chosen quoted sentence."]
+        assert result.evidence_quality == "quoted_passage"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_parse_error_also_surfaces_bm25_passages(self, mock_anthropic_cls: MagicMock) -> None:
+        # Pre-fix: parse error -> source_passages=[] (audit trail erased).
+        # Post-fix: parse error -> BM25 passages are surfaced.
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block("garbage not-json")]
+        mock_response.usage.input_tokens = 100
+        mock_response.usage.output_tokens = 10
+        mock_response.usage.cache_read_input_tokens = 0
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim_fulltext
+
+        result, _ = verify_claim_fulltext(_make_claim(), _make_source(), _make_passages(2))
+        assert result.status == "not_addressed"
+        assert len(result.source_passages) == 2
+        assert result.evidence_quality == "passages_searched_no_quote"
+
+    def test_truncate_passage_is_a_no_op_under_limit(self) -> None:
+        from src.verify import _truncate_passage
+
+        short = "A short passage of ~30 characters."
+        assert _truncate_passage(short) == short
+
+    def test_truncate_passage_breaks_on_word_boundary(self) -> None:
+        from src.verify import _truncate_passage
+
+        # Build a passage that is comfortably over the default limit and
+        # contains spaces so the truncator can pick a word boundary.
+        long_text = ("word " * 300).strip()
+        out = _truncate_passage(long_text, limit=200)
+        assert len(out) <= 200 + 1  # +1 for ellipsis
+        assert out.endswith("…")
+        # Last visible char before ellipsis is a non-space (we trimmed).
+        assert not out[:-1].endswith(" ")
+
+    def test_audit_fallback_makes_claim_transparent(self) -> None:
+        """Cross-module integration: a fulltext run that lands in the
+        passages_searched_no_quote bucket must register as transparent in
+        the AAR scorecard (the whole point of the fix)."""
+        from src.aar import _claim_is_transparent
+
+        verification = {
+            "source_passages": ["BM25 passage one", "BM25 passage two"],
+            "evidence_quality": "passages_searched_no_quote",
+        }
+        assert _claim_is_transparent(verification) is True
+
+        # And the empty-passage variant: even if downstream code drops
+        # source_passages somewhere, the new evidence_quality value alone
+        # is enough to count as transparent.
+        verification_no_passages = {
+            "source_passages": [],
+            "evidence_quality": "passages_searched_no_quote",
+        }
+        assert _claim_is_transparent(verification_no_passages) is True
+
+
 class TestVerifyClaimFulltextWithNumeric:
     @patch("src.numeric.engine.run_numeric_check")
     @patch("src.verify.verify_claim_fulltext")

@@ -12,7 +12,7 @@
 
 Verification depth on a single Elicit Report-mode systematic-review-style answer. Elicit positions itself as evidence-based with structured citations. We extract the answer text, parse its numbered References section into DOIs, and verify each extracted claim against the cited source's abstract or full text via the standard pipeline (extract → resolve → fetch_fulltext → BM25 passage select → verify).
 
-Only the Report-mode export from query 1 is committed as `input.txt` (32,687 chars). Query 2's PDF is gitignored alongside the raw export PDFs (license note prohibits redistribution of the raw tool output).
+Only the Report-mode export from query 1 is committed as `input.txt` (32,687 chars). Both raw Elicit PDF exports (query 1 and query 2) are now committed alongside `input.txt` for end-to-end reproducibility — anyone cloning the repo can re-run pymupdf on the same PDFs and regenerate `input.txt` byte-identically.
 
 ## Source files
 
@@ -20,7 +20,7 @@ Only the Report-mode export from query 1 is committed as `input.txt` (32,687 cha
 - `meta.json` — provenance metadata (queries, fetch date, source URL, license note).
 - `report.json` — pipeline output for the current run.
 - `provenance.jsonl` — append-only step log with hashes and tokens per stage.
-- `Elicit - *.pdf` and `*Sources.txt` — raw Elicit exports, **not committed** (see `.gitignore`).
+- `Elicit - *.pdf` — raw Elicit exports, **committed** for end-to-end reproducibility. `*Sources.txt` (Elicit's auxiliary citation list) remains gitignored as it is not used by the verification pipeline.
 
 ## Run command
 

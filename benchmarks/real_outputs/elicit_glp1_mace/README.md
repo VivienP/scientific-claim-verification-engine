@@ -15,7 +15,7 @@ End-to-end verification of an Elicit Premium Systematic Review output (~36KB rep
 - `meta.json` — provenance metadata (query, tier, format, source filter, fetch date).
 - `report.json` — pipeline output for the current run (46 claims, $1.46 cost).
 - `provenance.jsonl` — append-only step log with hashes, tokens, and cache hits per stage.
-- `Elicit - *.pdf` — raw Elicit export, **not committed** (see `.gitignore`).
+- `Elicit - *.pdf` — raw Elicit export, **committed** for end-to-end reproducibility (re-run pymupdf on this PDF to regenerate `input.txt` byte-identically).
 - `run_log.txt` — runner stdout/stderr (debug only, not committed).
 
 ## Run command

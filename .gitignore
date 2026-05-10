@@ -57,10 +57,16 @@ independent-project-audit-*.md
 benchmarks/real_papers/*/source.pdf
 benchmarks/real_papers/*/*.bak
 
-# Raw tool exports in real_outputs/ — license terms prohibit redistribution.
-# Keep only the derived input.txt + meta.json + report.json + provenance.jsonl + aar_scorecard.md.
-benchmarks/real_outputs/*/*.pdf
+# Raw tool exports in real_outputs/. Elicit Report-mode and Systematic
+# Review PDFs are now committed alongside the derived input.txt so that
+# anyone cloning the repo can re-run pymupdf on the original PDF and
+# obtain a byte-identical input.txt — the benchmark numbers in
+# report.json are then reproducible end-to-end. The Sources.txt files
+# (Elicit's auxiliary citation-list export) remain gitignored as they
+# are not consumed by the verification pipeline. run_log.txt is debug-
+# only stdout/stderr from the benchmark runner and regenerates per run.
 benchmarks/real_outputs/*/*Sources.txt
+benchmarks/real_outputs/*/run_log.txt
 
 # Local caches and tooling
 .cache/

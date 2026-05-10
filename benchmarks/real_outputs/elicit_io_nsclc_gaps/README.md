@@ -13,7 +13,8 @@ The Research Gap Analysis format produces a structurally different output: more 
 
 ## Source files
 
-- `input.txt` — text reconstructed from the Elicit Systematic Review PDF (Elicit's PDF was not saved to disk for this run; the text content was provided inline and matches the standard Elicit Systematic Review export format byte-for-byte after pymupdf extraction). 32,066 chars, 101 inline `[N]` citation markers, 18-entry numbered References section with DOIs.
+- `input.txt` — text reconstructed from the Elicit Systematic Review PDF as visible inline during the working session. The original PDF (`Elicit - PD-1 Inhibitors in NSCLC Treatment - Report.pdf`) is now committed alongside; re-running pymupdf on it should produce a byte-similar input.txt (formatting may differ slightly from the inline-reconstructed version). 32,066 chars, 101 inline `[N]` citation markers, 18-entry numbered References section with DOIs.
+- `Elicit - *.pdf` — raw Elicit Systematic Review export, **committed** for end-to-end reproducibility.
 - `meta.json` — provenance metadata.
 - `report.json` — pipeline output for the current run (25 claims, $0.64 cost).
 - `provenance.jsonl` — append-only step log.
@@ -149,7 +150,7 @@ The Research Gap Analysis format produces ~half the claims of General Review on 
 - **2 numeric inconsistencies are FALSE POSITIVES.** See the dedicated section above. The headline number `numeric_inconsistencies_flagged: 2` in `report.json` would be misleading without that context.
 - **Resolver fuzzy-match limitation surfaces here too.** The Liang 2020 → geophysics paper mismatch is the same class of CrossRef-fallback failure as the Gerstein 2023 → CKM scientific statement mismatch in the GLP-1 run. Same fix applies.
 - **Bachurski 2026 attribution case is borderline.** The HR 0.59 exists in the broader NSCLC NMA literature; Elicit's attribution to Bachurski's review may be a synthesis-vs-direct-citation distinction rather than a fabrication. Verdict reported as "unsupported" but reasonable people could differ.
-- **PD-1 PDF was not saved to disk.** The `input.txt` was reconstructed from the inline PDF text content provided in the working session. Format and structure match standard Elicit Systematic Review PDF exports; numeric content is identical to what `pymupdf` would produce on the original. For full reproducibility, save the Elicit PDF to this directory and re-run pymupdf on it.
+- **PD-1 PDF was originally inline-reconstructed.** The `input.txt` for this run was reconstructed from the inline PDF text content provided in the working session, before the original PDF was saved to disk. The PDF is now committed alongside (`Elicit - PD-1 Inhibitors in NSCLC Treatment - Report.pdf`), but the committed `input.txt` reflects the inline-reconstructed text — re-running pymupdf on the saved PDF may produce minor formatting differences (whitespace, page-break handling) without changing the substantive content. The `report.json` numbers in this directory derive from the committed `input.txt`, not from a fresh pymupdf extraction.
 - **Selection bias in validation.** The 1 fulltext-verified Elicit error candidate (Bachurski 2026) is the only `unsupported` verdict that could be defensibly attributed to Elicit on this run after subtracting the resolver mismatch. The 6 `partially_supported` verdicts and the 4 abstract-only `partially_supported` cases were not manually inspected for this README.
 
 ## Reproduction

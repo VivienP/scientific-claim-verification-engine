@@ -382,6 +382,26 @@ class TestParseBibliographyRobustness:
                 f"entry [{n}] doi mismatch: got {entries[n].doi!r}, expected {expected!r}"
             )
 
+    def test_truncated_doi_returns_none(self) -> None:
+        """A DOI suffix shorter than 3 characters must surface as None rather
+        than be sent to CrossRef, which can silently match a different paper.
+
+        Per `feedback_resolver_priority`: silent wrong DOIs > missed claims.
+        Forcing malformed DOIs into the title-search fallback is the safer
+        failure mode — the resolver surfaces "not found" instead of returning
+        a confidently wrong match.
+        """
+        text = (
+            "References\n\n"
+            "1. Smith A (2022) Paper one. doi: 10.1038/x PMID 12345.\n"
+            "2. Doe B (2023) Paper two. doi: 10.2222/valid PMID 67890.\n"
+        )
+        entries = parse_bibliography(text)
+        assert entries[1].doi is None, (
+            f"truncated suffix DOI should be None, got {entries[1].doi!r}"
+        )
+        assert entries[2].doi == "10.2222/valid"
+
     def test_year_extraction_skips_arxiv_id_prefix(self) -> None:
         """arXiv preprint IDs of the form `arXiv:YYMM.NNNNN` start with a
         year-like 4-digit token (e.g. `2005.11401` for May 2020). A naive

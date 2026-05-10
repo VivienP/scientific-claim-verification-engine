@@ -1163,11 +1163,26 @@ class TestDetectCitingPaperDoi:
         """
         from src.pipeline import detect_citing_paper_doi
 
-        # 5 KB of filler so the DOI URL falls outside the head window
-        head = "Just a paper title.\n" * 200  # ~3.6 KB
+        # 10 KB of filler so the DOI URL falls safely outside the 8 KB head
+        # window. 21 bytes per line * 500 = ~10.5 KB.
+        head = "Just a paper title.\n" * 500
         bib_doi = "https://doi.org/10.99/should-not-be-detected"
         text = head + "\nReferences\n1. Some entry. 2024. " + bib_doi + "\n"
         assert detect_citing_paper_doi(text) is None
+
+    def test_finds_doi_between_4kb_and_8kb_window(self) -> None:
+        """Tool exports (Elicit, Edison) sometimes prepend cover pages or
+        query metadata that push the actual paper DOI past the legacy 4 KB
+        window. The widened 8 KB window must catch DOIs that fall in the
+        4-8 KB range while still respecting the bibliography boundary.
+        """
+        from src.pipeline import detect_citing_paper_doi
+
+        # ~5 KB of cover-page filler, then the DOI URL — outside legacy 4 KB
+        # but inside the new 8 KB window.
+        cover = "Cover page header line.\n" * 220  # ~5.3 KB
+        text = cover + "\nhttps://doi.org/10.1234/test_doi_xyz\nAbstract: ...\n"
+        assert detect_citing_paper_doi(text) == "10.1234/test_doi_xyz"
 
     def test_picks_first_url_when_multiple_in_head(self) -> None:
         from src.pipeline import detect_citing_paper_doi

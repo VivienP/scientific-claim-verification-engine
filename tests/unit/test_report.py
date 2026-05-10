@@ -586,6 +586,61 @@ class TestPhase1ReportFields:
         # So fulltext_success_rate = 2/4 = 0.5.
         assert summary["fulltext_success_rate"] == 0.5
 
+    def test_not_addressed_breakdown_unaccounted_retrieval_status(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A `not_addressed` claim with a resolved source but a retrieval_status
+        outside the three known Literal values must surface a structured log
+        warning rather than silently disappear from the breakdown.
+
+        Realistic trigger: deserializing a report.json whose schema predates
+        the four-bucket breakdown, or whose `retrieval_status` field was
+        manually constructed via dict rather than the dataclass. The dataclass
+        defaults to a valid Literal, so this branch never fires on freshly-
+        produced pipeline output — but the defensive log keeps the breakdown
+        sum honest if the precondition is ever violated.
+        """
+        from src.report import build_report
+
+        claims = [_make_claim("c0")]
+        sources = {"c0": _make_source(found=True)}
+        results = {
+            "c0": VerificationResult(
+                status="not_addressed",
+                explanation="",
+                confidence=0.0,
+                retrieval_status="bogus_status",  # type: ignore[arg-type]
+            )
+        }
+        steps = [_make_step("s0", "c0")]
+
+        run_dir = build_report(
+            "report-unaccounted",
+            "T.",
+            claims,
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+        )
+
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        breakdown = report["summary"]["not_addressed_breakdown"]
+        # All four buckets must be zero — the bogus status falls through every
+        # elif. The total `not_addressed` (1) does NOT equal the breakdown sum
+        # (0); that mismatch is exactly what the warning surfaces.
+        assert breakdown == {"no_source": 0, "paywall": 0, "no_passage": 0, "claim_absent": 0}
+        # structlog writes to stdout by default; capsys captures the warning so
+        # we can assert it fired. caplog does not work here because structlog
+        # is not bridged to stdlib logging in this project's configuration.
+        captured = capsys.readouterr()
+        assert "not_addressed_breakdown_unaccounted" in captured.out, (
+            "expected `not_addressed_breakdown_unaccounted` warning to fire when "
+            "a not_addressed claim has retrieval_status outside the known Literal set"
+        )
+
 
 class TestVerifiabilityStatus:
     """Tests for verifiability_status field in report summary."""

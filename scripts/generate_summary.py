@@ -69,6 +69,12 @@ SEP = "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|"
 
 def build_table() -> tuple[str, dict[str, float]]:
     summaries = [(label, _load(slug)) for slug, label in TOOLS]
+    # IMPORTANT: only numeric (int/float) summary keys go in this list.
+    # Adding a dict-valued summary key (e.g. `not_addressed_breakdown`) would
+    # crash with `TypeError: unsupported operand type(s) for +=: 'float' and
+    # 'dict'` when the totals accumulation loop below hits it. If a future
+    # diagnostic field is dict-shaped, sum its sub-keys explicitly instead of
+    # adding the parent to this list.
     totals: dict[str, float] = {
         k: 0.0
         for k in [

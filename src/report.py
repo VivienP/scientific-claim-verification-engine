@@ -167,6 +167,18 @@ def _compute_summary_stats(
             not_addressed_breakdown["no_passage"] += 1
         elif retrieval == "passage_found":
             not_addressed_breakdown["claim_absent"] += 1
+        else:
+            # Defensive: VerificationResult defaults retrieval_status to one of
+            # the three Literal values, but a deserialized report.json with a
+            # missing/null field could land here. Surface the unaccounted claim
+            # rather than silently dropping it from the breakdown — the four
+            # buckets must sum to `not_addressed` for the diagnostic to be
+            # interpretable.
+            logger.warning(
+                "not_addressed_breakdown_unaccounted",
+                claim_id=c.claim_id,
+                retrieval_status=retrieval,
+            )
 
     return {
         "total_claims": total,

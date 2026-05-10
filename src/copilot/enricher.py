@@ -12,6 +12,7 @@ Output: EnrichedVerification wrapping the unchanged ClaimVerification.
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -200,8 +201,6 @@ class CopilotEnricher:
             list of EnrichedVerification, in the same order as ``cvs``,
             with failed claims dropped. May be shorter than the input.
         """
-        import asyncio
-
         if not cvs:
             return []
 

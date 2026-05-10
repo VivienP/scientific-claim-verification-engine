@@ -6,6 +6,7 @@ exceptions are captured into the JobStore rather than crashing the process.
 
 from __future__ import annotations
 
+import asyncio
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -85,8 +86,6 @@ def run_verification_job(
             # asyncio.run is safe here: this worker is invoked via
             # ``run_in_threadpool`` in app.py, so it executes on a worker
             # thread with no pre-existing event loop.
-            import asyncio
-
             enriched = asyncio.run(enricher.enrich_all_async(cvs))
 
             # Persist the HTML report.

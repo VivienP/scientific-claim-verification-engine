@@ -58,7 +58,8 @@ select = ["E", "F", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
 "src/numeric/checks.py" = ["E501"]
 "src/report.py" = ["E501"]
 "tests/unit/test_extract.py" = ["E501"]
-"tests/unit/test_verify.py" = ["E501"]
+"tests/unit/test_verify_abstract.py" = ["E501"]
+"tests/unit/test_verify_fulltext.py" = ["E501"]
 "tests/unit/test_report.py" = ["E501"]
 "tests/unit/test_chunker.py" = ["E501"]
 "tests/unit/test_fetch_fulltext.py" = ["E501"]
@@ -69,6 +70,10 @@ select = ["E", "F", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
 # fake objects with attached attributes — Protocol typing would be heavier than
 # the fixture warrants).
 "tests/unit/test_api_app.py" = ["ANN401"]
+# diagnose_ctran is loaded dynamically via importlib; the render_markdown test
+# helper that instantiates _diag.ClaimDiagnosis cannot annotate its return type
+# without a static import (which would defeat the script-as-module loader).
+"tests/unit/test_diagnose_ctran.py" = ["ANN401"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

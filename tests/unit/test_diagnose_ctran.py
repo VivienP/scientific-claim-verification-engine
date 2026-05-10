@@ -201,3 +201,111 @@ class TestDiagnoseRun:
     def test_missing_report_raises_clearly(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError, match=r"report\.json not found"):
             _diag.diagnose_run(tmp_path / "missing")
+
+
+# ---------------------------------------------------------------------------
+# render_markdown — smoke test on a known mix of pass/fail diagnoses
+# ---------------------------------------------------------------------------
+
+
+class TestRenderMarkdown:
+    """Smoke-level coverage of the markdown output path. The diagnoser's
+    primary user-facing artifact (``reports/phase_a2/ctran_failure_matrix.md``)
+    flows through this function, so a regression that breaks the table layout
+    or the dominant-failure call-out would silently corrupt the report."""
+
+    @staticmethod
+    def _diag_obj(
+        *,
+        claim_id: str,
+        transparent: bool,
+        category: str,
+        text: str = "claim text",
+        evidence_quality: str | None = None,
+        retrieval_status: str | None = None,
+    ) -> Any:
+        return _diag.ClaimDiagnosis(
+            claim_id=claim_id,
+            claim_text=text,
+            transparent=transparent,
+            category=category,
+            evidence_quality=evidence_quality,
+            retrieval_status=retrieval_status,
+            source_doi="10.1/x",
+            source_found=True,
+            source_passages_count=1 if transparent else 0,
+        )
+
+    def test_renders_all_required_sections(self) -> None:
+        diagnoses = {
+            "run_alpha": [
+                self._diag_obj(claim_id="c1", transparent=True, category="PASS_quoted_passage"),
+                self._diag_obj(
+                    claim_id="c2",
+                    transparent=False,
+                    category="A2b_verifier_did_not_quote",
+                    evidence_quality="no_evidence",
+                    retrieval_status="passage_found",
+                ),
+                self._diag_obj(
+                    claim_id="c3",
+                    transparent=False,
+                    category="A2b_verifier_did_not_quote",
+                    evidence_quality="no_evidence",
+                    retrieval_status="passage_found",
+                ),
+            ],
+            "run_beta": [
+                self._diag_obj(
+                    claim_id="c4",
+                    transparent=False,
+                    category="A1_doi_unresolved",
+                    evidence_quality=None,
+                    retrieval_status=None,
+                ),
+            ],
+        }
+        out = _diag.render_markdown(diagnoses)
+
+        # Header + four major sections must all be present.
+        assert "# CTran failure diagnostic" in out
+        assert "## Per-run summary" in out
+        assert "## Rolled-up category counts" in out
+        assert "## Dominant failure mode" in out
+        assert "## Per-claim failure detail" in out
+
+        # Per-run summary table includes both run names with their CTran %.
+        assert "`run_alpha`" in out
+        assert "`run_beta`" in out
+        assert "33.33%" in out  # 1/3 transparent in run_alpha
+        assert "0.00%" in out  # 0/1 transparent in run_beta
+
+        # Dominant failure: A2b appears 2/3 of the time and wins over A1 (1).
+        assert "`A2b_verifier_did_not_quote`" in out
+        # The A2b recommendation block from _recommendation_for() is included.
+        assert "Fix: verifier behaviour, not retrieval." in out
+
+        # Per-claim table surfaces the failing claim_ids (truncated to 12 chars).
+        assert "| `c2`" in out
+        assert "| `c3`" in out
+        assert "| `c4`" in out
+        # Passing claims must NOT appear in the failure table.
+        assert "| `c1`" not in out
+
+    def test_handles_all_passing_no_dominant_callout(self) -> None:
+        # All-pass run: no failures means no "Dominant failure mode" section.
+        diagnoses = {
+            "perfect_run": [
+                self._diag_obj(claim_id="c1", transparent=True, category="PASS_quoted_passage"),
+                self._diag_obj(claim_id="c2", transparent=True, category="PASS_abstract_only"),
+            ],
+        }
+        out = _diag.render_markdown(diagnoses)
+        assert "## Dominant failure mode" not in out
+        assert "100.00%" in out  # CTran rate
+
+    def test_empty_input_does_not_crash(self) -> None:
+        # No runs → still produces a valid header so the output isn't blank.
+        out = _diag.render_markdown({})
+        assert "# CTran failure diagnostic" in out
+        assert "## Per-run summary" in out

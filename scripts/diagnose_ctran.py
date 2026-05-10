@@ -1,10 +1,21 @@
 #!/usr/bin/env python
 """Diagnose why CTran fails on a run, per-claim.
 
-CTran is *transparent* iff `source_passages` is non-empty OR `evidence_quality`
-is in {abstract_only, quoted_passage, title_only}. A failure means
-`evidence_quality` is one of {no_evidence, citing_paper_context} (or anything
-outside the transparent allow-list) AND there are no quoted passages.
+CTran is *transparent* iff ``source_passages`` is non-empty OR
+``evidence_quality`` is in the transparent allow-list. The allow-list,
+mirroring :func:`src.aar._claim_is_transparent`, is:
+
+    {abstract_only, quoted_passage, title_only, passages_searched_no_quote}
+
+The ``passages_searched_no_quote`` value was introduced in Phase A.2 to
+distinguish "fulltext was retrieved and BM25 selected passages, but the
+LLM didn't quote any" from "no passages were ever shown to the LLM"
+(``no_evidence``). The auditor still sees what was searched in the former
+case, so it counts as transparent.
+
+A claim is a *failure* when ``source_passages`` is empty AND
+``evidence_quality`` is outside that allow-list (typically
+``no_evidence`` or ``citing_paper_context``).
 
 This diagnoser categorises each failing claim into a fix-mode bucket so we
 can target Phase A.2 work at the dominant failure rather than guessing.
@@ -62,9 +73,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+import structlog
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 
 # Mirrors src.aar._claim_is_transparent (kept in sync — adding a value here
@@ -346,6 +361,7 @@ def main() -> int:
         try:
             diagnoses_by_run[run_dir.name] = diagnose_run(run_dir)
         except FileNotFoundError as exc:
+            logger.warning("diagnose_run_skipped", run_dir=str(run_dir), error=str(exc))
             print(f"warning: {exc}", file=sys.stderr)
 
     if not diagnoses_by_run:

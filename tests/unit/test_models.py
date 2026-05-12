@@ -6,7 +6,16 @@ import dataclasses
 
 import pytest
 
-from src.models import Claim, ResolvedSource, VerificationResult, safe_verification_result
+from src.models import (
+    CandidateResolution,
+    Claim,
+    EvidenceBundle,
+    PdfFetchOutcome,
+    ResolutionVerdict,
+    ResolvedSource,
+    VerificationResult,
+    safe_verification_result,
+)
 from src.numeric.checks import NumericAssertion, NumericCheckResult
 
 
@@ -368,3 +377,144 @@ class TestVerificationResultInvariant:
         )
         assert result.status == "unverifiable"
         assert result.confidence is None
+
+
+class TestEvidenceBundleSchema:
+    """Phase 0: schema groundwork for the evidence-sufficiency contract.
+
+    These tests pin the new dataclass shapes (CandidateResolution,
+    ResolutionVerdict, PdfFetchOutcome, EvidenceBundle) and the extended
+    UnverifiableReason values. Behaviour wiring lives in Lane A / Lane B
+    PRs; here we only verify the schema deserialises and round-trips and
+    that the new Literal values pass the existing __post_init__ invariant.
+    """
+
+    def test_candidate_resolution_default_construction(self) -> None:
+        cand = CandidateResolution(
+            client="crossref",
+            doi="10.1056/NEJMoa2206443",
+            title="Single-Dose Psilocybin for Treatment-Resistant Depression",
+            year=2022,
+            first_author="Goodwin",
+            venue="N Engl J Med",
+        )
+        assert cand.client == "crossref"
+        assert cand.doi == "10.1056/NEJMoa2206443"
+        # Frozen contract — assignment must raise.
+        with pytest.raises((AttributeError, TypeError)):
+            cand.doi = "tampered"  # type: ignore[misc]
+
+    def test_resolution_verdict_status_literal_round_trip(self) -> None:
+        """All four status values construct without raising and preserve fields."""
+        candidates = (
+            CandidateResolution(
+                client="crossref",
+                doi="10.x/a",
+                title="A",
+                year=2020,
+                first_author="Smith",
+                venue="J A",
+            ),
+            CandidateResolution(
+                client="openalex",
+                doi="10.x/a",
+                title="A",
+                year=2020,
+                first_author="Smith",
+                venue="J A",
+            ),
+        )
+        verdict = ResolutionVerdict(
+            status="corroborated",
+            candidates=candidates,
+            agreement_signals=("doi", "year", "first_author"),
+        )
+        assert verdict.status == "corroborated"
+        assert len(verdict.candidates) == 2
+        assert "doi" in verdict.agreement_signals
+        # All four status values must construct without raising.
+        for status in ("corroborated", "disputed", "low_confidence", "single_source_only"):
+            ResolutionVerdict(status=status)  # type: ignore[arg-type]
+
+    def test_pdf_fetch_outcome_failure_reasons_exhaustive(self) -> None:
+        """Each PdfFailureReason literal value must construct."""
+        for reason in (
+            "ok",
+            "http_error",
+            "not_a_pdf",
+            "extraction_failed",
+            "too_short",
+            "timeout",
+        ):
+            outcome = PdfFetchOutcome(
+                text="text" if reason == "ok" else None,
+                failure_reason=reason,  # type: ignore[arg-type]
+                http_status=403 if reason == "http_error" else None,
+                content_type="text/html" if reason == "not_a_pdf" else None,
+            )
+            assert outcome.failure_reason == reason
+
+    def test_evidence_bundle_default_diagnostics(self) -> None:
+        """fetch_attempts and resolution_candidates default to empty tuples."""
+        bundle = EvidenceBundle(
+            text="abstract text here",
+            depth="abstract",
+            access_status="available",
+            source_resolution_status="single_source_only",
+        )
+        assert bundle.fetch_attempts == ()
+        assert bundle.resolution_candidates == ()
+        assert bundle.depth == "abstract"
+
+    def test_unverifiable_reason_new_values_pass_invariant(self) -> None:
+        """The two new reasons must construct a valid unverifiable result."""
+        for reason in ("resolution_low_confidence", "resolution_source_disagreement"):
+            result = VerificationResult(
+                status="unverifiable",
+                explanation=f"routed via {reason}",
+                confidence=None,
+                unverifiable_reason=reason,  # type: ignore[arg-type]
+                evidence_quality="no_evidence",
+            )
+            assert result.status == "unverifiable"
+            assert result.confidence is None
+            assert result.unverifiable_reason == reason
+
+    def test_resolved_source_back_compat_when_verdict_none(self) -> None:
+        """Existing fixtures predate resolution_verdict; default must be None."""
+        src = ResolvedSource(
+            found=True,
+            doi="10.x/legacy",
+            title="legacy",
+            abstract="abstract",
+            similarity_score=1.0,
+        )
+        assert src.resolution_verdict is None
+        # Construction with an explicit verdict also works.
+        src_v = dataclasses.replace(
+            src,
+            resolution_verdict=ResolutionVerdict(status="single_source_only"),
+        )
+        assert src_v.resolution_verdict is not None
+        assert src_v.resolution_verdict.status == "single_source_only"
+
+    def test_numeric_assertion_span_fields_default_none(self) -> None:
+        """Lane A will populate spans; Phase 0 only requires the schema."""
+        assertion = NumericAssertion(
+            raw_text="0.55",
+            value=0.55,
+            unit=None,
+            role="primary",
+            context="HR 0.55",
+        )
+        assert assertion.span_start is None
+        assert assertion.span_end is None
+        assert assertion.sentence_id is None
+
+    def test_numeric_check_result_ambiguous_default_false(self) -> None:
+        """Lane A flips this to True on multi-metric pairing ambiguity."""
+        result = NumericCheckResult(
+            check_type="or_ci_consistency",
+            consistent=True,
+        )
+        assert result.ambiguous is False

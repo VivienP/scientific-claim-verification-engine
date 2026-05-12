@@ -19,7 +19,9 @@ from src.models import (
     PaperChunk,
     ProvenanceStep,
     ResolvedSource,
+    UnverifiableReason,
     VerificationResult,
+    safe_verification_result,
 )
 from src.prompts import load_prompt
 
@@ -42,7 +44,13 @@ _CITING_CONTEXT_SYSTEM_PROMPT = load_prompt("verify_citing_context_v1")
 # Shared constants
 # ---------------------------------------------------------------------------
 
-_VALID_STATUSES: set[str] = {"supported", "unsupported", "not_addressed", "partially_supported"}
+_VALID_STATUSES: set[str] = {
+    "supported",
+    "unsupported",
+    "not_addressed",
+    "partially_supported",
+    "unverifiable",
+}
 
 _TITLE_ONLY_MIN_TITLE_LENGTH = 20
 _TITLE_ONLY_MAX_CONFIDENCE = 0.7
@@ -164,10 +172,12 @@ __all__ = [
     "_TITLE_ONLY_MIN_TITLE_LENGTH",
     "_TITLE_ONLY_SYSTEM_PROMPT",
     "_VALID_STATUSES",
+    "UnverifiableReason",
     "_build_passages_block",
     "_extract_citing_context_window",
     "_hash",
     "_make_short_circuit_step",
     "_parse_cache_hit",
     "_strip_fences",
+    "safe_verification_result",
 ]

@@ -79,12 +79,35 @@ def verify_claim_fulltext(
         from src.verify import verify_claim
 
         abstract_result, step = verify_claim(claim, source, model_id=model_id, api_key=api_key)
+        # A2 fix: was fulltext_available=True (lie) and retrieval_status="no_passage_found"
+        # (misleading). After A2: verify_claim routes through safe_verification_result,
+        # so abstract_result already has the correct status (unverifiable if the LLM
+        # tried to emit supported/unsupported on abstract_only evidence).
+        # We only override metadata fields here -- NOT status/confidence/evidence_quality.
+        # dataclasses.replace calls __post_init__, but since we leave status/confidence/
+        # evidence_quality unchanged (already valid from verify_claim), no invariant
+        # violation occurs.
+        # F1: when the inner verify_claim downgraded to unverifiable, the
+        # proximate cause for THIS outer fallback path is "we tried to fetch
+        # fulltext and couldn't" — override the inner reason
+        # ("numeric_claim_abstract_only") with "fulltext_unavailable" because
+        # for the outer caller, the missing-fulltext is the more actionable
+        # framing. The explanation from the helper already captured the
+        # original LLM verdict; we just refine the reason classification.
+        from src.models import UnverifiableReason
+
+        outer_reason: UnverifiableReason | None = (
+            "fulltext_unavailable" if abstract_result.status == "unverifiable" else None
+        )
         result = dataclasses.replace(
             abstract_result,
-            fulltext_available=True,
+            fulltext_available=False,  # was: True (BUG)
             verification_depth="abstract",
-            retrieval_status="no_passage_found",
+            retrieval_status="fulltext_unavailable",  # was: "no_passage_found"
             retraction_status=source.retraction_status,
+            unverifiable_reason=(
+                outer_reason if outer_reason is not None else abstract_result.unverifiable_reason
+            ),
         )
         return (
             result,
@@ -93,6 +116,7 @@ def verify_claim_fulltext(
                 input_hash=_hash(repr((claim, source, passages))),
                 output_hash=_hash(repr(result)),
                 confidence=result.confidence,
+                unverifiable_reason=outer_reason,
             ),
         )
 
@@ -163,10 +187,27 @@ def verify_claim_fulltext(
             source_passages = [_truncate_passage(p.text) for p in passages]
             evidence_quality = "passages_searched_no_quote"
 
+        # Handle null confidence on the fulltext path too — if the LLM ever
+        # returns status="unverifiable" with confidence=null (forward compat,
+        # spec emission-gates §7.11: "all emission sites must handle this case"),
+        # float(parsed["confidence"]) would crash. verify.py's parse boundary
+        # already handles this; mirror the pattern here.
+        raw_confidence_ft = parsed.get("confidence")
+        confidence_val_ft: float | None = (
+            None if raw_confidence_ft is None else float(raw_confidence_ft)
+        )
+        # Direct VerificationResult construction here is permitted by
+        # .claude/rules/no-confident-verdict-without-evidence.md: the
+        # evidence_quality is fulltext-grade ({quoted_passage,
+        # passages_searched_no_quote}) and is NOT in the helper's
+        # INSUFFICIENT set, so safe_verification_result would pass it
+        # through unchanged. Routing through the helper would be a no-op.
+        # If status=="unverifiable" the schema invariant requires
+        # confidence is None, which the parse above ensures.
         result = VerificationResult(
             status=status,
             explanation=str(parsed["explanation"]),
-            confidence=float(parsed["confidence"]),
+            confidence=None if status == "unverifiable" else confidence_val_ft,
             source_passages=source_passages,
             source_section=source_section,
             fulltext_available=True,

@@ -19,7 +19,7 @@ from src.models import (
     ProvenanceStep,
     ResolvedSource,
     VerificationResult,
-    VerificationStatus,
+    safe_verification_result,
 )
 from src.verify_citing_context import verify_claim_citing_context
 from src.verify_fulltext import (
@@ -186,11 +186,24 @@ def verify_claim(
         status_raw = str(parsed["status"])
         if status_raw not in _VALID_STATUSES:
             raise ValueError(f"Invalid status: {status_raw}")
-        status: VerificationStatus = status_raw  # type: ignore[assignment]
-        result = VerificationResult(
-            status=status,
+        # A2: parse confidence as float | None to support LLM returning null
+        # for unverifiable (after A3 prompt update, LLM may emit "confidence": null).
+        raw_confidence = parsed.get("confidence")
+        confidence_val: float | None = None if raw_confidence is None else float(raw_confidence)
+        # A2: route through safe_verification_result so that
+        # (supported|unsupported) + abstract_only -> (unverifiable, None).
+        # evidence_quality="abstract_only" is the correct value for this path
+        # (verify_claim only has the abstract, never fulltext passages).
+        result = safe_verification_result(
+            status=status_raw,
+            confidence=confidence_val,
             explanation=str(parsed["explanation"]),
-            confidence=float(parsed["confidence"]),
+            evidence_quality="abstract_only",
+            claim_text=claim.claim_text,
+            # F1: explicit reason on this path. The helper would default to
+            # "numeric_claim_abstract_only" but the explicit pass makes the
+            # contract visible at the call site.
+            unverifiable_reason="numeric_claim_abstract_only",
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.error(
@@ -201,6 +214,9 @@ def verify_claim(
         )
         result = _PARSE_ERROR_RESULT
 
+    # F1: read unverifiable_reason from the result so the ProvenanceStep and
+    # VerificationResult stay consistent. The helper (safe_verification_result)
+    # sets the reason on the result; we just propagate it to the step.
     step = ProvenanceStep(
         step_id=str(uuid.uuid4()),
         claim_id=claim.claim_id,
@@ -213,6 +229,7 @@ def verify_claim(
         tokens_out=tokens_out,
         cache_hit=cache_hit,
         confidence=result.confidence,
+        unverifiable_reason=result.unverifiable_reason,
     )
 
     return result, step

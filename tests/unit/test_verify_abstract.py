@@ -21,6 +21,18 @@ def _text_block(text: str) -> TextBlock:
 
 
 def _make_claim(claim_id: str = "claim-1") -> Claim:
+    # Numeric claim text: triggers _claim_has_specific_numeric so A2 downgrade tests work.
+    return Claim(
+        claim_id=claim_id,
+        claim_text="Response rates were 20% at 12 weeks.",
+        cited_authors=["Smith"],
+        cited_year=2020,
+        claim_type="factual_numeric",
+    )
+
+
+def _make_qualitative_claim(claim_id: str = "claim-q") -> Claim:
+    """Qualitative claim: does NOT trigger numeric heuristic, passes through safe_verification_result."""
     return Claim(
         claim_id=claim_id,
         claim_text="Protein folding rates increase with temperature.",
@@ -42,7 +54,9 @@ def _make_source(found: bool = True, abstract: str | None = "Abstract text.") ->
 
 class TestVerifyClaimHappyPath:
     @patch("src.verify.anthropic.Anthropic")
-    def test_supported_status(self, mock_anthropic_cls: MagicMock) -> None:
+    def test_supported_status_numeric_claim_downgrades(self, mock_anthropic_cls: MagicMock) -> None:
+        """A2: LLM returning 'supported' on abstract-only evidence for a numeric claim is
+        downgraded to 'unverifiable'. Numeric claims cannot be reliably confirmed from abstract."""
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client
         mock_response = MagicMock()
@@ -60,12 +74,42 @@ class TestVerifyClaimHappyPath:
         from src.verify import verify_claim
 
         result, _step = verify_claim(_make_claim(), _make_source())
-        assert result.status == "supported"
-        assert result.confidence == 0.9
+        # A2: numeric claim + supported+abstract_only -> downgraded to unverifiable
+        assert result.status == "unverifiable"
+        assert result.confidence is None
         assert isinstance(result.explanation, str)
 
     @patch("src.verify.anthropic.Anthropic")
+    def test_supported_status_qualitative_claim_passes_through(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """A2: Qualitative claim on abstract-only evidence is NOT downgraded.
+        Abstract is sufficient for 'X increases with Y'-style verdicts."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "supported", "explanation": "The abstract confirms this.", "confidence": 0.9}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, _step = verify_claim(_make_qualitative_claim(), _make_source())
+        # A2: qualitative claim on abstract-only -> passes through as supported
+        assert result.status == "supported"
+        assert result.confidence == 0.9
+
+    @patch("src.verify.anthropic.Anthropic")
     def test_provenance_step_populated(self, mock_anthropic_cls: MagicMock) -> None:
+        """A2: LLM returning 'supported' on abstract-only evidence for a numeric claim is
+        downgraded to 'unverifiable'. ProvenanceStep.confidence must reflect the downgraded value (None)."""
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client
         mock_response = MagicMock()
@@ -88,7 +132,8 @@ class TestVerifyClaimHappyPath:
         assert step.tokens_out == 30
         assert step.cache_hit is True
         assert step.model_id == "claude-sonnet-4-6"
-        assert step.confidence == 0.9
+        # A2: numeric claim + supported+abstract_only downgraded -> confidence is None in provenance
+        assert step.confidence is None
 
 
 class TestVerifierPromptRubric:
@@ -104,18 +149,36 @@ class TestVerifierPromptRubric:
             assert "partially_supported" in prompt
             assert "unsupported" in prompt
 
-    def test_clause_a_collapses_off_topic_into_unsupported_in_both_prompts(self) -> None:
-        """S1-P3 Clause A: off-topic source → unsupported (not not_addressed).
-        Pinned in both abstract and fulltext prompts to prevent regression.
+    def test_clause_a_distinguishes_contradiction_from_silence_in_both_prompts(self) -> None:
+        """Track G (2026-05-12) Clause A: `unsupported` is reserved for EXPLICIT
+        CONTRADICTION; silence (on-topic or off-topic) is `not_addressed`.
+
+        This replaces the previous semantics where off-topic abstracts were
+        forced into `unsupported`. The old behavior was a silent-failure
+        contributor on the Elicit psilocybin replay (qualitative claims where
+        the abstract was silent landed as `unsupported` with high confidence).
+        The new prompt teaches the LLM to emit `not_addressed` for silence,
+        leaving `unsupported` for cases where the abstract directly disagrees
+        with the claim.
         """
         from src.verify import _FULLTEXT_SYSTEM_PROMPT, _SYSTEM_PROMPT
 
         for prompt in (_SYSTEM_PROMPT, _FULLTEXT_SYSTEM_PROMPT):
             assert "Clause A" in prompt
+            # Must instruct that contradiction is the trigger for unsupported.
+            assert "CONTRADICTION" in prompt or "contradiction" in prompt
+            # Must teach that silence -> not_addressed (the inversion of the
+            # old "collapse-into-unsupported" behavior).
+            silence_phrasing_present = (
+                "silent on the specific" in prompt
+                or "silence" in prompt.lower()
+                or "does not contain the claim's specific assertion" in prompt
+            )
+            assert silence_phrasing_present, (
+                f"Clause A must teach silence -> not_addressed. Prompt: {prompt[:200]}..."
+            )
+            # off-topic must now route to not_addressed, not unsupported.
             assert "off-topic" in prompt.lower()
-            # Both prompts must instruct the LLM not to emit not_addressed when
-            # content is provided.
-            assert "not `not_addressed`" in prompt or "NOT `not_addressed`" in prompt
 
     def test_clause_b_uncertainty_band_inclusion_in_both_prompts(self) -> None:
         """S1-P3 Clause B: range/IQR/CI/SD inclusion bidirectional rule."""
@@ -138,12 +201,15 @@ class TestVerifierPromptRubric:
             assert "directional change" in prompt.lower()
             assert "static" in prompt.lower()
 
-    def test_not_addressed_removed_from_response_schema(self) -> None:
-        """Clause A side-effect: the JSON schema in both prompts no longer offers
-        not_addressed as a valid output when content is present.
+    def test_not_addressed_is_in_response_schema(self) -> None:
+        """Track G (2026-05-12): the JSON schema in both prompts OFFERS
+        `not_addressed` as a valid output now that Clause A reserves
+        `unsupported` for explicit contradiction.
 
-        Robust against ordering of supported/unsupported/partially_supported in
-        the schema enum — only checks `not_addressed` is not listed as a value.
+        This inverts the previous test (which pinned the old "collapse silence
+        into unsupported" semantics). The status enum should list all four
+        verdict values; the LLM picks based on Clause A's contradiction-vs-
+        silence rule.
         """
         import re
 
@@ -154,9 +220,9 @@ class TestVerifierPromptRubric:
             match = schema_line_re.search(prompt)
             assert match is not None, "schema line missing"
             allowed_values = match.group(1).split("|")
-            assert "not_addressed" not in allowed_values
             assert "supported" in allowed_values
             assert "unsupported" in allowed_values
+            assert "not_addressed" in allowed_values
             assert "partially_supported" in allowed_values
 
 
@@ -219,7 +285,8 @@ class TestVerifyClaimShortCircuit:
 
     @patch("src.verify.anthropic.Anthropic")
     def test_markdown_fenced_json_parsed(self, mock_anthropic_cls: MagicMock) -> None:
-        """LLM response wrapped in ```json fences is parsed correctly."""
+        """LLM response wrapped in ```json fences is parsed correctly.
+        A2: numeric claim + supported+abstract_only is downgraded to unverifiable."""
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client
         mock_response = MagicMock()
@@ -236,8 +303,9 @@ class TestVerifyClaimShortCircuit:
         from src.verify import verify_claim
 
         result, _step = verify_claim(_make_claim(), _make_source())
-        assert result.status == "supported"
-        assert result.confidence == 0.9
+        # A2: fences parsed correctly; numeric claim + supported+abstract_only -> unverifiable
+        assert result.status == "unverifiable"
+        assert result.confidence is None
 
     @patch("src.verify.anthropic.Anthropic")
     def test_cache_hit_none_when_no_cache_tokens(self, mock_anthropic_cls: MagicMock) -> None:
@@ -333,6 +401,7 @@ class TestVerifyClaimTitleOnly:
         result, _step = verify_claim_title_only(_make_claim(), _make_title_only_source())
 
         assert result.status == "partially_supported"
+        assert result.confidence is not None
         assert result.confidence <= 0.7
         assert result.evidence_quality == "title_only"
 
@@ -373,10 +442,14 @@ class TestAggregateMultiSource:
     def _result(status: str, confidence: float = 0.8) -> object:
         from src.models import VerificationResult
 
+        # A1: supported/unsupported require fulltext-grade evidence
+        eq = "quoted_passage" if status in ("supported", "unsupported") else "abstract_only"
+        actual_confidence: float | None = None if status == "unverifiable" else confidence
         return VerificationResult(
             status=status,  # type: ignore[arg-type]
             explanation="",
-            confidence=confidence,
+            confidence=actual_confidence,
+            evidence_quality=eq,  # type: ignore[arg-type]
         )
 
     def test_empty_returns_not_addressed(self) -> None:
@@ -421,6 +494,8 @@ class TestVerifyClaimMultiSource:
 
     @patch("src.verify.anthropic.Anthropic")
     def test_aggregates_two_supported_sources(self, mock_anthropic_cls: MagicMock) -> None:
+        """A2: LLM saying 'supported' on abstract-only sources is downgraded to
+        'unverifiable' per-source; the aggregate of two unverifiable is unverifiable."""
         from src.models import ResolvedSourceSet
         from src.verify import verify_claim_multi_source
 
@@ -446,22 +521,27 @@ class TestVerifyClaimMultiSource:
 
         result, steps = verify_claim_multi_source(_make_claim(), rs_set)
 
-        assert result.status == "supported"
+        # A2: both per-source results are unverifiable (supported+abstract_only -> downgraded)
+        assert result.status == "unverifiable"
         assert len(steps) == 3  # one verify step per source + one aggregate step
         assert steps[-1].operation == "aggregate"
         assert steps[-1].model_id is None
         assert steps[-1].claim_id == _make_claim().claim_id
-        assert "[10.1/a] supported" in result.explanation
-        assert "[10.1/b] supported" in result.explanation
+        # Explanation mentions per-source status (now unverifiable)
+        assert "[10.1/a] unverifiable" in result.explanation
+        assert "[10.1/b] unverifiable" in result.explanation
 
     @patch("src.verify.anthropic.Anthropic")
     def test_aggregates_mixed_verdicts_to_partial(self, mock_anthropic_cls: MagicMock) -> None:
+        """A2: both sources on abstract-only evidence get downgraded to unverifiable
+        regardless of the LLM's stated status. Aggregate of two unverifiable is unverifiable."""
         from src.models import ResolvedSourceSet
         from src.verify import verify_claim_multi_source
 
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client
-        # First source supports; second is unsupported.
+        # First source returns supported; second returns unsupported.
+        # Both are on abstract-only evidence -> A2 downgrades both to unverifiable.
         responses = [
             MagicMock(),
             MagicMock(),
@@ -493,7 +573,8 @@ class TestVerifyClaimMultiSource:
         rs_set = ResolvedSourceSet(sources=(s1, s2), citation_markers=(81, 82))
 
         result, steps = verify_claim_multi_source(_make_claim(), rs_set)
-        assert result.status == "partially_supported"
+        # A2: both per-source results unverifiable -> aggregate is unverifiable
+        assert result.status == "unverifiable"
         assert steps[-1].operation == "aggregate"
 
 
@@ -557,12 +638,15 @@ class TestVerifyClaimCitingContext:
         assert result.status == "partially_supported"
         assert result.evidence_quality == "citing_paper_context"
         assert result.verification_depth == "citing_paper_context"
+        assert result.confidence is not None
         assert result.confidence <= 0.6
         assert "internal-consistency" in result.explanation.lower()
         assert step.operation == "verify"
 
     @patch("src.verify.anthropic.Anthropic")
     def test_unsupported_when_context_contradicts(self, mock_anthropic_cls: MagicMock) -> None:
+        """A2: unsupported+citing_paper_context is downgraded to unverifiable for numeric claims.
+        Citing-paper context is insufficient for a confident 'unsupported' verdict on exact figures."""
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client
         mock_response = MagicMock()
@@ -585,15 +669,18 @@ class TestVerifyClaimCitingContext:
         source = ResolvedSource(
             found=False, doi=None, title=None, abstract=None, similarity_score=None
         )
+        # Numeric claim: 5 mmol/L is not in patterns, use percentage instead
         claim = Claim(
             claim_id="c1",
-            claim_text="Some unrelated assertion about cosmology.",
+            claim_text="Lactic acid accumulates at 50% of maximal exercise capacity.",
             cited_authors=["Brooks"],
             cited_year=1986,
-            claim_type="factual_qualitative",
+            claim_type="factual_numeric",
         )
         result, _step = verify_claim_citing_context(claim, source, self._citing_text())
-        assert result.status == "unsupported"
+        # A2: numeric claim + unsupported+citing_paper_context -> downgraded to unverifiable
+        assert result.status == "unverifiable"
+        assert result.confidence is None
         assert result.evidence_quality == "citing_paper_context"
 
     @patch("src.verify.anthropic.Anthropic")
@@ -631,6 +718,7 @@ class TestVerifyClaimCitingContext:
 
         assert result.status == "partially_supported"
         # Confidence clamped under the citing-context max.
+        assert result.confidence is not None
         assert result.confidence <= 0.6
         # Explanation is prefixed with internal-consistency tag if the LLM omits it.
         assert "internal-consistency" in result.explanation.lower()
@@ -651,3 +739,144 @@ class TestVerifyClaimCitingContext:
         window = _extract_citing_context_window(text, "Completely unrelated needle.")
         # Falls back to first 2*window of text rather than empty.
         assert len(window) > 0
+
+
+class TestA2EmissionGate:
+    """A2: verify.py emission gate -- safe_verification_result routes
+    (supported|unsupported) on abstract-only evidence to (unverifiable, None).
+    """
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_downgrades_confident_supported_to_unverifiable(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """LLM returning supported+0.9 on abstract-only -> unverifiable, None."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "supported", "explanation": "Abstract supports this.", "confidence": 0.9}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, step = verify_claim(_make_claim(), _make_source())
+        assert result.status == "unverifiable"
+        assert result.confidence is None
+        assert result.evidence_quality == "abstract_only"
+        assert step.confidence is None
+        # F1 (2026-05-12): verify.py now passes
+        # unverifiable_reason="numeric_claim_abstract_only" to the helper,
+        # propagating to both the result and the step.
+        assert step.unverifiable_reason == "numeric_claim_abstract_only"
+        assert result.unverifiable_reason == "numeric_claim_abstract_only"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_downgrades_confident_unsupported_to_unverifiable(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """The Goodwin NEJM 2022 / 20% sustained response case:
+        LLM returning unsupported+0.75 on abstract-only -> unverifiable, None.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "unsupported", "explanation": "The abstract does not '
+                'report a specific 20% sustained response rate.", "confidence": 0.75}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, _step = verify_claim(_make_claim(), _make_source())
+        assert result.status == "unverifiable"
+        assert result.confidence is None
+        assert result.evidence_quality == "abstract_only"
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_preserves_not_addressed(self, mock_anthropic_cls: MagicMock) -> None:
+        """not_addressed is exempt from Invariant 2 -- passes through unchanged."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "not_addressed", "explanation": "Source silent.", "confidence": 0.9}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, _step = verify_claim(_make_claim(), _make_source())
+        assert result.status == "not_addressed"
+        assert result.confidence == 0.9
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_preserves_partially_supported(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """partially_supported is a hedge -- allowed on abstract-only."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "partially_supported", "explanation": "Some match.", "confidence": 0.65}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, _step = verify_claim(_make_claim(), _make_source())
+        assert result.status == "partially_supported"
+        assert result.confidence == 0.65
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_accepts_explicit_unverifiable_from_llm(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """After A3 prompt, LLM may return unverifiable directly -- pass through."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "unverifiable", "confidence": null, '
+                '"explanation": "Cannot determine from abstract alone."}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, _step = verify_claim(_make_claim(), _make_source())
+        assert result.status == "unverifiable"
+        assert result.confidence is None

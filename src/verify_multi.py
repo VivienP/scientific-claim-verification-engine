@@ -23,8 +23,10 @@ from src.models import (
     PaperChunk,
     ProvenanceStep,
     ResolvedSourceSet,
+    UnverifiableReason,
     VerificationResult,
     VerificationStatus,
+    safe_verification_result,
 )
 from src.verify_prompts import MODEL_ID
 
@@ -52,10 +54,15 @@ def _aggregate_multi_source_verdicts(
     if not per_source:
         return "not_addressed"
     statuses = [r.status for r in per_source]
+    # A2: treat "unverifiable" like "not_addressed" for aggregation purposes —
+    # it contributes no evidence signal. If ALL per-source results are
+    # unverifiable, the aggregated status is "unverifiable".
+    if all(s == "unverifiable" for s in statuses):
+        return "unverifiable"
     has_supported = any(s == "supported" for s in statuses)
     has_partial = any(s == "partially_supported" for s in statuses)
     has_unsupported = any(s == "unsupported" for s in statuses)
-    has_not_addressed = any(s == "not_addressed" for s in statuses)
+    has_not_addressed = any(s in ("not_addressed", "unverifiable") for s in statuses)
 
     if has_supported and not has_unsupported and not has_not_addressed:
         return "supported"
@@ -63,7 +70,7 @@ def _aggregate_multi_source_verdicts(
         return "partially_supported"
     if all(s == "unsupported" for s in statuses):
         return "unsupported"
-    if all(s == "not_addressed" for s in statuses):
+    if all(s in ("not_addressed", "unverifiable") for s in statuses):
         return "not_addressed"
     if has_partial or has_unsupported:
         return "partially_supported"
@@ -119,20 +126,77 @@ def verify_claim_multi_source(
         marker_label = source.doi or source.title or "(unresolved)"
         explanations.append(f"[{marker_label}] {result.status}: {result.explanation}")
 
-    aggregated_status = _aggregate_multi_source_verdicts(per_source_results)
-    # Exclude confidence=0.0: these are parse-error results, not meaningful low-confidence verdicts.
-    confidences = [r.confidence for r in per_source_results if r.confidence > 0]
-    aggregated_confidence = sum(confidences) / len(confidences) if confidences else 0.0
+    # A1 hardening (2026-05-12, @reviewer warning): guard the empty-source-set
+    # case explicitly. The pipeline guards this at the call site
+    # (`len(source_set) > 1 and len(found_sources()) > 0`), but a direct caller
+    # passing an empty ResolvedSourceSet would hit the aggregation with no
+    # per-source results, producing `aggregated_confidence=None` and an
+    # `aggregated_status` that is not "unverifiable" — a schema invariant
+    # violation that __post_init__ catches as a runtime ValueError. Returning
+    # a valid `not_addressed` verdict for the empty case is the explicit
+    # contract; the loud-crash behavior was a side effect of the invariant
+    # tightening rather than an intended safety net.
+    if not per_source_results:
+        return (
+            VerificationResult(
+                status="not_addressed",
+                confidence=0.0,
+                explanation="Empty source set — no resolved sources to verify against.",
+                evidence_quality="no_evidence",
+            ),
+            all_steps,
+        )
 
-    aggregated = VerificationResult(
-        status=aggregated_status,
-        explanation=" || ".join(explanations) if explanations else "Empty source set.",
-        confidence=aggregated_confidence,
-        verification_depth="abstract",
-        evidence_quality="abstract_only" if per_source_results else "no_evidence",
-        retraction_status=any(s.retraction_status for s in source_set),
+    aggregated_status = _aggregate_multi_source_verdicts(per_source_results)
+    # A2: Exclude confidence=None (unverifiable) and confidence=0.0 (parse errors).
+    confidences = [
+        r.confidence for r in per_source_results if r.confidence is not None and r.confidence > 0
+    ]
+    aggregated_confidence: float | None = (
+        sum(confidences) / len(confidences) if confidences else None
     )
 
+    # A2: Derive verification_depth and evidence_quality from the best available
+    # per-source result rather than hardcoding to "abstract".
+    # Priority: fulltext > citing_paper_context > abstract > title_only.
+    # Rationale: the aggregation uses the most informative evidence available.
+    depth_priority = {
+        "fulltext": 0,
+        "citing_paper_context": 1,
+        "abstract": 2,
+        "title_only": 3,
+    }
+    primary_result = (
+        min(
+            per_source_results,
+            key=lambda r: depth_priority.get(r.verification_depth, 99),
+        )
+        if per_source_results
+        else None
+    )
+    agg_depth = primary_result.verification_depth if primary_result else "abstract"
+    agg_evidence = primary_result.evidence_quality if primary_result else "no_evidence"
+
+    # A2: Route through safe_verification_result so that aggregated
+    # (supported|unsupported) on insufficient evidence is downgraded to
+    # (unverifiable, None) per the A1 invariant.
+    aggregated = safe_verification_result(
+        status=aggregated_status,
+        confidence=aggregated_confidence,
+        explanation=" || ".join(explanations) if explanations else "Empty source set.",
+        verification_depth=agg_depth,
+        evidence_quality=agg_evidence,
+        retraction_status=any(s.retraction_status for s in source_set),
+        claim_text=claim.claim_text,
+        # F1: at multi-source aggregation, the cross-source synthesis is
+        # what produced the (potentially) confident verdict — the proximate
+        # cause if downgraded is "evidence depth insufficient across sources".
+        unverifiable_reason="insufficient_evidence_depth",
+    )
+
+    agg_unverifiable_reason: UnverifiableReason | None = (
+        "insufficient_evidence_depth" if aggregated.status == "unverifiable" else None
+    )
     all_steps.append(
         ProvenanceStep(
             step_id=str(uuid.uuid4()),
@@ -145,7 +209,8 @@ def verify_claim_multi_source(
             tokens_in=None,
             tokens_out=None,
             cache_hit=None,
-            confidence=aggregated_confidence,
+            confidence=aggregated.confidence,
+            unverifiable_reason=agg_unverifiable_reason,
         )
     )
 

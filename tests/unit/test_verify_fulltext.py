@@ -109,7 +109,12 @@ class TestVerifyClaimFulltext:
         from src.models import VerificationResult
 
         mock_verify.return_value = (
-            VerificationResult(status="supported", explanation="abs", confidence=0.9),
+            VerificationResult(
+                status="supported",
+                explanation="abs",
+                confidence=0.9,
+                evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
+            ),
             ProvenanceStep(
                 step_id="s",
                 claim_id="claim-1",
@@ -130,8 +135,9 @@ class TestVerifyClaimFulltext:
         result, _ = verify_claim_fulltext(_make_claim(), _make_source(), [])
         mock_verify.assert_called_once()
         assert result.verification_depth == "abstract"
-        assert result.fulltext_available is True
-        assert result.retrieval_status == "no_passage_found"
+        # A2 fix: empty passages = fulltext retrieval failed, not "found but empty"
+        assert result.fulltext_available is False
+        assert result.retrieval_status == "fulltext_unavailable"
 
     @patch("src.verify.anthropic.Anthropic")
     def test_retraction_status_mirrored(self, mock_anthropic_cls: MagicMock) -> None:
@@ -340,6 +346,7 @@ class TestVerifyClaimFulltextWithNumeric:
             confidence=0.9,
             fulltext_available=True,
             verification_depth="fulltext",
+            evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
         )
         ft_step = ProvenanceStep(
             step_id="vs",
@@ -421,6 +428,7 @@ class TestVerifyClaimFulltextWithNumeric:
             confidence=0.9,
             fulltext_available=True,
             verification_depth="fulltext",
+            evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
         )
         ft_step = ProvenanceStep(
             step_id="vs",
@@ -464,3 +472,82 @@ class TestVerifyClaimFulltextWithNumeric:
         )
         assert result.numeric_check is None
         assert len(steps) == 2
+
+
+class TestA2EmptyPassagesFix:
+    """A2: verify_fulltext.py empty-passages fallback correctness."""
+
+    @patch("src.verify.verify_claim")
+    def test_empty_passages_emits_fulltext_unavailable(self, mock_verify: MagicMock) -> None:
+        """A2 fix: empty passages -> fulltext_available=False, retrieval_status='fulltext_unavailable'."""
+        from src.models import VerificationResult
+
+        mock_verify.return_value = (
+            VerificationResult(
+                status="unverifiable",
+                explanation="cannot determine",
+                confidence=None,
+                evidence_quality="abstract_only",
+            ),
+            ProvenanceStep(
+                step_id="s",
+                claim_id="claim-1",
+                operation="verify",
+                input_hash="i",
+                output_hash="o",
+                model_id="m",
+                timestamp=0.0,
+                tokens_in=10,
+                tokens_out=5,
+                cache_hit=False,
+                confidence=None,
+                unverifiable_reason="insufficient_evidence_depth",
+            ),
+        )
+
+        from src.verify import verify_claim_fulltext
+
+        result, _step = verify_claim_fulltext(_make_claim(), _make_source(), [])
+        mock_verify.assert_called_once()
+        assert result.fulltext_available is False
+        assert result.retrieval_status == "fulltext_unavailable"
+        assert result.verification_depth == "abstract"
+
+    @patch("src.verify.verify_claim")
+    def test_empty_passages_with_abstract_supported_stays_unverifiable(
+        self, mock_verify: MagicMock
+    ) -> None:
+        """A2: inner verify_claim now routes through safe_verification_result, so it
+        returns (unverifiable, None) even if the LLM tried to say 'supported'.
+        The fulltext wrapper preserves that -- no double-gating needed."""
+        from src.models import VerificationResult
+
+        # verify_claim now always returns unverifiable for supported on abstract_only
+        mock_verify.return_value = (
+            VerificationResult(
+                status="unverifiable",
+                explanation="downgraded by safe_verification_result",
+                confidence=None,
+                evidence_quality="abstract_only",
+            ),
+            ProvenanceStep(
+                step_id="s",
+                claim_id="claim-1",
+                operation="verify",
+                input_hash="i",
+                output_hash="o",
+                model_id="m",
+                timestamp=0.0,
+                tokens_in=10,
+                tokens_out=5,
+                cache_hit=False,
+                confidence=None,
+            ),
+        )
+
+        from src.verify import verify_claim_fulltext
+
+        result, _ = verify_claim_fulltext(_make_claim(), _make_source(), [])
+        assert result.status == "unverifiable"
+        assert result.confidence is None
+        assert result.fulltext_available is False

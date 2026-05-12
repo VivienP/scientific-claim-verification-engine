@@ -86,6 +86,10 @@ def cross_modal_check(
     """
     if primary_result.status not in _TARGETED_STATUSES:
         return primary_result, None
+    # Schema invariant: non-"unverifiable" statuses always have non-None confidence.
+    # Targeted statuses ({supported, unsupported}) are a subset; narrow for mypy.
+    if primary_result.confidence is None:
+        return primary_result, None
     if primary_result.confidence <= confidence_threshold:
         return primary_result, None
     if primary_result.verification_depth != "abstract":

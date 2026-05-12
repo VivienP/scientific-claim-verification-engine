@@ -16,8 +16,9 @@ from src.models import (
     Claim,
     ProvenanceStep,
     ResolvedSource,
+    UnverifiableReason,
     VerificationResult,
-    VerificationStatus,
+    safe_verification_result,
 )
 from src.verify_prompts import (
     _TITLE_ONLY_MAX_CONFIDENCE,
@@ -102,14 +103,23 @@ def verify_claim_title_only(
         if status_raw == "supported":
             status_raw = "partially_supported"
         confidence = min(confidence, _TITLE_ONLY_MAX_CONFIDENCE)
-        status: VerificationStatus = status_raw  # type: ignore[assignment]
-        result = VerificationResult(
-            status=status,
-            explanation=str(parsed["explanation"]),
+        # A2: Route through safe_verification_result. The supported->partially_supported
+        # cap above handles the "supported" case. The remaining gap is "unsupported" +
+        # "title_only": that combination violates A1 Invariant 2, so
+        # safe_verification_result downgrades it to (unverifiable, None).
+        # Note: the information loss (title clearly off-topic -> unverifiable instead of
+        # unsupported) is accepted for Phase 1. Phase 3+ taxonomy may add "off_topic".
+        result = safe_verification_result(
+            status=status_raw,
             confidence=confidence,
+            explanation=str(parsed["explanation"]),
             verification_depth="title_only",
             evidence_quality="title_only",
             retraction_status=source.retraction_status,
+            claim_text=claim.claim_text,
+            # F1: title-only is structurally insufficient for any specific claim;
+            # the helper downgrades unsupported on title_only -> unverifiable.
+            unverifiable_reason="insufficient_evidence_depth",
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.error(
@@ -127,6 +137,9 @@ def verify_claim_title_only(
             retraction_status=source.retraction_status,
         )
 
+    unverifiable_reason: UnverifiableReason | None = (
+        "insufficient_evidence_depth" if result.status == "unverifiable" else None
+    )
     step = ProvenanceStep(
         step_id=str(uuid.uuid4()),
         claim_id=claim.claim_id,
@@ -139,6 +152,7 @@ def verify_claim_title_only(
         tokens_out=tokens_out,
         cache_hit=cache_hit,
         confidence=result.confidence,
+        unverifiable_reason=unverifiable_reason,
     )
 
     return result, step

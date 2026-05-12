@@ -16,8 +16,9 @@ from src.models import (
     Claim,
     ProvenanceStep,
     ResolvedSource,
+    UnverifiableReason,
     VerificationResult,
-    VerificationStatus,
+    safe_verification_result,
 )
 from src.verify_prompts import (
     _CITING_CONTEXT_MAX_CONFIDENCE,
@@ -114,20 +115,28 @@ def verify_claim_citing_context(
         if status_raw == "supported":
             status_raw = "partially_supported"
         confidence = min(confidence, _CITING_CONTEXT_MAX_CONFIDENCE)
-        status: VerificationStatus = status_raw  # type: ignore[assignment]
         raw_explanation = str(parsed["explanation"])
         explanation = (
             raw_explanation
             if "internal-consistency" in raw_explanation.lower()
             else f"[Internal-consistency only] {raw_explanation}"
         )
-        result = VerificationResult(
-            status=status,
-            explanation=explanation,
+        # A2: Route through safe_verification_result. The supported->partially_supported
+        # cap above handles the "supported" case. The remaining gap is "unsupported" +
+        # "citing_paper_context": that combination violates A1 Invariant 2, so
+        # safe_verification_result downgrades it to (unverifiable, None).
+        result = safe_verification_result(
+            status=status_raw,
             confidence=confidence,
+            explanation=explanation,
             verification_depth="citing_paper_context",
             evidence_quality="citing_paper_context",
             retraction_status=source.retraction_status,
+            claim_text=claim.claim_text,
+            # F1: citing-paper context is structurally insufficient for the
+            # cited paper's own claim — internal consistency only, not
+            # source-of-truth evidence.
+            unverifiable_reason="insufficient_evidence_depth",
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.error(
@@ -145,6 +154,9 @@ def verify_claim_citing_context(
             retraction_status=source.retraction_status,
         )
 
+    unverifiable_reason: UnverifiableReason | None = (
+        "insufficient_evidence_depth" if result.status == "unverifiable" else None
+    )
     step = ProvenanceStep(
         step_id=str(uuid.uuid4()),
         claim_id=claim.claim_id,
@@ -157,6 +169,7 @@ def verify_claim_citing_context(
         tokens_out=tokens_out,
         cache_hit=cache_hit,
         confidence=result.confidence,
+        unverifiable_reason=unverifiable_reason,
     )
 
     return result, step

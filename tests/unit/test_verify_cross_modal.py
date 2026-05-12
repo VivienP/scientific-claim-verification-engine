@@ -30,11 +30,17 @@ def _make_primary(
     confidence: float = 0.9,
     depth: str = "abstract",
 ) -> VerificationResult:
+    # A1: supported/unsupported require fulltext-grade evidence.
+    # Cross-modal tests exercise the cross-modal logic, not the emission gate,
+    # so we use quoted_passage to construct valid primaries.
+    eq = "quoted_passage" if status in ("supported", "unsupported") else "abstract_only"
+    actual_confidence: float | None = None if status == "unverifiable" else confidence
     return VerificationResult(
         status=status,  # type: ignore[arg-type]
         explanation="Primary verifier explanation.",
-        confidence=confidence,
+        confidence=actual_confidence,  # type: ignore[arg-type]
         verification_depth=depth,  # type: ignore[arg-type]
+        evidence_quality=eq,  # type: ignore[arg-type]
     )
 
 

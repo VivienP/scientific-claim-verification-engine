@@ -60,6 +60,127 @@ def test_regression_resolved(case: dict[str, Any]) -> None:
     )
 
 
+def test_goodwin_nejm_2022_abstract_only_returns_unverifiable() -> None:
+    """Regression pin for the Goodwin NEJM 2022 / 20% sustained response case.
+
+    The verifier previously emitted status='unsupported', confidence=0.75 while
+    internally recording evidence_quality='abstract_only' and
+    fulltext_available=False. After A2, the emission gate must downgrade this
+    to status='unverifiable', confidence=None.
+
+    This test loads the regression entry from eval/regressions/ and asserts
+    that the new behavior matches the expected_behavior described there.
+    """
+    from unittest.mock import MagicMock, patch
+
+    from anthropic.types import TextBlock
+
+    from src.models import Claim, ResolvedSource
+
+    # Load the regression entry to verify it exists and has the right shape.
+    goodwin_entry: dict[str, object] | None = None
+    for case in _CASES:
+        if case.get("regression_id") == "elicit_psilocybin__ae1ff864":
+            goodwin_entry = case
+            break
+
+    assert goodwin_entry is not None, (
+        "Regression entry 'elicit_psilocybin__ae1ff864' not found in "
+        "eval/regressions/2026-05-11/abstract_only_unsupported/regression.jsonl"
+    )
+    assert goodwin_entry["claim_text"] == (
+        "Sustained response rates at 12 weeks were only 20% in the largest randomized trial"
+    )
+
+    claim = Claim(
+        claim_id="elicit_psilocybin__ae1ff864",
+        claim_text=str(goodwin_entry["claim_text"]),
+        cited_authors=["Goodwin"],
+        cited_year=2022,
+        claim_type="factual_numeric",
+    )
+    source = ResolvedSource(
+        found=True,
+        doi=str(goodwin_entry["source_doi"]),
+        title=str(goodwin_entry["source_title"]),
+        # Representative NEJM abstract (does not mention the 20% figure explicitly)
+        abstract=(
+            "Background: Psilocybin therapy has shown promise as a treatment for "
+            "treatment-resistant major depressive disorder. Methods: We conducted a "
+            "phase 2 double-blind randomized controlled trial comparing single doses of "
+            "psilocybin (25 mg, 10 mg, 1 mg control) in 233 patients. Primary outcome "
+            "was change in MADRS score at 3 weeks. Secondary outcomes included response "
+            "and remission rates at 3 weeks, and sustained response at 12 weeks. "
+            "Results: MADRS score decreased significantly in the 25-mg group. "
+            "The incidences of response and remission at 3 weeks, but not sustained "
+            "response at 12 weeks, were generally supportive of the primary results. "
+            "Adverse events occurred in 179 of 233 participants (77%)."
+        ),
+        similarity_score=0.95,
+    )
+
+    # Mock the LLM to return the original buggy response (unsupported + 0.75).
+    # After A2, the emission gate must downgrade this to (unverifiable, None).
+    def _text_block(text: str) -> TextBlock:
+        return TextBlock(type="text", text=text)
+
+    with patch("src.verify.anthropic.Anthropic") as mock_cls:
+        mock_client = MagicMock()
+        mock_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "unsupported", "confidence": 0.75, "explanation": '
+                '"The abstract does not report a specific 20% sustained response rate '
+                "at 12 weeks. It states that sustained response at 12 weeks was NOT "
+                'generally supportive of the primary results in the 25-mg group."}'
+            )
+        ]
+        mock_response.usage.input_tokens = 200
+        mock_response.usage.output_tokens = 60
+        mock_response.usage.cache_read_input_tokens = 200
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify import verify_claim
+
+        result, step = verify_claim(claim, source)
+
+    # Assert: the Goodwin case must now return unverifiable, NOT unsupported.
+    assert result.status == "unverifiable", (
+        f"Expected 'unverifiable' but got {result.status!r}. "
+        "The A2 emission gate must downgrade unsupported+abstract_only -> unverifiable."
+    )
+    assert result.confidence is None
+    assert result.evidence_quality == "abstract_only"
+    # F1 (2026-05-12): unverifiable_reason is populated on the result itself
+    # (not just the ProvenanceStep). The verify.py emission site passes
+    # "numeric_claim_abstract_only" to the helper, which propagates to both
+    # the result and (via verify.py reading result.unverifiable_reason) the step.
+    assert result.unverifiable_reason == "numeric_claim_abstract_only", (
+        f"Expected reason 'numeric_claim_abstract_only' but got "
+        f"{result.unverifiable_reason!r}. The verify.py emission site must "
+        "pass unverifiable_reason='numeric_claim_abstract_only' to the helper."
+    )
+    assert step.unverifiable_reason == "numeric_claim_abstract_only", (
+        "ProvenanceStep.unverifiable_reason must mirror result.unverifiable_reason."
+    )
+    # F1: the explanation is rewritten by safe_verification_result so the
+    # verdict and explanation stay consistent. The original LLM "unsupported"
+    # narrative is preserved as a truncated suffix.
+    assert "Pipeline could not verify" in result.explanation, (
+        f"Expected pipeline-limit framing in explanation, got: {result.explanation!r}"
+    )
+    assert "abstract_only" in result.explanation, (
+        "Explanation must surface the evidence_quality that triggered the downgrade."
+    )
+    # The original LLM explanation should be preserved (truncated) as a suffix:
+    assert (
+        "20% sustained response rate" in result.explanation
+        or "20% sustained response" in result.explanation
+    ), "Original LLM explanation should be preserved (truncated) as a suffix."
+
+
 def test_collector_finds_jsonl_when_present() -> None:
     """Sanity check: the collector globs the right directory and parses jsonl correctly.
 

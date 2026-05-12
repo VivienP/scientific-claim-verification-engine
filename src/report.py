@@ -19,6 +19,7 @@ from src.models import (
     VerifiabilityStatus,
     VerificationResult,
 )
+from src.render_markdown import render_markdown
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -363,6 +364,14 @@ def build_report(
                     "attempts": [dataclasses.asdict(a) for a in outcome.attempts],
                 }
                 f.write(json.dumps(record) + "\n")
+
+    try:
+        md_text = render_markdown(report)
+        (run_dir / "report.md").write_text(md_text, encoding="utf-8")
+    except Exception as exc:
+        # Markdown is a convenience artifact; report.json remains canonical.
+        # Log and continue so a render bug never costs a completed pipeline run.
+        logger.warning("markdown_render_failed", report_id=report_id, error=str(exc))
 
     logger.info(
         "report_written",

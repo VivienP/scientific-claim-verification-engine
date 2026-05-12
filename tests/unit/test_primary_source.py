@@ -45,6 +45,7 @@ def _make_cv(
         status="supported",
         explanation="Evidence found.",
         confidence=0.8,
+        evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
     )
     return ClaimVerification(
         claim=claim,

@@ -48,10 +48,14 @@ def _cv(claim_id: str, verdict: str, claim_text: str = "Some claim.") -> ClaimVe
         similarity_score=0.6,
     )
     source_set = ResolvedSourceSet(sources=(source,), citation_markers=(1,))
+    # A1: supported/unsupported require fulltext-grade evidence
+    eq = "quoted_passage" if verdict in ("supported", "unsupported") else "abstract_only"
+    actual_confidence: float | None = None if verdict == "unverifiable" else 0.4
     result = VerificationResult(
         status=verdict,  # type: ignore[arg-type]
         explanation="x",
-        confidence=0.4,
+        confidence=actual_confidence,  # type: ignore[arg-type]
+        evidence_quality=eq,  # type: ignore[arg-type]
     )
     return ClaimVerification(
         claim=claim,

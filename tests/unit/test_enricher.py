@@ -42,6 +42,7 @@ def _make_cv(verdict: str = "unsupported") -> ClaimVerification:
         status=verdict,  # type: ignore[arg-type]
         explanation="Source does not support the magnitude claimed.",
         confidence=0.3,
+        evidence_quality="quoted_passage",  # A1 schema
     )
     return ClaimVerification(
         claim=claim,
@@ -345,6 +346,7 @@ def _make_cv_multi(verdict: str = "partially_supported", n_sources: int = 2) -> 
         status=verdict,  # type: ignore[arg-type]
         explanation="Mixed evidence across sources.",
         confidence=0.5,
+        evidence_quality="quoted_passage",  # A1 schema
     )
     return ClaimVerification(
         claim=claim,
@@ -459,7 +461,15 @@ def _cv_n(idx: int, verdict: str = "unsupported") -> ClaimVerification:
         similarity_score=0.7,
     )
     source_set = ResolvedSourceSet(sources=(source,), citation_markers=(1,))
-    result = VerificationResult(status=verdict, explanation="x", confidence=0.4)  # type: ignore[arg-type]
+    # A1 schema
+    eq = "quoted_passage" if verdict in ("supported", "unsupported") else "abstract_only"
+    actual_conf: float | None = None if verdict == "unverifiable" else 0.4
+    result = VerificationResult(
+        status=verdict,  # type: ignore[arg-type]
+        explanation="x",
+        confidence=actual_conf,
+        evidence_quality=eq,  # type: ignore[arg-type]
+    )
     return ClaimVerification(
         claim=claim,
         source=source,

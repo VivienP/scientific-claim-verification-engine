@@ -47,11 +47,15 @@ def _make_cv(
         similarity_score=0.7,
     )
     source_set = ResolvedSourceSet(sources=(source,), citation_markers=(1,))
+    # A1: supported/unsupported require fulltext-grade evidence.
+    eq = "quoted_passage" if verdict in ("supported", "unsupported") else "abstract_only"
+    actual_confidence: float | None = None if verdict == "unverifiable" else 0.3
     result = VerificationResult(
         status=verdict,  # type: ignore[arg-type]
         explanation="Source does not support the magnitude claimed.",
-        confidence=0.3,
+        confidence=actual_confidence,  # type: ignore[arg-type]
         retrieval_status=retrieval,  # type: ignore[arg-type]
+        evidence_quality=eq,  # type: ignore[arg-type]
     )
     return ClaimVerification(
         claim=claim,

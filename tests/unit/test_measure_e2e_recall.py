@@ -78,10 +78,14 @@ def _make_source(*, found: bool, doi: str | None = None) -> ResolvedSource:
 
 
 def _make_verification(status: str) -> VerificationResult:
+    # A1: supported/unsupported require fulltext-grade evidence
+    eq = "quoted_passage" if status in ("supported", "unsupported") else "abstract_only"
+    actual_confidence: float | None = None if status == "unverifiable" else 0.5
     return VerificationResult(
         status=status,  # type: ignore[arg-type]
         explanation="",
-        confidence=0.5,
+        confidence=actual_confidence,  # type: ignore[arg-type]
+        evidence_quality=eq,  # type: ignore[arg-type]
     )
 
 

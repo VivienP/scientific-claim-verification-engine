@@ -102,3 +102,55 @@ class TestCheckPValueCiConsistency:
         r = check_p_value_ci_consistency(1.5, 1.2, 2.4, null_value=1.0)
         assert r.consistent is False
         assert "p-value" in r.explanation
+
+
+class TestNumericCheckResultAmbiguous:
+    """Lane A: ``ambiguous`` field surfaces compact multi-metric pairing skips."""
+
+    def test_ambiguous_defaults_to_false(self) -> None:
+        r = check_or_ci_consistency(0.74, 0.58, 0.95)
+        assert r.ambiguous is False
+
+    def test_ambiguous_can_be_constructed_directly(self) -> None:
+        # Direct construction with ambiguous=True + consistent=True is the
+        # contract the engine uses for the skip-the-check case.
+        r = NumericCheckResult(
+            check_type="or_ci_consistency",
+            consistent=True,
+            extracted=[],
+            explanation="ambiguous pairing; check skipped",
+            ambiguous=True,
+        )
+        assert r.ambiguous is True
+        assert r.consistent is True
+
+
+class TestNumericAssertionSpanFields:
+    """Lane A: NumericAssertion gains span_start/end + sentence_id (optional, default None)."""
+
+    def test_default_span_fields_are_none(self) -> None:
+        a = NumericAssertion(
+            raw_text="0.74",
+            value=0.74,
+            unit=None,
+            role="primary",
+            context="HR for MACE",
+        )
+        assert a.span_start is None
+        assert a.span_end is None
+        assert a.sentence_id is None
+
+    def test_span_fields_round_trip(self) -> None:
+        a = NumericAssertion(
+            raw_text="0.74",
+            value=0.74,
+            unit=None,
+            role="primary",
+            context="HR for MACE",
+            span_start=10,
+            span_end=14,
+            sentence_id=0,
+        )
+        assert a.span_start == 10
+        assert a.span_end == 14
+        assert a.sentence_id == 0

@@ -2,6 +2,12 @@
 
 Returns structured NumericAssertion records. Backed by the Anthropic SDK with
 prompt caching on the system prompt (>1024 tokens).
+
+Span anchoring is deterministic: after the LLM emits ``raw_text`` for each
+assertion, this module derives ``span_start`` / ``span_end`` via
+``claim_text.find(raw_text)``. The LLM is not asked for character offsets —
+its job is to identify which substrings matter; the Python side owns
+positions and sentence ids.
 """
 
 from __future__ import annotations
@@ -9,6 +15,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import time
 import uuid
 from typing import Any
@@ -92,6 +99,60 @@ Reminder: emit JSON only, no commentary, no markdown.
 )
 
 
+_SENTENCE_BOUNDARY: re.Pattern[str] = re.compile(r"[.;!?](?=\s|$)")
+
+
+def _segment_sentences(text: str) -> list[tuple[int, int]]:
+    """Return ``(start, end_exclusive)`` char offsets for each sentence in ``text``.
+
+    Splits on ``.``, ``;``, ``?``, ``!`` followed by whitespace or end-of-string.
+    Pure deterministic function — used by ``_derive_sentence_id`` to anchor
+    a span to a sentence number without consulting the LLM.
+    """
+    segments: list[tuple[int, int]] = []
+    start = 0
+    for match in _SENTENCE_BOUNDARY.finditer(text):
+        end = match.end()
+        segments.append((start, end))
+        j = end
+        while j < len(text) and text[j].isspace():
+            j += 1
+        start = j
+    if start < len(text):
+        segments.append((start, len(text)))
+    return segments
+
+
+def _derive_sentence_id(offset: int | None, segments: list[tuple[int, int]]) -> int | None:
+    """Return 0-indexed sentence containing ``offset`` or ``None``."""
+    if offset is None:
+        return None
+    for i, (s, e) in enumerate(segments):
+        if s <= offset < e:
+            return i
+    return None
+
+
+def _derive_span(claim_text: str, raw_text: str) -> tuple[int | None, int | None]:
+    """Locate ``raw_text`` inside ``claim_text`` deterministically.
+
+    Returns ``(span_start, span_end)`` when ``raw_text`` appears exactly
+    once. Returns ``(None, None)`` when the substring is absent or
+    appears multiple times — the span-anchored pairing path then sees
+    ``span_start is None`` and the engine falls back to substring/window
+    matching. Pure function.
+    """
+    if not raw_text:
+        return (None, None)
+    first = claim_text.find(raw_text)
+    if first == -1:
+        return (None, None)
+    second = claim_text.find(raw_text, first + 1)
+    if second != -1:
+        return (None, None)
+    return (first, first + len(raw_text))
+
+
 def _hash(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
 
@@ -166,6 +227,7 @@ def extract_numeric_assertions(
     response_text = first_block.text if isinstance(first_block, TextBlock) else ""
 
     assertions: list[NumericAssertion] = []
+    sentence_segments = _segment_sentences(claim_text)
     try:
         parsed: dict[str, Any] = json.loads(_strip_fences(response_text))
         raw_list = parsed.get("assertions", [])
@@ -184,13 +246,19 @@ def extract_numeric_assertions(
             role: NumericRole = role_raw  # type: ignore[assignment]
             unit_raw = entry.get("unit")
             unit: str | None = str(unit_raw) if unit_raw not in (None, "") else None
+            raw_text = str(entry.get("raw_text", ""))
+            span_start, span_end = _derive_span(claim_text, raw_text)
+            sentence_id = _derive_sentence_id(span_start, sentence_segments)
             assertions.append(
                 NumericAssertion(
-                    raw_text=str(entry.get("raw_text", "")),
+                    raw_text=raw_text,
                     value=value,
                     unit=unit,
                     role=role,
                     context=str(entry.get("context", "")),
+                    span_start=span_start,
+                    span_end=span_end,
+                    sentence_id=sentence_id,
                 )
             )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:

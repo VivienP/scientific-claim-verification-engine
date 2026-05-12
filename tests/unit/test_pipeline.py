@@ -448,6 +448,78 @@ class TestClaimVerificationShape:
             cv.fetch_method = "other"  # type: ignore[misc]
 
 
+class TestEvidencePolicyShortCircuit:
+    """Lane A: pipeline gates verify_* on assess_evidence_sufficiency.
+
+    On Insufficient, the pipeline emits a deterministic unverifiable verdict
+    and DOES NOT invoke the LLM. The verifier mock should NOT be called.
+    """
+
+    @patch("src.pipeline.fetch_fulltext")
+    @patch("src.pipeline.verify_claim")
+    def test_numeric_claim_on_abstract_only_emits_unverifiable_without_llm(
+        self, mock_verify: MagicMock, mock_fetch: MagicMock
+    ) -> None:
+        """Numeric claim + abstract-only source -> policy short-circuit."""
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
+        numeric_claim = Claim(
+            claim_id="num-1",
+            claim_text="The HR for MACE was 0.74 (95% CI 0.58-0.95) at week 12.",
+            cited_authors=["Smith"],
+            cited_year=2022,
+            claim_type="factual_numeric",
+        )
+        rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
+        cv = verify_one_claim(numeric_claim, rs_set, config=PipelineConfig())
+        # Verifier was NOT called.
+        mock_verify.assert_not_called()
+        # Result is deterministic unverifiable.
+        assert cv.result.status == "unverifiable"
+        assert cv.result.confidence is None
+        assert cv.result.unverifiable_reason == "numeric_claim_abstract_only"
+        # Provenance step is model-free.
+        verify_steps = [s for s in cv.steps if s.operation == "verify"]
+        assert len(verify_steps) == 1
+        assert verify_steps[0].model_id is None
+        assert verify_steps[0].tokens_in is None
+        assert verify_steps[0].unverifiable_reason == "numeric_claim_abstract_only"
+
+    @patch("src.pipeline.fetch_fulltext")
+    @patch("src.pipeline.verify_claim")
+    def test_qualitative_claim_on_abstract_dispatches_to_verifier(
+        self, mock_verify: MagicMock, mock_fetch: MagicMock
+    ) -> None:
+        """Qualitative claim + abstract -> policy is Sufficient -> verifier runs."""
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
+        mock_verify.return_value = (_result("supported", "abstract_only"), _step())
+        rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
+        cv = verify_one_claim(_claim(), rs_set, config=PipelineConfig())
+        # Policy returned Sufficient -> verifier was called.
+        mock_verify.assert_called_once()
+        assert cv.result.status == "supported"
+
+    @patch("src.pipeline.fetch_fulltext")
+    @patch("src.pipeline.verify_claim_fulltext_with_numeric")
+    def test_numeric_claim_on_fulltext_dispatches_to_fulltext_verifier(
+        self, mock_ft_verify: MagicMock, mock_fetch: MagicMock
+    ) -> None:
+        """Numeric claim + fulltext -> policy Sufficient -> fulltext verifier runs."""
+        mock_fetch.return_value = _fo("body of paper " * 50, "oa_url_pdf")
+        mock_ft_verify.return_value = (_result("supported", "quoted_passage"), [_step()])
+        numeric_claim = Claim(
+            claim_id="num-1",
+            claim_text="HR for MACE was 0.74 (95% CI 0.58-0.95) at week 12.",
+            cited_authors=["Smith"],
+            cited_year=2022,
+            claim_type="factual_numeric",
+        )
+        rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
+        cv = verify_one_claim(numeric_claim, rs_set, config=PipelineConfig())
+        # Fulltext verifier was called (numeric+fulltext is Sufficient).
+        mock_ft_verify.assert_called_once()
+        assert cv.result.status == "supported"
+
+
 class TestProvenanceEmissionForRetrieval:
     """provenance-first.md requires fetch / chunk / select to emit steps."""
 

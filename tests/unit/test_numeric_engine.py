@@ -14,7 +14,13 @@ from unittest.mock import MagicMock, patch
 from anthropic.types import TextBlock
 
 from src.numeric.checks import NumericAssertion
-from src.numeric.engine import _find_or_ci_triple, run_numeric_check
+from src.numeric.engine import (
+    MAX_CHARS_BETWEEN_PRIMARY_AND_CI,
+    _detect_or_ci_pairing_ambiguity,
+    _find_or_ci_triple,
+    _find_span_anchored_triple,
+    run_numeric_check,
+)
 
 
 def _text_block(text: str) -> TextBlock:
@@ -438,6 +444,338 @@ class TestFindOrCiTripleHappyPath:
         assert _find_or_ci_triple(assertions) is None
 
 
+class TestSpanAnchoredPairing:
+    """Lane A tier 1: span+sentence anchoring picks the right CIs deterministically."""
+
+    def test_span_anchored_resolves_compact_two_primary_sentence(self) -> None:
+        """Compact 'HR 0.74 (95% CI 0.58-0.95) ... HR 0.79 (95% CI 0.57-1.11)'.
+
+        Both HRs in sentence 0 with same-sentence CIs that the window heuristic
+        could mis-pair. Span anchoring picks the CIs closest to HR 0.74.
+        """
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="subcut semaglutide pooled HR for MACE",
+                span_start=0,
+                span_end=7,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.58",
+                value=0.58,
+                unit=None,
+                role="ci_low",
+                context="95% CI lower bound for HR 0.74",
+                span_start=20,
+                span_end=24,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.95",
+                value=0.95,
+                unit=None,
+                role="ci_high",
+                context="95% CI upper bound for HR 0.74",
+                span_start=25,
+                span_end=29,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="HR 0.79",
+                value=0.79,
+                unit=None,
+                role="primary",
+                context="oral semaglutide PIONEER 6 HR for MACE",
+                span_start=120,
+                span_end=127,
+                sentence_id=1,
+            ),
+            NumericAssertion(
+                raw_text="0.57",
+                value=0.57,
+                unit=None,
+                role="ci_low",
+                context="95% CI lower bound for HR 0.79",
+                span_start=140,
+                span_end=144,
+                sentence_id=1,
+            ),
+            NumericAssertion(
+                raw_text="1.11",
+                value=1.11,
+                unit=None,
+                role="ci_high",
+                context="95% CI upper bound for HR 0.79",
+                span_start=145,
+                span_end=149,
+                sentence_id=1,
+            ),
+        ]
+        triple = _find_span_anchored_triple(assertions, 0)
+        assert triple == (0.74, 0.58, 0.95)
+
+    def test_span_anchored_returns_none_when_primary_lacks_span(self) -> None:
+        """Missing spans -> tier 1 returns None; caller falls through."""
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="HR for MACE",
+            ),
+            NumericAssertion(
+                raw_text="0.58",
+                value=0.58,
+                unit=None,
+                role="ci_low",
+                context="ci low",
+                span_start=10,
+                span_end=14,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.95",
+                value=0.95,
+                unit=None,
+                role="ci_high",
+                context="ci high",
+                span_start=15,
+                span_end=19,
+                sentence_id=0,
+            ),
+        ]
+        assert _find_span_anchored_triple(assertions, 0) is None
+
+    def test_span_anchored_rejects_far_ci_across_window(self) -> None:
+        """CI gap exceeds MAX_CHARS_BETWEEN_PRIMARY_AND_CI -> tier 1 returns None."""
+        far = MAX_CHARS_BETWEEN_PRIMARY_AND_CI + 5
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="HR for MACE",
+                span_start=0,
+                span_end=7,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.58",
+                value=0.58,
+                unit=None,
+                role="ci_low",
+                context="ci low",
+                span_start=7 + far,
+                span_end=11 + far,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.95",
+                value=0.95,
+                unit=None,
+                role="ci_high",
+                context="ci high",
+                span_start=12 + far,
+                span_end=16 + far,
+                sentence_id=0,
+            ),
+        ]
+        assert _find_span_anchored_triple(assertions, 0) is None
+
+    def test_span_anchored_rejects_cross_sentence_cis(self) -> None:
+        """CIs in a different sentence than the primary -> tier 1 returns None."""
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="HR for MACE",
+                span_start=0,
+                span_end=7,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.58",
+                value=0.58,
+                unit=None,
+                role="ci_low",
+                context="ci low",
+                span_start=20,
+                span_end=24,
+                sentence_id=1,
+            ),
+            NumericAssertion(
+                raw_text="0.95",
+                value=0.95,
+                unit=None,
+                role="ci_high",
+                context="ci high",
+                span_start=25,
+                span_end=29,
+                sentence_id=1,
+            ),
+        ]
+        assert _find_span_anchored_triple(assertions, 0) is None
+
+    def test_find_or_ci_triple_prefers_span_anchored_over_window(self) -> None:
+        """Tier 1 wins when both tier 1 and tier 3 (window) would match."""
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="MACE",
+                span_start=0,
+                span_end=7,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.58",
+                value=0.58,
+                unit=None,
+                role="ci_low",
+                context="ci low",
+                span_start=20,
+                span_end=24,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.95",
+                value=0.95,
+                unit=None,
+                role="ci_high",
+                context="ci high",
+                span_start=25,
+                span_end=29,
+                sentence_id=0,
+            ),
+        ]
+        assert _find_or_ci_triple(assertions) == (0.74, 0.58, 0.95)
+
+
+class TestAmbiguityDetection:
+    """Lane A ambiguity gate: refuse to flag inconsistencies when pairing is unclear."""
+
+    def test_ambiguity_detected_on_cross_referenced_ci_context(self) -> None:
+        """Two HRs without spans + window CI whose context names the OTHER HR.
+
+        Reproduces the Zhou/Wang pattern: compact multi-metric sentence where
+        the LLM's emitted CI context binds the CI to a non-selected primary.
+        The window-match would still pick (HR_A, CI_x_for_HR_B) — ambiguous.
+        """
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="MACE",
+            ),
+            NumericAssertion(
+                raw_text="HR 0.79",
+                value=0.79,
+                unit=None,
+                role="primary",
+                context="oral MACE",
+            ),
+            NumericAssertion(
+                raw_text="0.57",
+                value=0.57,
+                unit=None,
+                role="ci_low",
+                context="95% CI lower bound for HR 0.79 (oral)",
+            ),
+            NumericAssertion(
+                raw_text="1.11",
+                value=1.11,
+                unit=None,
+                role="ci_high",
+                context="95% CI upper bound for HR 0.79 (oral)",
+            ),
+        ]
+        assert _detect_or_ci_pairing_ambiguity(assertions) is True
+
+    def test_ambiguity_not_detected_with_single_primary(self) -> None:
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="MACE",
+            ),
+            NumericAssertion(
+                raw_text="0.58",
+                value=0.58,
+                unit=None,
+                role="ci_low",
+                context="ci",
+            ),
+            NumericAssertion(
+                raw_text="0.95",
+                value=0.95,
+                unit=None,
+                role="ci_high",
+                context="ci",
+            ),
+        ]
+        assert _detect_or_ci_pairing_ambiguity(assertions) is False
+
+    def test_ambiguity_not_detected_when_span_anchored_resolves(self) -> None:
+        """Span anchoring resolves the first primary -> no ambiguity."""
+        assertions = [
+            NumericAssertion(
+                raw_text="HR 0.74",
+                value=0.74,
+                unit=None,
+                role="primary",
+                context="MACE",
+                span_start=0,
+                span_end=7,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.58",
+                value=0.58,
+                unit=None,
+                role="ci_low",
+                context="ci low for HR 0.74",
+                span_start=20,
+                span_end=24,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="0.95",
+                value=0.95,
+                unit=None,
+                role="ci_high",
+                context="ci high for HR 0.74",
+                span_start=25,
+                span_end=29,
+                sentence_id=0,
+            ),
+            NumericAssertion(
+                raw_text="HR 0.79",
+                value=0.79,
+                unit=None,
+                role="primary",
+                context="oral",
+                span_start=120,
+                span_end=127,
+                sentence_id=1,
+            ),
+        ]
+        assert _detect_or_ci_pairing_ambiguity(assertions) is False
+
+
 class TestRunNumericCheck:
     @patch("src.numeric.extract.anthropic.Anthropic")
     def test_malformed_llm_response_falls_back_to_none(self, mock_anthropic_cls: MagicMock) -> None:
@@ -456,6 +794,70 @@ class TestRunNumericCheck:
         assert result is None
         assert len(steps) == 1
         assert steps[0].operation == "numeric_extract"
+
+    @patch("src.numeric.engine.extract_numeric_assertions")
+    def test_ambiguous_pairing_emits_ambiguous_skipped_check(self, mock_extract: MagicMock) -> None:
+        """End-to-end: ambiguous assertions -> NumericCheckResult(ambiguous=True)."""
+        from src.models import ProvenanceStep
+        from src.numeric.checks import NumericAssertion
+
+        mock_extract.return_value = (
+            [
+                NumericAssertion(
+                    raw_text="HR 0.74",
+                    value=0.74,
+                    unit=None,
+                    role="primary",
+                    context="MACE",
+                ),
+                NumericAssertion(
+                    raw_text="HR 0.79",
+                    value=0.79,
+                    unit=None,
+                    role="primary",
+                    context="oral MACE",
+                ),
+                NumericAssertion(
+                    raw_text="0.57",
+                    value=0.57,
+                    unit=None,
+                    role="ci_low",
+                    context="95% CI lower bound for HR 0.79",
+                ),
+                NumericAssertion(
+                    raw_text="1.11",
+                    value=1.11,
+                    unit=None,
+                    role="ci_high",
+                    context="95% CI upper bound for HR 0.79",
+                ),
+            ],
+            ProvenanceStep(
+                step_id="ne",
+                claim_id="claim-1",
+                operation="numeric_extract",
+                input_hash="i",
+                output_hash="o",
+                model_id="m",
+                timestamp=0.0,
+                tokens_in=10,
+                tokens_out=5,
+                cache_hit=False,
+                confidence=None,
+            ),
+        )
+
+        result, steps = run_numeric_check("two HRs in one sentence")
+        assert result is not None
+        assert result.ambiguous is True
+        assert result.consistent is True  # we did not detect an inconsistency
+        assert "ambiguous primary-CI pairing" in result.explanation
+        assert len(steps) == 2
+        # The check step is deterministic — no model_id, no tokens.
+        check_step = steps[1]
+        assert check_step.operation == "numeric_check"
+        assert check_step.model_id is None
+        assert check_step.tokens_in is None
 
     @patch("src.numeric.engine.extract_numeric_assertions")
     def test_p_value_ci_check_runs_when_no_or_ci_triple(self, mock_extract: MagicMock) -> None:

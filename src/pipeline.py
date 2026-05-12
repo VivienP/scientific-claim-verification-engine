@@ -45,15 +45,27 @@ from src.chunker import chunk_paper
 from src.extract import extract_claims
 from src.fetch_fulltext import fetch_fulltext
 from src.models import (
+    AccessStatus,
     Claim,
+    EvidenceBundle,
+    EvidenceDepth,
+    EvidenceQuality,
     FetchOutcome,
     FulltextMethod,
     OperationType,
     PaperChunk,
     ProvenanceStep,
+    ResolutionStatus,
     ResolvedSource,
     ResolvedSourceSet,
+    RetrievalStatus,
+    UnverifiableReason,
     VerificationResult,
+)
+from src.policy import (
+    Insufficient,
+    SufficiencyDecision,
+    assess_evidence_sufficiency,
 )
 from src.resolve import resolve_citations_multi
 from src.verify import (
@@ -63,6 +75,26 @@ from src.verify import (
     verify_claim_multi_source,
     verify_claim_title_only,
 )
+
+# Human-readable explanation tail shown on deterministic ``unverifiable``
+# verdicts emitted by the policy gate. Keeps the verdict + explanation pair
+# consistent — auditors reading either field see the same story.
+_UNVERIFIABLE_REASON_TEXT: dict[UnverifiableReason, str] = {
+    "insufficient_evidence_depth": ("evidence depth was insufficient for this claim type"),
+    "fulltext_unavailable": ("full text was not retrievable by the current fetch chain"),
+    "numeric_claim_abstract_only": (
+        "this claim contains specific numeric Results-section assertions "
+        "that cannot be confirmed from abstract-only evidence"
+    ),
+    "parse_error": "the verifier response could not be parsed",
+    "resolution_low_confidence": (
+        "the resolver flagged the source resolution as low-confidence and "
+        "the claim contains specific numerics that would silently contaminate"
+    ),
+    "resolution_source_disagreement": (
+        "multiple resolver clients disagreed on the source identity"
+    ),
+}
 
 
 def _hash(payload: str) -> str:
@@ -128,6 +160,156 @@ def _select_step(
         operation="select_passages",
         input_repr=f"{len(chunks)}|{claim.claim_text[:120]}",
         output_repr=repr([(p.section, p.char_start, p.char_end) for p in passages]),
+    )
+
+
+def _build_evidence_bundle(
+    source: ResolvedSource,
+    fetch_outcome: FetchOutcome | None,
+    *,
+    title_only_min_title_length: int,
+) -> EvidenceBundle:
+    """Assemble the policy-input bundle from one (source, fetch_outcome) pair.
+
+    Derives ``depth`` from what text is actually available (fulltext > abstract >
+    title > none) and ``access_status`` from the outcome (available > unavailable >
+    unresolved). The "blocked" access_status is reserved for Lane B
+    (``PdfFetchOutcome.failure_reason == "not_a_pdf"`` paywall HTML detection);
+    until Lane B lands, paywall failures fall through to ``unavailable``.
+
+    Resolution status falls back to ``"single_source_only"`` when the
+    multi-candidate verdict (``source.resolution_verdict``) is absent, except
+    when ``source.resolution_low_confidence`` is True — in which case the
+    bundle reports ``"low_confidence"`` so the policy can gate numeric
+    claims against weak resolutions even without Lane B's fold.
+    """
+    text: str | None = None
+    depth: EvidenceDepth
+    access_status: AccessStatus
+
+    if fetch_outcome is not None and fetch_outcome.text is not None:
+        text = fetch_outcome.text
+        depth = "fulltext"
+        access_status = "available"
+    elif source.found and source.abstract is not None:
+        text = source.abstract
+        depth = "abstract"
+        access_status = "available"
+    elif (
+        source.found
+        and source.title is not None
+        and len(source.title) >= title_only_min_title_length
+    ):
+        text = None
+        depth = "title"
+        access_status = "available"
+    elif source.found:
+        text = None
+        depth = "none"
+        access_status = "unavailable"
+    else:
+        text = None
+        depth = "none"
+        access_status = "unresolved"
+
+    resolution_status: ResolutionStatus
+    if source.resolution_verdict is not None:
+        resolution_status = source.resolution_verdict.status
+        candidates = source.resolution_verdict.candidates
+    elif source.resolution_low_confidence:
+        resolution_status = "low_confidence"
+        candidates = ()
+    else:
+        resolution_status = "single_source_only"
+        candidates = ()
+
+    fetch_attempts = fetch_outcome.attempts if fetch_outcome is not None else ()
+
+    return EvidenceBundle(
+        text=text,
+        depth=depth,
+        access_status=access_status,
+        source_resolution_status=resolution_status,
+        fetch_attempts=fetch_attempts,
+        resolution_candidates=candidates,
+    )
+
+
+def _result_fields_for_depth(
+    depth: EvidenceDepth,
+) -> tuple[str, EvidenceQuality, RetrievalStatus, bool]:
+    """Map ``EvidenceDepth`` to the four ``VerificationResult`` metadata fields.
+
+    Returns ``(verification_depth, evidence_quality, retrieval_status,
+    fulltext_available)``. Used by the deterministic-unverifiable emission
+    helper so the metadata stays consistent with what the LLM verifier
+    would have emitted at the same depth.
+    """
+    if depth == "fulltext":
+        return ("fulltext", "passages_searched_no_quote", "passage_found", True)
+    if depth == "abstract":
+        return ("abstract", "abstract_only", "fulltext_unavailable", False)
+    if depth == "title":
+        return ("title_only", "title_only", "fulltext_unavailable", False)
+    return ("abstract", "no_evidence", "fulltext_unavailable", False)
+
+
+def _emit_unverifiable_result(
+    *,
+    reason: UnverifiableReason,
+    depth: EvidenceDepth,
+    retraction_status: bool,
+) -> VerificationResult:
+    """Build a deterministic ``unverifiable`` verdict — no LLM call.
+
+    The verdict + explanation pair stays consistent: the explanation names
+    the policy reason and states explicitly that no LLM was consulted, so a
+    downstream reader cannot mistake the verdict for an epistemic claim
+    about the source's content.
+    """
+    verification_depth, evidence_quality, retrieval_status, fulltext_available = (
+        _result_fields_for_depth(depth)
+    )
+    explanation = (
+        "Pipeline declined to invoke the verifier: "
+        f"{_UNVERIFIABLE_REASON_TEXT[reason]}. "
+        "No LLM call was made — the verdict is deterministic."
+    )
+    return VerificationResult(
+        status="unverifiable",
+        confidence=None,
+        explanation=explanation,
+        evidence_quality=evidence_quality,
+        verification_depth=verification_depth,  # type: ignore[arg-type]
+        retrieval_status=retrieval_status,
+        fulltext_available=fulltext_available,
+        retraction_status=retraction_status,
+        unverifiable_reason=reason,
+    )
+
+
+def _unverifiable_step(
+    claim: Claim, source: ResolvedSource, reason: UnverifiableReason
+) -> ProvenanceStep:
+    """Provenance step for a policy-gated deterministic unverifiable verdict.
+
+    No ``model_id``, no tokens — the gate is pure-Python. The
+    ``unverifiable_reason`` is mirrored from the emitted VerificationResult so
+    auditors reading the JSONL see the same reason on both records.
+    """
+    return ProvenanceStep(
+        step_id=str(uuid.uuid4()),
+        claim_id=claim.claim_id,
+        operation="verify",
+        input_hash=_hash(repr((claim, source))),
+        output_hash=_hash(f"unverifiable|{reason}"),
+        model_id=None,
+        timestamp=time.time(),
+        tokens_in=None,
+        tokens_out=None,
+        cache_hit=None,
+        confidence=None,
+        unverifiable_reason=reason,
     )
 
 
@@ -283,6 +465,7 @@ def verify_one_claim(
         passages_per_source: dict[str, list[PaperChunk]] = {}
         methods_per_source: dict[str, FulltextMethod | str] = {}
         outcomes_per_source: dict[str, FetchOutcome] = {}
+        evidence_per_source: dict[str, EvidenceBundle] = {}
         for sub_source in source_set:
             if not sub_source.found:
                 continue
@@ -299,10 +482,16 @@ def verify_one_claim(
                 )
                 steps.append(_select_step(claim, sub_chunks, sub_passages))
                 passages_per_source[sub_source.doi or ""] = sub_passages
+            evidence_per_source[sub_source.doi or ""] = _build_evidence_bundle(
+                sub_source,
+                outcome,
+                title_only_min_title_length=config.title_only_min_title_length,
+            )
         result, verify_steps = verify_claim_multi_source(
             claim,
             source_set,
             passages_per_source=passages_per_source,
+            evidence_per_source=evidence_per_source,
             api_key=config.api_key,
         )
         steps.extend(verify_steps)
@@ -313,12 +502,36 @@ def verify_one_claim(
         primary_outcome = fetch_fulltext(source, db_path=config.db_path)
         fulltext, fetch_method = primary_outcome.text, primary_outcome.method
         steps.append(_fetch_step(claim, source, fetch_method, fulltext))
-        if fulltext is not None:
+
+        evidence = _build_evidence_bundle(
+            source,
+            primary_outcome,
+            title_only_min_title_length=config.title_only_min_title_length,
+        )
+        decision: SufficiencyDecision = assess_evidence_sufficiency(claim, source, evidence)
+
+        if source.found and isinstance(decision, Insufficient):
+            # Policy short-circuit: deterministic unverifiable, no LLM call.
+            # Applied only when the source resolved — source.found=False keeps
+            # its existing not_addressed short-circuit via verify_claim below
+            # so legacy callers see no semantic change to the resolver-failure
+            # path.
+            result = _emit_unverifiable_result(
+                reason=decision.reason,
+                depth=evidence.depth,
+                retraction_status=source.retraction_status,
+            )
+            steps.append(_unverifiable_step(claim, source, decision.reason))
+        elif fulltext is not None:
             chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
             steps.append(_chunk_step(claim, source, chunks))
             selected = list(select_passages(claim.claim_text, chunks, top_k=config.top_k_passages))
             steps.append(_select_step(claim, chunks, selected))
             passages = tuple(selected)
+            # Always dispatch to the fulltext-plus-numeric helper when fulltext was
+            # retrieved — the numeric engine runs even on empty-BM25 cases and
+            # ``verify_claim_fulltext`` itself defensively emits unverifiable
+            # when passages is empty (its no-LLM empty-passages branch).
             result, verify_steps = verify_claim_fulltext_with_numeric(
                 claim,
                 source,

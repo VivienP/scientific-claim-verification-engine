@@ -13,6 +13,7 @@ import pytest
 
 from src.models import (
     Claim,
+    FetchOutcome,
     PaperChunk,
     ProvenanceStep,
     ResolvedSource,
@@ -64,13 +65,28 @@ def _step(claim_id: str = "c1") -> ProvenanceStep:
     )
 
 
+def _fo(text: str | None, method: str = "abstract_fallback") -> FetchOutcome:
+    """I1: build a minimal FetchOutcome for mocks. Attempts intentionally empty;
+    routing tests don't assert on per-attempt telemetry, only on (text, method).
+    """
+    return FetchOutcome(
+        text=text,
+        method=method,  # type: ignore[arg-type]  # Literal narrowed at call site
+        attempts=(),
+        elapsed_ms_total=0,
+    )
+
+
 def _result(
-    status: str = "supported", evidence_quality: str = "abstract_only"
+    status: str = "supported", evidence_quality: str = "quoted_passage"
 ) -> VerificationResult:
+    # A1: default evidence_quality changed to "quoted_passage" to match default
+    # status="supported" (supported/unsupported require fulltext-grade evidence).
+    actual_confidence: float | None = None if status == "unverifiable" else 0.9
     return VerificationResult(
         status=status,  # type: ignore[arg-type]
         explanation="ok",
-        confidence=0.9,
+        confidence=actual_confidence,  # type: ignore[arg-type]
         evidence_quality=evidence_quality,  # type: ignore[arg-type]
     )
 
@@ -83,7 +99,7 @@ class TestVerifyOneClaimRouting:
     def test_fulltext_path_when_full_text_available(
         self, mock_ft_verify: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = ("body of paper " * 50, "oa_url_pdf")
+        mock_fetch.return_value = _fo("body of paper " * 50, "oa_url_pdf")
         mock_ft_verify.return_value = (_result("supported", "quoted_passage"), [_step()])
         rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
         cv = verify_one_claim(_claim(), rs_set, config=PipelineConfig())
@@ -96,7 +112,7 @@ class TestVerifyOneClaimRouting:
     def test_abstract_path_when_no_fulltext_but_abstract_present(
         self, mock_verify: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result(), _step())
         rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
         cv = verify_one_claim(_claim(), rs_set, config=PipelineConfig())
@@ -108,7 +124,7 @@ class TestVerifyOneClaimRouting:
     def test_title_only_path_when_no_abstract_but_long_title(
         self, mock_to: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_to.return_value = (_result("partially_supported", "title_only"), _step())
         long_title = "A long descriptive scientific paper title beyond twenty chars"
         src = ResolvedSource(
@@ -128,7 +144,7 @@ class TestVerifyOneClaimRouting:
     def test_short_circuit_when_source_not_found(
         self, mock_verify: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (
             _result("not_addressed", "no_evidence"),
             _step(),
@@ -144,7 +160,7 @@ class TestVerifyOneClaimRouting:
     def test_multi_source_path_when_set_has_multiple_found_sources(
         self, mock_multi: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_multi.return_value = (_result(), [_step(), _step()])
         rs_set = ResolvedSourceSet(sources=(_source(), _source()), citation_markers=(81, 82))
         cv = verify_one_claim(_claim(markers=[81, 82]), rs_set, config=PipelineConfig())
@@ -160,7 +176,7 @@ class TestVerifyOneClaimRouting:
     def test_multi_source_disabled_falls_back_to_primary(
         self, mock_verify: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result(), _step())
         rs_set = ResolvedSourceSet(sources=(_source(), _source()), citation_markers=(81, 82))
         cv = verify_one_claim(
@@ -179,7 +195,7 @@ class TestCitingContextFallback:
     def test_fires_when_evidence_quality_is_no_evidence(
         self, mock_cc: MagicMock, mock_verify: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result("not_addressed", "no_evidence"), _step())
         mock_cc.return_value = (
             _result("partially_supported", "citing_paper_context"),
@@ -204,7 +220,7 @@ class TestCitingContextFallback:
     def test_does_not_fire_when_evidence_quality_is_quoted_passage(
         self, mock_cc: MagicMock, mock_ft: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = ("full text body", "oa_url_pdf")
+        mock_fetch.return_value = _fo("full text body", "oa_url_pdf")
         mock_ft.return_value = (_result("supported", "quoted_passage"), [_step()])
         rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
         verify_one_claim(
@@ -221,7 +237,7 @@ class TestCitingContextFallback:
     def test_disabled_via_config(
         self, mock_cc: MagicMock, mock_verify: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result("not_addressed", "no_evidence"), _step())
         rs_set = ResolvedSourceSet(
             sources=(_source(found=False, abstract=None),), citation_markers=()
@@ -245,13 +261,13 @@ class TestCitingContextFallback:
         only override on partially_supported / unsupported. `supported`
         from cc must not propagate.
         """
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         original_result = _result("not_addressed", "no_evidence")
         mock_verify.return_value = (original_result, _step())
-        # Invalid cc output: status=supported is forbidden by the prompt.
-        # Pipeline must not override the original verdict with this.
+        # A2: supported+citing_paper_context downgrades to unverifiable via helper.
+        # Pipeline must not override the original not_addressed verdict with this.
         mock_cc.return_value = (
-            _result("supported", "citing_paper_context"),
+            _result("unverifiable", "citing_paper_context"),
             _step(),
         )
         rs_set = ResolvedSourceSet(
@@ -278,7 +294,7 @@ class TestCitingContextFallback:
         verdicts (passages shown, none quoted) silently bypass the path
         designed for exactly that situation.
         """
-        mock_fetch.return_value = ("full text body", "oa_url_pdf")
+        mock_fetch.return_value = _fo("full text body", "oa_url_pdf")
         # Fulltext path returns the new evidence_quality with non-empty
         # source_passages (BM25 fallback fired in verify_claim_fulltext).
         mock_ft.return_value = (
@@ -322,7 +338,7 @@ class TestRunPipeline:
         mock_parse_bib.return_value = {}
         rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
         mock_resolve.return_value = ({"c1": rs_set}, [_step("c1")])
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result(), _step("c1"))
 
         cvs, all_steps = run_pipeline("Some text [1].", config=PipelineConfig())
@@ -351,7 +367,7 @@ class TestRunPipeline:
         mock_parse_bib.return_value = {}
         rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
         mock_resolve.return_value = ({"c1": rs_set}, [_step("c1")])
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result(), _step("c1"))
 
         run_pipeline(
@@ -377,7 +393,7 @@ class TestRunPipeline:
         mock_extract.return_value = ([_claim("c1")], _step("c1"))
         rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
         mock_resolve.return_value = ({"c1": rs_set}, [_step("c1")])
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result(), _step("c1"))
 
         run_pipeline(
@@ -446,7 +462,7 @@ class TestProvenanceEmissionForRetrieval:
         mock_chunk: MagicMock,
         mock_fetch: MagicMock,
     ) -> None:
-        mock_fetch.return_value = ("body", "oa_url_pdf")
+        mock_fetch.return_value = _fo("body", "oa_url_pdf")
         chunk = PaperChunk(
             doi="10.1/x",
             section="results",
@@ -473,7 +489,7 @@ class TestProvenanceEmissionForRetrieval:
     def test_abstract_path_emits_fetch_then_verify(
         self, mock_verify: MagicMock, mock_fetch: MagicMock
     ) -> None:
-        mock_fetch.return_value = (None, "abstract_fallback")
+        mock_fetch.return_value = _fo(None, "abstract_fallback")
         mock_verify.return_value = (_result(), _step())
         rs_set = ResolvedSourceSet(sources=(_source(),), citation_markers=())
         cv = verify_one_claim(_claim(), rs_set, config=PipelineConfig())

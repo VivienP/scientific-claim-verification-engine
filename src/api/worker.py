@@ -62,6 +62,12 @@ def run_verification_job(
         claims = [cv.claim for cv in cvs]
         sources = {cv.claim.claim_id: cv.source for cv in cvs}
         results = {cv.claim.claim_id: cv.result for cv in cvs}
+        # I1 (2026-05-12): surface per-claim fetch telemetry in report.json
+        # so on-prem deployments get the coverage-by-publisher diagnostic
+        # without needing a separate post-processing pass.
+        fetch_outcomes = {
+            cv.claim.claim_id: cv.fetch_outcome for cv in cvs if cv.fetch_outcome is not None
+        }
         build_report(
             report_id=run_dir.name,
             input_text=req.text,
@@ -70,6 +76,7 @@ def run_verification_job(
             results=results,
             provenance_steps=pipeline_steps,
             output_dir=runs_root.parent,
+            fetch_outcomes=fetch_outcomes,
         )
 
         # Step 2 — optional Copilot enrichment.

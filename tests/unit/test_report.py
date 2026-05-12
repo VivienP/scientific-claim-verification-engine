@@ -32,7 +32,16 @@ def _make_source(found: bool = True) -> ResolvedSource:
 
 
 def _make_result(status: str = "supported") -> VerificationResult:
-    return VerificationResult(status=status, explanation="Ok.", confidence=0.9)  # type: ignore[arg-type]
+    # A1 schema: fulltext-grade evidence_quality for definitive verdicts;
+    # confidence is None iff status == "unverifiable".
+    eq = "quoted_passage" if status in ("supported", "unsupported") else "abstract_only"
+    confidence: float | None = None if status == "unverifiable" else 0.9
+    return VerificationResult(
+        status=status,  # type: ignore[arg-type]
+        explanation="Ok.",
+        confidence=confidence,
+        evidence_quality=eq,  # type: ignore[arg-type]
+    )
 
 
 def _make_step(
@@ -93,20 +102,24 @@ class TestBuildReport:
     def test_summary_stats(self, tmp_path: Path) -> None:
         from src.report import build_report
 
-        claims = [_make_claim(f"c{i}") for i in range(4)]
+        # A4: unverifiable must be counted separately from not_addressed.
+        # 5 claims, one per status — confirms each bucket is mutually exclusive.
+        claims = [_make_claim(f"c{i}") for i in range(5)]
         sources = {
             "c0": _make_source(found=True),
             "c1": _make_source(found=True),
             "c2": _make_source(found=False),
             "c3": _make_source(found=True),
+            "c4": _make_source(found=True),
         }
         results = {
             "c0": _make_result("supported"),
             "c1": _make_result("unsupported"),
             "c2": _make_result("not_addressed"),
             "c3": _make_result("partially_supported"),
+            "c4": _make_result("unverifiable"),
         }
-        steps = [_make_step(f"s{i}", f"c{i}") for i in range(4)]
+        steps = [_make_step(f"s{i}", f"c{i}") for i in range(5)]
 
         run_dir = build_report(
             "report-003", "Text.", claims, sources, results, steps, output_dir=tmp_path
@@ -116,12 +129,13 @@ class TestBuildReport:
             report = json.load(f)
 
         summary = report["summary"]
-        assert summary["total_claims"] == 4
+        assert summary["total_claims"] == 5
         assert summary["supported"] == 1
         assert summary["unsupported"] == 1
         assert summary["not_addressed"] == 1
         assert summary["partially_supported"] == 1
-        assert summary["citation_found_rate"] == pytest.approx(3 / 4)
+        assert summary["unverifiable"] == 1
+        assert summary["citation_found_rate"] == pytest.approx(4 / 5)
 
     def test_ec5_empty_claims_valid_report(self, tmp_path: Path) -> None:
         """EC-5: Empty claims list produces valid report with total_claims=0."""
@@ -220,6 +234,7 @@ class TestPhase1ReportFields:
                 verification_depth="fulltext",
                 fulltext_available=True,
                 retrieval_status="passage_found",
+                evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
             ),
             "c1": VerificationResult(
                 status="unsupported",
@@ -228,11 +243,13 @@ class TestPhase1ReportFields:
                 verification_depth="fulltext",
                 fulltext_available=True,
                 retrieval_status="passage_found",
+                evidence_quality="quoted_passage",  # A1: unsupported requires fulltext evidence
             ),
-            "c2": VerificationResult(  # abstract path
-                status="supported",
-                explanation="ok",
-                confidence=0.9,
+            "c2": VerificationResult(  # abstract path -> must be unverifiable or not_addressed
+                status="unverifiable",
+                explanation="insufficient evidence",
+                confidence=None,
+                evidence_quality="abstract_only",
             ),
         }
         steps = [_make_step(f"s{i}", f"c{i}") for i in range(3)]
@@ -301,12 +318,14 @@ class TestPhase1ReportFields:
                 explanation="ok",
                 confidence=0.9,
                 numeric_check=nc_consistent,
+                evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
             ),
             "c1": VerificationResult(
                 status="unsupported",
                 explanation="ok",
                 confidence=0.9,
                 numeric_check=nc_flagged,
+                evidence_quality="quoted_passage",  # A1: unsupported requires fulltext evidence
             ),
             "c2": VerificationResult(
                 status="not_addressed",
@@ -468,6 +487,7 @@ class TestPhase1ReportFields:
                 verification_depth="fulltext",
                 fulltext_available=True,
                 retrieval_status="passage_found",
+                evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
             ),
             "c1": VerificationResult(
                 status="not_addressed",
@@ -554,9 +574,9 @@ class TestPhase1ReportFields:
                 fulltext_available=True,
             ),
             "c4": VerificationResult(
-                status="supported",
-                explanation="ok",
-                confidence=0.9,
+                status="unverifiable",  # A1: supported on abstract-only is forbidden
+                explanation="abstract only — insufficient evidence",
+                confidence=None,
                 retrieval_status="fulltext_unavailable",
                 verification_depth="abstract",
             ),
@@ -767,3 +787,109 @@ class TestUsageByStage:
         per_stage_total = sum(float(b["cost_usd"]) for b in usage.values())
         # The auto-emitted aggregate step contributes 0 cost (no tokens).
         assert per_stage_total == report["summary"]["total_cost_usd"]
+
+
+class TestI1FetchTelemetry:
+    """I1 (2026-05-12): build_report aggregates per-claim FetchOutcome into
+    summary.fetch_attempts_by_method + summary.fetch_failures_by_reason, and
+    writes fetch_traces.jsonl when outcomes are supplied.
+    """
+
+    def test_fetch_outcomes_aggregated_into_summary(self, tmp_path: Path) -> None:
+        from src.models import FetchAttempt, FetchOutcome
+        from src.report import build_report
+
+        claims = [_make_claim("c1"), _make_claim("c2")]
+        sources = {"c1": _make_source(), "c2": _make_source()}
+        results = {"c1": _make_result(), "c2": _make_result("unsupported")}
+        steps = [_make_step("s1", "c1")]
+        # c1: succeeded via oa_url_pdf with no failed attempts.
+        # c2: oa_url failed, then pmc failed, then unpaywall succeeded.
+        fetch_outcomes = {
+            "c1": FetchOutcome(
+                text="full text",
+                method="oa_url_pdf",
+                attempts=(
+                    FetchAttempt(method="oa_url_pdf", success=True, reason=None, elapsed_ms=10),
+                ),
+                elapsed_ms_total=10,
+            ),
+            "c2": FetchOutcome(
+                text="up text",
+                method="unpaywall_pdf",
+                attempts=(
+                    FetchAttempt(
+                        method="oa_url_pdf",
+                        success=False,
+                        reason="oa_url_pdf_failed",
+                        elapsed_ms=15,
+                    ),
+                    FetchAttempt(
+                        method="pmc", success=False, reason="pmc_no_fulltext", elapsed_ms=20
+                    ),
+                    FetchAttempt(method="unpaywall_pdf", success=True, reason=None, elapsed_ms=25),
+                ),
+                elapsed_ms_total=60,
+            ),
+        }
+
+        run_dir = build_report(
+            "i1-001",
+            "T.",
+            claims,
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+            fetch_outcomes=fetch_outcomes,
+        )
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        summary = report["summary"]
+        # Final methods: oa_url_pdf=1 (c1), unpaywall_pdf=1 (c2).
+        assert summary["fetch_attempts_by_method"] == {
+            "oa_url_pdf": 1,
+            "unpaywall_pdf": 1,
+        }
+        # Failures aggregated across all claims.
+        assert summary["fetch_failures_by_reason"] == {
+            "oa_url_pdf_failed": 1,
+            "pmc_no_fulltext": 1,
+        }
+
+        # fetch_traces.jsonl persisted, one line per claim with non-None outcome.
+        traces_path = run_dir / "fetch_traces.jsonl"
+        assert traces_path.exists()
+        lines = traces_path.read_text(encoding="utf-8").splitlines()
+        assert len(lines) == 2
+        c2_trace = json.loads(lines[1])
+        assert c2_trace["claim_id"] == "c2"
+        assert c2_trace["final_method"] == "unpaywall_pdf"
+        assert [a["reason"] for a in c2_trace["attempts"]] == [
+            "oa_url_pdf_failed",
+            "pmc_no_fulltext",
+            None,
+        ]
+
+    def test_no_fetch_outcomes_omits_diagnostic_fields(self, tmp_path: Path) -> None:
+        """Backward compatibility: callers that don't pass fetch_outcomes
+        (the README Quick Start, all pre-I1 tests) must still get a valid
+        report without the new fields.
+        """
+        from src.report import build_report
+
+        claims = [_make_claim("c1")]
+        sources = {"c1": _make_source()}
+        results = {"c1": _make_result()}
+        steps = [_make_step("s1", "c1")]
+
+        run_dir = build_report("i1-002", "T.", claims, sources, results, steps, output_dir=tmp_path)
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        summary = report["summary"]
+        assert "fetch_attempts_by_method" not in summary
+        assert "fetch_failures_by_reason" not in summary
+        # And no fetch_traces.jsonl file is written when outcomes are absent.
+        assert not (run_dir / "fetch_traces.jsonl").exists()

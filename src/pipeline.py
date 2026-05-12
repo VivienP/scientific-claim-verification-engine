@@ -43,9 +43,11 @@ from src.bibliography import BibEntry, parse_bibliography
 from src.bm25_selector import select_passages
 from src.chunker import chunk_paper
 from src.extract import extract_claims
-from src.fetch_fulltext import FulltextMethod, fetch_fulltext
+from src.fetch_fulltext import fetch_fulltext
 from src.models import (
     Claim,
+    FetchOutcome,
+    FulltextMethod,
     OperationType,
     PaperChunk,
     ProvenanceStep,
@@ -234,6 +236,12 @@ class ClaimVerification:
     fetch_method: FulltextMethod | str
     passages: tuple[PaperChunk, ...] = field(default_factory=tuple)
     steps: tuple[ProvenanceStep, ...] = field(default_factory=tuple)
+    # I1 (2026-05-12): per-claim fetch telemetry. Optional for backward
+    # compatibility with tests that construct ClaimVerification by hand
+    # (no FetchOutcome available). Populated by verify_one_claim from the
+    # primary fetch_fulltext call (multi-source mode picks the primary
+    # source's outcome).
+    fetch_outcome: FetchOutcome | None = None
 
 
 def verify_one_claim(
@@ -274,14 +282,18 @@ def verify_one_claim(
     passages: tuple[PaperChunk, ...] = ()
     fetch_method: FulltextMethod | str = "abstract_fallback"
 
+    primary_outcome: FetchOutcome | None = None
     if config.enable_multi_source and len(source_set) > 1 and len(source_set.found_sources()) > 0:
         passages_per_source: dict[str, list[PaperChunk]] = {}
         methods_per_source: dict[str, FulltextMethod | str] = {}
+        outcomes_per_source: dict[str, FetchOutcome] = {}
         for sub_source in source_set:
             if not sub_source.found:
                 continue
-            ft, sub_method = fetch_fulltext(sub_source, db_path=config.db_path)
+            outcome = fetch_fulltext(sub_source, db_path=config.db_path)
+            ft, sub_method = outcome.text, outcome.method
             methods_per_source[sub_source.doi or ""] = sub_method
+            outcomes_per_source[sub_source.doi or ""] = outcome
             steps.append(_fetch_step(claim, sub_source, sub_method, ft))
             if ft is not None:
                 sub_chunks = chunk_paper(sub_source.doi or claim.claim_id, ft)
@@ -299,9 +311,11 @@ def verify_one_claim(
         )
         steps.extend(verify_steps)
         fetch_method = methods_per_source.get(source.doi or "", "abstract_fallback")
+        primary_outcome = outcomes_per_source.get(source.doi or "")
         passages = tuple(passages_per_source.get(source.doi or "", []))
     else:
-        fulltext, fetch_method = fetch_fulltext(source, db_path=config.db_path)
+        primary_outcome = fetch_fulltext(source, db_path=config.db_path)
+        fulltext, fetch_method = primary_outcome.text, primary_outcome.method
         steps.append(_fetch_step(claim, source, fetch_method, fulltext))
         if fulltext is not None:
             chunks = chunk_paper(source.doi or claim.claim_id, fulltext)
@@ -361,6 +375,7 @@ def verify_one_claim(
         fetch_method=fetch_method,
         passages=passages,
         steps=tuple(steps),
+        fetch_outcome=primary_outcome,
     )
 
 

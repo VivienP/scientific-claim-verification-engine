@@ -13,6 +13,7 @@ import structlog
 
 from src.models import (
     Claim,
+    FetchOutcome,
     ProvenanceStep,
     ResolvedSource,
     VerifiabilityStatus,
@@ -96,8 +97,23 @@ def _compute_summary_stats(
     claims: list[Claim],
     results: dict[str, VerificationResult],
     sources: dict[str, ResolvedSource],
+    fetch_outcomes: dict[str, FetchOutcome] | None = None,
 ) -> dict[str, int | float | str | dict[str, int]]:
-    """Pure helper — compute summary statistics. No I/O."""
+    """Pure helper — compute summary statistics. No I/O.
+
+    I1 (2026-05-12): when ``fetch_outcomes`` is supplied, two diagnostic
+    fields are added to the returned dict:
+        - ``fetch_attempts_by_method``: count of FINAL methods used per
+          claim (1 per claim), keyed by the method that ultimately
+          succeeded or ``"abstract_fallback"`` when none did.
+        - ``fetch_failures_by_reason``: count of FAILED attempts across
+          all claims, keyed by ``FetchFailureReason``. A single claim
+          may contribute multiple failures (e.g. oa_url failed AND
+          unpaywall failed) before terminating.
+
+    When ``fetch_outcomes`` is None, neither field is present — preserves
+    backward compatibility with callers / tests that don't plumb outcomes.
+    """
     total = len(claims)
 
     def result_for(claim: Claim) -> VerificationResult:
@@ -116,6 +132,19 @@ def _compute_summary_stats(
     unsupported = sum(1 for c in claims if result_for(c).status == "unsupported")
     not_addressed = sum(1 for c in claims if result_for(c).status == "not_addressed")
     partially_supported = sum(1 for c in claims if result_for(c).status == "partially_supported")
+    unverifiable = sum(1 for c in claims if result_for(c).status == "unverifiable")
+
+    # F1 (2026-05-12): break down `unverifiable` count by reason. Surfaces
+    # the access-limit category for downstream readers: "fulltext_unavailable"
+    # tells the operator the fetch chain failed (potential coverage gap);
+    # "numeric_claim_abstract_only" tells them the abstract was structurally
+    # insufficient for that specific claim shape.
+    unverifiable_by_reason: dict[str, int] = {}
+    for c in claims:
+        result = result_for(c)
+        if result.status == "unverifiable":
+            reason = result.unverifiable_reason or "unspecified"
+            unverifiable_by_reason[reason] = unverifiable_by_reason.get(reason, 0) + 1
 
     found_count = sum(1 for c in claims if source_for(c).abstract is not None)
     citation_found_rate = found_count / total if total > 0 else 0.0
@@ -180,12 +209,14 @@ def _compute_summary_stats(
                 retrieval_status=retrieval,
             )
 
-    return {
+    stats: dict[str, int | float | str | dict[str, int]] = {
         "total_claims": total,
         "supported": supported,
         "unsupported": unsupported,
         "not_addressed": not_addressed,
         "partially_supported": partially_supported,
+        "unverifiable": unverifiable,
+        "unverifiable_by_reason": unverifiable_by_reason,
         "citation_found_rate": citation_found_rate,
         "verifiability_status": _verifiability_status(citation_found_rate),
         "fulltext_verified": fulltext_verified,
@@ -200,6 +231,30 @@ def _compute_summary_stats(
         "not_addressed_breakdown": not_addressed_breakdown,
     }
 
+    # I1: fetch telemetry aggregation. Skipped entirely when outcomes are
+    # absent — the diagnostic fields don't appear in the report. Operators
+    # can rely on `"fetch_failures_by_reason" in stats` to detect whether
+    # the run was instrumented.
+    if fetch_outcomes:
+        fetch_attempts_by_method: dict[str, int] = {}
+        fetch_failures_by_reason: dict[str, int] = {}
+        for c in claims:
+            outcome = fetch_outcomes.get(c.claim_id)
+            if outcome is None:
+                continue
+            fetch_attempts_by_method[outcome.method] = (
+                fetch_attempts_by_method.get(outcome.method, 0) + 1
+            )
+            for att in outcome.attempts:
+                if not att.success and att.reason:
+                    fetch_failures_by_reason[att.reason] = (
+                        fetch_failures_by_reason.get(att.reason, 0) + 1
+                    )
+        stats["fetch_attempts_by_method"] = fetch_attempts_by_method
+        stats["fetch_failures_by_reason"] = fetch_failures_by_reason
+
+    return stats
+
 
 def build_report(
     report_id: str,
@@ -210,6 +265,7 @@ def build_report(
     provenance_steps: list[ProvenanceStep],
     *,
     output_dir: Path | None = None,
+    fetch_outcomes: dict[str, FetchOutcome] | None = None,
 ) -> Path:
     """Aggregate pipeline results and write report.json + provenance.jsonl.
 
@@ -224,7 +280,7 @@ def build_report(
     run_dir = resolved_output_dir / "runs" / report_id
     run_dir.mkdir(parents=True, exist_ok=True)
 
-    stats = _compute_summary_stats(claims, results, sources)
+    stats = _compute_summary_stats(claims, results, sources, fetch_outcomes)
     total_cost = _compute_cost(provenance_steps)
     stats["total_cost_usd"] = total_cost
     stats["usage_by_stage"] = _compute_usage_by_stage(provenance_steps)  # type: ignore[assignment]
@@ -288,6 +344,25 @@ def build_report(
     with open(run_dir / "provenance.jsonl", "w", encoding="utf-8") as f:
         for step in all_steps:
             f.write(json.dumps(dataclasses.asdict(step)) + "\n")
+
+    # I1 (2026-05-12): one line per claim, per-attempt fetch trace. Persisted
+    # only when fetch_outcomes are supplied; scripts/analyze_fetch_coverage.py
+    # (Track D4) reads these to produce the weekly coverage-by-publisher view.
+    if fetch_outcomes:
+        with open(run_dir / "fetch_traces.jsonl", "w", encoding="utf-8") as f:
+            for claim in claims:
+                outcome = fetch_outcomes.get(claim.claim_id)
+                if outcome is None:
+                    continue
+                src_opt: ResolvedSource | None = sources.get(claim.claim_id)
+                record = {
+                    "claim_id": claim.claim_id,
+                    "doi": src_opt.doi if src_opt is not None else None,
+                    "final_method": outcome.method,
+                    "elapsed_ms_total": outcome.elapsed_ms_total,
+                    "attempts": [dataclasses.asdict(a) for a in outcome.attempts],
+                }
+                f.write(json.dumps(record) + "\n")
 
     logger.info(
         "report_written",

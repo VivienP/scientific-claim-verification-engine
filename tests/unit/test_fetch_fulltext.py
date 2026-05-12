@@ -1,4 +1,8 @@
-"""Unit tests for src/fetch_fulltext.py — orchestration with sub-clients patched."""
+"""Unit tests for src/fetch_fulltext.py — orchestration with sub-clients patched.
+
+I1 (2026-05-12): tests updated to assert on the structured FetchOutcome
+return shape. Two new tests pin the failure-reason recording semantics.
+"""
 
 from __future__ import annotations
 
@@ -35,9 +39,9 @@ class TestFetchFulltext:
             patch("src.fetch_fulltext.europepmc.fetch_oa_url") as mock_epmc,
             patch("src.fetch_fulltext.unpaywall.get_oa_url") as mock_unp,
         ):
-            text, method = fetch_fulltext(_src(doi=None), db_path=tmp_path / "c.db")
-            assert text is None
-            assert method == "abstract_fallback"
+            outcome = fetch_fulltext(_src(doi=None), db_path=tmp_path / "c.db")
+            assert outcome.text is None
+            assert outcome.method == "abstract_fallback"
             mock_pdf.assert_not_called()
             mock_pmc.assert_not_called()
             mock_epmc.assert_not_called()
@@ -50,12 +54,12 @@ class TestFetchFulltext:
             ) as mock_pdf,
             patch("src.fetch_fulltext.pmc.fetch_fulltext") as mock_pmc,
         ):
-            text, method = fetch_fulltext(
+            outcome = fetch_fulltext(
                 _src(oa_url="https://x/y.pdf"),
                 db_path=tmp_path / "c.db",
             )
-            assert text == "full text"
-            assert method == "oa_url_pdf"
+            assert outcome.text == "full text"
+            assert outcome.method == "oa_url_pdf"
             mock_pdf.assert_called_once()
             mock_pmc.assert_not_called()
 
@@ -65,12 +69,12 @@ class TestFetchFulltext:
             patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value="pmc text") as mock_pmc,
             patch("src.fetch_fulltext.unpaywall.get_oa_url") as mock_unp,
         ):
-            text, method = fetch_fulltext(
+            outcome = fetch_fulltext(
                 _src(pmcid="PMC123"),
                 db_path=tmp_path / "c.db",
             )
-            assert text == "pmc text"
-            assert method == "pmc"
+            assert outcome.text == "pmc text"
+            assert outcome.method == "pmc"
             mock_pmc.assert_called_once_with("PMC123", db_path=tmp_path / "c.db")
             mock_pdf.assert_not_called()
             mock_unp.assert_not_called()
@@ -85,9 +89,9 @@ class TestFetchFulltext:
                 "src.fetch_fulltext.unpaywall.get_oa_url", return_value="https://x/p.pdf"
             ) as mock_unp,
         ):
-            text, method = fetch_fulltext(_src(), db_path=tmp_path / "c.db")
-            assert text == "up text"
-            assert method == "unpaywall_pdf"
+            outcome = fetch_fulltext(_src(), db_path=tmp_path / "c.db")
+            assert outcome.text == "up text"
+            assert outcome.method == "unpaywall_pdf"
             mock_epmc.assert_called_once()
             mock_unp.assert_called_once()
             mock_pdf.assert_called_once()
@@ -103,12 +107,12 @@ class TestFetchFulltext:
                 "src.fetch_fulltext.unpaywall.get_oa_url", return_value="https://x/p.pdf"
             ) as mock_unp,
         ):
-            text, method = fetch_fulltext(
+            outcome = fetch_fulltext(
                 _src(pmcid="PMC123"),
                 db_path=tmp_path / "c.db",
             )
-            assert text == "up text"
-            assert method == "unpaywall_pdf"
+            assert outcome.text == "up text"
+            assert outcome.method == "unpaywall_pdf"
             mock_pmc.assert_called_once()
             mock_epmc.assert_called_once()
             mock_unp.assert_called_once()
@@ -130,12 +134,12 @@ class TestFetchFulltext:
             ) as mock_epmc,
             patch("src.fetch_fulltext.unpaywall.get_oa_url") as mock_unp,
         ):
-            text, method = fetch_fulltext(
+            outcome = fetch_fulltext(
                 _src(doi="10.1186/s13049-020-00776-z"),
                 db_path=tmp_path / "c.db",
             )
-            assert text == "epmc text"
-            assert method == "europepmc_pdf"
+            assert outcome.text == "epmc text"
+            assert outcome.method == "europepmc_pdf"
             mock_epmc.assert_called_once()
             mock_pdf.assert_called_once_with(
                 "https://europepmc.org/articles/PMC7437027/pdf",
@@ -163,9 +167,9 @@ class TestFetchFulltext:
                 return_value="https://publisher.com/p.pdf",
             ) as mock_unp,
         ):
-            text, method = fetch_fulltext(_src(), db_path=tmp_path / "c.db")
-            assert text == "up text"
-            assert method == "unpaywall_pdf"
+            outcome = fetch_fulltext(_src(), db_path=tmp_path / "c.db")
+            assert outcome.text == "up text"
+            assert outcome.method == "unpaywall_pdf"
             mock_unp.assert_called_once()
 
     def test_all_fail(self, tmp_path: Path) -> None:
@@ -175,9 +179,81 @@ class TestFetchFulltext:
             patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None),
             patch("src.fetch_fulltext.unpaywall.get_oa_url", return_value=None),
         ):
-            text, method = fetch_fulltext(
+            outcome = fetch_fulltext(
                 _src(oa_url="https://x/y.pdf", pmcid="PMC1"),
                 db_path=tmp_path / "c.db",
             )
-            assert text is None
-            assert method == "abstract_fallback"
+            assert outcome.text is None
+            assert outcome.method == "abstract_fallback"
+
+
+class TestFetchFulltextOutcomeReasons:
+    """I1 (2026-05-12): per-attempt failure-reason recording.
+
+    These tests pin the contract that downstream telemetry depends on —
+    each FetchAttempt records WHY the step failed, not just that it did.
+    """
+
+    def test_no_identifiers_records_reason(self, tmp_path: Path) -> None:
+        """Source with all None identifiers → one attempt, reason='no_identifiers'."""
+        outcome = fetch_fulltext(_src(doi=None), db_path=tmp_path / "c.db")
+        assert outcome.text is None
+        assert outcome.method == "abstract_fallback"
+        assert len(outcome.attempts) == 1
+        attempt = outcome.attempts[0]
+        assert attempt.method == "abstract_fallback"
+        assert attempt.success is False
+        assert attempt.reason == "no_identifiers"
+
+    def test_attempts_accumulated_in_chain_order(self, tmp_path: Path) -> None:
+        """oa_url fails → pmc fails → publisher_html (unknown) skipped → epmc fails → unpaywall succeeds.
+
+        The attempts tuple should record each failure with its specific
+        reason, in the order the chain tried them, plus the final success.
+        """
+        with (
+            patch(
+                "src.fetch_fulltext.pdf.download_and_extract",
+                side_effect=[None, None, "up text"],  # oa_url fails, epmc fails, unpaywall ok
+            ),
+            patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None),
+            patch(
+                "src.fetch_fulltext.publisher_html.fetch_via_doi",
+                return_value=None,
+            ),
+            patch(
+                "src.fetch_fulltext.europepmc.fetch_oa_url",
+                return_value="https://europepmc.org/dud.pdf",
+            ),
+            patch(
+                "src.fetch_fulltext.unpaywall.get_oa_url",
+                return_value="https://publisher.com/p.pdf",
+            ),
+        ):
+            outcome = fetch_fulltext(
+                _src(oa_url="https://x/y.pdf", pmcid="PMC123", doi="10.99/qual"),
+                db_path=tmp_path / "c.db",
+            )
+
+        assert outcome.text == "up text"
+        assert outcome.method == "unpaywall_pdf"
+
+        # Expect 5 attempts: oa_url_pdf (fail), pmc (fail), publisher_html
+        # (fail/unknown — doi prefix 10.99 isn't in the known map),
+        # europepmc_pdf (fail), unpaywall_pdf (success).
+        methods = [a.method for a in outcome.attempts]
+        assert methods == [
+            "oa_url_pdf",
+            "pmc",
+            "publisher_html",
+            "europepmc_pdf",
+            "unpaywall_pdf",
+        ]
+        # Reasons on failures must be specific.
+        assert outcome.attempts[0].reason == "oa_url_pdf_failed"
+        assert outcome.attempts[1].reason == "pmc_no_fulltext"
+        assert outcome.attempts[2].reason == "publisher_html_unknown"
+        assert outcome.attempts[3].reason == "europepmc_pdf_failed"
+        # Final success has reason=None.
+        assert outcome.attempts[4].success is True
+        assert outcome.attempts[4].reason is None

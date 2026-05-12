@@ -18,8 +18,10 @@ Only the Report-mode export from query 1 is committed as `input.txt` (32,687 cha
 
 - `input.txt` — text extracted from `Elicit - Psilocybin and Treatment-Resistant Depression - Report.pdf` via `pymupdf` (text layer, no OCR or LLM paraphrase). Includes the full Abstract, Flow Diagram, Screening criteria, Data extraction, Results tables, Synthesis discussion, and 10 numbered References with DOIs.
 - `meta.json` — provenance metadata (queries, fetch date, source URL, license note).
-- `report.json` — pipeline output for the current run.
-- `provenance.jsonl` — append-only step log with hashes and tokens per stage.
+- `report.json` — **post-fix pipeline output (2026-05-12, Tracks A+D+F+G+I)**: 43 claims, $0.75, **0 silent failures** vs 15/57 (26%) on the pre-fix run.
+- `provenance.jsonl` — append-only step log with hashes and tokens per stage (post-fix run).
+- `fetch_traces.jsonl` — per-attempt fetch chain log (Track I1). Reveals NEJM / Nature / Lancet / AJP all served paywall HTML on the PDF endpoint, forcing 34/43 claims onto abstract fallback; the helper correctly downgrades 9 of those numeric claims to `unverifiable` with `unverifiable_reason="numeric_claim_abstract_only"`.
+- `_archive_pre_fix/` — pre-2026-05-12 verifier output (57 claims, $1.16). Do not cite; see [`../_archive_README.md`](../_archive_README.md).
 - `Elicit - *.pdf` — raw Elicit exports, **committed** for end-to-end reproducibility. `*Sources.txt` (Elicit's auxiliary citation list) remains gitignored as it is not used by the verification pipeline.
 
 ## Run command

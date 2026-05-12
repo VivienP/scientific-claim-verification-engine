@@ -82,3 +82,6 @@ eval/e2e/_*.json
 eval/e2e/_*.py
 eval/e2e/source_texts/*.txt
 eval/e2e/source_texts/_*.json
+
+# Local-only dogfood script — superseded by scripts/dogfood_postfix_run.py
+scripts/dogfood_psilocybin_postfix.py

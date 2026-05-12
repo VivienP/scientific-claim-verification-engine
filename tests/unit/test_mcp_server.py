@@ -273,9 +273,9 @@ class TestMain:
         flag (env var) lets us assert that build_server() + main() wiring is
         correct without invoking ``mcp.run()``.
         """
-        monkeypatch.setenv("COPILOT_API_BASE_URL", _BASE)
-        monkeypatch.setenv("COPILOT_API_KEY", _KEY)
-        monkeypatch.setenv("COPILOT_MCP_DRY_RUN", "1")
+        monkeypatch.setenv("VERIFIER_API_BASE_URL", _BASE)
+        monkeypatch.setenv("VERIFIER_API_KEY", _KEY)
+        monkeypatch.setenv("VERIFIER_MCP_DRY_RUN", "1")
         from src.mcp_server.server import main
 
         # Should return cleanly (rc=0) without entering stdio.
@@ -285,15 +285,15 @@ class TestMain:
     def test_main_fails_fast_when_api_key_missing(
         self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
     ) -> None:
-        monkeypatch.delenv("COPILOT_API_KEY", raising=False)
-        monkeypatch.setenv("COPILOT_API_BASE_URL", _BASE)
-        monkeypatch.setenv("COPILOT_MCP_DRY_RUN", "1")
+        monkeypatch.delenv("VERIFIER_API_KEY", raising=False)
+        monkeypatch.setenv("VERIFIER_API_BASE_URL", _BASE)
+        monkeypatch.setenv("VERIFIER_MCP_DRY_RUN", "1")
         from src.mcp_server.server import main
 
         rc = main()
         assert rc == 2
         captured = capsys.readouterr()
-        assert "COPILOT_API_KEY" in captured.err
+        assert "VERIFIER_API_KEY" in captured.err
 
 
 # ---------------------------------------------------------------------------

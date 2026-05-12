@@ -8,7 +8,7 @@ Design constraints:
   POST /verify returns a ``job_id`` immediately and the work happens in a
   background task. GET /jobs/{id} polls for status and result.
 - **Single API key**: validated via ``X-API-Key`` header against the
-  ``COPILOT_API_KEY`` environment variable. Phase D adds multi-tenant.
+  ``VERIFIER_API_KEY`` environment variable. Phase D adds multi-tenant.
 - **In-memory job store**: sufficient for one-process on-prem deployments.
   A single-tenant biotech does not need Redis or Postgres for Phase C.
 - **No persistent state in the API itself**: all run artifacts

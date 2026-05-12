@@ -38,10 +38,10 @@ dev = [
 
 [project.scripts]
 # Console entrypoint for the MCP wrapper. Configure Claude Desktop /
-# Claude Agent SDK to spawn `copilot-mcp` with COPILOT_API_KEY +
-# COPILOT_API_BASE_URL set in the env block. Requires the `mcp` extra:
+# Claude Agent SDK to spawn `verifier-mcp` with VERIFIER_API_KEY +
+# VERIFIER_API_BASE_URL set in the env block. Requires the `mcp` extra:
 #   pip install -e '.[mcp]'
-copilot-mcp = "src.mcp_server.server:main"
+verifier-mcp = "src.mcp_server.server:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]

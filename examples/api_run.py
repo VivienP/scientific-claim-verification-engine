@@ -8,7 +8,7 @@ Demonstrates the async-jobs + polling flow:
 
 Usage:
     # 1) Start the server in another terminal:
-    export COPILOT_API_KEY=local-dev-key
+    export VERIFIER_API_KEY=local-dev-key
     uvicorn src.api.app:app --host 127.0.0.1 --port 8000
 
     # 2) Run this client:
@@ -58,10 +58,10 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    api_key = os.environ.get("COPILOT_API_KEY")
+    api_key = os.environ.get("VERIFIER_API_KEY")
     if not api_key:
         print(
-            "error: COPILOT_API_KEY env var is required (must match the server's key).",
+            "error: VERIFIER_API_KEY env var is required (must match the server's key).",
             file=sys.stderr,
         )
         return 2

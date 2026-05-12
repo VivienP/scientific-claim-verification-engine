@@ -30,30 +30,37 @@ Only the Report-mode export from query 1 is committed as `input.txt` (32,687 cha
 python .cache/run_benchmark.py benchmarks/real_outputs/elicit_psilocybin
 ```
 
-## Headline numbers — 2026-05-10 (run #2, after bibliography fixes)
+## Headline numbers — post-fix run (2026-05-12)
+
+Post-fix pipeline (Tracks A+D+F+G+I): verifier now distinguishes "source contradicts" (`unsupported`) from "source is silent" (`not_addressed`) and "pipeline could not access full text for a numeric claim" (`unverifiable`).
+
+| Metric | Post-fix (2026-05-12) | Pre-fix run #2 (2026-05-10) |
+|---|---:|---:|
+| Claims extracted | **43** | 57 |
+| Citation found rate | 100.0% | 100.0% |
+| Fulltext verified | 9 (21%) | 18 (32%) |
+| Supported | **10** | 25 |
+| Partially supported | **17** | 15 |
+| Unsupported | **0** | 17 |
+| Not addressed | **7** | 0 |
+| **Unverifiable** | **9** | n/a |
+| Numeric checks run | 9 | 2 |
+| Numeric inconsistencies flagged | 0 | 2 |
+| Silent failures (rule violation) | **0** | **15** (26%) |
+| Total cost | $0.75 | $1.16 |
+
+The 17 pre-fix `unsupported` verdicts were split by the post-fix pipeline into: 0 genuine contradictions, 7 silences (`not_addressed`), and 9 abstract-only numeric claims downgraded to `unverifiable`. The 9 `unverifiable` claims all hit NEJM / Lancet / AJP paywall; `fetch_traces.jsonl` confirms each one returned a paywall HTML page on the PDF endpoint.
+
+### Pre-fix run #1 vs #2 (bibliography fixes, 2026-05-10)
 
 | Metric | Run #1 (broken) | Run #2 (fixed) |
 |---|---:|---:|
 | Claims extracted | 65 | 57 |
 | Citation found rate | 66.2% | **100.0%** |
 | Resolution low-confidence | 4 | **0** |
-| Fulltext verified | 33 | 18 |
-| Supported | 5 | **25** |
-| Partially supported | 2 | **15** |
-| Unsupported | 35 | 17 |
-| Not addressed | 23 | **0** |
-| Numeric checks run | 6 | 2 |
-| Numeric inconsistencies flagged | 6 | 2 |
 | Total cost | $1.38 | $1.16 |
 
-### Verdict distribution (run #2)
-
-| Verdict | Count | % of resolved |
-|---|---:|---:|
-| supported | 25 | 43.9% |
-| partially_supported | 15 | 26.3% |
-| unsupported | 17 | 29.8% |
-| not_addressed | 0 | 0.0% |
+Run #1 broke because `run_benchmark.py` did not pass the bibliography to the resolver and pymupdf artefacts corrupted DOI extraction. See source files for the archived pre-fix outputs.
 
 ### Resolved DOI distribution (run #2)
 
@@ -129,6 +136,6 @@ Three claims where the verifier and the cited paper genuinely disagree (selected
 
 ## Honesty disclosures
 
-- **Selection bias in validation examples**: only fulltext-verified cases are shown above. The remaining 15 `unsupported` verdicts are abstract-only — when NEJM, Lancet Psychiatry, and other paywalled journals are cited, the verifier sees only the abstract. Specific numbers in the methods/results often correctly derive from the paper's full text but cannot be confirmed from the abstract alone, biasing those verdicts toward `unsupported`. These are pipeline limitations, not Elicit failures, and are excluded from the validation set.
+- **Selection bias in validation examples**: only fulltext-verified cases are shown above. The 3 validated examples all use open-access sources where the verifier saw the full text. In the post-fix run, the 9 abstract-only numeric claims from NEJM / Lancet / AJP are correctly emitted as `unverifiable` (not `unsupported`), so they are no longer eligible for the validation set — the pipeline itself flags the evidence gap rather than issuing a confident verdict.
 - **N=1 query, single user session**: this benchmark reflects one Elicit Report-mode generation. Results are not generalizable beyond this run. Re-running the same prompt would produce a different answer due to the underlying LLM stochasticity.
 - **Pipeline still has limitations**: our own e2e benchmark on a hand-annotated lactate-ISF review currently sits at 16/25 verdict agreement (64%) — the verifier and resolver have known weaknesses outside the bibliography path. The validated examples above are robust because they isolate single-paper verification with fulltext access; broader claims about Elicit's overall accuracy are not warranted from this single benchmark.

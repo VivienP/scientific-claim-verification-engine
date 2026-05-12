@@ -2,12 +2,12 @@
 #
 # Quick start:
 #   1. Set secrets in a .env file (NEVER commit .env — it's in .gitignore):
-#        COPILOT_API_KEY=<choose a strong random key>
+#        VERIFIER_API_KEY=<choose a strong random key>
 #        ANTHROPIC_API_KEY=<your Anthropic key>
 #   2. docker compose up --build
 #   3. Test:
 #        curl http://localhost:8000/health
-#        curl -H "X-API-Key: $COPILOT_API_KEY" \
+#        curl -H "X-API-Key: $VERIFIER_API_KEY" \
 #             -H "Content-Type: application/json" \
 #             -d '{"text":"sample claim text [1]"}' \
 #             http://localhost:8000/verify
@@ -25,7 +25,7 @@ services:
     ports:
       - "127.0.0.1:8000:8000"  # bind to localhost; expose via reverse proxy
     environment:
-      COPILOT_API_KEY: ${COPILOT_API_KEY:?COPILOT_API_KEY must be set in .env}
+      VERIFIER_API_KEY: ${VERIFIER_API_KEY:?VERIFIER_API_KEY must be set in .env}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:?ANTHROPIC_API_KEY must be set in .env}
       PYTHONUNBUFFERED: "1"
     volumes:

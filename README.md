@@ -44,7 +44,7 @@ print(f"Report: {run_dir}")
 
 ## What You Get
 
-Each run writes `report.json` (one entry per claim) and `provenance.jsonl` (append-only audit log; sum `tokens_in + tokens_out` across lines for exact $ cost) under `reports/runs/{run_id}/`.
+Each run writes four artifacts under `reports/runs/{run_id}/`: `report.json` (one entry per claim, canonical), `provenance.jsonl` (append-only step trace; sum `tokens_in + tokens_out` for exact $ cost), `report.md` (human-readable rendering of the same verdicts), and `fetch_traces.jsonl` (per-attempt fulltext fetch log; use `scripts/analyze_fetch_coverage.py` for publisher-level coverage breakdown).
 
 ```yaml
 # report.json — one entry per claim in claims[]
@@ -57,14 +57,16 @@ source:
   oa_url: url | null
   retraction_status: bool
 verification:
-  status: supported | partially_supported | unsupported | not_addressed
+  status: supported | partially_supported | unsupported | not_addressed | unverifiable
   evidence_quality: quoted_passage | passages_searched_no_quote
                   | abstract_only | title_only
                   | citing_paper_context | no_evidence
   verification_depth: fulltext | abstract | title_only | citing_paper_context
   source_passages: [string]      # always populated when evidence_quality != no_evidence
   numeric_check: object | null   # OR/CI or p-value/CI consistency, deterministic
-  confidence: 0.0–1.0            # LLM self-report — UNRELIABLE; trust evidence_quality
+  confidence: 0.0–1.0 | null     # null only when status=unverifiable; LLM self-report — UNRELIABLE
+  unverifiable_reason: insufficient_evidence_depth | fulltext_unavailable
+                     | numeric_claim_abstract_only | parse_error | null
 ```
 
 Full schema (nested fields, Copilot enrichment, worked example): [docs/output-schema.md](docs/output-schema.md).
@@ -126,7 +128,7 @@ A FastAPI wrapper around `run_pipeline` and the Copilot enrichment layer is avai
 
 ```bash
 # Run locally
-export COPILOT_API_KEY="$(openssl rand -hex 32)"
+export VERIFIER_API_KEY="$(openssl rand -hex 32)"
 export ANTHROPIC_API_KEY="sk-ant-..."
 uvicorn src.api.app:app --host 127.0.0.1 --port 8000
 
@@ -134,7 +136,7 @@ uvicorn src.api.app:app --host 127.0.0.1 --port 8000
 docker compose up
 ```
 
-Endpoints (all require `X-API-Key: $COPILOT_API_KEY` except `/health`):
+Endpoints (all require `X-API-Key: $VERIFIER_API_KEY` except `/health`):
 
 | Method | Path | Purpose |
 | --- | --- | --- |
@@ -156,11 +158,11 @@ For AI agents (Claude Desktop, Claude Agent SDK, any MCP client), the engine shi
 pip install -e '.[mcp]'
 
 # Required env (matches the lite API)
-export COPILOT_API_KEY="$(openssl rand -hex 32)"
-export COPILOT_API_BASE_URL="http://127.0.0.1:8000"  # or your VPC URL
+export VERIFIER_API_KEY="$(openssl rand -hex 32)"
+export VERIFIER_API_BASE_URL="http://127.0.0.1:8000"  # or your VPC URL
 
 # Stdio transport — what Claude Desktop spawns
-copilot-mcp
+verifier-mcp
 ```
 
 Claude Desktop config (`claude_desktop_config.json`):
@@ -169,10 +171,10 @@ Claude Desktop config (`claude_desktop_config.json`):
 {
   "mcpServers": {
     "scve": {
-      "command": "copilot-mcp",
+      "command": "verifier-mcp",
       "env": {
-        "COPILOT_API_BASE_URL": "http://127.0.0.1:8000",
-        "COPILOT_API_KEY": "<same key as the lite API>"
+        "VERIFIER_API_BASE_URL": "http://127.0.0.1:8000",
+        "VERIFIER_API_KEY": "<same key as the lite API>"
       }
     }
   }
@@ -184,15 +186,15 @@ The MCP server requires the lite API to be running (locally or remotely). It is 
 ## Limitations
 
 - Requires explicit author/year or numbered bracket citation anchors.
-- Open-access only — paywalled sources without an OA copy return `not_addressed`.
+- Open-access only — when no public full-text is retrievable, numeric claims (%, p-values, ratios) return `unverifiable` with `unverifiable_reason`; qualitative claims fall back to abstract and return `not_addressed` if the abstract is silent.
 - BM25 is lexical; claims with no token overlap with any retrieved chunk report `no_passage_found`.
 - Numeric coverage: OR/CI consistency and p-value/CI null-crossing checks only.
 - Each claim is checked against its cited source, not the full literature.
 - The LLM-reported `confidence` field is unreliable (self-reported by the model). Use `retrieval_status` and `evidence_quality` as the trust signals — these are deterministically computed from what was actually retrieved.
 
-## Related Work
+## Acknowledged Work
 
-Closest neighbours: [Valsci](https://github.com/bricee98/Valsci) (single-source, batch literature corpus) and [CiteAudit](https://arxiv.org/abs/2602.23452) (metadata consistency, 5-agent). This engine targets AI-agent output auditing with multi-source resolution and deterministic numeric checks separated from LLM verification. Full survey: [docs/related-work.md](docs/related-work.md).
+See [docs/related-work.md](docs/related-work.md).
 
 ## Development
 

@@ -41,29 +41,31 @@ class McpConfig:
         """Build a config from process environment.
 
         Required:
-            COPILOT_API_KEY    — forwarded to the API as X-API-Key.
+            VERIFIER_API_KEY    — forwarded to the API as X-API-Key.
 
         Optional:
-            COPILOT_API_BASE_URL          (default http://127.0.0.1:8000)
-            COPILOT_MCP_TIMEOUT           (default 600.0 seconds)
-            COPILOT_MCP_POLL_INTERVAL     (default 2.0 seconds)
-            COPILOT_MCP_REQUEST_TIMEOUT   (default 30.0 seconds)
+            VERIFIER_API_BASE_URL          (default http://127.0.0.1:8000)
+            VERIFIER_MCP_TIMEOUT           (default 600.0 seconds)
+            VERIFIER_MCP_POLL_INTERVAL     (default 2.0 seconds)
+            VERIFIER_MCP_REQUEST_TIMEOUT   (default 30.0 seconds)
 
         Raises:
-            ValueError: when COPILOT_API_KEY is missing or empty. The MCP
+            ValueError: when VERIFIER_API_KEY is missing or empty. The MCP
                 stdio subprocess must fail fast — Claude Desktop logs a
                 useful error rather than a silent retry loop.
         """
-        api_key = os.environ.get("COPILOT_API_KEY", "").strip()
+        api_key = os.environ.get("VERIFIER_API_KEY", "").strip()
         if not api_key:
-            raise ValueError("COPILOT_API_KEY env var is required (must match the lite API's key).")
-        base_url = os.environ.get("COPILOT_API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
+            raise ValueError(
+                "VERIFIER_API_KEY env var is required (must match the lite API's key)."
+            )
+        base_url = os.environ.get("VERIFIER_API_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
         return cls(
             api_base_url=base_url,
             api_key=api_key,
-            timeout_seconds=float(os.environ.get("COPILOT_MCP_TIMEOUT", "600.0")),
-            poll_interval_seconds=float(os.environ.get("COPILOT_MCP_POLL_INTERVAL", "2.0")),
-            request_timeout_seconds=float(os.environ.get("COPILOT_MCP_REQUEST_TIMEOUT", "30.0")),
+            timeout_seconds=float(os.environ.get("VERIFIER_MCP_TIMEOUT", "600.0")),
+            poll_interval_seconds=float(os.environ.get("VERIFIER_MCP_POLL_INTERVAL", "2.0")),
+            request_timeout_seconds=float(os.environ.get("VERIFIER_MCP_REQUEST_TIMEOUT", "30.0")),
         )
 
 

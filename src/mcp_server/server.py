@@ -66,7 +66,7 @@ async def verify_text(
         wait: When True (default), block until the job is completed/failed.
             When False, return immediately with the job id.
         timeout_seconds: Optional override on the wait deadline. Falls back
-            to ``COPILOT_MCP_TIMEOUT`` (default 600s).
+            to ``VERIFIER_MCP_TIMEOUT`` (default 600s).
     """
     submitted = await client.submit_verification(
         text=text,
@@ -181,7 +181,7 @@ def build_server(config: McpConfig) -> FastMCP:
 
 
 # ---------------------------------------------------------------------------
-# Entrypoint — installed as the `copilot-mcp` console script.
+# Entrypoint — installed as the `verifier-mcp` console script.
 # ---------------------------------------------------------------------------
 
 
@@ -212,7 +212,7 @@ def _bootstrap_error(message: str) -> None:
     logger call because configuring structlog would pollute the global
     state used by sibling tests / the rest of the process.
     """
-    sys.stderr.write(f"copilot-mcp: {message}\n")
+    sys.stderr.write(f"verifier-mcp: {message}\n")
 
 
 def main() -> int:
@@ -232,7 +232,7 @@ def main() -> int:
 
     # Dry-run path for unit tests / CI smoke checks. Avoids spawning the
     # stdio loop, which would block forever waiting for a JSON-RPC peer.
-    if os.environ.get("COPILOT_MCP_DRY_RUN"):
+    if os.environ.get("VERIFIER_MCP_DRY_RUN"):
         logger.info("mcp_dry_run", api_base_url=config.api_base_url)
         return 0
 

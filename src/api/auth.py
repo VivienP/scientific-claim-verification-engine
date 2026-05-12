@@ -1,14 +1,14 @@
 """Single shared API key auth middleware.
 
 Phase C lite: validates the ``X-API-Key`` header against the
-``COPILOT_API_KEY`` environment variable. Phase D will replace this with
+``VERIFIER_API_KEY`` environment variable. Phase D will replace this with
 per-tenant keys + rate limiting.
 
 Security notes:
 - The expected key MUST be loaded from env, never hard-coded.
 - Comparison uses ``hmac.compare_digest`` to defend against timing attacks
   even though the lite-API threat model is on-prem.
-- Empty / unset ``COPILOT_API_KEY`` raises 503 — fail closed, never open.
+- Empty / unset ``VERIFIER_API_KEY`` raises 503 — fail closed, never open.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from fastapi import Header, HTTPException, status
 
 # Header name kept lowercase for Pydantic/FastAPI; HTTP is case-insensitive.
 _API_KEY_HEADER = "x-api-key"
-_API_KEY_ENV = "COPILOT_API_KEY"
+_API_KEY_ENV = "VERIFIER_API_KEY"
 
 
 def _expected_key() -> str:

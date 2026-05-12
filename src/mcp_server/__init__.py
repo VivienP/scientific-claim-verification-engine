@@ -7,7 +7,7 @@ Agent SDK, any MCP client) can consume the engine without speaking HTTP +
 managing async-job polling themselves.
 
 Public re-exports kept minimal — most callers only need `main` (the stdio
-entrypoint installed as the `copilot-mcp` console script) or `build_server`
+entrypoint installed as the `verifier-mcp` console script) or `build_server`
 (for tests / custom transports).
 """
 

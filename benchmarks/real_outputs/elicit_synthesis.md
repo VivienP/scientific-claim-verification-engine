@@ -34,34 +34,38 @@ to the format rather than to tier or topic-corpus availability.
 
 Numbers below come from each run's `report.json` summary block.
 
-| Metric | psilocybin (Report) | GLP-1 MACE (Gen. Review) | PD-1 NSCLC (Gap Analysis) |
+| Metric | psilocybin — **post-fix** (2026-05-12) | GLP-1 MACE (pre-fix, re-run pending) | PD-1 NSCLC (pre-fix, re-run pending) |
 |---|---:|---:|---:|
-| Claims extracted | 57 | 46 | 25 |
+| Claims extracted | **43** | 46 | 25 |
 | citation_found_rate | 100.0% | 93.5% | 60.0% |
-| Supported | 25 (43.9%) | **30 (65.2%)** | 8 (32.0%) |
-| Partially supported | 15 (26.3%) | 5 (10.9%) | 6 (24.0%) |
-| Unsupported | 17 (29.8%) | 10 (21.7%) | 2 (8.0%) |
-| Not addressed | 0 (0.0%) | 1 (2.2%) | 9 (36.0%) |
-| Numeric checks run | 2 | **13** | 8 |
-| Numeric inconsistencies (raw) | 2 | **0** | 2 |
-| Total cost (USD) | $1.16 | $1.46 | $0.64 |
+| Supported | 10 (23.3%) | 30 (65.2%) | 8 (32.0%) |
+| Partially supported | 17 (39.5%) | 5 (10.9%) | 6 (24.0%) |
+| Unsupported | **0 (0.0%)** | 10 (21.7%) | 2 (8.0%) |
+| Not addressed | 7 (16.3%) | 1 (2.2%) | 9 (36.0%) |
+| **Unverifiable** | **9 (20.9%)** | n/a (pre-fix) | n/a (pre-fix) |
+| Numeric checks run | 9 | **13** | 8 |
+| Numeric inconsistencies (raw) | 0 | **0** | 2 |
+| Silent failures (rule violation) | **0** | unknown (pre-fix) | unknown (pre-fix) |
+| Total cost (USD) | $0.75 | $1.46 | $0.64 |
+
+The psilocybin column reflects the 2026-05-12 post-fix re-run. GLP-1 MACE and PD-1 NSCLC still show pre-fix numbers; cross-run comparisons involving those columns should be treated as provisional until their post-fix re-runs land.
 
 ### Diagnostic fields (from commit `e38150f`)
 
 The 3 diagnostic fields populate across all 3 runs and are critical for
 correctly interpreting the headline numbers.
 
-| Diagnostic | psilocybin | GLP-1 MACE | PD-1 NSCLC |
+| Diagnostic | psilocybin (post-fix) | GLP-1 MACE (pre-fix) | PD-1 NSCLC (pre-fix) |
 |---|---:|---:|---:|
-| `abstract_only_verdicts` | n/a (pre-feature) | 20 | 4 |
-| `fulltext_success_rate` | n/a (pre-feature) | 56.5% | 72.2% |
+| `abstract_only_verdicts` (pre-fix) | n/a (post-fix uses `unverifiable`) | 20 | 4 |
+| `fulltext_success_rate` | 20.9% (9/43) | 56.5% | 72.2% |
+| `unverifiable_count` | **9** | n/a | n/a |
 | `not_addressed_breakdown.no_source` | n/a | 0 | **7** |
 | `not_addressed_breakdown.paywall` | n/a | 1 | 1 |
 | `not_addressed_breakdown.no_passage` | n/a | 0 | 0 |
 | `not_addressed_breakdown.claim_absent` | n/a | 0 | 1 |
 
-Psilocybin ran before commit `e38150f` landed, so its `report.json` does
-not carry these fields. Re-running it would populate them.
+The post-fix pipeline replaces `abstract_only_verdicts` with `unverifiable` + `unverifiable_reason`; GLP-1 and PD-1 pre-fix diagnostics remain valid for those archived runs.
 
 ## Three findings the cross-run comparison enables
 

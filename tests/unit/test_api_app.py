@@ -24,7 +24,7 @@ _API_KEY = "test-key-do-not-use-in-prod"
 @pytest.fixture(autouse=True)
 def _set_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
     """Every test runs with a fixed API key in env."""
-    monkeypatch.setenv("COPILOT_API_KEY", _API_KEY)
+    monkeypatch.setenv("VERIFIER_API_KEY", _API_KEY)
 
 
 @pytest.fixture
@@ -130,7 +130,7 @@ class TestAuth:
         fake_worker_factory: Any,
         tmp_path: Path,
     ) -> None:
-        monkeypatch.delenv("COPILOT_API_KEY", raising=False)
+        monkeypatch.delenv("VERIFIER_API_KEY", raising=False)
         app = create_app(job_store=JobStore(), worker=fake_worker_factory(), runs_root=tmp_path)
         client = TestClient(app)
         r = client.post("/verify", json={"text": "x"}, headers={"X-API-Key": "anything"})

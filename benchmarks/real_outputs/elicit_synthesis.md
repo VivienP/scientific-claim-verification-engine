@@ -1,5 +1,16 @@
 # Elicit cross-run synthesis — 3 runs, 2 tiers, 2 formats
 
+> **Outdated numbers — recomputed runs in progress (2026-05-12).** The
+> figures below come from pre-fix verifier outputs that conflated
+> `unsupported` (source contradicts) with `not_addressed` (source is
+> silent) and what the post-fix pipeline reports as `unverifiable`
+> (pipeline could not access full text). Only `elicit_psilocybin/` has
+> been re-run; see [`elicit_psilocybin/README.md`](elicit_psilocybin/README.md)
+> for current numbers (43 claims, 0 silent failures vs 15/57 pre-fix).
+> `elicit_glp1_mace/` and `elicit_io_nsclc_gaps/` are in the Track C
+> queue. Cross-run synthesis below will be regenerated once all three
+> post-fix runs are complete.
+
 Cross-cutting analysis of the three Elicit benchmark runs in this directory.
 This document consolidates the per-run READMEs (`elicit_psilocybin/`,
 `elicit_glp1_mace/`, `elicit_io_nsclc_gaps/`) into a single comparison

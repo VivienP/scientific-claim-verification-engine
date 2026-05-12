@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 """Score a pipeline run's resolution correctness against an oracle file.
 
-The standard `report.json.summary.citation_found_rate` reports whether the
-resolver returned ANY DOI per claim. It says nothing about whether that
-DOI is the *correct* one — a critical distinction the Valsci validation run
-exposed (2026-05-08): the headline 85.7% citation found rate hid a 14.3%
-correct-source rate, with several claims resolving to the citing paper
-itself or to unrelated work.
+The standard `report.json.summary.citation_found_rate` reports whether the resolver
+returned ANY DOI per claim — not whether that DOI is the *correct* one.
+A benchmark can show high citation-found rates while hiding a much lower correct-source
+rate, with claims resolving to the citing paper itself or to unrelated work.
 
 This script reads `report.json` and `oracle.json` from a real-paper validation
 directory and emits a `correct_source_rate` plus per-claim diagnostics.

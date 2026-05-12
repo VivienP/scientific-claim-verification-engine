@@ -1,25 +1,21 @@
 """HTML fulltext fetcher via DOI redirect + per-publisher extraction.
 
-Targets publishers that serve their article HTML publicly even when their
-PDF endpoint is paywalled. Used as a fulltext source in
-`src/fetch_fulltext.py` for cases like the user-caught NEJM Goodwin 2022:
-Semantic Scholar handed us a paywalled `/doi/pdf/...?articleTools=true`
-URL, the PDF extractor returned None, and the fetch chain fell back to
-abstract — even though human users can read the full HTML at
+Targets publishers that serve their article HTML publicly even when their PDF
+endpoint is paywalled. Used as a fulltext source in `src/fetch_fulltext.py`
+for cases like NEJM, whose Semantic Scholar `oa_url` is a paywalled
+`/doi/pdf/...?articleTools=true` while the full HTML is publicly readable at
 `https://www.nejm.org/doi/full/<doi>`.
 
-**Real-world limit (NEJM, 2026-05-11):** Publishers with active bot
-protection (Cloudflare interstitial, JS challenges) will return 403 to
-any straightforward HTTP client regardless of User-Agent. NEJM in
-particular serves a "Just a moment..." Cloudflare page and rejects us.
-Their `robots.txt` explicitly disallows AI/scraper bots
-(GPTBot, ChatGPT-User, CCBot, Google-Extended, PerplexityBot,
-SemanticScholarBot, etc.). This module handles 403 gracefully — returns
-None and caches the failure — so the fetch chain falls through to the
-abstract fallback, and Track A's `safe_verification_result` correctly
-emits `unverifiable` for claims that need Results-section data.
-Bypassing publisher bot protection would require a headless browser
-(Playwright) or paid API auth — both out of scope for Phase 1.
+**Real-world limit:** publishers with active bot protection (Cloudflare
+interstitial, JS challenges) return 403 to any straightforward HTTP client
+regardless of User-Agent. NEJM in particular serves a "Just a moment..."
+Cloudflare page; its `robots.txt` disallows AI/scraper bots (GPTBot,
+ChatGPT-User, CCBot, Google-Extended, PerplexityBot, SemanticScholarBot).
+This module handles 403 gracefully (returns None and caches the failure) so
+the fetch chain falls through to the abstract fallback, and
+`safe_verification_result` correctly emits `unverifiable` for claims that
+need Results-section data. Bypassing publisher bot protection would require
+a headless browser (Playwright) or paid API auth — out of scope for Phase 1.
 
 This module is therefore most useful for publishers that don't gate
 HTML access (preprint servers, many OA journals, some legacy

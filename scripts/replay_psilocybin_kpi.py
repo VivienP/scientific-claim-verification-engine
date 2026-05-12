@@ -1,9 +1,8 @@
-"""Replay pre-fix Elicit-psilocybin verdicts through the new safe_verification_result helper.
+"""Replay captured Elicit-psilocybin verdicts through ``safe_verification_result``.
 
-Measures the 26% silent-failure KPI movement attributable to Tracks A1-A2 + F1 alone.
-Track G (prompt rewrite) cannot be measured by replay — it requires a fresh LLM call
-because the prompt change shifts the LLM's choice between `unsupported` (contradicts)
-and `not_addressed` (silent).
+Measures the KPI movement attributable to the deterministic helper alone,
+isolated from the prompt-side `unsupported`-vs-`not_addressed` split.
+The prompt-side effect cannot be measured by replay — it requires a fresh LLM call.
 
 Usage:
     python -m scripts.replay_psilocybin_kpi reports/runs/elicit_psilocybin_rerun_860b1ae5/report.json

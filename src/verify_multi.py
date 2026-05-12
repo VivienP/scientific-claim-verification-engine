@@ -54,9 +54,9 @@ def _aggregate_multi_source_verdicts(
     if not per_source:
         return "not_addressed"
     statuses = [r.status for r in per_source]
-    # A2: treat "unverifiable" like "not_addressed" for aggregation purposes —
-    # it contributes no evidence signal. If ALL per-source results are
-    # unverifiable, the aggregated status is "unverifiable".
+    # Treat "unverifiable" like "not_addressed" for aggregation — it
+    # contributes no evidence signal. When every per-source result is
+    # unverifiable, the aggregate is also unverifiable.
     if all(s == "unverifiable" for s in statuses):
         return "unverifiable"
     has_supported = any(s == "supported" for s in statuses)
@@ -126,16 +126,10 @@ def verify_claim_multi_source(
         marker_label = source.doi or source.title or "(unresolved)"
         explanations.append(f"[{marker_label}] {result.status}: {result.explanation}")
 
-    # A1 hardening (2026-05-12, @reviewer warning): guard the empty-source-set
-    # case explicitly. The pipeline guards this at the call site
-    # (`len(source_set) > 1 and len(found_sources()) > 0`), but a direct caller
-    # passing an empty ResolvedSourceSet would hit the aggregation with no
-    # per-source results, producing `aggregated_confidence=None` and an
-    # `aggregated_status` that is not "unverifiable" — a schema invariant
-    # violation that __post_init__ catches as a runtime ValueError. Returning
-    # a valid `not_addressed` verdict for the empty case is the explicit
-    # contract; the loud-crash behavior was a side effect of the invariant
-    # tightening rather than an intended safety net.
+    # Empty-source-set guard. Without this, aggregation produces
+    # confidence=None on a non-unverifiable status, which __post_init__
+    # rejects with a runtime ValueError. The pipeline guards this at the
+    # call site, but direct callers shouldn't trip the invariant either.
     if not per_source_results:
         return (
             VerificationResult(
@@ -148,7 +142,8 @@ def verify_claim_multi_source(
         )
 
     aggregated_status = _aggregate_multi_source_verdicts(per_source_results)
-    # A2: Exclude confidence=None (unverifiable) and confidence=0.0 (parse errors).
+    # Exclude confidence=None (unverifiable) and confidence=0.0 (parse errors)
+    # so they don't drag the aggregate confidence down.
     confidences = [
         r.confidence for r in per_source_results if r.confidence is not None and r.confidence > 0
     ]
@@ -156,10 +151,10 @@ def verify_claim_multi_source(
         sum(confidences) / len(confidences) if confidences else None
     )
 
-    # A2: Derive verification_depth and evidence_quality from the best available
-    # per-source result rather than hardcoding to "abstract".
-    # Priority: fulltext > citing_paper_context > abstract > title_only.
-    # Rationale: the aggregation uses the most informative evidence available.
+    # Derive verification_depth and evidence_quality from the best available
+    # per-source result rather than hardcoding to "abstract". Priority:
+    # fulltext > citing_paper_context > abstract > title_only — the aggregation
+    # uses the most informative evidence available.
     depth_priority = {
         "fulltext": 0,
         "citing_paper_context": 1,
@@ -177,9 +172,7 @@ def verify_claim_multi_source(
     agg_depth = primary_result.verification_depth if primary_result else "abstract"
     agg_evidence = primary_result.evidence_quality if primary_result else "no_evidence"
 
-    # A2: Route through safe_verification_result so that aggregated
-    # (supported|unsupported) on insufficient evidence is downgraded to
-    # (unverifiable, None) per the A1 invariant.
+    # Route through the helper: low-evidence confident verdicts are downgraded to unverifiable.
     aggregated = safe_verification_result(
         status=aggregated_status,
         confidence=aggregated_confidence,
@@ -188,9 +181,7 @@ def verify_claim_multi_source(
         evidence_quality=agg_evidence,
         retraction_status=any(s.retraction_status for s in source_set),
         claim_text=claim.claim_text,
-        # F1: at multi-source aggregation, the cross-source synthesis is
-        # what produced the (potentially) confident verdict — the proximate
-        # cause if downgraded is "evidence depth insufficient across sources".
+        # If downgraded: proximate cause is insufficient evidence depth across sources.
         unverifiable_reason="insufficient_evidence_depth",
     )
 

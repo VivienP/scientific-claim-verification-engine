@@ -86,10 +86,9 @@ def _check_compact_track_record(
 ) -> list[str]:
     """Validate the compact README Track Record row against SUMMARY total.
 
-    The README was simplified on 2026-05-08: it no longer embeds the full
-    Real-Output Benchmark table, only a Track Record row with total claim
-    count and citation-found rate. Keep the alignment check useful by
-    validating those remaining public numbers against README.md.
+    The README's Track Record section carries a single row for real-output benchmarks
+    (total claim count + citation-found rate) rather than the full table.
+    This check validates those public numbers against README.md.
     """
     mismatches: list[str] = []
     total = _find_row("Total", summary_rows)

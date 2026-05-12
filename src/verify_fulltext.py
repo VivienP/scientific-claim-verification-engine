@@ -79,21 +79,9 @@ def verify_claim_fulltext(
         from src.verify import verify_claim
 
         abstract_result, step = verify_claim(claim, source, model_id=model_id, api_key=api_key)
-        # A2 fix: was fulltext_available=True (lie) and retrieval_status="no_passage_found"
-        # (misleading). After A2: verify_claim routes through safe_verification_result,
-        # so abstract_result already has the correct status (unverifiable if the LLM
-        # tried to emit supported/unsupported on abstract_only evidence).
-        # We only override metadata fields here -- NOT status/confidence/evidence_quality.
-        # dataclasses.replace calls __post_init__, but since we leave status/confidence/
-        # evidence_quality unchanged (already valid from verify_claim), no invariant
-        # violation occurs.
-        # F1: when the inner verify_claim downgraded to unverifiable, the
-        # proximate cause for THIS outer fallback path is "we tried to fetch
-        # fulltext and couldn't" — override the inner reason
-        # ("numeric_claim_abstract_only") with "fulltext_unavailable" because
-        # for the outer caller, the missing-fulltext is the more actionable
-        # framing. The explanation from the helper already captured the
-        # original LLM verdict; we just refine the reason classification.
+        # verify_claim already applied safe_verification_result; status is correct.
+        # Only metadata fields are overridden here (not status/confidence/evidence_quality).
+        # If unverifiable, override the inner reason with `fulltext_unavailable` — more actionable.
         from src.models import UnverifiableReason
 
         outer_reason: UnverifiableReason | None = (
@@ -173,13 +161,8 @@ def verify_claim_fulltext(
         source_section = str(source_section_raw) if source_section_raw else None
 
         # CTran-transparency fallback: when the LLM returns no quoted passages
-        # (typically because the verdict is unsupported/not_addressed and the
-        # model chose not to quote), populate source_passages with the BM25
-        # passages that WERE shown to the verifier. This preserves the audit
-        # trail — an auditor inspecting the run can see which passages the
-        # verifier examined, not just which it agreed with. Phase A.2 fix
-        # (was the dominant CTran-failure mode at 50% of failures across the
-        # 5-document benchmark; see reports/phase_a2/ctran_failure_matrix.md).
+        # The model chose not to quote; populate source_passages with the BM25 chunks shown.
+        # Preserves the audit trail: auditor sees what the verifier examined, not just quotes.
         if llm_quoted_passages:
             source_passages = llm_quoted_passages
             evidence_quality: EvidenceQuality = "quoted_passage"

@@ -236,11 +236,8 @@ class ClaimVerification:
     fetch_method: FulltextMethod | str
     passages: tuple[PaperChunk, ...] = field(default_factory=tuple)
     steps: tuple[ProvenanceStep, ...] = field(default_factory=tuple)
-    # I1 (2026-05-12): per-claim fetch telemetry. Optional for backward
-    # compatibility with tests that construct ClaimVerification by hand
-    # (no FetchOutcome available). Populated by verify_one_claim from the
-    # primary fetch_fulltext call (multi-source mode picks the primary
-    # source's outcome).
+    # Per-claim fetch telemetry from the primary fetch_fulltext call.
+    # Optional so test fixtures constructing ClaimVerification by hand stay valid.
     fetch_outcome: FetchOutcome | None = None
 
 
@@ -268,10 +265,9 @@ def verify_one_claim(
            ``citing_paper_text`` is provided, attempt
            :func:`verify_claim_citing_context` as a last-resort
            internal-consistency check (capped to ``partially_supported``).
-           ``passages_searched_no_quote`` was added in Phase A.2 — the
-           verifier saw passages but didn't quote any, which is just as
-           weak a signal as ``no_evidence`` for the purposes of falling
-           back to citing-paper context.
+           ``passages_searched_no_quote`` means the verifier saw passages but
+           didn't quote any — just as weak a signal as ``no_evidence`` for the
+           purposes of falling back to citing-paper context.
 
     The function never raises on missing data: a fully unresolvable claim
     returns a ``ClaimVerification`` whose ``result.status`` is
@@ -344,12 +340,8 @@ def verify_one_claim(
             result, verify_step = verify_claim(claim, source, api_key=config.api_key)
             steps.append(verify_step)
 
-    # Citing-context fallback fires when the verifier produced no actionable
-    # evidence. Both ``no_evidence`` (no passages were ever shown to the LLM,
-    # or LLM produced parse-errored output pre-Phase A.2) and
-    # ``passages_searched_no_quote`` (Phase A.2: passages were shown but the
-    # LLM didn't quote any) qualify — in both cases the verdict is too weak
-    # to be useful, so we try the citing-paper-context path next.
+    # Fallback when verifier evidence is too weak to be useful.
+    # Triggers: `no_evidence` and `passages_searched_no_quote`.
     if (
         config.enable_citing_context_fallback
         and result.evidence_quality in {"no_evidence", "passages_searched_no_quote"}

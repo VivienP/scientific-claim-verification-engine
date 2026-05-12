@@ -7,7 +7,7 @@
 > not access full text). After the 2026-05-12 verifier fix
 > (commits [`992303e`](../../README.md) through
 > [`3211b23`](../../README.md)), 2 of the 6 inputs have been re-run on
-> the post-fix pipeline. The remaining 4 are in the Track C queue.
+> the post-fix pipeline. The remaining 4 are pending re-run.
 >
 > Cite numbers ONLY from the post-fix table directly below.
 
@@ -27,11 +27,11 @@ claims on paywalled NEJM / Nature papers where the verifier emitted
 confident `supported` / `unsupported` from the abstract alone. Post-fix:
 - 0 silent failures — the helper downgrades all 9 numeric-on-abstract
   claims to `unverifiable` with `unverifiable_reason="numeric_claim_abstract_only"`.
-- 17 false-`unsupported` verdicts → 0 (Track G's prompt rewrite reclassifies
+- 17 false-`unsupported` verdicts → 0 (the prompt's contradicts-vs-silent split reclassifies
   silence as `not_addressed`; A2+F1 helper handles the numeric subset).
 - 34 of 43 claims fall back to abstract because NEJM / Nature / Lancet /
   AJP serve paywall HTML on the PDF endpoint; `fetch_traces.jsonl`
-  (Track I1) shows the exact per-step failure reasons.
+  shows the exact per-step failure reasons.
 - Replay infrastructure: [`scripts/replay_psilocybin_kpi.py`](../../scripts/replay_psilocybin_kpi.py).
 
 **AnswerThis** is the claim-coverage story. The pre-fix pipeline punted
@@ -41,7 +41,7 @@ verifies 15 of 19 claims (79% confidently classified as
 $0.47 to $0.25. Two compounding effects:
 - Better fetch chain (Tracks D1 + I1) raised fulltext success rate to 63%,
   giving the verifier something to ground on.
-- Track G's prompt rewrite means the verifier no longer dumps anything-it-
+- The prompt's contradicts-vs-silent split means the verifier no longer dumps anything-it-
   cannot-find-in-the-abstract into `not_addressed` — when the fulltext
   contains the assertion, the verifier emits `supported`.
 

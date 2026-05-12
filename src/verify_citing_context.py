@@ -121,10 +121,8 @@ def verify_claim_citing_context(
             if "internal-consistency" in raw_explanation.lower()
             else f"[Internal-consistency only] {raw_explanation}"
         )
-        # A2: Route through safe_verification_result. The supported->partially_supported
-        # cap above handles the "supported" case. The remaining gap is "unsupported" +
-        # "citing_paper_context": that combination violates A1 Invariant 2, so
-        # safe_verification_result downgrades it to (unverifiable, None).
+        # Route through the helper: `unsupported` + `citing_paper_context` is downgraded.
+        # `supported` is already capped to `partially_supported` above.
         result = safe_verification_result(
             status=status_raw,
             confidence=confidence,
@@ -133,9 +131,8 @@ def verify_claim_citing_context(
             evidence_quality="citing_paper_context",
             retraction_status=source.retraction_status,
             claim_text=claim.claim_text,
-            # F1: citing-paper context is structurally insufficient for the
-            # cited paper's own claim — internal consistency only, not
-            # source-of-truth evidence.
+            # Citing-paper context is internal consistency only, not
+            # source-of-truth evidence; insufficient depth for any specific claim.
             unverifiable_reason="insufficient_evidence_depth",
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:

@@ -88,7 +88,7 @@ For the dataclass definitions (frozen, type-checked), see [src/models.py](../src
 | `evidence_quality` | What the verifier actually saw | Deterministic — derived from retrieval, not from LLM output |
 | `retrieval_status` | Did the pipeline reach the source body? | Deterministic — set by `fetch_fulltext` chain |
 | `verification_depth` | Which verifier mode produced the verdict | Deterministic — set by routing logic |
-| `source_passages` | Quotes (or audit-trail BM25 chunks) | Always populated when `evidence_quality != no_evidence` after Phase A.2 |
+| `source_passages` | Quotes (or audit-trail BM25 chunks) | Always populated when `evidence_quality != no_evidence` |
 | `confidence` | LLM-reported number 0.0–1.0 | **Unreliable** — model self-report; do not gate decisions on it |
 
 ---
@@ -109,11 +109,11 @@ The verdict by itself is not enough — pair it with `evidence_quality` to know 
 | `not_addressed` × `no_evidence` | Pipeline could not reach the source body at all |
 | anything × `citing_paper_context` | **Capped to `partially_supported`** — verdict is internal-consistency only (S3-P1) |
 
-The `passages_searched_no_quote` value was added in Phase A.2 to distinguish *"fulltext was retrieved and the LLM saw passages but didn't quote any"* from *"no passages were ever shown to the LLM"* (`no_evidence`). The auditor still sees what was searched in the former case, so it counts as **transparent** in the CTran metric.
+The `passages_searched_no_quote` value distinguishes *"fulltext was retrieved and the LLM saw passages but didn't quote any"* from *"no passages were ever shown to the LLM"* (`no_evidence`). The auditor still sees what was searched in the former case, so it counts as **transparent** in the CTran metric.
 
 ---
 
-## 3. Audit-trail fallback (Phase A.2)
+## 3. Audit-trail fallback
 
 When the LLM returns a verdict but `source_passages = []` — typically because the verdict is `unsupported` or `not_addressed` and the model chose not to quote — the verifier falls back to the BM25-selected passages it had shown the LLM:
 

@@ -84,11 +84,9 @@ Hard caps (deterministic post-LLM):
 
 ---
 
-## 3. Audit-trail fallback (Phase A.2)
+## 3. Audit-trail fallback
 
-The dominant CTran failure mode pre-Phase-A.2 was *"verifier saw passages but
-didn't quote any"* — 50% of failures across 5 benchmarks. This diagram shows
-how the fallback now preserves the audit trail in that case.
+When the verifier sees BM25 passages but doesn't quote any (e.g. parse error or low confidence), the fallback below preserves the audit trail so a reviewer can still inspect what was shown to the LLM.
 
 ```mermaid
 flowchart LR
@@ -104,9 +102,7 @@ flowchart LR
     class FB new
 ```
 
-The blue path is the Phase A.2 addition. Pre-fix it would have produced
-`source_passages = []` and `evidence_quality = "no_evidence"` — the auditor
-saw nothing despite the pipeline having seen everything.
+The blue path surfaces the BM25 chunks as `passages_searched_no_quote` instead of dropping them as `no_evidence`, so the auditor sees what the pipeline saw.
 
 CTran impact across 135 claims on 5 benchmarks: **48.9% → 65.9% (+17pp)**.
 Per-benchmark breakdown: see the CTran table in

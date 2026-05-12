@@ -53,10 +53,9 @@ EvidenceQuality = Literal[
     "no_evidence",
 ]
 
-# I1 (2026-05-12): fulltext retrieval telemetry.
-# FulltextMethod is named here (rather than in src/fetch_fulltext.py) so that
-# FetchOutcome below can reference it without creating an import cycle.
-# Consumers (fetch_fulltext.py, pipeline.py, report.py) import it from models.
+# Fulltext retrieval telemetry. FulltextMethod lives here (not in
+# src/fetch_fulltext.py) so FetchOutcome can reference it without creating
+# an import cycle; consumers import it from models.
 FulltextMethod = Literal[
     "oa_url_pdf",
     "pmc",
@@ -144,13 +143,12 @@ class ResolvedSourceSet:
         resolver populates ``self.sources`` parallel to ``citation_markers``,
         so iterating sources is equivalent to iterating markers.
 
-        Bug A (Valsci validation run, 2026-05-08): the previous implementation
-        used ``max(sources, key=title_match_score)`` and on `[7, 9]`
-        (Kinney + Lo) returned Lo because its title-match-score against
-        the claim text "Semantic Scholar database" was higher — even
-        though the user listed Kinney first. The score-based heuristic
-        was a leaky abstraction; marker order is the only ordering the
-        author intentionally provided.
+        Why marker order, not score-based selection: title-match-score
+        is a leaky abstraction. On ``[7, 9]`` (Kinney + Lo) a score-based
+        ``max(sources, key=title_match_score)`` returns Lo when Lo's
+        title happens to be more lexically similar to the claim text,
+        even though the author wrote Kinney first. Marker order is the
+        only ordering the author intentionally provided.
 
         Returns:
         - The first source whose ``found`` is True, walking sources in
@@ -197,27 +195,25 @@ class VerificationResult:
     evidence_quality: EvidenceQuality = "abstract_only"
     retraction_status: bool = False
     numeric_check: NumericCheckResult | None = None
-    # F1 (2026-05-12): mirrors the field on ProvenanceStep. Populated only
-    # when status == "unverifiable". Honest about why the pipeline could not
-    # produce a confident verdict — communicates "pipeline access limit" to
-    # downstream consumers and report.json readers.
+    # Populated only when status == "unverifiable"; mirrors the field on
+    # ProvenanceStep. Surfaces why the pipeline could not produce a
+    # confident verdict at this call site (a pipeline access limit, not
+    # an epistemic claim).
     unverifiable_reason: UnverifiableReason | None = None
 
     def __post_init__(self) -> None:
-        # Invariant 1 (only): unverifiable <-> confidence is None.
-        # Decision log 2026-05-11: Invariant 2 (evidence-quality coupling) is
-        # NOT enforced here. The evidence-quality discrimination depends on
-        # claim_text, which is not a VerificationResult field. That enforcement
-        # lives in safe_verification_result() at LLM-response parse boundaries.
-        # Direct VerificationResult constructions (test fixtures, internal helpers)
-        # are permitted to use any (status, evidence_quality) combination.
+        # Invariant: unverifiable <-> confidence is None. The orthogonal
+        # evidence-quality coupling depends on claim_text (which is not a
+        # field here) and is enforced in safe_verification_result() at
+        # LLM-response parse boundaries, not in the schema. Direct
+        # VerificationResult constructions are permitted to use any
+        # (status, evidence_quality) combination.
         if self.status == "unverifiable" and self.confidence is not None:
             raise ValueError("unverifiable status requires confidence=None")
         if self.status != "unverifiable" and self.confidence is None:
             raise ValueError(f"{self.status!r} status requires non-null confidence")
-        # F1: soft check — emit a warning if status is unverifiable but no
-        # reason is supplied. Don't raise — keeps backward compatibility with
-        # existing serialized reports and test fixtures that predate the field.
+        # Soft check: warn (not raise) when unverifiable is missing a reason,
+        # so deserialized reports that predate the field still load.
         if self.status == "unverifiable" and self.unverifiable_reason is None:
             logger.warning(
                 "unverifiable_without_reason",
@@ -229,11 +225,10 @@ class VerificationResult:
 class FetchAttempt:
     """One attempt in the full-text retrieval chain.
 
-    I1 (2026-05-12): replaces the implicit "we tried, it returned None"
-    signal with explicit per-step reasons so that report.json can answer
-    "which publishers fail most often, and at which step?" without re-running
-    the pipeline. The attempt order in FetchOutcome.attempts matches the
-    chain order in fetch_fulltext.fetch_fulltext.
+    Each attempt records a specific failure reason so report.json can
+    answer "which publishers fail most often, and at which step?"
+    without re-running the pipeline. The attempt order in
+    FetchOutcome.attempts matches the chain order in fetch_fulltext.
     """
 
     method: FulltextMethod
@@ -275,20 +270,20 @@ class ProvenanceStep:
 
 
 # ---------------------------------------------------------------------------
-# Migration helper (A1/A2): use at LLM response parse boundaries.
-# Pure callers with known-valid inputs should construct VerificationResult
-# directly. This helper is for sites that receive raw LLM output.
+# Helper for LLM-response parse boundaries. Pure callers with known-valid
+# inputs should construct VerificationResult directly; this helper exists
+# for sites that receive raw LLM output and need the downgrade rule
+# applied deterministically.
 # ---------------------------------------------------------------------------
 
 _INSUFFICIENT_EVIDENCE_SET: frozenset[str] = frozenset(
     {"abstract_only", "title_only", "citing_paper_context", "no_evidence"}
 )
 
-# F1 (2026-05-12): explanation template used when the helper downgrades a
-# confident LLM verdict to unverifiable. The verdict and explanation must
-# be consistent — emitting `unverifiable` with the original LLM's "supported"
-# narrative attached is misleading. This template is fully deterministic
-# (no LLM call) and surfaces the access limit in plain language.
+# Explanation template used when the helper downgrades a confident LLM
+# verdict to unverifiable. The verdict and explanation must stay
+# consistent — emitting `unverifiable` with the original "supported"
+# narrative attached would be misleading. Deterministic (no LLM call).
 _EXPLANATION_PREFIX = (
     "Pipeline could not verify this claim with the evidence it was able to "
     "retrieve ({evidence_quality}). The verifier LLM emitted {original_verdict!r} "
@@ -349,7 +344,7 @@ def safe_verification_result(
     pass through unchanged — the abstract is sufficient for 'X reduces Y'-style
     verdicts when it directly addresses the topic.
 
-    On downgrade (F1, 2026-05-12):
+    On downgrade:
     - `unverifiable_reason` is populated on the result (defaults to
       ``"numeric_claim_abstract_only"`` when caller doesn't specify).
     - `explanation` is rewritten by ``_build_unverifiable_explanation`` so the

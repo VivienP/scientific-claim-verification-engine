@@ -103,12 +103,9 @@ def verify_claim_title_only(
         if status_raw == "supported":
             status_raw = "partially_supported"
         confidence = min(confidence, _TITLE_ONLY_MAX_CONFIDENCE)
-        # A2: Route through safe_verification_result. The supported->partially_supported
-        # cap above handles the "supported" case. The remaining gap is "unsupported" +
-        # "title_only": that combination violates A1 Invariant 2, so
-        # safe_verification_result downgrades it to (unverifiable, None).
-        # Note: the information loss (title clearly off-topic -> unverifiable instead of
-        # unsupported) is accepted for Phase 1. Phase 3+ taxonomy may add "off_topic".
+        # Route through the helper: `unsupported` + `title_only` is downgraded to unverifiable.
+        # `supported` is already capped to `partially_supported` above.
+        # Off-topic titles surface as `unverifiable` (not `unsupported`) — acceptable for Phase 1.
         result = safe_verification_result(
             status=status_raw,
             confidence=confidence,
@@ -117,8 +114,7 @@ def verify_claim_title_only(
             evidence_quality="title_only",
             retraction_status=source.retraction_status,
             claim_text=claim.claim_text,
-            # F1: title-only is structurally insufficient for any specific claim;
-            # the helper downgrades unsupported on title_only -> unverifiable.
+            # Title-only evidence is structurally insufficient for any specific claim.
             unverifiable_reason="insufficient_evidence_depth",
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:

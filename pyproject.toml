@@ -60,8 +60,9 @@ line-length = 100
 select = ["E", "F", "I", "N", "UP", "ANN", "B", "SIM", "RUF"]
 
 [tool.ruff.lint.per-file-ignores]
-# System prompt strings and test JSON literals legitimately exceed 100 chars
+# System prompt strings, test JSON literals, and verbatim Usage paths legitimately exceed 100 chars
 "src/extract.py" = ["E501"]
+"scripts/replay_psilocybin_kpi.py" = ["E501"]
 "src/verify.py" = ["E501"]
 "src/verify_prompts.py" = ["E501"]
 "src/chunker.py" = ["E501"]

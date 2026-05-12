@@ -1,9 +1,9 @@
 """Full-text retrieval orchestrator: oa_url -> PMC -> Europe PMC -> Unpaywall -> fallback.
 
-I1 (2026-05-12): fetch_fulltext now returns a structured FetchOutcome instead
-of a (text, method) tuple. The chain order is unchanged; each attempt
-(success or failure) is recorded with a reason code so report.json can
-surface coverage-by-publisher diagnostics without re-running the pipeline.
+Returns a structured ``FetchOutcome`` capturing every attempt and a specific
+failure reason per step. The aggregated coverage-by-publisher diagnostic in
+``report.json`` is computed from these traces, so coverage analysis doesn't
+need to re-run the pipeline.
 """
 
 from __future__ import annotations
@@ -95,12 +95,8 @@ def fetch_fulltext(
                 attempts=tuple(attempts),
                 elapsed_ms_total=_ms_since(t0),
             )
-        # Heuristic: the most common reason an oa_url PDF fetch returns None
-        # is that the publisher served an HTML paywall page (Content-Type
-        # mismatch). We attribute generically as `oa_url_pdf_failed`; the
-        # finer-grained `oa_url_not_pdf` is reserved for the case where the
-        # PDF client surfaces a Content-Type signal (deferred until pdf.py
-        # is structurally upgraded per Track D2).
+        # Common cause of None: publisher served an HTML paywall (Content-Type mismatch).
+        # Attributed generically; `oa_url_not_pdf` waits on pdf.py surfacing Content-Type.
         attempts.append(_attempt("oa_url_pdf", False, "oa_url_pdf_failed", ts))
 
     if source.pmcid:

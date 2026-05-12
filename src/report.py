@@ -102,18 +102,12 @@ def _compute_summary_stats(
 ) -> dict[str, int | float | str | dict[str, int]]:
     """Pure helper — compute summary statistics. No I/O.
 
-    I1 (2026-05-12): when ``fetch_outcomes`` is supplied, two diagnostic
-    fields are added to the returned dict:
-        - ``fetch_attempts_by_method``: count of FINAL methods used per
-          claim (1 per claim), keyed by the method that ultimately
-          succeeded or ``"abstract_fallback"`` when none did.
-        - ``fetch_failures_by_reason``: count of FAILED attempts across
-          all claims, keyed by ``FetchFailureReason``. A single claim
-          may contribute multiple failures (e.g. oa_url failed AND
-          unpaywall failed) before terminating.
+    When ``fetch_outcomes`` is supplied, two diagnostic fields are added to the returned dict:
 
-    When ``fetch_outcomes`` is None, neither field is present — preserves
-    backward compatibility with callers / tests that don't plumb outcomes.
+        - ``fetch_attempts_by_method``: count of FINAL methods used per claim (1 per claim), keyed by the method that ultimately succeeded or ``"abstract_fallback"`` when none did.
+        - ``fetch_failures_by_reason``: count of FAILED attempts across all claims, keyed by ``FetchFailureReason``. A single claim may contribute multiple failures (e.g. oa_url failed AND unpaywall failed) before terminating.
+
+    When ``fetch_outcomes`` is None, neither field is present — preserves backward compatibility with callers / tests that don't plumb outcomes.
     """
     total = len(claims)
 
@@ -135,11 +129,9 @@ def _compute_summary_stats(
     partially_supported = sum(1 for c in claims if result_for(c).status == "partially_supported")
     unverifiable = sum(1 for c in claims if result_for(c).status == "unverifiable")
 
-    # F1 (2026-05-12): break down `unverifiable` count by reason. Surfaces
-    # the access-limit category for downstream readers: "fulltext_unavailable"
-    # tells the operator the fetch chain failed (potential coverage gap);
-    # "numeric_claim_abstract_only" tells them the abstract was structurally
-    # insufficient for that specific claim shape.
+    # Break down `unverifiable` by reason to surface access-limit categories.
+    # `fulltext_unavailable` signals a fetch-chain coverage gap.
+    # `numeric_claim_abstract_only` signals the abstract is too thin for this claim shape.
     unverifiable_by_reason: dict[str, int] = {}
     for c in claims:
         result = result_for(c)
@@ -232,10 +224,8 @@ def _compute_summary_stats(
         "not_addressed_breakdown": not_addressed_breakdown,
     }
 
-    # I1: fetch telemetry aggregation. Skipped entirely when outcomes are
-    # absent — the diagnostic fields don't appear in the report. Operators
-    # can rely on `"fetch_failures_by_reason" in stats` to detect whether
-    # the run was instrumented.
+    # Fetch telemetry aggregation. Skipped when outcomes are absent.
+    # Presence of `"fetch_failures_by_reason"` in stats marks the run as instrumented.
     if fetch_outcomes:
         fetch_attempts_by_method: dict[str, int] = {}
         fetch_failures_by_reason: dict[str, int] = {}
@@ -346,9 +336,8 @@ def build_report(
         for step in all_steps:
             f.write(json.dumps(dataclasses.asdict(step)) + "\n")
 
-    # I1 (2026-05-12): one line per claim, per-attempt fetch trace. Persisted
-    # only when fetch_outcomes are supplied; scripts/analyze_fetch_coverage.py
-    # (Track D4) reads these to produce the weekly coverage-by-publisher view.
+    # Per-claim, per-attempt fetch trace; one line per claim.
+    # Downstream: `scripts/analyze_fetch_coverage.py` reads these for the publisher rollup.
     if fetch_outcomes:
         with open(run_dir / "fetch_traces.jsonl", "w", encoding="utf-8") as f:
             for claim in claims:

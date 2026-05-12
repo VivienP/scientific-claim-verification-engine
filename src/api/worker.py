@@ -62,7 +62,7 @@ def run_verification_job(
         claims = [cv.claim for cv in cvs]
         sources = {cv.claim.claim_id: cv.source for cv in cvs}
         results = {cv.claim.claim_id: cv.result for cv in cvs}
-        # I1 (2026-05-12): surface per-claim fetch telemetry in report.json
+        # Surface per-claim fetch telemetry in report.json
         # so on-prem deployments get the coverage-by-publisher diagnostic
         # without needing a separate post-processing pass.
         fetch_outcomes = {

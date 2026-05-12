@@ -8,12 +8,12 @@ You will receive a claim and a set of passages selected from the source paper us
 
 Verification statuses:
 - supported: At least one passage explicitly provides evidence consistent with the claim's core assertion AND the specific magnitude / value / direction the claim asserts. Quote the exact sentence(s) from the passage that justify this verdict.
-- unsupported: Use this when ANY of: (a) at least one passage explicitly contradicts the claim; (b) the passages address the topic of the claim but do not contain the specific content the claim asserts (on-topic absence-of-support); OR (c) the passages are on a different scientific subject altogether and therefore cannot substantiate the claim's specific assertion (off-topic absence-of-support).
-- not_addressed: Reserved for the rare case where no passage content is provided at all. You will not normally encounter this case — assume passages are present.
+- unsupported: At least one passage EXPLICITLY CONTRADICTS the claim — asserts a different direction, a different magnitude, or a fact incompatible with what the claim states. Reserved for cases where the passages DIRECTLY DISAGREE with the claim, not cases where they merely fail to mention it.
+- not_addressed: The passages are silent on the specific claim. This covers BOTH (a) on-topic passages from the same paper that don't contain the claim's specific assertion (e.g. the paper studies the same disease but reports a different endpoint than the claim asserts), AND (b) off-topic passages from a different scientific subject. In both cases, the passages do not contain enough information to confirm or contradict the claim; choosing between these subtypes is not your job.
 - partially_supported: The passages provide some support but not complete support (see the partial-support rules below).
 
-Clause A — collapse off-topic into unsupported:
-When you receive any passage content, the verdict must be one of `supported` / `partially_supported` / `unsupported`. Off-topic passages whose subject is unrelated to the claim are `unsupported` (the cited source does not contain evidence for the specific claim), NOT `not_addressed`. Do not split "right paper, wrong specific evidence" and "wrong paper entirely" into two different verdicts.
+Clause A — distinguish contradiction from silence:
+`unsupported` is reserved for EXPLICIT CONTRADICTION. If the passages are silent on the specific claim — whether because they address the broader topic without that specific assertion (on-topic silence), or because they are on a different scientific subject entirely (off-topic) — the verdict is `not_addressed`. Do NOT use `unsupported` to mean "I cannot find the assertion in the passages." Use `unsupported` ONLY when the passages state something that directly disagrees with what the claim asserts (e.g. claim says "X reduced mortality" and a Results passage reports "X did not affect mortality").
 
 Clause B — partial when source covers only part of the claimed quantitative space (apply BEFORE deciding `supported`):
 
@@ -26,7 +26,7 @@ The passage proves the claim is plausible at one point but does not establish th
 
 (B.2) Claim asserts a POINT VALUE, passages report a CENTRAL ESTIMATE with explicit uncertainty (95% CI, IQR, SD, range), and the claimed value falls inside the uncertainty band even when differing from the central estimate.
 - Example: Claim "lag is approximately 10 minutes"; passage reports "lag = 5 min (IQR -4 to 11)" → `partially_supported`.
-- Use `unsupported` only when the claimed value is outside any reported band, or when passages explicitly contradict the direction.
+- Use `unsupported` only when the claimed value is outside any reported band — this is an EXPLICIT contradiction. When the passages simply do not report the relevant quantity at all, use `not_addressed`.
 
 Clause B applies whenever EITHER direction matches. When B applies, the verdict is `partially_supported` and `supported` is DISALLOWED.
 
@@ -47,8 +47,8 @@ General guidelines:
 
 Return ONLY a JSON object with this exact schema:
 {
-  "status": "supported|unsupported|partially_supported",
-  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the passages. When the verdict is unsupported, state explicitly whether the passages contradict the claim, are silent on the specific assertion, or are on a different scientific subject.",
+  "status": "supported|unsupported|not_addressed|partially_supported",
+  "explanation": "One or two sentences explaining your verdict, citing specific evidence from the passages. When the verdict is unsupported, state explicitly what the passages assert that contradicts the claim. When the verdict is not_addressed, state explicitly that the passages do not contain the claim's specific assertion.",
   "confidence": 0.85,
   "source_passages": ["exact sentence quoted from a passage", "another exact sentence"],
   "source_section": "results"
@@ -58,7 +58,8 @@ Your response must be valid JSON only — no explanatory text outside the JSON, 
 
 Reminder of how to weigh evidence:
 - "supported" requires explicit textual evidence in at least one passage that fully matches the claim's specific assertion (including magnitude, direction, and conditions).
-- "unsupported" covers contradiction, on-topic absence-of-support, AND off-topic passages. Do not output `not_addressed` when passages are provided.
+- "unsupported" requires EXPLICIT CONTRADICTION — at least one passage must state something incompatible with the claim. Do NOT use `unsupported` for silence or absence-of-evidence.
+- "not_addressed" is the correct verdict when the passages simply do not address the claim's specific assertion, regardless of whether they are on-topic or off-topic. Reserve `unsupported` for direct disagreement only.
 - "partially_supported" applies when: (i) the passages support the direction but not the magnitude; (ii) the claimed value falls inside the source's uncertainty band but differs from the central estimate; (iii) the passages report only static values for a directional/trajectory claim; (iv) the passages support some but not all parts of a compound claim.
 - source_passages must contain verbatim quotes pulled directly from the passages provided. Never paraphrase or invent text.
 - source_section should match the section attribute of the passage(s) you cite. If you cite multiple passages from different sections, choose the one whose section best characterizes the evidence (Results for outcome data, Methods for design, Discussion for interpretation).

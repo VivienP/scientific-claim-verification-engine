@@ -34,21 +34,21 @@ to the format rather than to tier or topic-corpus availability.
 
 Numbers below come from each run's `report.json` summary block.
 
-| Metric | psilocybin — **post-fix** (2026-05-12) | GLP-1 MACE (pre-fix, re-run pending) | PD-1 NSCLC (pre-fix, re-run pending) |
+| Metric | psilocybin — **post-fix** (2026-05-12) | GLP-1 MACE — **post-fix** (2026-05-12) | PD-1 NSCLC (pre-fix, re-run pending) |
 |---|---:|---:|---:|
-| Claims extracted | **43** | 46 | 25 |
-| citation_found_rate | 100.0% | 93.5% | 60.0% |
-| Supported | 10 (23.3%) | 30 (65.2%) | 8 (32.0%) |
-| Partially supported | 17 (39.5%) | 5 (10.9%) | 6 (24.0%) |
-| Unsupported | **0 (0.0%)** | 10 (21.7%) | 2 (8.0%) |
-| Not addressed | 7 (16.3%) | 1 (2.2%) | 9 (36.0%) |
-| **Unverifiable** | **9 (20.9%)** | n/a (pre-fix) | n/a (pre-fix) |
-| Numeric checks run | 9 | **13** | 8 |
-| Numeric inconsistencies (raw) | 0 | **0** | 2 |
-| Silent failures (rule violation) | **0** | unknown (pre-fix) | unknown (pre-fix) |
-| Total cost (USD) | $0.75 | $1.46 | $0.64 |
+| Claims extracted | **43** | **36** | 25 |
+| citation_found_rate | 100.0% | 91.7% | 60.0% |
+| Supported | 10 (23.3%) | 19 (52.8%) | 8 (32.0%) |
+| Partially supported | 17 (39.5%) | 2 (5.6%) | 6 (24.0%) |
+| Unsupported | **0 (0.0%)** | **0 (0.0%)** | 2 (8.0%) |
+| Not addressed | 7 (16.3%) | 8 (22.2%) | 9 (36.0%) |
+| **Unverifiable** | **9 (20.9%)** | **7 (19.4%)** | n/a (pre-fix) |
+| Numeric checks run | 9 | 9 | 8 |
+| Numeric inconsistencies (raw) | 0 | 0 | 2 |
+| Silent failures (rule violation) | **0** | **0** | unknown (pre-fix) |
+| Total cost (USD) | $0.75 | $0.63 | $0.64 |
 
-The psilocybin column reflects the 2026-05-12 post-fix re-run. GLP-1 MACE and PD-1 NSCLC still show pre-fix numbers; cross-run comparisons involving those columns should be treated as provisional until their post-fix re-runs land.
+Two of three columns now reflect the post-fix pipeline. PD-1 NSCLC still shows pre-fix numbers; cross-run comparisons involving that column should be treated as provisional until its post-fix re-run lands.
 
 ### Diagnostic fields (from commit `e38150f`)
 

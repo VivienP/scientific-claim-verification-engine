@@ -79,8 +79,9 @@ Full schema (nested fields, Copilot enrichment, worked example): [docs/output-sc
 | Valsci paper (bioinformatics), 11 external claims | resolver | 11/11 correct source (100%) | [benchmarks/real_papers/valsci_brice_2025/](benchmarks/real_papers/valsci_brice_2025/README.md) |
 | SciFact dev | verifier, oracle inputs | F1 = 0.94 | binary, [scripts/eval_scifact.py](scripts/eval_scifact.py) |
 | Elicit psilocybin / TRD (post-fix, 2026-05-12) | full pipeline | 43 claims; **0 silent failures** (was 15/57 = 26% on the pre-fix run); 10 supported / 17 partial / 0 unsupported / 7 not_addressed / 9 unverifiable; $0.75 | [benchmarks/real_outputs/elicit_psilocybin/](benchmarks/real_outputs/elicit_psilocybin/README.md) |
+| Elicit GLP-1 MACE (post-fix, 2026-05-12) | full pipeline | 36 claims; **0 silent failures**; 19 supported / 2 partial / 0 unsupported / 8 not_addressed / 7 unverifiable; $0.63 | [benchmarks/real_outputs/elicit_glp1_mace/](benchmarks/real_outputs/elicit_glp1_mace/README.md) |
 | AnswerThis lactate (post-fix, 2026-05-12) | full pipeline | 19 claims, **79% confidently classified** (vs 12% pre-fix where 22/25 were dumped into `not_addressed`); 6 supported / 8 partial / 1 unsupported / 4 not_addressed; $0.25 | [benchmarks/real_outputs/answerthis_lactate/](benchmarks/real_outputs/answerthis_lactate/report.json) |
-| Real AI-for-science tools, 6 outputs | full pipeline | post-fix re-runs: 2 of 6 confirmed (psilocybin + AnswerThis above); 4 pending (Edison TREM2, Elicit GLP-1 MACE, Elicit PD-1 NSCLC, Sakana AI Scientist). Pre-fix aggregates archived under each benchmark's `_archive_pre_fix/` (do not cite). | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
+| Real AI-for-science tools, 6 outputs | full pipeline | post-fix re-runs: 3 of 6 confirmed (psilocybin + GLP-1 + AnswerThis); 3 pending (Edison TREM2, Elicit PD-1 NSCLC, Sakana AI Scientist). Pre-fix aggregates archived under each benchmark's `_archive_pre_fix/` (do not cite). | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md) |
 | Claim Transparency (CTran) across 135 claims, 5 benchmarks | audit trail | 65.9% transparent (+17pp vs pre-fix baseline) | [benchmarks/real_outputs/](benchmarks/real_outputs/README.md#claim-transparency-ctran) |
 
 ## Pipeline
@@ -125,6 +126,8 @@ Data models (`Claim`, `ResolvedSource`, `ResolvedSourceSet`, `VerificationResult
 ## HTTP API (on-prem deployment)
 
 A FastAPI wrapper around `run_pipeline` and the Copilot enrichment layer is available for biotech ops teams that need to deploy behind a corporate firewall. It exposes async jobs (POST /verify → 202 + job_id; poll GET /jobs/{id}) so requests don't time out at any reverse proxy.
+
+> `VERIFIER_API_KEY` is the pre-shared secret that gates this HTTP API and the MCP server below — required only for those two paths. The Python library Quick Start above needs only `ANTHROPIC_API_KEY`.
 
 ```bash
 # Run locally

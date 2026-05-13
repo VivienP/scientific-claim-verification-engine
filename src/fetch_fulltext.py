@@ -19,6 +19,7 @@ from src.models import (
     FetchFailureReason,
     FetchOutcome,
     FulltextMethod,
+    PdfFetchOutcome,
     ResolvedSource,
 )
 
@@ -41,6 +42,21 @@ def _attempt(
     return FetchAttempt(
         method=method, success=success, reason=reason, elapsed_ms=_ms_since(started_at)
     )
+
+
+def _pdf_failure_to_oa_url_reason(outcome: PdfFetchOutcome) -> FetchFailureReason:
+    """Map a ``PdfFetchOutcome`` failure to the oa_url-specific FetchFailureReason.
+
+    The ``not_a_pdf`` outcome is the audit-significant signal — a paywall
+    HTML page returned by a publisher OA URL — and gets its own enum
+    variant ``oa_url_not_pdf``. Other failure modes (http_error, timeout,
+    extraction_failed, too_short) collapse to the generic
+    ``oa_url_pdf_failed`` because the existing FetchFailureReason enum has
+    no finer-grained bucket for them.
+    """
+    if outcome.failure_reason == "not_a_pdf":
+        return "oa_url_not_pdf"
+    return "oa_url_pdf_failed"
 
 
 def fetch_fulltext(
@@ -85,19 +101,22 @@ def fetch_fulltext(
 
     if source.oa_url:
         ts = time.perf_counter()
-        text = pdf.download_and_extract(source.oa_url, db_path=db_path)
-        if text is not None:
+        pdf_outcome = pdf.download_and_extract(source.oa_url, db_path=db_path)
+        if pdf_outcome.text is not None:
             attempts.append(_attempt("oa_url_pdf", True, None, ts))
             logger.info("fulltext_method", method="oa_url_pdf", doi=source.doi)
             return FetchOutcome(
-                text=text,
+                text=pdf_outcome.text,
                 method="oa_url_pdf",
                 attempts=tuple(attempts),
                 elapsed_ms_total=_ms_since(t0),
             )
-        # Common cause of None: publisher served an HTML paywall (Content-Type mismatch).
-        # Attributed generically; `oa_url_not_pdf` waits on pdf.py surfacing Content-Type.
-        attempts.append(_attempt("oa_url_pdf", False, "oa_url_pdf_failed", ts))
+        # Distinguish "not_a_pdf" (Cloudflare/paywall HTML) from generic PDF
+        # download failures so the publisher-coverage rollup can flag paywalls
+        # versus real fetch errors without re-running the pipeline.
+        attempts.append(
+            _attempt("oa_url_pdf", False, _pdf_failure_to_oa_url_reason(pdf_outcome), ts)
+        )
 
     if source.pmcid:
         ts = time.perf_counter()
@@ -141,12 +160,12 @@ def fetch_fulltext(
         ts = time.perf_counter()
         epmc_url = europepmc.fetch_oa_url(source.doi, db_path=db_path)
         if epmc_url:
-            text = pdf.download_and_extract(epmc_url, db_path=db_path)
-            if text is not None:
+            pdf_outcome = pdf.download_and_extract(epmc_url, db_path=db_path)
+            if pdf_outcome.text is not None:
                 attempts.append(_attempt("europepmc_pdf", True, None, ts))
                 logger.info("fulltext_method", method="europepmc_pdf", doi=source.doi)
                 return FetchOutcome(
-                    text=text,
+                    text=pdf_outcome.text,
                     method="europepmc_pdf",
                     attempts=tuple(attempts),
                     elapsed_ms_total=_ms_since(t0),
@@ -158,12 +177,12 @@ def fetch_fulltext(
         ts = time.perf_counter()
         oa_url = unpaywall.get_oa_url(source.doi, db_path=db_path)
         if oa_url:
-            text = pdf.download_and_extract(oa_url, db_path=db_path)
-            if text is not None:
+            pdf_outcome = pdf.download_and_extract(oa_url, db_path=db_path)
+            if pdf_outcome.text is not None:
                 attempts.append(_attempt("unpaywall_pdf", True, None, ts))
                 logger.info("fulltext_method", method="unpaywall_pdf", doi=source.doi)
                 return FetchOutcome(
-                    text=text,
+                    text=pdf_outcome.text,
                     method="unpaywall_pdf",
                     attempts=tuple(attempts),
                     elapsed_ms_total=_ms_since(t0),

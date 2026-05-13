@@ -836,6 +836,11 @@ class TestResolveCitations:
                 "src.resolve._crossref.search_paper",
                 return_value=ResolvedSource(False, None, None, None, None),
             ),
+            # Lane B: ``_attach_resolution_verdict`` calls find_candidate on
+            # the resolved source; those calls are out of scope for this
+            # retry-exhaustion test, so short-circuit them at the mock.
+            patch("src.resolve._crossref.find_candidate", return_value=None),
+            patch("src.resolve._openalex.find_candidate", return_value=None),
         ):
             claims = [_make_claim("c0"), _make_claim("c1")]
             sources, steps = resolve_citations(claims, db_path=tmp_path / "cache.db")
@@ -1321,3 +1326,323 @@ class TestArxivFallback:
         # and the arXiv client must never be invoked.
         mock_arxiv.assert_not_called()
         assert sources["c1"].doi == "10.48550/arXiv.2201.11903"
+
+
+class TestResolutionVerdict:
+    """Lane B (2026-05-12): cross-source resolution verdict folding.
+
+    The resolver attaches a ``ResolutionVerdict`` to every found source so
+    downstream policy can gate verification on resolver confidence. Status
+    values:
+
+    * ``corroborated`` — bib-DOI path used (trivial, no extra calls) OR
+      multiple candidate clients agreed on the resolved DOI.
+    * ``disputed`` — CrossRef and OpenAlex returned different DOIs without
+      fuzzy (year, first_author, venue) agreement.
+    * ``single_source_only`` — only one client returned a candidate.
+    * ``low_confidence`` — single-source + the OpenAlex weak-signal flag.
+    """
+
+    @patch("src.resolve._openalex.find_candidate")
+    @patch("src.resolve._crossref.find_candidate")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.fetch_work_by_doi")
+    @patch("src.resolve.search_paper")
+    def test_bib_doi_direct_yields_trivial_corroborated_without_extra_calls(
+        self,
+        mock_oa: MagicMock,
+        mock_fetch_doi: MagicMock,
+        mock_retr: MagicMock,
+        mock_cf_cand: MagicMock,
+        mock_oa_cand: MagicMock,
+    ) -> None:
+        """Cost-discipline rule: bib-DOI path = corroborated without extra HTTP calls.
+
+        The bibliography supplied the DOI; CrossRef confirmed it. The
+        verdict folder should NOT invoke find_candidate on any client.
+        """
+        from src.bibliography import BibEntry
+        from src.resolve import resolve_citations
+
+        bib = {
+            3: BibEntry(
+                number=3,
+                raw="...",
+                authors=["Goodwin"],
+                title="Blood lactate measurements",
+                year=2007,
+                doi="10.1177/193229680700100414",
+            )
+        }
+        mock_fetch_doi.return_value = ResolvedSource(
+            found=True,
+            doi="10.1177/193229680700100414",
+            title="Blood lactate measurements",
+            abstract="A short abstract.",
+            similarity_score=1.0,
+        )
+        claim = _make_claim("c1", cited_authors=["Goodwin"], cited_year=2007)
+        sources, _ = resolve_citations([claim], bibliography=bib)
+
+        source = sources["c1"]
+        assert source.resolution_verdict is not None
+        assert source.resolution_verdict.status == "corroborated"
+        assert "doi" in source.resolution_verdict.agreement_signals
+        # Cost discipline: no candidate-corroboration calls when bib-DOI ok.
+        mock_cf_cand.assert_not_called()
+        mock_oa_cand.assert_not_called()
+
+    @patch("src.resolve._openalex.find_candidate")
+    @patch("src.resolve._crossref.find_candidate")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_disputed_when_crossref_and_openalex_return_different_dois(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+        mock_cf_cand: MagicMock,
+        mock_oa_cand: MagicMock,
+    ) -> None:
+        """Gerstein-shaped failure: CrossRef and OpenAlex disagree on DOI."""
+        from src.models import CandidateResolution
+        from src.resolve import resolve_citations
+
+        # Resolver lands on OpenAlex's pick first (fuzzy path).
+        mock_oa.return_value = ResolvedSource(
+            found=True,
+            doi="10.1/openalex",
+            title="Some Paper",
+            abstract="abs",
+            similarity_score=0.8,
+        )
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+        # Candidates for the verdict folder: disagreement on DOI, no fuzzy agreement.
+        mock_cf_cand.return_value = CandidateResolution(
+            client="crossref",
+            doi="10.1/crossref",
+            title="A different title",
+            year=2018,
+            first_author="alpha",
+            venue="Journal A",
+        )
+        mock_oa_cand.return_value = CandidateResolution(
+            client="openalex",
+            doi="10.1/openalex",
+            title="Some Paper",
+            year=2023,
+            first_author="beta",
+            venue="Journal B",
+        )
+
+        claim = _make_claim("c1", cited_authors=["Gerstein"], cited_year=2023)
+        sources, _ = resolve_citations([claim])
+
+        source = sources["c1"]
+        assert source.resolution_verdict is not None
+        assert source.resolution_verdict.status == "disputed"
+        assert source.resolution_verdict.agreement_signals == ()
+        candidates = source.resolution_verdict.candidates
+        clients = {c.client for c in candidates}
+        assert {"crossref", "openalex"}.issubset(clients)
+
+    @patch("src.resolve._openalex.find_candidate")
+    @patch("src.resolve._crossref.find_candidate")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_corroborated_when_clients_agree_on_doi(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+        mock_cf_cand: MagicMock,
+        mock_oa_cand: MagicMock,
+    ) -> None:
+        """CrossRef and OpenAlex return the same DOI → corroborated."""
+        from src.models import CandidateResolution
+        from src.resolve import resolve_citations
+
+        mock_oa.return_value = ResolvedSource(
+            found=True, doi="10.1/agreed", title="T", abstract="abs", similarity_score=0.9
+        )
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+        mock_cf_cand.return_value = CandidateResolution(
+            client="crossref",
+            doi="10.1/agreed",
+            title="T",
+            year=2020,
+            first_author="smith",
+            venue="Journal X",
+        )
+        mock_oa_cand.return_value = CandidateResolution(
+            client="openalex",
+            doi="10.1/agreed",
+            title="T",
+            year=2020,
+            first_author="smith",
+            venue="Journal X",
+        )
+
+        claim = _make_claim("c1", cited_authors=["Smith"], cited_year=2020)
+        sources, _ = resolve_citations([claim])
+
+        source = sources["c1"]
+        assert source.resolution_verdict is not None
+        assert source.resolution_verdict.status == "corroborated"
+        assert "doi" in source.resolution_verdict.agreement_signals
+
+    @patch("src.resolve._openalex.find_candidate", return_value=None)
+    @patch("src.resolve._crossref.find_candidate")
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_single_source_only_when_only_one_client_returns_a_candidate(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+        mock_cf_cand: MagicMock,
+        mock_oa_cand: MagicMock,
+    ) -> None:
+        """Only CrossRef returns a candidate; OpenAlex misses."""
+        from src.models import CandidateResolution
+        from src.resolve import resolve_citations
+
+        mock_oa.return_value = ResolvedSource(
+            found=True, doi="10.1/only", title="T", abstract="abs", similarity_score=0.9
+        )
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+        mock_cf_cand.return_value = CandidateResolution(
+            client="crossref",
+            doi="10.1/only",
+            title="T",
+            year=2020,
+            first_author="solo",
+            venue="V",
+        )
+
+        claim = _make_claim("c1", cited_authors=["Solo"], cited_year=2020)
+        sources, _ = resolve_citations([claim])
+
+        source = sources["c1"]
+        assert source.resolution_verdict is not None
+        assert source.resolution_verdict.status == "single_source_only"
+
+    @patch("src.resolve._openalex.find_candidate", return_value=None)
+    @patch("src.resolve._crossref.find_candidate", return_value=None)
+    @patch("src.resolve._crossref.check_retraction", return_value=False)
+    @patch("src.resolve._crossref.search_paper")
+    @patch("src.resolve.search_paper")
+    def test_low_confidence_when_single_candidate_has_weak_signal(
+        self,
+        mock_oa: MagicMock,
+        mock_cf: MagicMock,
+        mock_retr: MagicMock,
+        mock_cf_cand: MagicMock,
+        mock_oa_cand: MagicMock,
+    ) -> None:
+        """OpenAlex returns a weak match (title overlap below threshold).
+
+        The source carries ``resolution_low_confidence=True``. With no other
+        candidates to corroborate against, the verdict upgrades to
+        ``low_confidence`` so the policy gate can downgrade to unverifiable
+        on numeric claims.
+        """
+        from src.models import CandidateResolution
+        from src.resolve import resolve_citations
+
+        mock_oa.return_value = ResolvedSource(
+            found=True,
+            doi="10.1/weak",
+            title="Some Paper",
+            abstract="abs",
+            similarity_score=0.8,
+            title_match_score=0.10,
+            resolution_low_confidence=True,
+        )
+        mock_cf.return_value = ResolvedSource(False, None, None, None, None)
+        # Only OpenAlex returns a candidate; CrossRef miss is set in the decorator.
+        mock_oa_cand.return_value = CandidateResolution(
+            client="openalex",
+            doi="10.1/weak",
+            title="Some Paper",
+            year=2020,
+            first_author="x",
+            venue="V",
+        )
+
+        claim = _make_claim("c1", cited_authors=["Solo"], cited_year=2020)
+        sources, _ = resolve_citations([claim])
+
+        source = sources["c1"]
+        assert source.resolution_verdict is not None
+        assert source.resolution_verdict.status == "low_confidence"
+
+
+class TestFoldCandidatesIntoVerdict:
+    """Pure-function tests for the verdict folder."""
+
+    def test_empty_candidates_is_single_source_only(self) -> None:
+        from src.resolve_utils import fold_candidates_into_verdict
+
+        verdict = fold_candidates_into_verdict(())
+        assert verdict.status == "single_source_only"
+        assert verdict.candidates == ()
+        assert verdict.agreement_signals == ()
+
+    def test_single_candidate_is_single_source_only(self) -> None:
+        from src.models import CandidateResolution
+        from src.resolve_utils import fold_candidates_into_verdict
+
+        candidates = (
+            CandidateResolution(
+                client="crossref",
+                doi="10.1/x",
+                title="T",
+                year=2020,
+                first_author="a",
+                venue="V",
+            ),
+        )
+        verdict = fold_candidates_into_verdict(candidates)
+        assert verdict.status == "single_source_only"
+
+    def test_two_candidates_same_doi_is_corroborated(self) -> None:
+        from src.models import CandidateResolution
+        from src.resolve_utils import fold_candidates_into_verdict
+
+        candidates = (
+            CandidateResolution("crossref", "10.1/x", "T", 2020, "a", "V"),
+            CandidateResolution("openalex", "10.1/X", "T2", 2021, "b", "V2"),
+        )
+        verdict = fold_candidates_into_verdict(candidates)
+        assert verdict.status == "corroborated"
+        assert "doi" in verdict.agreement_signals
+
+    def test_two_candidates_different_doi_no_fuzzy_match_is_disputed(self) -> None:
+        from src.models import CandidateResolution
+        from src.resolve_utils import fold_candidates_into_verdict
+
+        candidates = (
+            CandidateResolution("crossref", "10.1/a", "Ta", 2018, "alpha", "VA"),
+            CandidateResolution("openalex", "10.1/b", "Tb", 2023, "beta", "VB"),
+        )
+        verdict = fold_candidates_into_verdict(candidates)
+        assert verdict.status == "disputed"
+
+    def test_two_candidates_different_doi_but_fuzzy_match_is_corroborated(self) -> None:
+        """Preprint vs published version: different DOIs, same year/first_author/venue."""
+        from src.models import CandidateResolution
+        from src.resolve_utils import fold_candidates_into_verdict
+
+        candidates = (
+            CandidateResolution("crossref", "10.1/preprint", "T", 2020, "smith", "Journal X"),
+            CandidateResolution("openalex", "10.1/journal", "T", 2020, "smith", "Journal X"),
+        )
+        verdict = fold_candidates_into_verdict(candidates)
+        assert verdict.status == "corroborated"
+        # Agreement signals report which fuzzy fields matched.
+        assert "year" in verdict.agreement_signals
+        assert "first_author" in verdict.agreement_signals

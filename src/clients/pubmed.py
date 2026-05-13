@@ -32,6 +32,7 @@ from src.clients.pubmed_parser import (
     _extract_record_fields,
     _title_overlap_score,
 )
+from src.models import CandidateResolution
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -381,6 +382,37 @@ def fetch_abstract_by_doi(
     if pmid is None:
         return None
     return fetch_abstract(pmid, timeout=timeout, db_path=db_path)
+
+
+def find_candidate_by_doi(
+    doi: str,
+    *,
+    timeout: float = 15.0,
+    db_path: Path | None = None,
+) -> CandidateResolution | None:
+    """Return a PubMed CandidateResolution for a known DOI, or ``None``.
+
+    Public helper for callers wanting a third opinion on a DOI beyond the
+    CrossRef + OpenAlex pair the resolver consults by default. A non-None
+    result means PubMed lists the DOI — strong corroboration even when only
+    the DOI field is filled (title / year / venue may stay ``None`` because
+    they are not always parseable from the efetch text response). The
+    resolver itself does not call this in Phase 1 to keep verdict folding
+    to a single round-trip pair (CrossRef + OpenAlex).
+    """
+    pmid = find_pmid_by_doi(doi, timeout=timeout, db_path=db_path)
+    if pmid is None:
+        return None
+    record = fetch_record(pmid, timeout=timeout, db_path=db_path)
+    record_doi = record.doi if record is not None else doi
+    return CandidateResolution(
+        client="pubmed",
+        doi=record_doi or doi,
+        title=None,
+        year=None,
+        first_author=None,
+        venue=None,
+    )
 
 
 def _default_db_path() -> Path:

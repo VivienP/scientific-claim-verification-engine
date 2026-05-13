@@ -25,7 +25,7 @@ from src.clients._common import (
 from src.clients._common import (
     make_cache_key,
 )
-from src.models import ResolvedSource
+from src.models import CandidateResolution, ResolvedSource
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -134,6 +134,62 @@ def _extract_pmcid(pmcid_raw: str | None) -> str | None:
     if cleaned.isdigit():
         return f"PMC{cleaned}"
     return cleaned
+
+
+def _first_author_display(result: dict[str, Any]) -> str | None:
+    """Return the lowercased family name of the first authorship."""
+    authorships = result.get("authorships")
+    if not isinstance(authorships, list) or not authorships:
+        return None
+    first = authorships[0]
+    if not isinstance(first, dict):
+        return None
+    author = first.get("author")
+    if not isinstance(author, dict):
+        return None
+    display = author.get("display_name")
+    if isinstance(display, str) and display.strip():
+        parts = display.strip().split()
+        if parts:
+            # OpenAlex stores "Given Family"; surname is the last token by convention.
+            return parts[-1].lower()
+    return None
+
+
+def _venue_from_result(result: dict[str, Any]) -> str | None:
+    """Return OpenAlex's primary host venue display_name when available."""
+    primary = result.get("primary_location") or {}
+    if isinstance(primary, dict):
+        source = primary.get("source")
+        if isinstance(source, dict):
+            name = source.get("display_name")
+            if isinstance(name, str) and name.strip():
+                return name.strip()
+    host_venue = result.get("host_venue")
+    if isinstance(host_venue, dict):
+        name = host_venue.get("display_name")
+        if isinstance(name, str) and name.strip():
+            return name.strip()
+    return None
+
+
+def _candidate_from_result(result: dict[str, Any]) -> CandidateResolution:
+    """Build a CandidateResolution from an OpenAlex work record.
+
+    Mirrors the CrossRef ``_candidate_from_message`` shape so the verdict
+    folder treats the two clients symmetrically when testing
+    (year, first_author, venue) agreement.
+    """
+    doi_raw: str | None = result.get("doi")
+    doi: str | None = doi_raw.replace("https://doi.org/", "") if doi_raw else None
+    return CandidateResolution(
+        client="openalex",
+        doi=doi,
+        title=result.get("title"),
+        year=result.get("publication_year"),
+        first_author=_first_author_display(result),
+        venue=_venue_from_result(result),
+    )
 
 
 def _build_resolved_source(
@@ -256,6 +312,82 @@ def search_paper(
 
     logger.error("max_retries_exceeded", query=query)
     return _not_found
+
+
+def find_candidate(
+    query: str,
+    *,
+    timeout: float = 10.0,
+    db_path: Path | None = None,
+) -> CandidateResolution | None:
+    """Return OpenAlex's best candidate for a bibliographic query.
+
+    Independent of ``search_paper`` so the resolver verdict folder can call
+    both APIs without coupling the legacy ResolvedSource cache to the new
+    candidate cache. Same scoring as ``search_paper``; only the returned
+    shape differs.
+    """
+    resolved_db_path = db_path if db_path is not None else _default_db_path()
+    key = make_cache_key("openalex:candidate:v1", query)
+
+    cached = get(resolved_db_path, key)
+    if cached is not None:
+        logger.debug("openalex_candidate_cache_hit", query=query)
+        data: dict[str, Any] = json.loads(cached)
+        if not data:
+            return None
+        return CandidateResolution(**data)
+
+    params: dict[str, str | int] = {
+        "search": query,
+        "per-page": 5,
+        "mailto": _MAILTO,
+    }
+    headers: dict[str, str] = {"User-Agent": "ScientificClaimVerifier/0.1"}
+    query_year = _extract_year_from_query(query)
+
+    for attempt in range(1, _RETRY_MAX + 1):
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                response = client.get(
+                    f"{_BASE_URL}/works",
+                    params=params,
+                    headers=headers,
+                )
+            if response.status_code == 429:
+                wait = _RETRY_BACKOFF_BASE**attempt
+                logger.warning(
+                    "openalex_candidate_rate_limited", attempt=attempt, wait_seconds=wait
+                )
+                if attempt < _RETRY_MAX:
+                    time.sleep(wait)
+                    continue
+                return None
+            response.raise_for_status()
+            payload: dict[str, Any] = response.json()
+            results_list: list[dict[str, Any]] = payload.get("results", [])
+            best = _pick_best_result(results_list, query_year, query)
+            if best is None:
+                put(resolved_db_path, key, json.dumps({}), _CACHE_TTL_SECONDS)
+                return None
+            candidate = _candidate_from_result(best)
+            put(
+                resolved_db_path,
+                key,
+                json.dumps(dataclasses.asdict(candidate)),
+                _CACHE_TTL_SECONDS,
+            )
+            return candidate
+        except httpx.HTTPStatusError as exc:
+            logger.error("openalex_candidate_request_error", query=query, error=str(exc))
+            return None
+        except httpx.RequestError as exc:
+            logger.error("openalex_candidate_request_error", query=query, error=str(exc))
+            return None
+        except Exception as exc:
+            logger.error("openalex_candidate_unexpected_error", query=query, error=str(exc))
+            return None
+    return None
 
 
 def _default_db_path() -> Path:

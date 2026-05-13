@@ -119,6 +119,18 @@ def _render_summary(summary: dict[str, Any]) -> str:
     if numeric_run > 0:
         lines.append(f"**Numeric checks:** {numeric_run} run, {numeric_bad} inconsistencies")
 
+    verdict_counts = summary.get("resolution_verdict_counts")
+    if isinstance(verdict_counts, dict):
+        corroborated = int(verdict_counts.get("corroborated", 0) or 0)
+        disputed = int(verdict_counts.get("disputed", 0) or 0)
+        low_conf = int(verdict_counts.get("low_confidence", 0) or 0)
+        single = int(verdict_counts.get("single_source_only", 0) or 0)
+        if corroborated + disputed + low_conf + single > 0:
+            lines.append(
+                f"**Resolution verdicts:** corroborated={corroborated}, "
+                f"disputed={disputed}, low_confidence={low_conf}, single_source={single}"
+            )
+
     warnings = _render_summary_warnings(summary)
     if warnings:
         lines.append("")
@@ -142,6 +154,14 @@ def _render_summary_warnings(summary: dict[str, Any]) -> list[str]:
         warnings.append(
             f"> **Warning:** {low_conf} citation(s) resolved with low confidence — verify manually."
         )
+    verdict_counts = summary.get("resolution_verdict_counts")
+    if isinstance(verdict_counts, dict):
+        disputed = int(verdict_counts.get("disputed", 0) or 0)
+        if disputed > 0:
+            warnings.append(
+                f"> **Warning:** {disputed} citation(s) had disputed cross-source resolution — "
+                "different clients returned different DOIs."
+            )
     cross_modal = int(summary.get("cross_modal_disagreements", 0) or 0)
     if cross_modal > 0:
         warnings.append(
@@ -178,6 +198,10 @@ def _render_one_claim(index: int, claim: dict[str, Any]) -> str:
 
     lines.append(_format_source_line(source))
     lines.append(_format_evidence_line(verification))
+
+    verdict_lines = _format_resolution_verdict(source.get("resolution_verdict"))
+    if verdict_lines:
+        lines.extend(verdict_lines)
 
     numeric_line = _format_numeric_line(verification.get("numeric_check"))
     if numeric_line:
@@ -225,6 +249,53 @@ def _format_evidence_line(verification: dict[str, Any]) -> str:
     quality = verification.get("evidence_quality", "unknown")
     depth = verification.get("verification_depth", "unknown")
     return f"- **Evidence:** depth={depth}, retrieval={retrieval}, quality={quality}"
+
+
+def _format_resolution_verdict(verdict: dict[str, Any] | None) -> list[str]:
+    """Render the resolver's cross-source verdict + per-candidate diagnostics.
+
+    Shown on every found source so the auditor can read at a glance whether
+    multiple clients agreed (``corroborated``), disagreed (``disputed``),
+    returned a single weak match (``low_confidence``), or only one client
+    answered at all (``single_source_only``).
+
+    Candidates are rendered even when the verdict is ``corroborated`` — the
+    bib-DOI path emits ``corroborated`` with a single CrossRef candidate
+    (the bibliography acts as the implicit second authority), and an auditor
+    inspecting the report deserves to see which DOI carried the agreement.
+    Hiding the candidate list there would conceal whether a 1-source or
+    n-source corroboration drove the verdict.
+    """
+    if not isinstance(verdict, dict):
+        return []
+    status = str(verdict.get("status", "") or "")
+    if not status:
+        return []
+    signals_raw = verdict.get("agreement_signals") or ()
+    signals = tuple(str(s) for s in signals_raw)
+    signal_str = f" (agree on {', '.join(signals)})" if signals else ""
+    out = [f"- **Resolution verdict:** `{status}`{signal_str}"]
+
+    candidates_raw = verdict.get("candidates") or ()
+    if not candidates_raw:
+        return out
+    out.append("- **Candidates:**")
+    for candidate in candidates_raw:
+        if not isinstance(candidate, dict):
+            continue
+        client = str(candidate.get("client", "?"))
+        doi = candidate.get("doi") or "—"
+        title = candidate.get("title") or "—"
+        year = candidate.get("year")
+        venue = candidate.get("venue") or "—"
+        author = candidate.get("first_author") or "—"
+        year_str = f"{year}" if year is not None else "—"
+        title_short = _inline_safe(str(title))[:120]
+        out.append(
+            f"  - `{client}` doi={doi} year={year_str} first_author={author} "
+            f"venue={_inline_safe(str(venue))} — *{title_short}*"
+        )
+    return out
 
 
 def _format_numeric_line(numeric: dict[str, Any] | None) -> str | None:

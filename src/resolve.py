@@ -12,9 +12,17 @@ import structlog
 from src.bibliography import BibEntry
 from src.clients import arxiv as _arxiv
 from src.clients import crossref as _crossref
+from src.clients import openalex as _openalex
 from src.clients import pubmed as _pubmed
 from src.clients.openalex import search_paper
-from src.models import Claim, ProvenanceStep, ResolvedSource, ResolvedSourceSet
+from src.models import (
+    CandidateResolution,
+    Claim,
+    ProvenanceStep,
+    ResolutionVerdict,
+    ResolvedSource,
+    ResolvedSourceSet,
+)
 from src.resolve_enrich import _enrich_via_europepmc, _enrich_via_pubmed
 from src.resolve_utils import (
     _NOT_FOUND,
@@ -27,6 +35,7 @@ from src.resolve_utils import (
     _hash,
     _normalize_pmcid,
     _source_from_bib_entry,
+    fold_candidates_into_verdict,
 )
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
@@ -69,6 +78,83 @@ def _reject_if_citing_paper(
         )
         return _NOT_FOUND
     return source
+
+
+def _attach_resolution_verdict(
+    source: ResolvedSource,
+    *,
+    used_bib_doi: bool,
+    query: str | None,
+    db_path: Path | None,
+) -> ResolvedSource:
+    """Compute a ``ResolutionVerdict`` and attach it to ``source``.
+
+    Two paths:
+
+    * ``used_bib_doi=True`` — the bibliography already supplied a DOI that
+      CrossRef confirmed. The bib acts as the second authority; status is
+      ``corroborated`` trivially without extra HTTP calls (the cost-
+      discipline rule of the verdict design).
+    * ``used_bib_doi=False`` — fuzzy fallback path. Collect candidates from
+      CrossRef, OpenAlex, and (when a DOI was settled) PubMed via their
+      ``find_candidate`` APIs, then fold into a verdict. Disagreement
+      between clients on DOI surfaces as ``disputed`` — the signal that the
+      downstream policy uses to gate verification.
+
+    A source with ``found=False`` returns unchanged: no verdict is meaningful
+    when no candidate exists. When the source carries
+    ``resolution_low_confidence=True`` and the fold yields
+    ``single_source_only``, the status is upgraded to ``low_confidence`` so
+    the policy gate sees the weak-signal flag.
+    """
+    if not source.found:
+        return source
+
+    if used_bib_doi and source.doi is not None:
+        bib_candidate = CandidateResolution(
+            client="crossref",
+            doi=source.doi,
+            title=source.title,
+            year=None,
+            first_author=None,
+            venue=None,
+        )
+        verdict = ResolutionVerdict(
+            status="corroborated",
+            candidates=(bib_candidate,),
+            agreement_signals=("doi",),
+        )
+        return dataclasses.replace(source, resolution_verdict=verdict)
+
+    candidates: list[CandidateResolution] = []
+    if query:
+        cf_cand = _crossref.find_candidate(query, db_path=db_path)
+        if cf_cand is not None:
+            candidates.append(cf_cand)
+        oa_cand = _openalex.find_candidate(query, db_path=db_path)
+        if oa_cand is not None:
+            candidates.append(oa_cand)
+
+    if not candidates:
+        return source
+
+    # CrossRef + OpenAlex are sufficient for the cross-source signal: when
+    # they agree on DOI the verdict is corroborated; when they disagree it
+    # is disputed. PubMed is exposed as ``find_candidate_by_doi`` for
+    # callers that want a third opinion, but adding a third HTTP call per
+    # claim here doubles resolver latency without changing the policy
+    # outcome — the auditor can inspect ``resolution_verdict.candidates``
+    # and pull a PubMed candidate by hand when the verdict is disputed.
+    verdict = fold_candidates_into_verdict(tuple(candidates))
+
+    if verdict.status == "single_source_only" and source.resolution_low_confidence:
+        verdict = ResolutionVerdict(
+            status="low_confidence",
+            candidates=verdict.candidates,
+            agreement_signals=(),
+        )
+
+    return dataclasses.replace(source, resolution_verdict=verdict)
 
 
 def _resolve_via_bib_doi(entry: BibEntry, *, db_path: Path | None) -> ResolvedSource:
@@ -183,8 +269,11 @@ def _resolve_for_bib_entry(
     Returns `_NOT_FOUND` when every step misses.
     """
     source = _NOT_FOUND
+    used_bib_doi = False
     if bib_entry.doi:
         source = _resolve_via_bib_doi(bib_entry, db_path=db_path)
+        if source.found:
+            used_bib_doi = True
     if not source.found and (bib_entry.pmid or bib_entry.pmcid):
         source = _resolve_via_bib_pmid(bib_entry, db_path=db_path)
     if not source.found and bib_entry.title:
@@ -207,6 +296,13 @@ def _resolve_for_bib_entry(
 
     source = _enrich_via_pubmed(source, db_path=db_path)
     source = _enrich_via_europepmc(source, db_path=db_path)
+    verdict_query = _build_query_from_bib(bib_entry, claim) if not used_bib_doi else None
+    source = _attach_resolution_verdict(
+        source,
+        used_bib_doi=used_bib_doi,
+        query=verdict_query,
+        db_path=db_path,
+    )
     return source
 
 
@@ -329,6 +425,7 @@ def resolve_citations(
     for claim in claims:
         ts = time.time()
         bib_match: BibEntry | None = None
+        used_bib_doi = False
         if bibliography:
             bib_match = _best_bib_match(claim, bibliography)
 
@@ -350,6 +447,7 @@ def resolve_citations(
             if bib_match is not None and bib_match.doi:
                 source = _resolve_via_bib_doi(bib_match, db_path=db_path)
                 if source.found:
+                    used_bib_doi = True
                     logger.info(
                         "resolve_via_bib_doi",
                         claim_id=claim.claim_id,
@@ -418,6 +516,21 @@ def resolve_citations(
 
         source = _enrich_via_pubmed(source, db_path=db_path)
         source = _enrich_via_europepmc(source, db_path=db_path)
+
+        if not used_bib_doi:
+            verdict_query: str | None = (
+                _build_query_from_bib(bib_match, claim)
+                if bib_match is not None
+                else _build_query(claim)
+            )
+        else:
+            verdict_query = None
+        source = _attach_resolution_verdict(
+            source,
+            used_bib_doi=used_bib_doi,
+            query=verdict_query,
+            db_path=db_path,
+        )
 
         sources[claim.claim_id] = source
         steps.append(

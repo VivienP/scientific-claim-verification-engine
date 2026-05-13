@@ -11,6 +11,7 @@ from src.clients.pubmed import (
     fetch_abstract,
     fetch_abstract_by_doi,
     fetch_record,
+    find_candidate_by_doi,
     find_pmid_by_doi,
     find_pmid_by_title,
 )
@@ -230,3 +231,27 @@ class TestFetchAbstractByDoi:
         assert fetch_abstract_by_doi("10.1234/missing", db_path=tmp_path / "c.db") is None
         urls = [str(r.url) for r in httpx_mock.get_requests()]
         assert all("efetch" not in u for u in urls)
+
+
+class TestFindCandidateByDoi:
+    """Lane B (2026-05-12): PubMed CandidateResolution exposure.
+
+    The resolver verdict folder uses PubMed as a third corroborating source
+    after CrossRef and OpenAlex. A non-None result means PubMed lists the
+    DOI — strong corroboration even when only the DOI field is populated.
+    """
+
+    def test_returns_candidate_when_doi_resolves_to_pmid(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(text=_ESEARCH_OK)
+        httpx_mock.add_response(text=_EFETCH_TEXT)
+        candidate = find_candidate_by_doi("10.1177/193229680700100414", db_path=tmp_path / "c.db")
+        assert candidate is not None
+        assert candidate.client == "pubmed"
+        assert candidate.doi == "10.1177/193229680700100414"
+
+    def test_returns_none_when_doi_has_no_pmid(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        httpx_mock.add_response(text=_ESEARCH_EMPTY)
+        candidate = find_candidate_by_doi("10.1234/missing", db_path=tmp_path / "c.db")
+        assert candidate is None

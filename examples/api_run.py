@@ -1,4 +1,4 @@
-"""End-to-end client example for the Phase C lite API.
+"""End-to-end client example for the lite API.
 
 Demonstrates the async-jobs + polling flow:
 

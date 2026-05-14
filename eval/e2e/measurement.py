@@ -143,9 +143,8 @@ def compute_metrics(
     """Compute the 5 metrics from aligned claims + pipeline outputs.
 
     `not_addressed_unknown_cause` is 1.0 whenever any not_addressed verdict is
-    present, until Phase D propagates per-cause attribution into
-    VerificationResult. After Phase D this metric will reflect the actual
-    fraction with no assigned cause.
+    present. The metric reflects the actual fraction with no assigned cause
+    once per-cause attribution is available in VerificationResult.
     """
     n_gt = len(gt_claims)
     n_extracted = len(extracted)

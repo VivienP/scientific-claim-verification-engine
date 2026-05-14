@@ -1,6 +1,6 @@
 """End-to-end Copilot example: V1 pipeline → enricher → HTML report.
 
-Public API entrypoint for Phase B. Demonstrates:
+Demonstrates:
 
   text → run_pipeline()             → list[ClaimVerification]
        → CopilotEnricher.enrich_all → list[EnrichedVerification]

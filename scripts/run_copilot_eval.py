@@ -6,7 +6,7 @@ Usage:
       --gold eval/e2e/reference_paper_v1_verdicts.json \
       --output eval/results/copilot_eval_<run_id>.json
 
-Exits non-zero if the Phase B gate fails (precision < 0.80, hallucination > 0,
+Exits non-zero if the gate fails (precision < 0.80, hallucination > 0,
 or fix-present-rate < 0.60). This is the offline regression bar for any change
 to ``src/copilot/`` modules.
 """
@@ -44,7 +44,7 @@ def main() -> int:
     parser.add_argument(
         "--enforce-gate",
         action="store_true",
-        help="Exit 1 if Phase B gate fails (default: report only).",
+        help="Exit 1 if the copilot gate fails (default: report only).",
     )
     args = parser.parse_args()
 

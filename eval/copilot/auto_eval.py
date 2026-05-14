@@ -1,6 +1,6 @@
 """Auto-evaluation of Copilot field outputs against the lactate-ISF gold set.
 
-Phase B baseline targets (per plan §9.1):
+Baseline targets:
   - is_primary_source precision  ≥ 0.80
   - doi_hallucination_rate       = 0.00  (hard gate)
   - fix_present_rate (unsupported) ≥ 0.60
@@ -68,7 +68,7 @@ class CopilotEvalReport:
     n_unsupported_in_gold: int
     n_unsupported_with_fix: int
 
-    # Phase B gate verdicts (booleans for CI).
+    # Gate verdicts (booleans for CI).
     passes_phase_b_gate: bool
 
     # Per-claim diff for debugging.

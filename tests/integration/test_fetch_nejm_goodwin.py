@@ -60,7 +60,7 @@ def _goodwin_source() -> ResolvedSource:
         "Their robots.txt explicitly disallows GPTBot/CCBot/PerplexityBot/"
         "SemanticScholarBot and Cloudflare blocks the rest at the edge. "
         "Bypassing this would require a headless browser (Playwright) or "
-        "paid NEJM API access — both out of scope for Phase 1. "
+        "paid NEJM API access — both out of scope. "
         "Track A's `unverifiable` safety net handles this case correctly: "
         "for NEJM papers without OA, the verifier emits "
         "(status='unverifiable', confidence=None) instead of the previous "

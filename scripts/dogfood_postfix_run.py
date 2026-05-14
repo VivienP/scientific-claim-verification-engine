@@ -1,6 +1,6 @@
-"""Run the post-fix pipeline (Tracks A + D + F + G + I) against any captured
-dogfood input under benchmarks/real_outputs/{name}/input.txt and diff it
-against the pre-fix baseline at the same location.
+"""Run the current pipeline against any captured dogfood input under
+benchmarks/real_outputs/{name}/input.txt and diff against the archived
+baseline report.json at the same location.
 
 Usage:
     python -m scripts.dogfood_postfix_run elicit_psilocybin
@@ -16,9 +16,9 @@ KPI checks printed at the end:
       "supported|unsupported + abstract_only" pattern, which also catches the
       design's intentional pass-through case (qualitative claims that the
       abstract directly supports verbatim).
-    - unverifiable_by_reason  (where did new "unverifiable" verdicts come from?)
+    - unverifiable_by_reason  (where do `unverifiable` verdicts come from?)
     - fetch_failures_by_reason (which fetch steps failed on which publishers?)
-    - Verdict-flip diff vs the pre-fix baseline (claim-text-matched).
+    - Verdict-flip diff vs the archived baseline (claim-text-matched).
 """
 
 from __future__ import annotations
@@ -56,7 +56,7 @@ def _run(benchmark: str) -> int:
 
     text = input_path.read_text(encoding="utf-8")
     run_id = f"{benchmark}_postfix_{int(time.time())}"
-    print(f"Starting post-fix pipeline run: {run_id}")
+    print(f"Starting pipeline run: {run_id}")
     print(f"  Input: {input_path} ({len(text)} chars)")
 
     t0 = time.perf_counter()
@@ -95,7 +95,7 @@ def _run(benchmark: str) -> int:
         old_report = json.loads(prefix_report.read_text(encoding="utf-8"))
         old_summary = old_report["summary"]
         old_claims = old_report["claims"]
-        print("Verdict distribution             pre-fix -> post-fix")
+        print("Verdict distribution             baseline -> current")
         for k in (
             "supported",
             "partially_supported",
@@ -107,7 +107,7 @@ def _run(benchmark: str) -> int:
             n = new_summary.get(k) or 0
             print(f"  {k:24s}     {o:3d} -> {n:3d}  ({n - o:+d})")
     else:
-        print("(no pre-fix baseline at " + str(prefix_report) + ")")
+        print("(no archived baseline at " + str(prefix_report) + ")")
         old_claims = []
 
     # Rule-compliant violation check: BOTH conditions must hold per
@@ -134,7 +134,7 @@ def _run(benchmark: str) -> int:
     print(f"Citation found rate:      {new_summary.get('citation_found_rate', 0):.1%}")
     print(f"Fulltext success rate:    {new_summary.get('fulltext_success_rate', 0):.1%}")
 
-    # Pre-fix silent-failure count (numeric+confident+abstract on the OLD report).
+    # Baseline silent-failure count (numeric+confident+abstract on the OLD report).
     if old_claims:
         old_silent = sum(
             1
@@ -148,8 +148,8 @@ def _run(benchmark: str) -> int:
         n_viol = len(true_violations)
         print(
             f"\nKPI - silent-failure count (numeric+confident+abstract):\n"
-            f"  pre-fix:  {old_silent}/{n_old} ({100 * old_silent / n_old:.1f}%)\n"
-            f"  post-fix: {n_viol}/{n_new} ({100 * n_viol / n_new:.1f}%)"
+            f"  baseline: {old_silent}/{n_old} ({100 * old_silent / n_old:.1f}%)\n"
+            f"  current:  {n_viol}/{n_new} ({100 * n_viol / n_new:.1f}%)"
         )
         # Verdict flips (claim-text-matched).
         old_by_text = {c["claim_text"]: c["verification"]["status"] for c in old_claims}

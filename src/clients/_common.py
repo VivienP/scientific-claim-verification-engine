@@ -1,15 +1,14 @@
 """Shared constants and helpers for ``src/clients/*`` modules.
 
-Each client module previously redeclared the same TTL constants, retry
-budget, and cache-key helper. Centralising them here:
+Each client module imports its TTL constants, retry budget, and cache-key
+helper from here. The module:
 
-* keeps the cached values byte-identical across the migration (no cache
-  invalidation), because :func:`make_cache_key` joins parts with ``":"``
-  exactly the same way the per-client helpers did;
+* exposes :func:`make_cache_key`, which joins parts with ``":"`` so all
+  clients produce byte-identical cache keys for the same logical request;
 * documents the convention that **the first part is a namespace** (e.g.
   ``"crossref:doi"``, ``"pubmed_record_v1"``) so multiple clients can
   share one SQLite database without key collisions;
-* gives one place to bump TTLs or retry behaviour in future sprints.
+* gives one place to tune TTLs or retry behaviour.
 """
 
 from __future__ import annotations

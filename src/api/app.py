@@ -16,8 +16,8 @@ Background execution model:
     FastAPI's ``BackgroundTasks`` schedules the worker on the same event
     loop. For long-running synchronous work we'd prefer a thread or
     process pool; the worker uses ``starlette.concurrency.run_in_threadpool``
-    to avoid blocking the loop. This is sufficient for single-tenant
-    Phase C; Phase D moves to Celery/RQ.
+    to avoid blocking the loop. Sufficient for single-tenant deployments;
+    a Celery/RQ-backed queue is a future-phase concern.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ def create_app(
     app = FastAPI(
         title="Scientific Claim Verification Engine",
         version=API_VERSION,
-        description="Lite API for V1 pipeline + Phase B Copilot enrichment.",
+        description="Lite API for the V1 pipeline + Copilot enrichment.",
     )
     app.state.job_store = job_store or JobStore()
     app.state.runs_root = runs_root or Path("reports/runs")

@@ -31,8 +31,8 @@ class VerifyRequest(BaseModel):
     )
     mode: Literal["v1", "copilot"] = Field(
         "copilot",
-        description='"v1" returns plain ClaimVerification list. '
-        '"copilot" runs the Phase B enrichment layer and produces a '
+        description='"v1" returns a plain ClaimVerification list. '
+        '"copilot" runs the enrichment layer and produces a '
         "copilot_report.html.",
     )
     copilot_mode: Literal["pharma", "academic", "general"] = Field(

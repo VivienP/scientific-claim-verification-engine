@@ -105,7 +105,7 @@ def verify_claim_title_only(
         confidence = min(confidence, _TITLE_ONLY_MAX_CONFIDENCE)
         # Route through the helper: `unsupported` + `title_only` is downgraded to unverifiable.
         # `supported` is already capped to `partially_supported` above.
-        # Off-topic titles surface as `unverifiable` (not `unsupported`) — acceptable for Phase 1.
+        # Off-topic titles surface as `unverifiable` (not `unsupported`).
         result = safe_verification_result(
             status=status_raw,
             confidence=confidence,

@@ -81,7 +81,7 @@ Defines four metrics for evaluating audit tools over research agents:
 - **CTran** (Claim Transparency) — fraction of claims with explicit verdict rationale
 - **AEff** (Audit Efficiency) — claims audited per USD
 
-Adopted in this engine from S4 onward. Current Valsci-paper run: PCov 100% / PSnd 100% / CTran 36% / AEff 45.4. See `python scripts/aar_scorecard.py reports/runs/<id>`.
+Adopted in this engine. Current Valsci-paper run: PCov 100% / PSnd 100% / CTran 47% / AEff 76. See `python scripts/aar_scorecard.py reports/runs/<id>`.
 
 ### SciClaimHunt_Num (arXiv 2502.10003)
 

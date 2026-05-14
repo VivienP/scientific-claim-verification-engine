@@ -15,7 +15,7 @@ This module handles 403 gracefully (returns None and caches the failure) so
 the fetch chain falls through to the abstract fallback, and
 `safe_verification_result` correctly emits `unverifiable` for claims that
 need Results-section data. Bypassing publisher bot protection would require
-a headless browser (Playwright) or paid API auth — out of scope for Phase 1.
+a headless browser (Playwright) or paid API auth — out of scope.
 
 This module is therefore most useful for publishers that don't gate
 HTML access (preprint servers, many OA journals, some legacy

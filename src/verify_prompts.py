@@ -1,8 +1,7 @@
 """Prompt constants, pure helpers, and shared constants for the verify layer.
 
 Nothing in this module makes LLM calls or performs I/O.  All symbols are
-imported by src/verify.py; callers that previously imported from src.verify
-continue to work via the re-exports defined there.
+re-exported from ``src.verify``, so callers can import from either module.
 """
 
 from __future__ import annotations

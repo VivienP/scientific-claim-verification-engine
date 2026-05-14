@@ -1,17 +1,14 @@
 # Real-Tool Benchmark Summary
 
-> **Numbers being recomputed (2026-05-12).** The pre-fix aggregate
-> table below the banner conflated three epistemically distinct
-> verdicts — `unsupported` (source contradicts), `not_addressed`
-> (source is silent), and what is now `unverifiable` (pipeline could
-> not access full text). After the 2026-05-12 verifier fix
-> (commits [`992303e`](../../README.md) through
-> [`3211b23`](../../README.md)), 2 of the 6 inputs have been re-run on
-> the post-fix pipeline. The remaining 4 are pending re-run.
->
-> Cite numbers ONLY from the post-fix table directly below.
+> **Cite numbers ONLY from the current-runs table directly below.** The
+> archived aggregate table further down conflates three epistemically
+> distinct verdicts — `unsupported` (source contradicts), `not_addressed`
+> (source is silent), and `unverifiable` (pipeline could not access full
+> text) — and must not be cited as evidence of current pipeline behaviour.
+> 2 of the 6 inputs have been re-run on the current pipeline; the
+> remaining 4 are pending.
 
-## Post-fix runs (2026-05-12, Tracks A+D+F+G+I)
+## Current runs (2026-05-12)
 
 | tool | claims | supported | partially | unsupported | not_addressed | unverifiable | citation_found_rate | fulltext_verified | cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -19,42 +16,42 @@
 | AnswerThis (lactate ISF PK) | 19 | 6 | 8 | 1 | 4 | 0 | 100.0% | 12 | $0.25 |
 | _(Edison TREM2, Elicit GLP-1 MACE, Elicit PD-1 NSCLC, Sakana AI Scientist — re-run pending)_ | — | — | — | — | — | — | — | — | — |
 
-### Two distinct kinds of post-fix win
+### Two highlighted current-run effects
 
-**Psilocybin** is the silent-failure-elimination story. On the pre-fix
-run, 15 of 57 confident verdicts (26%) were silent failures: numeric
-claims on paywalled NEJM / Nature papers where the verifier emitted
-confident `supported` / `unsupported` from the abstract alone. Post-fix:
-- 0 silent failures — the helper downgrades all 9 numeric-on-abstract
+**Psilocybin** — silent-failure elimination. 0 silent failures across 43
+claims · prior baseline 15/57 = 26% (numeric claims on paywalled NEJM /
+Nature papers where the verifier emitted confident `supported` /
+`unsupported` from the abstract alone).
+
+- 0 silent failures: the helper downgrades all 9 numeric-on-abstract
   claims to `unverifiable` with `unverifiable_reason="numeric_claim_abstract_only"`.
-- 17 false-`unsupported` verdicts → 0 (the prompt's contradicts-vs-silent split reclassifies
-  silence as `not_addressed`; A2+F1 helper handles the numeric subset).
+- 0 `unsupported` verdicts · prior baseline 17. The prompt's
+  contradicts-vs-silent split reclassifies silence as `not_addressed`;
+  the helper handles the numeric subset.
 - 34 of 43 claims fall back to abstract because NEJM / Nature / Lancet /
   AJP serve paywall HTML on the PDF endpoint; `fetch_traces.jsonl`
   shows the exact per-step failure reasons.
 - Replay infrastructure: [`scripts/replay_psilocybin_kpi.py`](../../scripts/replay_psilocybin_kpi.py).
 
-**AnswerThis** is the claim-coverage story. The pre-fix pipeline punted
-on 22 of 25 claims (88% `not_addressed`); the post-fix pipeline actually
-verifies 15 of 19 claims (79% confidently classified as
-`supported` / `partially_supported` / `unsupported`). Cost dropped from
-$0.47 to $0.25. Two compounding effects:
-- Better fetch chain (Tracks D1 + I1) raised fulltext success rate to 63%,
-  giving the verifier something to ground on.
-- The prompt's contradicts-vs-silent split means the verifier no longer dumps anything-it-
-  cannot-find-in-the-abstract into `not_addressed` — when the fulltext
-  contains the assertion, the verifier emits `supported`.
+**AnswerThis** — claim-coverage. 15 of 19 claims confidently classified
+(79%) at $0.25 · prior baseline 3/25 (12%) at $0.47, with 22/25 routed
+to `not_addressed`. Two compounding effects:
 
-## Pre-fix runs (archived — do not cite)
+- Better fetch chain raises fulltext success rate to 63%, giving the
+  verifier something to ground on.
+- The prompt's contradicts-vs-silent split means the verifier no longer
+  dumps anything-it-cannot-find-in-the-abstract into `not_addressed` —
+  when the fulltext contains the assertion, the verifier emits `supported`.
 
-The original aggregate table previously appeared here. It is preserved
-below for diff/replay purposes but should not be used as evidence of
-current pipeline behavior. The per-run pre-fix outputs are under each
-benchmark's `_archive_pre_fix/` directory; see
+## Archived runs (do not cite)
+
+The original aggregate table is preserved below for diff/replay purposes
+and is not evidence of current pipeline behaviour. The per-run archived
+outputs sit under each benchmark's `_archive_pre_fix/` directory; see
 [`_archive_README.md`](_archive_README.md) for context.
 
 <details>
-<summary>Click to expand pre-fix aggregate table (DEPRECATED)</summary>
+<summary>Click to expand archived aggregate table (DO NOT CITE)</summary>
 
 | tool | claims | supported | partially_supported | unsupported | not_addressed | citation_found_rate | fulltext_verified | retracted_sources | numeric_checks_run | numeric_inconsistencies_flagged | cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -74,12 +71,12 @@ benchmark's `_archive_pre_fix/` directory; see
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
 | Canary suite | 4 | 0 | 0 | 1 | 3 | 50.0% | 2 | 0 | 0 | 0 | $0.03 |
 
-The canary is a controlled four-claim input designed to exercise contradiction detection, retraction flagging, numeric inconsistency, and weak-resolution diagnostics. Its results are not pooled with the real-tool aggregate above. The canary `report.json` has not yet been re-run on the post-fix pipeline.
+The canary is a controlled four-claim input designed to exercise contradiction detection, retraction flagging, numeric inconsistency, and weak-resolution diagnostics. Its results are not pooled with the real-tool aggregate above. The canary `report.json` has not yet been re-run on the current pipeline.
 
 ## Reading the table
 
 - **claims**: total verifiable claims extracted from the input
-- **supported / partially_supported / unsupported / not_addressed / unverifiable**: full-text verification verdicts (the post-fix pipeline distinguishes `unverifiable` — pipeline could not access full text — from `not_addressed` — source is silent — and `unsupported` — source explicitly contradicts)
+- **supported / partially_supported / unsupported / not_addressed / unverifiable**: full-text verification verdicts (the pipeline distinguishes `unverifiable` — pipeline could not access full text — from `not_addressed` — source is silent — and `unsupported` — source explicitly contradicts)
 - **citation_found_rate**: fraction of claims where the cited source was resolved (title-match ≥ 15%)
 - **fulltext_verified**: claims that received full-text BM25 passage selection and verification
 - **retracted_sources**: cited papers flagged as retracted via CrossRef `update-to`
@@ -91,4 +88,4 @@ The canary is a controlled four-claim input designed to exercise contradiction d
 
 Independent of verdict correctness, CTran measures whether each claim's `report.json` entry contains enough evidence for a human auditor to trace the verdict. A claim is *transparent* when `source_passages` is non-empty OR `evidence_quality` is in `{abstract_only, quoted_passage, title_only, passages_searched_no_quote}`.
 
-The pre-Phase-A.2 CTran numbers (135 claims, 65.9% aggregate, +17pp vs 48.9% baseline) were measured on pre-fix runs. Post-fix CTran has not yet been recomputed; expected to improve further because the new `unverifiable` verdict carries explicit `unverifiable_reason` provenance, and `fetch_traces.jsonl` adds per-attempt fetch reasoning that any auditor can read.
+CTran aggregate: 65.9% transparent across 135 claims · prior baseline 48.9% (+17pp). Recomputation on the current pipeline is pending; the `unverifiable` verdict's explicit `unverifiable_reason` provenance and the per-attempt `fetch_traces.jsonl` give auditors strictly more signal than the baseline measurement included.

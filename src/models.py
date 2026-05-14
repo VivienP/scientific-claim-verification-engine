@@ -212,9 +212,9 @@ class ResolvedSource:
     pmcid: str | None = None
     retraction_status: bool = False
     # Cross-source verdict carrying per-client CandidateResolution diagnostics.
-    # Optional for back-compat — legacy resolutions and fixtures predate the
-    # multi-candidate fold and serialize without this field. Populated by the
-    # resolver post Phase 0; consumed by assess_evidence_sufficiency.
+    # Optional for back-compat — legacy resolutions and fixtures serialize
+    # without this field. Populated by the resolver; consumed by
+    # assess_evidence_sufficiency.
     resolution_verdict: ResolutionVerdict | None = None
 
 
@@ -391,7 +391,7 @@ class ProvenanceStep:
     tokens_out: int | None
     cache_hit: bool | None
     confidence: float | None
-    unverifiable_reason: UnverifiableReason | None = None  # NEW (A2): additive, optional
+    unverifiable_reason: UnverifiableReason | None = None
 
 
 # ---------------------------------------------------------------------------

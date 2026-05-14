@@ -102,7 +102,7 @@ def run_eval(
     extract_claims() and resolve_citations() are NOT called — this measures verifier
     accuracy given perfect inputs, not end-to-end pipeline accuracy. SciFact claims are
     isolated sentences without resolvable bibliographic citations, making oracle access
-    the only valid evaluation strategy for Phase 1.
+    the only valid evaluation strategy.
 
     Refuses split="test" with structlog.error + sys.exit(1).
     Tracks cumulative cost via ProvenanceStep tokens; aborts with sys.exit(1) if exceeded.

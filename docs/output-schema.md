@@ -127,7 +127,7 @@ LLM returns []           BM25 had selected 3 passages
    evidence_quality = "passages_searched_no_quote"
 ```
 
-Pre-fix this combination produced `evidence_quality = "no_evidence"` with empty `source_passages` — the auditor saw nothing despite the pipeline having seen everything. The fallback was the dominant CTran failure mode (50% of failures across 5 benchmarks).
+Without this fallback, the combination would produce `evidence_quality = "no_evidence"` with empty `source_passages` — the auditor would see nothing despite the pipeline having seen everything. The fallback addresses the dominant CTran failure mode on the baseline measurement (50% of failures across 5 benchmarks).
 
 The fallback also fires on JSON parse errors so a corrupted LLM response doesn't erase the audit trail.
 

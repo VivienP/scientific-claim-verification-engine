@@ -397,8 +397,8 @@ def find_candidate_by_doi(
     result means PubMed lists the DOI — strong corroboration even when only
     the DOI field is filled (title / year / venue may stay ``None`` because
     they are not always parseable from the efetch text response). The
-    resolver itself does not call this in Phase 1 to keep verdict folding
-    to a single round-trip pair (CrossRef + OpenAlex).
+    resolver itself does not call this — verdict folding stays scoped to a
+    single round-trip pair (CrossRef + OpenAlex).
     """
     pmid = find_pmid_by_doi(doi, timeout=timeout, db_path=db_path)
     if pmid is None:

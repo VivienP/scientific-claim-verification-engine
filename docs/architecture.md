@@ -139,14 +139,14 @@ Replay invariant: re-running the pipeline on the same input text with the
 same model should produce identical `input_hash` / `output_hash` chains for
 the deterministic steps. LLM steps drift, but the chain shape is preserved.
 
-Provenance schema (Phase 0–3): JSONL append at
-`reports/runs/{run_id}/provenance.jsonl`; graph DB deferred to Phase 4+.
+Provenance storage: JSONL append at `reports/runs/{run_id}/provenance.jsonl`.
+A graph-DB backend is a future-phase concern.
 
 ---
 
 ## 5. HTTP API request lifecycle
 
-Phase C deployment exposes the pipeline behind FastAPI with async jobs so
+The HTTP deployment exposes the pipeline behind FastAPI with async jobs so
 calls don't time out at any reverse proxy.
 
 ```mermaid
@@ -182,8 +182,8 @@ in [output-schema.md §6](output-schema.md#6-copilot-enrichment).
 
 Hardening: container runs as non-root uid 10001, `read_only: true`, `cap_drop: ALL`,
 exact-pinned Python deps, all endpoints (except `/health`) require
-`X-API-Key`. Single-tenant Phase C; Postgres-backed multi-tenant `JobStore`
-is deferred to Phase D.
+`X-API-Key`. Single-tenant; a Postgres-backed multi-tenant `JobStore`
+is a future-phase concern.
 
 ---
 

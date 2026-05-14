@@ -1,8 +1,8 @@
 """Cross-modal second-pass verification for high-confidence claims.
 
-Phase 1: opt-in helper. Not wired into pipeline.py — caller invokes manually
-on a per-run basis (e.g. from a benchmarking script). Future integration into
-the pipeline is gated on cost characterization across 3 dogfood runs.
+Opt-in helper. Not wired into pipeline.py — caller invokes manually on a
+per-run basis (e.g. from a benchmarking script). Pipeline integration is
+gated on cost characterization across 3 dogfood runs.
 
 Why: per `feedback_resolver_priority` and the "Silent failures" rule in
 CLAUDE.md, confident-but-wrong outputs are the worst failure mode. A single

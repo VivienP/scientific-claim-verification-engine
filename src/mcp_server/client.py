@@ -1,4 +1,4 @@
-"""Async HTTP client wrapping the Phase C lite API.
+"""Async HTTP client wrapping the lite API.
 
 This client is the only network seam in the MCP wrapper. The MCP tool
 functions in ``server.py`` consume it; tests mock its underlying httpx

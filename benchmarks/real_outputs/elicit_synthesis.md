@@ -1,15 +1,14 @@
 # Elicit cross-run synthesis — 3 runs, 2 tiers, 2 formats
 
-> **Outdated numbers — recomputed runs in progress (2026-05-12).** The
-> figures below come from pre-fix verifier outputs that conflated
-> `unsupported` (source contradicts) with `not_addressed` (source is
-> silent) and what the post-fix pipeline reports as `unverifiable`
-> (pipeline could not access full text). Only `elicit_psilocybin/` has
-> been re-run; see [`elicit_psilocybin/README.md`](elicit_psilocybin/README.md)
-> for current numbers (43 claims, 0 silent failures vs 15/57 pre-fix).
-> `elicit_glp1_mace/` and `elicit_io_nsclc_gaps/` are in the Track C
-> queue. Cross-run synthesis below will be regenerated once all three
-> post-fix runs are complete.
+> **Mixed-vintage figures — cite with care.** Only the `elicit_psilocybin`
+> and `elicit_glp1_mace` columns reflect the current pipeline; the
+> `elicit_io_nsclc_gaps` column is provisional (archived baseline) and
+> conflates `unsupported` (source contradicts), `not_addressed` (source
+> is silent) and `unverifiable` (pipeline could not access full text)
+> into a single bucket. See [`elicit_psilocybin/README.md`](elicit_psilocybin/README.md)
+> for the headline psilocybin numbers (43 claims, 0 silent failures ·
+> prior baseline 15/57). The cross-run synthesis below will be
+> regenerated once the PD-1 NSCLC re-run lands.
 
 Cross-cutting analysis of the three Elicit benchmark runs in this directory.
 This document consolidates the per-run READMEs (`elicit_psilocybin/`,
@@ -34,7 +33,7 @@ to the format rather than to tier or topic-corpus availability.
 
 Numbers below come from each run's `report.json` summary block.
 
-| Metric | psilocybin — **post-fix** (2026-05-12) | GLP-1 MACE — **post-fix** (2026-05-12) | PD-1 NSCLC (pre-fix, re-run pending) |
+| Metric | psilocybin (2026-05-12) | GLP-1 MACE (2026-05-12) | PD-1 NSCLC (provisional, re-run pending) |
 |---|---:|---:|---:|
 | Claims extracted | **43** | **36** | 25 |
 | citation_found_rate | 100.0% | 91.7% | 60.0% |
@@ -42,22 +41,22 @@ Numbers below come from each run's `report.json` summary block.
 | Partially supported | 17 (39.5%) | 2 (5.6%) | 6 (24.0%) |
 | Unsupported | **0 (0.0%)** | **0 (0.0%)** | 2 (8.0%) |
 | Not addressed | 7 (16.3%) | 8 (22.2%) | 9 (36.0%) |
-| **Unverifiable** | **9 (20.9%)** | **7 (19.4%)** | n/a (pre-fix) |
+| **Unverifiable** | **9 (20.9%)** | **7 (19.4%)** | n/a (provisional) |
 | Numeric checks run | 9 | 9 | 8 |
 | Numeric inconsistencies (raw) | 0 | 0 | 2 |
-| Silent failures (rule violation) | **0** | **0** | unknown (pre-fix) |
+| Silent failures (rule violation) | **0** | **0** | unknown (provisional) |
 | Total cost (USD) | $0.75 | $0.63 | $0.64 |
 
-Two of three columns now reflect the post-fix pipeline. PD-1 NSCLC still shows pre-fix numbers; cross-run comparisons involving that column should be treated as provisional until its post-fix re-run lands.
+Two of three columns reflect the current pipeline. The PD-1 NSCLC column is provisional (archived baseline); cross-run comparisons involving it should be treated as such until its re-run lands.
 
 ### Diagnostic fields (from commit `e38150f`)
 
 The 3 diagnostic fields populate across all 3 runs and are critical for
 correctly interpreting the headline numbers.
 
-| Diagnostic | psilocybin (post-fix) | GLP-1 MACE (pre-fix) | PD-1 NSCLC (pre-fix) |
+| Diagnostic | psilocybin (current) | GLP-1 MACE (provisional) | PD-1 NSCLC (provisional) |
 |---|---:|---:|---:|
-| `abstract_only_verdicts` (pre-fix) | n/a (post-fix uses `unverifiable`) | 20 | 4 |
+| `abstract_only_verdicts` (provisional column field) | n/a (current pipeline uses `unverifiable`) | 20 | 4 |
 | `fulltext_success_rate` | 20.9% (9/43) | 56.5% | 72.2% |
 | `unverifiable_count` | **9** | n/a | n/a |
 | `not_addressed_breakdown.no_source` | n/a | 0 | **7** |
@@ -65,7 +64,7 @@ correctly interpreting the headline numbers.
 | `not_addressed_breakdown.no_passage` | n/a | 0 | 0 |
 | `not_addressed_breakdown.claim_absent` | n/a | 0 | 1 |
 
-The post-fix pipeline replaces `abstract_only_verdicts` with `unverifiable` + `unverifiable_reason`; GLP-1 and PD-1 pre-fix diagnostics remain valid for those archived runs.
+The current pipeline replaces `abstract_only_verdicts` with `unverifiable` + `unverifiable_reason`; the GLP-1 and PD-1 provisional-column diagnostics remain valid for those archived snapshots.
 
 ## Three findings the cross-run comparison enables
 

@@ -12,7 +12,7 @@ Resources:
 Transport:
     Default ``stdio`` for Claude Desktop / Claude Agent SDK. The optional
     ``MCP_TRANSPORT`` env var lets you switch to ``streamable-http`` for
-    remote agents (Phase D); see README for the wiring.
+    remote agents; see README for the wiring.
 
 Why module-level tool functions:
     The tools are defined at module level so tests can call them directly
@@ -61,7 +61,7 @@ async def verify_text(
         text: Scientific text to verify (paper draft, regulatory paragraph,
             AI-generated summary). 1 to 2,000,000 chars.
         mode: ``"v1"`` for the plain claim list; ``"copilot"`` (default)
-            adds the Phase B enrichment + HTML report.
+            adds the enrichment layer + HTML report.
         copilot_mode: Schema profile applied in Copilot mode.
         wait: When True (default), block until the job is completed/failed.
             When False, return immediately with the job id.

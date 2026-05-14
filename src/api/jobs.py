@@ -1,4 +1,4 @@
-"""In-memory job store for the Phase C lite API.
+"""In-memory job store for the lite API.
 
 A single-process biotech on-prem deployment does not need Redis or a
 database. This store keeps job state in a thread-safe dict guarded by a
@@ -16,7 +16,7 @@ Eviction:
     *completed* or *failed* job is evicted; running jobs are never evicted.
     Default 1000 — enough for ~1 month of pharma usage.
 
-For Phase D this becomes a Postgres-backed store; the Protocol contract
+A Postgres-backed store is a future-phase concern; the Protocol contract
 in ``app.py`` lets us swap implementations without touching routes.
 """
 

@@ -18,10 +18,10 @@ Only the Report-mode export from query 1 is committed as `input.txt` (32,687 cha
 
 - `input.txt` — text extracted from `Elicit - Psilocybin and Treatment-Resistant Depression - Report.pdf` via `pymupdf` (text layer, no OCR or LLM paraphrase). Includes the full Abstract, Flow Diagram, Screening criteria, Data extraction, Results tables, Synthesis discussion, and 10 numbered References with DOIs.
 - `meta.json` — provenance metadata (queries, fetch date, source URL, license note).
-- `report.json` — **post-fix pipeline output (2026-05-12, Tracks A+D+F+G+I)**: 43 claims, $0.75, **0 silent failures** vs 15/57 (26%) on the pre-fix run.
-- `provenance.jsonl` — append-only step log with hashes and tokens per stage (post-fix run).
-- `fetch_traces.jsonl` — per-attempt fetch chain log (Track I1). Reveals NEJM / Nature / Lancet / AJP all served paywall HTML on the PDF endpoint, forcing 34/43 claims onto abstract fallback; the helper correctly downgrades 9 of those numeric claims to `unverifiable` with `unverifiable_reason="numeric_claim_abstract_only"`.
-- `_archive_pre_fix/` — pre-2026-05-12 verifier output (57 claims, $1.16). Do not cite; see [`../_archive_README.md`](../_archive_README.md).
+- `report.json` — pipeline output (2026-05-12): 43 claims, $0.75, **0 silent failures** · prior baseline 15/57 = 26%.
+- `provenance.jsonl` — append-only step log with hashes and tokens per stage.
+- `fetch_traces.jsonl` — per-attempt fetch chain log. NEJM / Nature / Lancet / AJP all serve paywall HTML on the PDF endpoint, forcing 34/43 claims onto abstract fallback; the helper downgrades 9 of those numeric claims to `unverifiable` with `unverifiable_reason="numeric_claim_abstract_only"`.
+- `_archive_pre_fix/` — archived prior verifier output (57 claims, $1.16). Do not cite; see [`../_archive_README.md`](../_archive_README.md).
 - `Elicit - *.pdf` — raw Elicit exports, **committed** for end-to-end reproducibility. `*Sources.txt` (Elicit's auxiliary citation list) remains gitignored as it is not used by the verification pipeline.
 
 ## Run command
@@ -30,11 +30,11 @@ Only the Report-mode export from query 1 is committed as `input.txt` (32,687 cha
 python .cache/run_benchmark.py benchmarks/real_outputs/elicit_psilocybin
 ```
 
-## Headline numbers — post-fix run (2026-05-12)
+## Headline numbers (2026-05-12)
 
-Post-fix pipeline (Tracks A+D+F+G+I): verifier now distinguishes "source contradicts" (`unsupported`) from "source is silent" (`not_addressed`) and "pipeline could not access full text for a numeric claim" (`unverifiable`).
+The verifier distinguishes "source contradicts" (`unsupported`) from "source is silent" (`not_addressed`) and "pipeline could not access full text for a numeric claim" (`unverifiable`).
 
-| Metric | Post-fix (2026-05-12) | Pre-fix run #2 (2026-05-10) |
+| Metric | Current (2026-05-12) | Prior baseline (2026-05-10) |
 |---|---:|---:|
 | Claims extracted | **43** | 57 |
 | Citation found rate | 100.0% | 100.0% |
@@ -49,22 +49,11 @@ Post-fix pipeline (Tracks A+D+F+G+I): verifier now distinguishes "source contrad
 | Silent failures (rule violation) | **0** | **15** (26%) |
 | Total cost | $0.75 | $1.16 |
 
-The 17 pre-fix `unsupported` verdicts were split by the post-fix pipeline into: 0 genuine contradictions, 7 silences (`not_addressed`), and 9 abstract-only numeric claims downgraded to `unverifiable`. The 9 `unverifiable` claims all hit NEJM / Lancet / AJP paywall; `fetch_traces.jsonl` confirms each one returned a paywall HTML page on the PDF endpoint.
+The 17 baseline `unsupported` verdicts decompose into: 0 genuine contradictions, 7 silences (`not_addressed`), and 9 abstract-only numeric claims downgraded to `unverifiable` on the current pipeline. The 9 `unverifiable` claims all hit NEJM / Lancet / AJP paywall; `fetch_traces.jsonl` confirms each returned paywall HTML on the PDF endpoint.
 
-### Pre-fix run #1 vs #2 (bibliography fixes, 2026-05-10)
+### Resolved DOI distribution
 
-| Metric | Run #1 (broken) | Run #2 (fixed) |
-|---|---:|---:|
-| Claims extracted | 65 | 57 |
-| Citation found rate | 66.2% | **100.0%** |
-| Resolution low-confidence | 4 | **0** |
-| Total cost | $1.38 | $1.16 |
-
-Run #1 broke because `run_benchmark.py` did not pass the bibliography to the resolver and pymupdf artefacts corrupted DOI extraction. See source files for the archived pre-fix outputs.
-
-### Resolved DOI distribution (run #2)
-
-All 57 claims resolved to one of the 9 distinct papers Elicit cited (10 references in the bibliography, ref [3] Meikle 2025 was cited fewer times):
+All 57 claims in the archived baseline resolved to one of the 9 distinct papers Elicit cited (10 references in the bibliography; ref [3] Meikle 2025 was cited fewer times):
 
 | DOI | Paper | Claims |
 |---|---|---:|
@@ -78,27 +67,28 @@ All 57 claims resolved to one of the 9 distinct papers Elicit cited (10 referenc
 | 10.1177/20451253251377187 | Meikle 2025 (Therapeutic Adv Psych) | 3 |
 | 10.1016/j.medj.2024.01.005 | Rosenblat 2024 (i Medicina) | 1 |
 
-## What changed between run #1 and run #2
+## Pipeline behaviour exercised by this input
 
-Run #1 surfaced two bugs that systematically broke citation resolution on PDF-derived inputs:
+This fixture exercises two PDF-derived bibliography paths and one
+extractor path:
 
-**Bug R1 — runner did not pass bibliography to resolver** ([.cache/run_benchmark.py](../../../.cache/run_benchmark.py)). `resolve_citations` accepts an optional `bibliography` kwarg, but the benchmark runner called it without one. Without a parsed bibliography, the resolver fell back to fuzzy CrossRef search on each claim's text, landing on unrelated papers (e.g. claim about Goodwin 2022 NEJM resolved to *"Growth Hormone is Useless in IVF: The Largest Randomized Controlled Trial"* via the phrase "the largest randomized controlled trial"). Only 4/65 (6%) of run #1 resolutions matched one of the actual Elicit-cited papers.
-
-**Bug R2 — pymupdf artefacts corrupted DOI extraction** ([src/bibliography.py](../../../src/bibliography.py)). PDF text extraction interleaves page-number-only lines and wraps long URLs across line boundaries. The original `_DOI_FIELD_RE` lookahead missed both:
-- *Page numbers fused with DOIs*: `https://doi.org/10.1038/s41591-022-01744-z\n12\n` extracted as `10.1038/s41591-022-01744-z12` (corrupted).
-- *URL-wrap drops*: `https://doi.or\ng/10.1177/20451253251377187` extracted as `None`.
-
-Fix added a `_clean_pdf_artefacts` preprocessing step that strips digit-only lines and collapses URL line-wraps with a negative lookahead protecting next-entry boundaries. Coverage: 6/10 → **10/10** correct DOIs on this fixture.
-
-Tests added:
-- [`tests/unit/test_bibliography.py::TestParseBibliographyRobustness::test_pymupdf_page_numbers_stripped`](../../../tests/unit/test_bibliography.py)
-- `test_url_line_wrap_collapsed`
-- `test_url_wrap_does_not_eat_next_entry`
-- `test_real_elicit_input_parses` (end-to-end on this fixture)
-
-All 638 unit tests pass after the fix.
-
-A separate fix migrated [`src/extract.py`](../../../src/extract.py) to streaming (`messages.stream()`) and exposed a `max_output_tokens` kwarg, because Report-mode density (~57 claims for a 32K-char input) overflows the prior hardcoded 4096 ceiling and triggers connection drops on the resulting long generations.
+- **Bibliography preprocessing** ([src/bibliography.py](../../../src/bibliography.py)).
+  PDF text from pymupdf interleaves page-number-only lines and wraps
+  long URLs across line boundaries. `_clean_pdf_artefacts` strips
+  digit-only lines and collapses URL line-wraps with a negative
+  lookahead protecting next-entry boundaries. Coverage on this
+  fixture: 10/10 correct DOIs.
+- **Bibliography → resolver wiring** ([.cache/run_benchmark.py](../../../.cache/run_benchmark.py)).
+  `resolve_citations` accepts a `bibliography` kwarg; without one the
+  resolver falls back to fuzzy CrossRef search on each claim's text and
+  lands on unrelated papers (e.g. Goodwin 2022 NEJM → *"Growth Hormone
+  is Useless in IVF: The Largest Randomized Controlled Trial"*). The
+  benchmark runner passes the parsed bibliography to keep resolution
+  pinned.
+- **Streaming extractor** ([src/extract.py](../../../src/extract.py)).
+  Report-mode density (~57 claims for a 32K-char input) overflows a
+  hardcoded 4096 output-token ceiling, so the extractor uses
+  `messages.stream()` and exposes a `max_output_tokens` kwarg.
 
 ## Manually validated examples
 
@@ -136,6 +126,6 @@ Three claims where the verifier and the cited paper genuinely disagree (selected
 
 ## Honesty disclosures
 
-- **Selection bias in validation examples**: only fulltext-verified cases are shown above. The 3 validated examples all use open-access sources where the verifier saw the full text. In the post-fix run, the 9 abstract-only numeric claims from NEJM / Lancet / AJP are correctly emitted as `unverifiable` (not `unsupported`), so they are no longer eligible for the validation set — the pipeline itself flags the evidence gap rather than issuing a confident verdict.
+- **Selection bias in validation examples**: only fulltext-verified cases are shown above. The 3 validated examples all use open-access sources where the verifier saw the full text. The 9 abstract-only numeric claims from NEJM / Lancet / AJP are emitted as `unverifiable` (not `unsupported`) and so are not eligible for the validation set — the pipeline itself flags the evidence gap rather than issuing a confident verdict.
 - **N=1 query, single user session**: this benchmark reflects one Elicit Report-mode generation. Results are not generalizable beyond this run. Re-running the same prompt would produce a different answer due to the underlying LLM stochasticity.
 - **Pipeline still has limitations**: our own e2e benchmark on a hand-annotated lactate-ISF review currently sits at 16/25 verdict agreement (64%) — the verifier and resolver have known weaknesses outside the bibliography path. The validated examples above are robust because they isolate single-paper verification with fulltext access; broader claims about Elicit's overall accuracy are not warranted from this single benchmark.

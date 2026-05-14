@@ -8,9 +8,8 @@ Why split: the guard is a security primitive that lives in `src/prompt_guard.py`
 The body is creative content that `@prompt-smith` iterates on. Keeping them
 separate prevents accidental guard mutation during prompt tuning.
 
-Behavior contract: for any prompt that was previously a Python constant of
-the form `PROMPT_INJECTION_GUARD + "\\n" + BODY`, the migrated equivalent
-`load_prompt(name)` MUST return a byte-identical string.
+Behaviour contract: `load_prompt(name)` returns a byte-identical string to
+the legacy `PROMPT_INJECTION_GUARD + "\\n" + BODY` Python-constant form.
 """
 
 from __future__ import annotations

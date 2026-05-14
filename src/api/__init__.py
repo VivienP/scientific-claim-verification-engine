@@ -1,16 +1,17 @@
 """FastAPI lite API for the Scientific Claim Verification Engine.
 
-Phase C deliverable: a single-tenant on-prem-deployable HTTP service that
-wraps ``run_pipeline()`` (V1) and ``CopilotEnricher.enrich_all()`` (Phase B).
+A single-tenant on-prem-deployable HTTP service that wraps
+``run_pipeline()`` (V1) and ``CopilotEnricher.enrich_all()``.
 
 Design constraints:
 - **Async jobs + polling**: pipeline runs take 2-8 minutes per document, so
   POST /verify returns a ``job_id`` immediately and the work happens in a
   background task. GET /jobs/{id} polls for status and result.
 - **Single API key**: validated via ``X-API-Key`` header against the
-  ``VERIFIER_API_KEY`` environment variable. Phase D adds multi-tenant.
+  ``VERIFIER_API_KEY`` environment variable. Multi-tenant auth is a
+  future-phase concern.
 - **In-memory job store**: sufficient for one-process on-prem deployments.
-  A single-tenant biotech does not need Redis or Postgres for Phase C.
+  A single-tenant biotech does not need Redis or Postgres.
 - **No persistent state in the API itself**: all run artifacts
   (``report.json``, ``provenance.jsonl``, ``copilot_report.html``) live on
   disk under ``reports/runs/{run_id}/``. The API just orchestrates.

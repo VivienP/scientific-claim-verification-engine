@@ -1,8 +1,8 @@
 """Single shared API key auth middleware.
 
-Phase C lite: validates the ``X-API-Key`` header against the
-``VERIFIER_API_KEY`` environment variable. Phase D will replace this with
-per-tenant keys + rate limiting.
+Validates the ``X-API-Key`` header against the ``VERIFIER_API_KEY``
+environment variable. Per-tenant keys + rate limiting are a future-phase
+concern.
 
 Security notes:
 - The expected key MUST be loaded from env, never hard-coded.

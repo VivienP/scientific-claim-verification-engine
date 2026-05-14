@@ -172,16 +172,15 @@ def _build_evidence_bundle(
     """Assemble the policy-input bundle from one (source, fetch_outcome) pair.
 
     Derives ``depth`` from what text is actually available (fulltext > abstract >
-    title > none) and ``access_status`` from the outcome (available > unavailable >
-    unresolved). The "blocked" access_status is reserved for Lane B
-    (``PdfFetchOutcome.failure_reason == "not_a_pdf"`` paywall HTML detection);
-    until Lane B lands, paywall failures fall through to ``unavailable``.
+    title > none) and ``access_status`` from the outcome (available > blocked >
+    unavailable > unresolved). ``blocked`` is derived from fetch attempts that
+    prove publisher-side blocking/non-PDF responses.
 
     Resolution status falls back to ``"single_source_only"`` when the
     multi-candidate verdict (``source.resolution_verdict``) is absent, except
     when ``source.resolution_low_confidence`` is True — in which case the
     bundle reports ``"low_confidence"`` so the policy can gate numeric
-    claims against weak resolutions even without Lane B's fold.
+    claims against weak resolutions even without a multi-candidate fold.
     """
     text: str | None = None
     depth: EvidenceDepth
@@ -206,7 +205,16 @@ def _build_evidence_bundle(
     elif source.found:
         text = None
         depth = "none"
-        access_status = "unavailable"
+        access_status = (
+            "blocked"
+            if fetch_outcome is not None
+            and any(
+                not attempt.success
+                and attempt.reason in {"oa_url_not_pdf", "publisher_html_blocked"}
+                for attempt in fetch_outcome.attempts
+            )
+            else "unavailable"
+        )
     else:
         text = None
         depth = "none"

@@ -13,6 +13,7 @@ import pytest
 
 from src.models import (
     Claim,
+    FetchAttempt,
     FetchOutcome,
     PaperChunk,
     ProvenanceStep,
@@ -518,6 +519,81 @@ class TestEvidencePolicyShortCircuit:
         # Fulltext verifier was called (numeric+fulltext is Sufficient).
         mock_ft_verify.assert_called_once()
         assert cv.result.status == "supported"
+
+    def test_oa_url_not_pdf_builds_blocked_evidence_bundle(self) -> None:
+        """Paywall/non-PDF OA responses must reach the access gate."""
+        from src.pipeline import _build_evidence_bundle
+
+        source = ResolvedSource(
+            found=True,
+            doi="10.1/x",
+            title="A source with no usable abstract",
+            abstract=None,
+            similarity_score=1.0,
+        )
+        outcome = FetchOutcome(
+            text=None,
+            method="abstract_fallback",
+            attempts=(
+                FetchAttempt(
+                    method="oa_url_pdf",
+                    success=False,
+                    reason="oa_url_not_pdf",
+                    elapsed_ms=1,
+                ),
+            ),
+            elapsed_ms_total=1,
+        )
+
+        bundle = _build_evidence_bundle(
+            source,
+            outcome,
+            title_only_min_title_length=100,
+        )
+
+        assert bundle.depth == "none"
+        assert bundle.access_status == "blocked"
+
+    def test_failed_attempt_with_no_reason_falls_through_to_unavailable(
+        self,
+    ) -> None:
+        """A failed FetchAttempt with reason=None is not enough to claim blocking.
+
+        Only attempts that explicitly mark a paywall/non-PDF response can
+        promote access_status to "blocked". An undocumented failure stays
+        as "unavailable" so the policy gate remains conservative.
+        """
+        from src.pipeline import _build_evidence_bundle
+
+        source = ResolvedSource(
+            found=True,
+            doi="10.1/x",
+            title="A source with no usable abstract",
+            abstract=None,
+            similarity_score=1.0,
+        )
+        outcome = FetchOutcome(
+            text=None,
+            method="abstract_fallback",
+            attempts=(
+                FetchAttempt(
+                    method="oa_url_pdf",
+                    success=False,
+                    reason=None,
+                    elapsed_ms=1,
+                ),
+            ),
+            elapsed_ms_total=1,
+        )
+
+        bundle = _build_evidence_bundle(
+            source,
+            outcome,
+            title_only_min_title_length=100,
+        )
+
+        assert bundle.depth == "none"
+        assert bundle.access_status == "unavailable"
 
 
 class TestProvenanceEmissionForRetrieval:

@@ -13,23 +13,44 @@ _MAX_CI_RATIO = 50.0  # plausibility heuristic for OR/CI ratio
 
 @dataclass(frozen=True)
 class NumericAssertion:
-    """A single numeric assertion extracted from claim or passage text."""
+    """A single numeric assertion extracted from claim or passage text.
+
+    ``raw_text`` is the substring the LLM identified as significant; this is
+    the ground-truth field. ``span_start`` / ``span_end`` are character offsets
+    derived deterministically in Python via ``claim_text.find(raw_text)`` (the
+    LLM is not trusted for character offsets — its job is identifying which
+    substrings matter). When ``raw_text`` appears multiple times in the claim,
+    the spans stay ``None`` and pairing falls back to substring/window
+    heuristics. ``sentence_id`` is a 0-indexed sentence number used by the
+    span-anchored pairing path to require co-sentence primary+CI matches.
+    """
 
     raw_text: str
     value: float
     unit: str | None
     role: NumericRole
     context: str
+    span_start: int | None = None
+    span_end: int | None = None
+    sentence_id: int | None = None
 
 
 @dataclass(frozen=True)
 class NumericCheckResult:
-    """Result of a deterministic numeric check on a single claim."""
+    """Result of a deterministic numeric check on a single claim.
+
+    ``ambiguous=True`` signals the checker detected multiple ratio-primaries
+    with no unambiguous pairing (span anchoring unavailable AND window-match
+    would steal a CI semantically closer to a later primary). In that case the
+    check is skipped, ``consistent`` stays ``True`` by convention (we did not
+    detect an inconsistency), and the text-path verdict is preserved upstream.
+    """
 
     check_type: CheckType
     consistent: bool
     extracted: list[NumericAssertion] = field(default_factory=list)
     explanation: str = ""
+    ambiguous: bool = False
 
 
 def check_or_ci_consistency(

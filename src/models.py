@@ -22,6 +22,8 @@ UnverifiableReason = Literal[
     "fulltext_unavailable",
     "numeric_claim_abstract_only",
     "parse_error",
+    "resolution_low_confidence",
+    "resolution_source_disagreement",
 ]
 
 OperationType = Literal[
@@ -82,6 +84,101 @@ FetchFailureReason = Literal[
     "all_paths_exhausted",  # synthetic terminal reason when chain exits
 ]
 
+# Which retrieval client produced a CandidateResolution. Used by the resolver
+# verdict folder to attribute agreement/disagreement signals to specific
+# sources, so a disputed verdict surfaces "crossref vs openalex" rather than
+# anonymous "source disagreement".
+CandidateClient = Literal["crossref", "openalex", "pubmed", "arxiv"]
+
+# How confident the resolver is that the resolved source is the right paper.
+# "corroborated" means >=2 clients agree on DOI or on (year, first_author, venue).
+# "disputed" means >=2 clients returned different DOIs and disagreement on
+#   the agreement-signal fields exceeds the threshold.
+# "low_confidence" means a single candidate with weak signals (existing
+#   OpenAlex < 0.15 / arXiv similar threshold logic surfaces here).
+# "single_source_only" means only one client returned a candidate so the
+#   verdict cannot be tested for agreement.
+ResolutionStatus = Literal["corroborated", "disputed", "low_confidence", "single_source_only"]
+
+# Outcome of a single PDF download + extraction attempt. Distinguishes the
+# typical paywall pattern (non-PDF Content-Type) from real HTTP failures so
+# fetch_fulltext.py can attribute FetchAttempt.reason precisely.
+PdfFailureReason = Literal[
+    "ok",  # text retrieved successfully (text is non-None and above _MIN_TEXT_LENGTH)
+    "http_error",  # non-2xx response from publisher endpoint
+    "not_a_pdf",  # Content-Type did not include "pdf" — typical paywall HTML page
+    "extraction_failed",  # pymupdf raised on the downloaded bytes
+    "too_short",  # extracted text below the _MIN_TEXT_LENGTH threshold
+    "timeout",  # request exceeded the httpx timeout
+]
+
+# Depth of evidence available for verification. Mirrors EvidenceQuality but is
+# the policy-input shape: independent of which prompt/verifier was invoked.
+EvidenceDepth = Literal["fulltext", "abstract", "title", "none"]
+
+# Whether the pipeline was able to access the cited source at all.
+# "available" — fulltext or abstract text retrieved
+# "unavailable" — no identifiers / no OA URL / Europe PMC silent
+# "blocked" — publisher returned paywall HTML or 403/Cloudflare
+# "unresolved" — resolver could not produce a usable ResolvedSource
+AccessStatus = Literal["available", "unavailable", "blocked", "unresolved"]
+
+
+@dataclass(frozen=True)
+class CandidateResolution:
+    """One client's answer to "what DOI matches this citation?".
+
+    The resolver collects up to one CandidateResolution per client (CrossRef,
+    OpenAlex, PubMed, arXiv) and folds them into a ResolutionVerdict. Each
+    candidate carries enough metadata for the verdict folder to detect
+    cross-client agreement on (year, first_author, venue) when the DOIs
+    themselves differ.
+    """
+
+    client: CandidateClient
+    doi: str | None
+    title: str | None
+    year: int | None
+    first_author: str | None
+    venue: str | None  # journal / conference / preprint server
+
+
+@dataclass(frozen=True)
+class ResolutionVerdict:
+    """Cross-source resolution verdict for a single citation.
+
+    ``status`` is the policy-input shape consumed by ``assess_evidence_sufficiency``.
+    ``candidates`` retains per-client diagnostics for auditor visibility — when a
+    verdict is "disputed", the auditor can see exactly which client returned
+    which DOI.
+
+    ``agreement_signals`` records which fields agreed across candidates when
+    status is "corroborated" (e.g. ``("doi",)`` for an exact match across
+    clients, or ``("year", "first_author", "venue")`` for fuzzy agreement).
+    """
+
+    status: ResolutionStatus
+    candidates: tuple[CandidateResolution, ...] = ()
+    agreement_signals: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True)
+class PdfFetchOutcome:
+    """Structured result of a single PDF download + extraction attempt.
+
+    Replaces the legacy ``str | None`` return shape of
+    ``src/clients/pdf.py::download_and_extract``. ``failure_reason`` is the
+    single source of truth that lets ``fetch_fulltext.py`` populate
+    ``FetchAttempt.reason`` with publisher-specific signal (paywall HTML page
+    is "not_a_pdf"; a real 403 is "http_error"; a malformed PDF that pymupdf
+    cannot open is "extraction_failed").
+    """
+
+    text: str | None
+    failure_reason: PdfFailureReason
+    http_status: int | None = None
+    content_type: str | None = None
+
 
 @dataclass(frozen=True)
 class PaperChunk:
@@ -114,6 +211,11 @@ class ResolvedSource:
     oa_url: str | None = None
     pmcid: str | None = None
     retraction_status: bool = False
+    # Cross-source verdict carrying per-client CandidateResolution diagnostics.
+    # Optional for back-compat — legacy resolutions and fixtures predate the
+    # multi-candidate fold and serialize without this field. Populated by the
+    # resolver post Phase 0; consumed by assess_evidence_sufficiency.
+    resolution_verdict: ResolutionVerdict | None = None
 
 
 _NOT_FOUND_SOURCE = ResolvedSource(
@@ -251,6 +353,29 @@ class FetchOutcome:
     method: FulltextMethod
     attempts: tuple[FetchAttempt, ...]
     elapsed_ms_total: int
+
+
+@dataclass(frozen=True)
+class EvidenceBundle:
+    """The single contract consumed by ``assess_evidence_sufficiency``.
+
+    The verifier should not own access-policy, resolution-policy, or
+    depth-policy decisions; those live in one pure function gated on this
+    bundle. The verifier receives the bundle only when the policy returned
+    ``Sufficient``, so its only job is the semantic question
+    (supported / partially_supported / unsupported / not_addressed).
+
+    Diagnostic fields (``fetch_attempts``, ``resolution_candidates``) are
+    carried forward for auditor visibility in ``report.json`` — they are
+    NOT consulted by the policy itself.
+    """
+
+    text: str | None
+    depth: EvidenceDepth
+    access_status: AccessStatus
+    source_resolution_status: ResolutionStatus
+    fetch_attempts: tuple[FetchAttempt, ...] = ()
+    resolution_candidates: tuple[CandidateResolution, ...] = ()
 
 
 @dataclass(frozen=True)

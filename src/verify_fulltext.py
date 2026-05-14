@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import dataclasses
 import json
 import os
 import time
@@ -76,37 +75,45 @@ def verify_claim_fulltext(
     Never raises. Falls back to a parse-error result on malformed responses.
     """
     if not passages:
-        from src.verify import verify_claim
-
-        abstract_result, step = verify_claim(claim, source, model_id=model_id, api_key=api_key)
-        # verify_claim already applied safe_verification_result; status is correct.
-        # Only metadata fields are overridden here (not status/confidence/evidence_quality).
-        # If unverifiable, override the inner reason with `fulltext_unavailable` — more actionable.
-        from src.models import UnverifiableReason
-
-        outer_reason: UnverifiableReason | None = (
-            "fulltext_unavailable" if abstract_result.status == "unverifiable" else None
-        )
-        result = dataclasses.replace(
-            abstract_result,
-            fulltext_available=False,  # was: True (BUG)
-            verification_depth="abstract",
-            retrieval_status="fulltext_unavailable",  # was: "no_passage_found"
+        # Empty-passages contract: the pipeline now owns this routing decision
+        # (``src/pipeline.py::verify_one_claim`` falls back to the abstract
+        # verifier when BM25 returns no chunks). A defensive caller that still
+        # passes an empty list lands here; we emit a deterministic
+        # ``unverifiable + fulltext_unavailable`` verdict without an LLM call
+        # so a degenerate input never leaks a confident verdict.
+        ts_empty = time.time()
+        empty_result = VerificationResult(
+            status="unverifiable",
+            explanation=(
+                "verify_claim_fulltext invoked with empty passages — the pipeline "
+                "owns empty-passages routing; this branch is a defensive no-LLM "
+                "fallback. No verifier call was made."
+            ),
+            confidence=None,
+            source_passages=[],
+            source_section=None,
+            fulltext_available=False,
+            verification_depth="fulltext",
+            retrieval_status="fulltext_unavailable",
+            evidence_quality="no_evidence",
             retraction_status=source.retraction_status,
-            unverifiable_reason=(
-                outer_reason if outer_reason is not None else abstract_result.unverifiable_reason
-            ),
+            unverifiable_reason="fulltext_unavailable",
         )
-        return (
-            result,
-            dataclasses.replace(
-                step,
-                input_hash=_hash(repr((claim, source, passages))),
-                output_hash=_hash(repr(result)),
-                confidence=result.confidence,
-                unverifiable_reason=outer_reason,
-            ),
+        empty_step = ProvenanceStep(
+            step_id=str(uuid.uuid4()),
+            claim_id=claim.claim_id,
+            operation="verify",
+            input_hash=_hash(repr((claim, source, passages))),
+            output_hash=_hash(repr(empty_result)),
+            model_id=None,
+            timestamp=ts_empty,
+            tokens_in=None,
+            tokens_out=None,
+            cache_hit=None,
+            confidence=None,
+            unverifiable_reason="fulltext_unavailable",
         )
+        return empty_result, empty_step
 
     ts = time.time()
     effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")

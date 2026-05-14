@@ -6,7 +6,13 @@ from pathlib import Path
 
 from pytest_httpx import HTTPXMock
 
-from src.clients.crossref import check_retraction, fetch_work_by_doi, search_paper
+from src.clients.crossref import (
+    check_retraction,
+    fetch_work_by_doi,
+    find_candidate,
+    find_candidate_by_doi,
+    search_paper,
+)
 
 _WORKS_URL = "https://api.crossref.org/works"
 _DOI = "10.1234/test.2023"
@@ -349,4 +355,78 @@ class TestCheckRetraction:
         r2 = check_retraction(_DOI, db_path=db)
         assert r1 is True
         assert r2 is True
+        assert len(httpx_mock.get_requests()) == 1
+
+
+class TestFindCandidate:
+    """Lane B (2026-05-12): per-client CandidateResolution exposure.
+
+    The resolver verdict folder consumes one CandidateResolution per client
+    to detect cross-source agreement on DOI / (year, first_author, venue).
+    """
+
+    def test_find_candidate_by_doi_returns_full_shape(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(
+            json={
+                "message": {
+                    "DOI": "10.1234/foo",
+                    "title": ["A Paper"],
+                    "issued": {"date-parts": [[2020]]},
+                    "author": [{"family": "Smith", "given": "J."}],
+                    "container-title": ["Journal of Things"],
+                }
+            }
+        )
+        candidate = find_candidate_by_doi("10.1234/foo", db_path=tmp_path / "c.db")
+        assert candidate is not None
+        assert candidate.client == "crossref"
+        assert candidate.doi == "10.1234/foo"
+        assert candidate.title == "A Paper"
+        assert candidate.year == 2020
+        assert candidate.first_author == "smith"
+        assert candidate.venue == "Journal of Things"
+
+    def test_find_candidate_by_doi_returns_none_on_404(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(status_code=404)
+        assert find_candidate_by_doi("10.404/missing", db_path=tmp_path / "c.db") is None
+
+    def test_find_candidate_query_returns_best_match(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        httpx_mock.add_response(
+            json={
+                "message": {
+                    "items": [
+                        {
+                            "DOI": "10.1234/agreed",
+                            "type": "journal-article",
+                            "title": ["Lactate kinetics"],
+                            "author": [{"family": "Adams", "given": "X."}],
+                            "issued": {"date-parts": [[2021]]},
+                            "container-title": ["Journal A"],
+                        }
+                    ]
+                }
+            }
+        )
+        candidate = find_candidate("Adams 2021 lactate", db_path=tmp_path / "c.db")
+        assert candidate is not None
+        assert candidate.client == "crossref"
+        assert candidate.doi == "10.1234/agreed"
+        assert candidate.year == 2021
+        assert candidate.first_author == "adams"
+        assert candidate.venue == "Journal A"
+
+    def test_find_candidate_caches_negative_lookup(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        """Empty items array → cached as miss; second call hits cache."""
+        httpx_mock.add_response(json={"message": {"items": []}})
+        db = tmp_path / "c.db"
+        assert find_candidate("nothing 1900", db_path=db) is None
+        assert find_candidate("nothing 1900", db_path=db) is None
         assert len(httpx_mock.get_requests()) == 1

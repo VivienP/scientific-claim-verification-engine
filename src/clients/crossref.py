@@ -30,7 +30,7 @@ from src.clients._common import (
 from src.clients._common import (
     make_cache_key,
 )
-from src.models import ResolvedSource
+from src.models import CandidateResolution, ResolvedSource
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -214,6 +214,48 @@ def _pick_best_item(query: str, items: list[dict[str, Any]]) -> dict[str, Any] |
     return max(enumerate(items), key=lambda item: _candidate_score(query, item[1], item[0]))[1]
 
 
+def _first_author_family(message: dict[str, Any]) -> str | None:
+    """Return the lowercased family name of the first author, or ``None``."""
+    raw = message.get("author")
+    if not isinstance(raw, list) or not raw:
+        return None
+    first = raw[0]
+    if not isinstance(first, dict):
+        return None
+    family = first.get("family")
+    if isinstance(family, str) and family.strip():
+        return _normalise_search_text(family).lower()
+    return None
+
+
+def _venue_from_message(message: dict[str, Any]) -> str | None:
+    """Return CrossRef's ``container-title`` (journal / conference) if any."""
+    raw = message.get("container-title")
+    if isinstance(raw, list) and raw:
+        first = raw[0]
+        if isinstance(first, str) and first.strip():
+            return first.strip()
+    return None
+
+
+def _candidate_from_message(message: dict[str, Any]) -> CandidateResolution:
+    """Build a CandidateResolution from a CrossRef work message.
+
+    Pure helper. The fields it surfaces (doi/title/year/first_author/venue)
+    are the ones the resolver verdict folder consults when checking
+    cross-client agreement, so every client must emit them in the same
+    normalised form (lowercase ASCII first-author surname).
+    """
+    return CandidateResolution(
+        client="crossref",
+        doi=_normalise_doi(message.get("DOI")),
+        title=_title_from_work_message(message),
+        year=_item_year(message),
+        first_author=_first_author_family(message),
+        venue=_venue_from_message(message),
+    )
+
+
 def _resolved_from_work_message(message: dict[str, Any]) -> ResolvedSource:
     return ResolvedSource(
         found=True,
@@ -347,6 +389,134 @@ def search_paper(
             return _NOT_FOUND
 
     return _NOT_FOUND
+
+
+def find_candidate_by_doi(
+    doi: str,
+    *,
+    timeout: float = 10.0,
+    db_path: Path | None = None,
+) -> CandidateResolution | None:
+    """Return a CandidateResolution for a known DOI, or ``None`` on miss.
+
+    Used by the resolver verdict folder to corroborate a bib-supplied or
+    fuzzy-matched DOI against CrossRef's authoritative metadata. Cache key
+    is independent of ``fetch_work_by_doi`` because the cached payload shape
+    differs — this function stores candidate JSON, not the legacy
+    ResolvedSource shape.
+    """
+    if not doi:
+        return None
+    resolved_db_path = db_path if db_path is not None else _default_db_path()
+    normalised = _normalise_doi(doi.strip()) or ""
+    key = make_cache_key("crossref:candidate_doi:v1", normalised.lower())
+
+    cached = get(resolved_db_path, key)
+    if cached is not None:
+        logger.debug("crossref_candidate_doi_cache_hit", doi=normalised)
+        data: dict[str, Any] = json.loads(cached)
+        if not data:
+            return None
+        return CandidateResolution(**data)
+
+    encoded_doi = urllib.parse.quote(normalised, safe="")
+    url = f"{_BASE_URL}/works/{encoded_doi}"
+
+    try:
+        with httpx.Client(timeout=timeout) as client:
+            response = client.get(url, params={"mailto": _MAILTO}, headers=_HEADERS)
+        if response.status_code == 404:
+            put(resolved_db_path, key, json.dumps({}), _CACHE_TTL_SECONDS)
+            return None
+        response.raise_for_status()
+        payload: dict[str, Any] = response.json()
+        message: dict[str, Any] = payload.get("message", {})
+        if not message:
+            put(resolved_db_path, key, json.dumps({}), _CACHE_TTL_SECONDS)
+            return None
+        candidate = _candidate_from_message(message)
+        put(resolved_db_path, key, json.dumps(dataclasses.asdict(candidate)), _CACHE_TTL_SECONDS)
+        return candidate
+    except httpx.HTTPStatusError as exc:
+        logger.error("crossref_candidate_doi_request_error", doi=normalised, error=str(exc))
+        return None
+    except httpx.RequestError as exc:
+        logger.error("crossref_candidate_doi_request_error", doi=normalised, error=str(exc))
+        return None
+    except Exception as exc:
+        logger.error("crossref_candidate_doi_unexpected_error", doi=normalised, error=str(exc))
+        return None
+
+
+def find_candidate(
+    query: str,
+    *,
+    timeout: float = 10.0,
+    db_path: Path | None = None,
+) -> CandidateResolution | None:
+    """Return CrossRef's best candidate for a bibliographic query.
+
+    Independent of ``search_paper`` so the resolver can corroborate findings
+    without breaking the legacy ResolvedSource cache contract. Same scoring
+    logic as ``search_paper`` (``_pick_best_item``); only the returned shape
+    differs.
+    """
+    resolved_db_path = db_path if db_path is not None else _default_db_path()
+    key = make_cache_key("crossref:candidate_query:v1", query)
+
+    cached = get(resolved_db_path, key)
+    if cached is not None:
+        logger.debug("crossref_candidate_query_cache_hit", query=query)
+        data: dict[str, Any] = json.loads(cached)
+        if not data:
+            return None
+        return CandidateResolution(**data)
+
+    url = f"{_BASE_URL}/works"
+    params: dict[str, str | int] = {
+        "query.bibliographic": query,
+        "rows": 5,
+        "mailto": _MAILTO,
+    }
+
+    for attempt in range(1, _RETRY_MAX + 1):
+        try:
+            with httpx.Client(timeout=timeout) as client:
+                response = client.get(url, params=params, headers=_HEADERS)
+            if response.status_code == 429:
+                wait = _RETRY_BACKOFF_BASE**attempt
+                logger.warning(
+                    "crossref_candidate_rate_limited", attempt=attempt, wait_seconds=wait
+                )
+                if attempt < _RETRY_MAX:
+                    time.sleep(wait)
+                    continue
+                return None
+            response.raise_for_status()
+            payload: dict[str, Any] = response.json()
+            items: list[dict[str, Any]] = payload.get("message", {}).get("items", [])
+            if not items:
+                put(resolved_db_path, key, json.dumps({}), _CACHE_TTL_SECONDS)
+                return None
+            item = _pick_best_item(query, items)
+            if item is None:
+                put(resolved_db_path, key, json.dumps({}), _CACHE_TTL_SECONDS)
+                return None
+            candidate = _candidate_from_message(item)
+            put(
+                resolved_db_path, key, json.dumps(dataclasses.asdict(candidate)), _CACHE_TTL_SECONDS
+            )
+            return candidate
+        except httpx.HTTPStatusError as exc:
+            logger.error("crossref_candidate_request_error", query=query, error=str(exc))
+            return None
+        except httpx.RequestError as exc:
+            logger.error("crossref_candidate_request_error", query=query, error=str(exc))
+            return None
+        except Exception as exc:
+            logger.error("crossref_candidate_unexpected_error", query=query, error=str(exc))
+            return None
+    return None
 
 
 def check_retraction(

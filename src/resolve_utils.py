@@ -7,7 +7,7 @@ import re
 import unicodedata
 
 from src.bibliography import BibEntry
-from src.models import Claim, ResolvedSource
+from src.models import CandidateResolution, Claim, ResolutionVerdict, ResolvedSource
 
 _NOT_FOUND = ResolvedSource(found=False, doi=None, title=None, abstract=None, similarity_score=None)
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
@@ -172,6 +172,106 @@ def _bibliography_title_match_score(
     if not resolved_tokens:
         return 0.0
     return len(entry_tokens & resolved_tokens) / len(entry_tokens)
+
+
+_FUZZY_AGREEMENT_MIN_FIELDS = 2
+
+
+def _normalised_venue(venue: str | None) -> str | None:
+    if not venue:
+        return None
+    return _normalise_search_text(venue).lower()
+
+
+def _fuzzy_agreement_signals(
+    candidates: tuple[CandidateResolution, ...],
+) -> tuple[str, ...]:
+    """Return which of (year, first_author, venue) agree across candidates.
+
+    A field counts toward agreement when at least two candidates have a
+    non-None value for it AND every such value is equal (after normalisation
+    for venue). Year/first_author are compared exactly; venue is collapsed
+    via ``_normalised_venue``. Returns the tuple of agreed field names; empty
+    when fewer than ``_FUZZY_AGREEMENT_MIN_FIELDS`` (2 of 3) agree.
+    """
+    agreed: list[str] = []
+
+    years = [c.year for c in candidates if c.year is not None]
+    if len(years) >= 2 and len(set(years)) == 1:
+        agreed.append("year")
+
+    authors = [c.first_author for c in candidates if c.first_author]
+    if len(authors) >= 2 and len(set(authors)) == 1:
+        agreed.append("first_author")
+
+    venues = [v for v in (_normalised_venue(c.venue) for c in candidates) if v]
+    if len(venues) >= 2 and len(set(venues)) == 1:
+        agreed.append("venue")
+
+    if len(agreed) >= _FUZZY_AGREEMENT_MIN_FIELDS:
+        return tuple(agreed)
+    return ()
+
+
+def fold_candidates_into_verdict(
+    candidates: tuple[CandidateResolution, ...],
+) -> ResolutionVerdict:
+    """Fold per-client candidates into a ``ResolutionVerdict``.
+
+    Pure function. The verdict statuses encode resolver confidence as a
+    policy input:
+
+    * **corroborated** — at least two candidates agree on DOI (case-
+      insensitive) OR on (year, first_author, venue) within tolerance.
+      Strongest signal that the resolver landed on the right paper.
+    * **disputed** — at least two candidates disagree on DOI AND the
+      (year, first_author, venue) fuzzy test fails. Policy treats this as
+      ``unverifiable`` because a wrong-paper resolution is a worse failure
+      mode than no resolution at all.
+    * **single_source_only** — fewer than two candidates returned, so
+      cross-source agreement cannot be tested. Policy gates fall back to
+      depth/access criteria.
+    * **low_confidence** is NOT emitted by this function — the caller sets
+      it on a single candidate when individual signals are weak (OpenAlex
+      title overlap below ``_LOW_TITLE_MATCH_THRESHOLD``).
+
+    ``agreement_signals`` carries the field names that drove a corroborated
+    verdict so the auditor can read e.g. ``("doi",)`` (DOIs match) or
+    ``("year", "first_author", "venue")`` (preprint vs published-version
+    duplicate listing of the same work).
+    """
+    if len(candidates) < 2:
+        return ResolutionVerdict(
+            status="single_source_only",
+            candidates=candidates,
+            agreement_signals=(),
+        )
+
+    dois_present = [c.doi.lower() for c in candidates if c.doi]
+    doi_unanimous = len(dois_present) >= 2 and len(set(dois_present)) == 1
+
+    fuzzy_signals = _fuzzy_agreement_signals(candidates)
+
+    if doi_unanimous:
+        signals = ("doi", *(s for s in fuzzy_signals if s != "doi"))
+        return ResolutionVerdict(
+            status="corroborated",
+            candidates=candidates,
+            agreement_signals=signals,
+        )
+
+    if fuzzy_signals:
+        return ResolutionVerdict(
+            status="corroborated",
+            candidates=candidates,
+            agreement_signals=fuzzy_signals,
+        )
+
+    return ResolutionVerdict(
+        status="disputed",
+        candidates=candidates,
+        agreement_signals=(),
+    )
 
 
 def _source_from_bib_entry(

@@ -35,6 +35,13 @@ RATIO_KEYWORDS_SHORT: frozenset[str] = frozenset(
 )
 _WORD_RE: re.Pattern[str] = re.compile(r"[A-Za-z]+")
 
+# Maximum gap (in chars) between a primary's span_end and a same-sentence CI's
+# span_start that still permits span-anchored pairing. 60 chars is wide enough
+# to accept a typical "(95% CI 0.48-0.74)" parenthetical between primary and
+# CI, narrow enough to reject CIs that belong to a later primary in a compact
+# multi-metric sentence.
+MAX_CHARS_BETWEEN_PRIMARY_AND_CI = 60
+
 
 def _hash(data: str) -> str:
     return hashlib.sha256(data.encode()).hexdigest()
@@ -71,20 +78,77 @@ def _is_ratio_primary(a: NumericAssertion) -> bool:
     return False
 
 
+def _find_span_anchored_triple(
+    assertions: list[NumericAssertion], primary_idx: int
+) -> tuple[float, float, float] | None:
+    """Tier 1: pair primary + ci_low + ci_high by span+sentence anchoring.
+
+    Returns a triple when the primary has ``span_start`` / ``span_end`` /
+    ``sentence_id`` populated AND at least one ``ci_low`` and one ``ci_high``
+    share the primary's sentence with a closest-CI char gap within
+    ``MAX_CHARS_BETWEEN_PRIMARY_AND_CI``. The closest CI by char distance to
+    the primary is picked when multiple same-sentence CIs exist (defensive
+    against compact multi-CI sentences).
+
+    Returns None when the primary is missing span info, when no same-sentence
+    CIs exist on each side, or when the closest CI exceeds the char-gap
+    threshold — the caller falls through to substring / window matching.
+    """
+    primary = assertions[primary_idx]
+    if primary.span_start is None or primary.span_end is None or primary.sentence_id is None:
+        return None
+    primary_start = primary.span_start
+    primary_end = primary.span_end
+
+    def _gap(ci: NumericAssertion) -> int:
+        ci_start = ci.span_start
+        ci_end = ci.span_end
+        if ci_start is None or ci_end is None:
+            return 10**9
+        if ci_start >= primary_end:
+            return ci_start - primary_end
+        if ci_end <= primary_start:
+            return primary_start - ci_end
+        return 0  # overlapping spans — pathological but accept it
+
+    same_sent_lows = [
+        a
+        for a in assertions
+        if a.role == "ci_low" and a.span_start is not None and a.sentence_id == primary.sentence_id
+    ]
+    same_sent_highs = [
+        a
+        for a in assertions
+        if a.role == "ci_high" and a.span_start is not None and a.sentence_id == primary.sentence_id
+    ]
+    if not (same_sent_lows and same_sent_highs):
+        return None
+    closest_low = min(same_sent_lows, key=_gap)
+    closest_high = min(same_sent_highs, key=_gap)
+    if _gap(closest_low) > MAX_CHARS_BETWEEN_PRIMARY_AND_CI:
+        return None
+    if _gap(closest_high) > MAX_CHARS_BETWEEN_PRIMARY_AND_CI:
+        return None
+    return (primary.value, closest_low.value, closest_high.value)
+
+
 def _find_or_ci_triple(
     assertions: list[NumericAssertion],
 ) -> tuple[float, float, float] | None:
-    """Find a (ratio, ci_low, ci_high) triple via two-step matching.
+    """Find a (ratio, ci_low, ci_high) triple via three-tier matching.
 
     Step 1: pick the first primary that is a ratio measure. No unit=None
     fallback — Bug B fix.
 
-    Step 2: pair the primary with its CI by:
-      (a) Strong match — CI context contains primary's raw_text (substring,
-          case-insensitive).
-      (b) Window match — CI inside [primary_idx+1, next_primary_idx).
+    Step 2: pair the primary with its CI by trying, in order:
+      (a) Span-anchored — primary + CIs share a sentence and the closest
+          CIs by char gap are within ``MAX_CHARS_BETWEEN_PRIMARY_AND_CI``.
+          Requires deterministic span derivation by the extractor.
+      (b) Strong substring — CI context contains primary's raw_text
+          (case-insensitive). Survives even when spans are unavailable.
+      (c) Window — CI inside ``[primary_idx+1, next_primary_idx)``.
 
-    If neither match yields a ci_low + ci_high pair, return None. This avoids
+    If no tier yields a ci_low + ci_high pair, return None. This avoids
     pairing a ratio primary with CIs that belong to a different statistic when
     multiple primaries are present — Bug A fix.
     """
@@ -96,6 +160,10 @@ def _find_or_ci_triple(
 
     if primary_idx is None:
         return None
+
+    span_triple = _find_span_anchored_triple(assertions, primary_idx)
+    if span_triple is not None:
+        return span_triple
 
     primary = assertions[primary_idx]
     p_raw_l = primary.raw_text.lower()
@@ -117,6 +185,52 @@ def _find_or_ci_triple(
         return (primary.value, win_lows[0].value, win_highs[0].value)
 
     return None
+
+
+def _detect_or_ci_pairing_ambiguity(assertions: list[NumericAssertion]) -> bool:
+    """True when CIs exist but cross-reference a different primary than the selected one.
+
+    Activates when (a) ≥2 ratio primaries are present, (b) span-anchored
+    pairing is unavailable for the first primary, (c) the first primary has
+    no own strong-substring CI match, and (d) at least one CI's context names
+    a different ratio primary's ``raw_text``. The Zhou/Wang
+    compact-multi-metric pattern: two HRs in one sentence, LLM-emitted CI
+    contexts that bind the CI to a later primary, and a window-match that
+    would either fail (no own CIs in window) or fabricate a triple that
+    flags a false-positive inconsistency.
+
+    On detection, ``run_numeric_check`` skips the OR/CI consistency check
+    and emits ``NumericCheckResult(ambiguous=True)`` — better to skip than
+    to flag a wrong inconsistency. The text-path verdict is preserved.
+    """
+    ratio_primaries = [(i, a) for i, a in enumerate(assertions) if _is_ratio_primary(a)]
+    if len(ratio_primaries) < 2:
+        return False
+    first_idx = ratio_primaries[0][0]
+
+    if _find_span_anchored_triple(assertions, first_idx) is not None:
+        return False
+
+    first_primary = assertions[first_idx]
+    p_raw_l = first_primary.raw_text.lower()
+    strong_lows = [a for a in assertions if a.role == "ci_low" and p_raw_l in a.context.lower()]
+    strong_highs = [a for a in assertions if a.role == "ci_high" and p_raw_l in a.context.lower()]
+    if strong_lows and strong_highs:
+        # The first primary has its own substring-anchored CIs — pairing is
+        # unambiguous via tier 2, no need to fall through to window.
+        return False
+
+    cis = [a for a in assertions if a.role in ("ci_low", "ci_high")]
+    if not cis:
+        return False
+    other_primaries = [a for j, a in ratio_primaries if j != first_idx]
+    for ci in cis:
+        ctx_l = ci.context.lower()
+        for other in other_primaries:
+            other_raw_l = other.raw_text.lower()
+            if other_raw_l and other_raw_l in ctx_l:
+                return True
+    return False
 
 
 def _infer_null_value(assertions: list[NumericAssertion]) -> float:
@@ -167,6 +281,41 @@ def run_numeric_check(
     if not assertions:
         logger.debug("numeric_no_assertions", claim_id=claim_id)
         return None, [extract_step]
+
+    # Ambiguity gate: when a compact multi-metric sentence makes window-match
+    # unsafe, skip the OR/CI check and surface ``ambiguous=True``. Preserves
+    # the text-path verdict; refuses to fabricate a numeric verdict the
+    # extractor can't unambiguously support.
+    if _detect_or_ci_pairing_ambiguity(assertions):
+        ambiguous_result = NumericCheckResult(
+            check_type="or_ci_consistency",
+            consistent=True,
+            extracted=assertions,
+            explanation=(
+                "ambiguous primary-CI pairing: multiple ratio primaries with overlapping "
+                "context references; OR/CI consistency check skipped."
+            ),
+            ambiguous=True,
+        )
+        check_step = ProvenanceStep(
+            step_id=str(uuid.uuid4()),
+            claim_id=claim_id,
+            operation="numeric_check",
+            input_hash=_hash(repr(assertions)),
+            output_hash=_hash(repr(ambiguous_result)),
+            model_id=None,
+            timestamp=ts_check,
+            tokens_in=None,
+            tokens_out=None,
+            cache_hit=None,
+            confidence=None,
+        )
+        logger.info(
+            "numeric_check_ambiguous",
+            claim_id=claim_id,
+            n_assertions=len(assertions),
+        )
+        return ambiguous_result, [extract_step, check_step]
 
     triple = _find_or_ci_triple(assertions)
     input_payload: tuple[float, ...]

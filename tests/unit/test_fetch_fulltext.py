@@ -1,7 +1,10 @@
 """Unit tests for src/fetch_fulltext.py — orchestration with sub-clients patched.
 
-I1 (2026-05-12): tests updated to assert on the structured FetchOutcome
-return shape. Two new tests pin the failure-reason recording semantics.
+Lane B (2026-05-12): ``pdf.download_and_extract`` returns ``PdfFetchOutcome``
+instead of ``str | None``; mocks return that structured shape so callers can
+attribute the failure precisely. The not_a_pdf signal threads through to
+``FetchAttempt.reason == "oa_url_not_pdf"`` — the audit win for paywall
+HTML responses on publisher OA URLs.
 """
 
 from __future__ import annotations
@@ -10,7 +13,17 @@ from pathlib import Path
 from unittest.mock import patch
 
 from src.fetch_fulltext import fetch_fulltext
-from src.models import ResolvedSource
+from src.models import PdfFetchOutcome, ResolvedSource
+
+
+def _ok(text: str) -> PdfFetchOutcome:
+    return PdfFetchOutcome(text=text, failure_reason="ok")
+
+
+def _fail(reason: str = "http_error") -> PdfFetchOutcome:
+    # str is the literal value of PdfFailureReason — narrowed to the enum at
+    # call sites that pass it through, so this loose typing is fine for fixtures.
+    return PdfFetchOutcome(text=None, failure_reason=reason)  # type: ignore[arg-type]
 
 
 def _src(
@@ -50,7 +63,7 @@ class TestFetchFulltext:
     def test_oa_url_path(self, tmp_path: Path) -> None:
         with (
             patch(
-                "src.fetch_fulltext.pdf.download_and_extract", return_value="full text"
+                "src.fetch_fulltext.pdf.download_and_extract", return_value=_ok("full text")
             ) as mock_pdf,
             patch("src.fetch_fulltext.pmc.fetch_fulltext") as mock_pmc,
         ):
@@ -82,7 +95,7 @@ class TestFetchFulltext:
     def test_unpaywall_pdf_path(self, tmp_path: Path) -> None:
         with (
             patch(
-                "src.fetch_fulltext.pdf.download_and_extract", return_value="up text"
+                "src.fetch_fulltext.pdf.download_and_extract", return_value=_ok("up text")
             ) as mock_pdf,
             patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None) as mock_epmc,
             patch(
@@ -99,7 +112,7 @@ class TestFetchFulltext:
     def test_pmc_fails_falls_through_to_unpaywall(self, tmp_path: Path) -> None:
         with (
             patch(
-                "src.fetch_fulltext.pdf.download_and_extract", return_value="up text"
+                "src.fetch_fulltext.pdf.download_and_extract", return_value=_ok("up text")
             ) as mock_pdf,
             patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None) as mock_pmc,
             patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None) as mock_epmc,
@@ -126,7 +139,8 @@ class TestFetchFulltext:
         """
         with (
             patch(
-                "src.fetch_fulltext.pdf.download_and_extract", return_value="epmc text"
+                "src.fetch_fulltext.pdf.download_and_extract",
+                return_value=_ok("epmc text"),
             ) as mock_pdf,
             patch(
                 "src.fetch_fulltext.europepmc.fetch_oa_url",
@@ -145,7 +159,6 @@ class TestFetchFulltext:
                 "https://europepmc.org/articles/PMC7437027/pdf",
                 db_path=tmp_path / "c.db",
             )
-            # Unpaywall is skipped when Europe PMC succeeds.
             mock_unp.assert_not_called()
 
     def test_europepmc_failure_falls_through_to_unpaywall(self, tmp_path: Path) -> None:
@@ -156,7 +169,7 @@ class TestFetchFulltext:
         with (
             patch(
                 "src.fetch_fulltext.pdf.download_and_extract",
-                side_effect=[None, "up text"],  # epmc fails, unpaywall succeeds
+                side_effect=[_fail("http_error"), _ok("up text")],
             ),
             patch(
                 "src.fetch_fulltext.europepmc.fetch_oa_url",
@@ -174,7 +187,7 @@ class TestFetchFulltext:
 
     def test_all_fail(self, tmp_path: Path) -> None:
         with (
-            patch("src.fetch_fulltext.pdf.download_and_extract", return_value=None),
+            patch("src.fetch_fulltext.pdf.download_and_extract", return_value=_fail()),
             patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None),
             patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None),
             patch("src.fetch_fulltext.unpaywall.get_oa_url", return_value=None),
@@ -214,7 +227,7 @@ class TestFetchFulltextOutcomeReasons:
         with (
             patch(
                 "src.fetch_fulltext.pdf.download_and_extract",
-                side_effect=[None, None, "up text"],  # oa_url fails, epmc fails, unpaywall ok
+                side_effect=[_fail("http_error"), _fail("http_error"), _ok("up text")],
             ),
             patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None),
             patch(
@@ -238,9 +251,6 @@ class TestFetchFulltextOutcomeReasons:
         assert outcome.text == "up text"
         assert outcome.method == "unpaywall_pdf"
 
-        # Expect 5 attempts: oa_url_pdf (fail), pmc (fail), publisher_html
-        # (fail/unknown — doi prefix 10.99 isn't in the known map),
-        # europepmc_pdf (fail), unpaywall_pdf (success).
         methods = [a.method for a in outcome.attempts]
         assert methods == [
             "oa_url_pdf",
@@ -249,11 +259,95 @@ class TestFetchFulltextOutcomeReasons:
             "europepmc_pdf",
             "unpaywall_pdf",
         ]
-        # Reasons on failures must be specific.
         assert outcome.attempts[0].reason == "oa_url_pdf_failed"
         assert outcome.attempts[1].reason == "pmc_no_fulltext"
         assert outcome.attempts[2].reason == "publisher_html_unknown"
         assert outcome.attempts[3].reason == "europepmc_pdf_failed"
-        # Final success has reason=None.
         assert outcome.attempts[4].success is True
         assert outcome.attempts[4].reason is None
+
+
+class TestFetchFulltextPdfOutcomePlumbing:
+    """Lane B (2026-05-12): PdfFetchOutcome plumbing into FetchAttempt.reason.
+
+    The not_a_pdf signal — typical Cloudflare/paywall HTML response on a
+    publisher OA URL — must surface as ``oa_url_not_pdf`` rather than the
+    generic ``oa_url_pdf_failed``, so the publisher-coverage rollup can
+    flag paywalls without re-running the pipeline.
+    """
+
+    def test_oa_url_not_a_pdf_recorded_as_oa_url_not_pdf(self, tmp_path: Path) -> None:
+        """Cloudflare-fronted OA URL returns HTML → reason='oa_url_not_pdf'."""
+        with (
+            patch(
+                "src.fetch_fulltext.pdf.download_and_extract",
+                return_value=PdfFetchOutcome(
+                    text=None,
+                    failure_reason="not_a_pdf",
+                    http_status=200,
+                    content_type="text/html",
+                ),
+            ),
+            patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None),
+            patch("src.fetch_fulltext.publisher_html.fetch_via_doi", return_value=None),
+            patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None),
+            patch("src.fetch_fulltext.unpaywall.get_oa_url", return_value=None),
+        ):
+            outcome = fetch_fulltext(
+                _src(oa_url="https://nejm.org/article.pdf", doi="10.1056/x"),
+                db_path=tmp_path / "c.db",
+            )
+        oa_attempt = next(a for a in outcome.attempts if a.method == "oa_url_pdf")
+        assert oa_attempt.success is False
+        assert oa_attempt.reason == "oa_url_not_pdf"
+
+    def test_oa_url_http_error_recorded_as_oa_url_pdf_failed(self, tmp_path: Path) -> None:
+        """403 from OA URL → reason='oa_url_pdf_failed' (no enum variant for raw http_error)."""
+        with (
+            patch(
+                "src.fetch_fulltext.pdf.download_and_extract",
+                return_value=PdfFetchOutcome(
+                    text=None,
+                    failure_reason="http_error",
+                    http_status=403,
+                ),
+            ),
+            patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None),
+            patch("src.fetch_fulltext.publisher_html.fetch_via_doi", return_value=None),
+            patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None),
+            patch("src.fetch_fulltext.unpaywall.get_oa_url", return_value=None),
+        ):
+            outcome = fetch_fulltext(
+                _src(oa_url="https://x/y.pdf", doi="10.99/qual"),
+                db_path=tmp_path / "c.db",
+            )
+        oa_attempt = next(a for a in outcome.attempts if a.method == "oa_url_pdf")
+        assert oa_attempt.success is False
+        assert oa_attempt.reason == "oa_url_pdf_failed"
+
+    def test_oa_url_extraction_failed_recorded_as_oa_url_pdf_failed(self, tmp_path: Path) -> None:
+        """Malformed PDF from OA URL → reason='oa_url_pdf_failed' (extraction_failed bucket)."""
+        with (
+            patch(
+                "src.fetch_fulltext.pdf.download_and_extract",
+                return_value=PdfFetchOutcome(
+                    text=None,
+                    failure_reason="extraction_failed",
+                    http_status=200,
+                    content_type="application/pdf",
+                ),
+            ),
+            patch("src.fetch_fulltext.pmc.fetch_fulltext", return_value=None),
+            patch("src.fetch_fulltext.publisher_html.fetch_via_doi", return_value=None),
+            patch("src.fetch_fulltext.europepmc.fetch_oa_url", return_value=None),
+            patch("src.fetch_fulltext.unpaywall.get_oa_url", return_value=None),
+        ):
+            outcome = fetch_fulltext(
+                _src(oa_url="https://x/y.pdf", doi="10.99/qual"),
+                db_path=tmp_path / "c.db",
+            )
+        oa_attempt = next(a for a in outcome.attempts if a.method == "oa_url_pdf")
+        assert oa_attempt.success is False
+        # extraction_failed currently shares the oa_url_pdf_failed bucket; only
+        # not_a_pdf gets its own variant in the existing FetchFailureReason enum.
+        assert oa_attempt.reason == "oa_url_pdf_failed"

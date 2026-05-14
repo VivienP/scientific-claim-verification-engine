@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 from pytest_httpx import HTTPXMock
 
-from src.clients.openalex import _reconstruct_abstract, search_paper
+from src.clients.openalex import _reconstruct_abstract, find_candidate, search_paper
 
 _OA_URL_PATTERN = re.compile(r"https://api\.openalex\.org/works")
 
@@ -307,3 +307,42 @@ class TestCaching:
         result = search_paper("scaling laws neural models", db_path=tmp_path / "cache.db")
         assert result.found is True
         assert result.similarity_score == 0.8
+
+
+class TestFindCandidate:
+    """Lane B (2026-05-12): per-client CandidateResolution exposure.
+
+    Mirrors the CrossRef ``find_candidate`` shape so the verdict folder can
+    treat the two clients symmetrically when testing cross-source agreement.
+    """
+
+    def test_returns_candidate_with_full_metadata(
+        self, httpx_mock: HTTPXMock, tmp_path: Path
+    ) -> None:
+        response = {
+            "results": [
+                {
+                    "title": "Scaling Laws",
+                    "doi": "https://doi.org/10.1234/x",
+                    "publication_year": 2022,
+                    "authorships": [
+                        {"author": {"display_name": "Jordan Hoffmann"}},
+                    ],
+                    "primary_location": {
+                        "source": {"display_name": "NeurIPS Proceedings"},
+                    },
+                }
+            ]
+        }
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json=response)
+        candidate = find_candidate("Hoffmann 2022 scaling", db_path=tmp_path / "cache.db")
+        assert candidate is not None
+        assert candidate.client == "openalex"
+        assert candidate.doi == "10.1234/x"
+        assert candidate.year == 2022
+        assert candidate.first_author == "hoffmann"
+        assert candidate.venue == "NeurIPS Proceedings"
+
+    def test_empty_results_returns_none(self, httpx_mock: HTTPXMock, tmp_path: Path) -> None:
+        httpx_mock.add_response(url=_OA_URL_PATTERN, json={"results": []})
+        assert find_candidate("nothing 1900", db_path=tmp_path / "cache.db") is None

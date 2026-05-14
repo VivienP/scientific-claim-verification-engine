@@ -151,9 +151,35 @@ def _compute_summary_stats(
     )
     retracted_sources = sum(1 for c in claims if source_for(c).retraction_status)
     resolution_low_confidence = sum(1 for c in claims if source_for(c).resolution_low_confidence)
+    # Cross-source resolution verdict counters. A "disputed" verdict means
+    # >=2 candidate clients (CrossRef / OpenAlex / PubMed) disagreed on the
+    # resolved DOI without fuzzy (year, first_author, venue) agreement — the
+    # signal Lane A's policy uses to gate verification with
+    # ``unverifiable + resolution_source_disagreement``.
+    resolution_verdict_counts: dict[str, int] = {
+        "corroborated": 0,
+        "disputed": 0,
+        "low_confidence": 0,
+        "single_source_only": 0,
+    }
+    for c in claims:
+        verdict = source_for(c).resolution_verdict
+        if verdict is None:
+            continue
+        resolution_verdict_counts[verdict.status] = (
+            resolution_verdict_counts.get(verdict.status, 0) + 1
+        )
     numeric_checks_run = sum(1 for c in claims if result_for(c).numeric_check is not None)
     numeric_inconsistencies_flagged = sum(
         1 for c in claims if ((nc := result_for(c).numeric_check) is not None and not nc.consistent)
+    )
+    # Lane A ambiguity gate: compact multi-metric sentences where the
+    # extractor's pairing is ambiguous, the deterministic check is skipped,
+    # and the text-path verdict is preserved. Counted separately from
+    # ``numeric_checks_run`` so an auditor can see the skip-rate without
+    # confusing it with successful checks.
+    numeric_ambiguous = sum(
+        1 for c in claims if ((nc := result_for(c).numeric_check) is not None and nc.ambiguous)
     )
 
     # Diagnostic fields. Goal: make `not_addressed` actionable. Today the count
@@ -219,9 +245,11 @@ def _compute_summary_stats(
         "retracted_sources": retracted_sources,
         "numeric_checks_run": numeric_checks_run,
         "numeric_inconsistencies_flagged": numeric_inconsistencies_flagged,
+        "numeric_ambiguous": numeric_ambiguous,
         "abstract_only_verdicts": abstract_only_verdicts,
         "fulltext_success_rate": fulltext_success_rate,
         "not_addressed_breakdown": not_addressed_breakdown,
+        "resolution_verdict_counts": resolution_verdict_counts,
     }
 
     # Fetch telemetry aggregation. Skipped when outcomes are absent.

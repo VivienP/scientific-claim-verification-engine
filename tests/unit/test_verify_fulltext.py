@@ -105,39 +105,26 @@ class TestVerifyClaimFulltext:
         assert "Passage number 0" in user_message
 
     @patch("src.verify.verify_claim")
-    def test_empty_passages_marks_no_passage_found(self, mock_verify: MagicMock) -> None:
-        from src.models import VerificationResult
+    def test_empty_passages_emits_deterministic_unverifiable(self, mock_verify: MagicMock) -> None:
+        """Lane A contract: empty passages -> deterministic unverifiable, no abstract fallback.
 
-        mock_verify.return_value = (
-            VerificationResult(
-                status="supported",
-                explanation="abs",
-                confidence=0.9,
-                evidence_quality="quoted_passage",  # A1: supported requires fulltext evidence
-            ),
-            ProvenanceStep(
-                step_id="s",
-                claim_id="claim-1",
-                operation="verify",
-                input_hash="i",
-                output_hash="o",
-                model_id="m",
-                timestamp=0.0,
-                tokens_in=10,
-                tokens_out=5,
-                cache_hit=False,
-                confidence=0.9,
-            ),
-        )
-
+        The pipeline owns empty-passages routing now
+        (``src/pipeline.py::verify_one_claim``); verify_claim_fulltext defensively
+        emits ``unverifiable + fulltext_unavailable`` without an LLM call. The
+        previous behavior (silent fallback to verify_claim on abstract) is gone.
+        """
         from src.verify import verify_claim_fulltext
 
-        result, _ = verify_claim_fulltext(_make_claim(), _make_source(), [])
-        mock_verify.assert_called_once()
-        assert result.verification_depth == "abstract"
-        # A2 fix: empty passages = fulltext retrieval failed, not "found but empty"
+        result, step = verify_claim_fulltext(_make_claim(), _make_source(), [])
+        mock_verify.assert_not_called()
+        assert result.status == "unverifiable"
+        assert result.confidence is None
+        assert result.unverifiable_reason == "fulltext_unavailable"
         assert result.fulltext_available is False
         assert result.retrieval_status == "fulltext_unavailable"
+        assert step.model_id is None
+        assert step.tokens_in is None
+        assert step.unverifiable_reason == "fulltext_unavailable"
 
     @patch("src.verify.anthropic.Anthropic")
     def test_retraction_status_mirrored(self, mock_anthropic_cls: MagicMock) -> None:
@@ -479,39 +466,23 @@ class TestA2EmptyPassagesFix:
 
     @patch("src.verify.verify_claim")
     def test_empty_passages_emits_fulltext_unavailable(self, mock_verify: MagicMock) -> None:
-        """A2 fix: empty passages -> fulltext_available=False, retrieval_status='fulltext_unavailable'."""
-        from src.models import VerificationResult
+        """Lane A: empty passages emit unverifiable+fulltext_unavailable deterministically.
 
-        mock_verify.return_value = (
-            VerificationResult(
-                status="unverifiable",
-                explanation="cannot determine",
-                confidence=None,
-                evidence_quality="abstract_only",
-            ),
-            ProvenanceStep(
-                step_id="s",
-                claim_id="claim-1",
-                operation="verify",
-                input_hash="i",
-                output_hash="o",
-                model_id="m",
-                timestamp=0.0,
-                tokens_in=10,
-                tokens_out=5,
-                cache_hit=False,
-                confidence=None,
-                unverifiable_reason="insufficient_evidence_depth",
-            ),
-        )
-
+        Previously the fallback called verify_claim on the abstract. Per the
+        evidence-sufficiency contract, the pipeline owns empty-passages routing
+        and verify_claim_fulltext refuses to invoke any verifier on an empty
+        passages list — it emits an unverifiable verdict and a model-free
+        provenance step.
+        """
         from src.verify import verify_claim_fulltext
 
         result, _step = verify_claim_fulltext(_make_claim(), _make_source(), [])
-        mock_verify.assert_called_once()
+        mock_verify.assert_not_called()
+        assert result.status == "unverifiable"
+        assert result.confidence is None
         assert result.fulltext_available is False
         assert result.retrieval_status == "fulltext_unavailable"
-        assert result.verification_depth == "abstract"
+        assert result.unverifiable_reason == "fulltext_unavailable"
 
     @patch("src.verify.verify_claim")
     def test_empty_passages_with_abstract_supported_stays_unverifiable(

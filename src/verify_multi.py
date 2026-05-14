@@ -20,15 +20,108 @@ import structlog
 
 from src.models import (
     Claim,
+    EvidenceBundle,
     PaperChunk,
     ProvenanceStep,
+    ResolvedSource,
     ResolvedSourceSet,
     UnverifiableReason,
     VerificationResult,
     VerificationStatus,
     safe_verification_result,
 )
+from src.policy import Insufficient, assess_evidence_sufficiency
 from src.verify_prompts import MODEL_ID
+
+# Reused by ``verify_claim_multi_source`` when the per-source policy gate
+# emits an ``Insufficient`` verdict. Kept in sync with the pipeline-side
+# table in ``src/pipeline.py``; duplicated to avoid an inverse import.
+_UNVERIFIABLE_REASON_TEXT: dict[UnverifiableReason, str] = {
+    "insufficient_evidence_depth": ("evidence depth was insufficient for this claim type"),
+    "fulltext_unavailable": ("full text was not retrievable by the current fetch chain"),
+    "numeric_claim_abstract_only": (
+        "this claim contains specific numeric Results-section assertions "
+        "that cannot be confirmed from abstract-only evidence"
+    ),
+    "parse_error": "the verifier response could not be parsed",
+    "resolution_low_confidence": (
+        "the resolver flagged the source resolution as low-confidence and "
+        "the claim contains specific numerics that would silently contaminate"
+    ),
+    "resolution_source_disagreement": (
+        "multiple resolver clients disagreed on the source identity"
+    ),
+}
+
+
+def _policy_gated_result(
+    *,
+    reason: UnverifiableReason,
+    evidence: EvidenceBundle,
+    source: ResolvedSource,
+) -> VerificationResult:
+    """Deterministic per-source ``unverifiable`` verdict for the multi-source path.
+
+    Matches the metadata the LLM verifier would have emitted at the same depth
+    so the aggregation logic downstream sees a comparable shape.
+    """
+    if evidence.depth == "fulltext":
+        verification_depth: str = "fulltext"
+        evidence_quality = "passages_searched_no_quote"
+        retrieval_status = "passage_found"
+        fulltext_available = True
+    elif evidence.depth == "abstract":
+        verification_depth = "abstract"
+        evidence_quality = "abstract_only"
+        retrieval_status = "fulltext_unavailable"
+        fulltext_available = False
+    elif evidence.depth == "title":
+        verification_depth = "title_only"
+        evidence_quality = "title_only"
+        retrieval_status = "fulltext_unavailable"
+        fulltext_available = False
+    else:
+        verification_depth = "abstract"
+        evidence_quality = "no_evidence"
+        retrieval_status = "fulltext_unavailable"
+        fulltext_available = False
+    explanation = (
+        "Pipeline declined to invoke the verifier for this source: "
+        f"{_UNVERIFIABLE_REASON_TEXT[reason]}. "
+        "No LLM call was made — the verdict is deterministic."
+    )
+    return VerificationResult(
+        status="unverifiable",
+        confidence=None,
+        explanation=explanation,
+        evidence_quality=evidence_quality,  # type: ignore[arg-type]
+        verification_depth=verification_depth,  # type: ignore[arg-type]
+        retrieval_status=retrieval_status,  # type: ignore[arg-type]
+        fulltext_available=fulltext_available,
+        retraction_status=source.retraction_status,
+        unverifiable_reason=reason,
+    )
+
+
+def _policy_step(
+    claim: Claim, source: ResolvedSource, reason: UnverifiableReason
+) -> ProvenanceStep:
+    """Provenance step for a per-source policy-gated unverifiable verdict."""
+    return ProvenanceStep(
+        step_id=str(uuid.uuid4()),
+        claim_id=claim.claim_id,
+        operation="verify",
+        input_hash=hashlib.sha256(repr((claim, source)).encode()).hexdigest(),
+        output_hash=hashlib.sha256(f"unverifiable|{reason}".encode()).hexdigest(),
+        model_id=None,
+        timestamp=time.time(),
+        tokens_in=None,
+        tokens_out=None,
+        cache_hit=None,
+        confidence=None,
+        unverifiable_reason=reason,
+    )
+
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
@@ -82,25 +175,32 @@ def verify_claim_multi_source(
     source_set: ResolvedSourceSet,
     *,
     passages_per_source: dict[str, list[PaperChunk]] | None = None,
+    evidence_per_source: dict[str, EvidenceBundle] | None = None,
     model_id: str = MODEL_ID,
     api_key: str | None = None,
 ) -> tuple[VerificationResult, list[ProvenanceStep]]:
     """Verify a claim against every source in `source_set`, aggregate, and return.
 
     For each source in the set:
-      - If `passages_per_source[source.doi]` is non-empty, run
-        `verify_claim_fulltext` on those passages.
-      - Else run `verify_claim` against `source.abstract` (via the existing
-        single-source path; that path itself routes to title-only mode when
-        abstract is None and title is informative).
+      - If ``evidence_per_source[source.doi]`` is supplied and the policy
+        gate returns ``Insufficient``, emit a deterministic per-source
+        ``unverifiable`` verdict and skip the LLM. This applies the same
+        evidence-sufficiency contract enforced by the single-source path
+        in ``src/pipeline.py::verify_one_claim``.
+      - Else, if ``passages_per_source[source.doi]`` is non-empty, run
+        ``verify_claim_fulltext`` on those passages.
+      - Otherwise run ``verify_claim`` against ``source.abstract`` (the
+        single-source path routes to title-only mode when abstract is None
+        and the title is informative).
 
-    Per-source verdicts are then aggregated via `_aggregate_multi_source_verdicts`.
+    Per-source verdicts are then aggregated via ``_aggregate_multi_source_verdicts``.
     The returned VerificationResult records the aggregate status, a synthetic
-    explanation listing per-source verdicts, and `confidence` set to the mean
+    explanation listing per-source verdicts, and ``confidence`` set to the mean
     of per-source confidences.
 
     The returned ProvenanceStep list contains one step per source plus any
-    nested fulltext+numeric steps for sources that took the fulltext path.
+    nested fulltext+numeric steps for sources that took the fulltext path,
+    and the aggregate step at the end.
     """
     # Deferred imports to avoid a circular dependency:
     # verify_multi -> verify (verify_claim, verify_claim_fulltext)
@@ -108,12 +208,28 @@ def verify_claim_multi_source(
     from src.verify import verify_claim, verify_claim_fulltext
 
     passages_per_source = passages_per_source or {}
+    evidence_per_source = evidence_per_source or {}
     per_source_results: list[VerificationResult] = []
     all_steps: list[ProvenanceStep] = []
     explanations: list[str] = []
 
     for source in source_set:
         passages = passages_per_source.get(source.doi or "", []) if source.doi else []
+        evidence = evidence_per_source.get(source.doi or "") if source.doi else None
+        if source.found and evidence is not None:
+            decision = assess_evidence_sufficiency(claim, source, evidence)
+            if isinstance(decision, Insufficient):
+                result = _policy_gated_result(
+                    reason=decision.reason, evidence=evidence, source=source
+                )
+                step = _policy_step(claim, source, decision.reason)
+                all_steps.append(step)
+                per_source_results.append(result)
+                marker_label = source.doi or source.title or "(unresolved)"
+                explanations.append(
+                    f"[{marker_label}] {result.status} ({decision.reason}): {result.explanation}"
+                )
+                continue
         if passages:
             result, step = verify_claim_fulltext(
                 claim, source, passages, model_id=model_id, api_key=api_key

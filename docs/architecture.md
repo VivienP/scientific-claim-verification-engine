@@ -122,7 +122,7 @@ flowchart TD
     S1 --> C1([Claim])
     C1 -->|resolve| S2[ProvenanceStep<br/>operation = resolve]
     S2 --> C2([ResolvedSource])
-    C2 -->|fetch + chunk + select| C3([PaperChunk[]])
+    C2 -->|fetch + chunk + select| C3(["PaperChunk[]"])
     C2 -->|verify| S3[ProvenanceStep<br/>operation = verify]
     C3 --> S3
     S3 --> R0([VerificationResult])

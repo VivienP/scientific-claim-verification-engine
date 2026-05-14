@@ -76,7 +76,6 @@ benchmarks/real_outputs/*/run_log.txt
 
 # Local-only docs (outreach drafts, private notes) — suffix .local.md to keep untracked
 *.local.md
-docs/inbound-outbound-readiness.md
 docs/internal/
 
 # E2E benchmark scratch (intermediate annotation buffer + per-batch staging files)

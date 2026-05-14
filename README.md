@@ -44,7 +44,15 @@ print(f"Report: {run_dir}")
 
 ## What You Get
 
-Each run writes four artifacts under `reports/runs/{run_id}/`: `report.json` (one entry per claim, canonical), `provenance.jsonl` (append-only step trace; sum `tokens_in + tokens_out` for exact $ cost), `report.md` (human-readable rendering of the same verdicts), and `fetch_traces.jsonl` (per-attempt fulltext fetch log; use `scripts/analyze_fetch_coverage.py` for publisher-level coverage breakdown).
+Each run writes four artifacts under `reports/runs/{run_id}/`: `report.json` (one entry per claim, canonical), `provenance.jsonl` (append-only step trace; sum `tokens_in + tokens_out` for exact $ cost), `report.md` (human-readable rendering of the same verdicts), and `fetch_traces.jsonl` (per-attempt fulltext fetch log for publisher-level access diagnostics).
+
+For an external reviewer or buyer audit, export the canonical `report.json` into a lightweight audit package:
+
+```bash
+python -m scripts.export_audit_package benchmarks/real_outputs/elicit_psilocybin/report.json --output-dir reports/audit_packages/elicit_psilocybin
+```
+
+The package contains `claims.csv` for human adjudication, `audit_summary.md`, `limitations.md`, and `manifest.json`. It is post-processing only: it does not rerun the verifier or change verdict semantics.
 
 ```yaml
 # report.json — one entry per claim in claims[]
@@ -215,4 +223,4 @@ Internal Claude Code workflows used during development: `/eval` (SciFact dev met
 
 Apache 2.0 — see [LICENSE](LICENSE). Dataset under `eval/e2e/` is CC BY-NC.
 
-**Looking for design partners.** If you're building an AI-for-science tool, working in pharma medical affairs, or evaluating AI-generated scientific text — reach out [@PerrelleVivien](https://x.com/PerrelleVivien).
+**Looking for pilot users.** If you're building an AI-for-science tool, working in pharma medical affairs, or evaluating AI-generated scientific text — reach out [@PerrelleVivien](https://x.com/PerrelleVivien).

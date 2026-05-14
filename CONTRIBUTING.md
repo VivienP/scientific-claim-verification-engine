@@ -37,7 +37,7 @@ python -m ruff check src/ tests/ scripts/
 python -m mypy --strict src/
 ```
 
-All three must pass clean before a PR is accepted. The CI pipeline enforces this.
+All three must pass clean before a PR is accepted. This checkout does not currently commit a public `.github/` workflow, so run these locally before opening a PR.
 
 ## Submitting a PR
 

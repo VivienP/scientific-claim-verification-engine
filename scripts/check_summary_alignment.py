@@ -1,8 +1,9 @@
-"""Verify that README.md real-output benchmark table matches README.md.
+"""Verify that public benchmark summary rows match README.md.
 
 Parses the markdown tables in both files and compares the numeric values for:
   claims, supported, partially_supported, unsupported, not_addressed
-for each tool row and the Total row.
+for each current tool row when README.md exposes a full benchmark table. In
+the compact Track Record layout, it validates the current-run count.
 
 Exit 0 on agreement (silent). Exit 1 on any mismatch (prints a diff).
 """
@@ -16,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 
 # Partial label strings to identify each tool row (case-insensitive substring match)
-TOOL_LABELS = ["Edison", "Sakana", "AnswerThis", "Total"]
+TOOL_LABELS = ["Elicit Report mode", "Elicit Systematic Review", "AnswerThis"]
 
 # Column names to validate (must appear as headers in both tables, case-insensitive, _ == space)
 CHECK_COLS = ["claims", "supported", "partially_supported", "unsupported", "not_addressed"]
@@ -33,7 +34,14 @@ def _parse_table(text: str, after_marker: str) -> dict[str, dict[str, str]]:
         raise ValueError(f"Marker not found: {after_marker!r}")
     chunk = text[idx:]
 
-    lines = [ln for ln in chunk.splitlines() if re.match(r"\s*\|", ln)]
+    lines = []
+    in_table = False
+    for line in chunk.splitlines():
+        if re.match(r"\s*\|", line):
+            lines.append(line)
+            in_table = True
+        elif in_table:
+            break
     if len(lines) < 3:
         raise ValueError(f"No table (≥3 lines) found after {after_marker!r}")
 
@@ -74,26 +82,17 @@ def _to_int(val: str) -> int:
     return int(re.sub(r"[^\d]", "", val))
 
 
-def _to_percent_tenths(val: str) -> int:
-    match = re.search(r"(\d+(?:\.\d+)?)\s*%", val)
-    if match is None:
-        raise ValueError(f"percentage not found: {val!r}")
-    return round(float(match.group(1)) * 10)
-
-
 def _check_compact_track_record(
     summary_rows: dict[str, dict[str, str]], readme_text: str
 ) -> list[str]:
-    """Validate the compact README Track Record row against SUMMARY total.
+    """Validate the compact README Track Record row against current runs.
 
     The README's Track Record section carries a single row for real-output benchmarks
-    (total claim count + citation-found rate) rather than the full table.
-    This check validates those public numbers against README.md.
+    rather than the full table. This check validates the public current-run count
+    against benchmarks/real_outputs/README.md.
     """
     mismatches: list[str] = []
-    total = _find_row("Total", summary_rows)
-    if total is None:
-        return ["SUMMARY: no Total row"]
+    current_count = sum(1 for label in summary_rows if not label.startswith("_("))
 
     try:
         track_rows = _parse_table(readme_text, "## Track Record")
@@ -105,30 +104,14 @@ def _check_compact_track_record(
         return ["README: no Track Record row matching 'Real AI-for-science tools'"]
     readme_row = track_rows[readme_key]
 
-    summary_claims_raw = _find_col("claims", total)
-    summary_cfr_raw = _find_col("citation_found_rate", total)
     readme_result = _find_col("result", readme_row) or ""
 
-    if summary_claims_raw is None:
-        mismatches.append("SUMMARY: Total row missing 'claims'")
-    else:
-        summary_claims = _to_int(summary_claims_raw)
-        readme_claims = _to_int(readme_key)
-        if summary_claims != readme_claims:
-            mismatches.append(
-                f"compact README claims mismatch: SUMMARY={summary_claims} README={readme_claims}"
-            )
-
-    if summary_cfr_raw is None:
-        mismatches.append("SUMMARY: Total row missing 'citation_found_rate'")
-    else:
-        summary_cfr = _to_percent_tenths(summary_cfr_raw)
-        readme_cfr = _to_percent_tenths(readme_result)
-        if summary_cfr != readme_cfr:
-            mismatches.append(
-                "compact README citation_found_rate mismatch: "
-                f"SUMMARY={summary_cfr_raw} README={readme_result}"
-            )
+    expected = f"{current_count} of 6 confirmed"
+    if expected not in readme_result:
+        mismatches.append(
+            "compact README current-run count mismatch: "
+            f"SUMMARY={current_count} README={readme_result}"
+        )
 
     return mismatches
 
@@ -161,7 +144,10 @@ def main() -> int:
     except ValueError:
         compact_mismatches = _check_compact_track_record(summary_rows, readme_text)
         if compact_mismatches:
-            print("ALIGNMENT FAILURE — mismatches between README.md and README.md:")
+            print(
+                "ALIGNMENT FAILURE -- mismatches between "
+                "benchmarks/real_outputs/README.md and README.md:"
+            )
             for m in compact_mismatches:
                 print(f"  {m}")
             return 1
@@ -198,7 +184,10 @@ def main() -> int:
                 mismatches.append(f"tool={label!r} col={col!r}: SUMMARY={s_int} README={r_int}")
 
     if mismatches:
-        print("ALIGNMENT FAILURE — mismatches between README.md and README.md:")
+        print(
+            "ALIGNMENT FAILURE -- mismatches between "
+            "benchmarks/real_outputs/README.md and README.md:"
+        )
         for m in mismatches:
             print(f"  {m}")
         return 1

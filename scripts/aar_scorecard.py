@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
-from src.aar import AARScorecard, compute_aar_for_run, render_scorecard_markdown
+from src.aar import AARScorecard, compute_aar_for_run, render_scorecard_markdown  # noqa: E402
 
 DEFAULT_RUNS_DIR = PROJECT_ROOT / "reports" / "runs"
 

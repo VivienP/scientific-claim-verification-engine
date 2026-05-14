@@ -1,11 +1,21 @@
 # Output Schema — per-claim verification record
 
-Every run produces two artifacts under `reports/runs/{run_id}/`:
+Every run produces these canonical artifacts under `reports/runs/{run_id}/`:
 
 - **`report.json`** — one entry per claim in `claims[]`, plus a `summary` block.
 - **`provenance.jsonl`** — append-only audit log; one JSON object per pipeline step.
+- **`report.md`** — human-readable rendering of the same claim records.
+- **`fetch_traces.jsonl`** — per-attempt full-text retrieval diagnostics.
 
 This document describes the on-disk shape of one `report.json["claims"][i]` entry, the `provenance.jsonl` record, and the **Copilot enrichment** that wraps a base verification when the run is launched in Copilot mode.
+
+For external review or buyer audit, derive a separate audit package from an existing `report.json`:
+
+```bash
+python -m scripts.export_audit_package reports/runs/<run_id>/report.json --output-dir reports/audit_packages/<run_id>
+```
+
+That package contains `claims.csv`, `audit_summary.md`, `limitations.md`, and `manifest.json`. It is derived from the canonical report and does not rerun verification.
 
 For the dataclass definitions (frozen, type-checked), see [src/models.py](../src/models.py) and [src/copilot/models.py](../src/copilot/models.py).
 

@@ -38,7 +38,7 @@ The verifier distinguishes "source contradicts" (`unsupported`) from "source is 
 |---|---:|---:|
 | Claims extracted | **43** | 57 |
 | Citation found rate | 100.0% | 100.0% |
-| Fulltext verified | 9 (21%) | 18 (32%) |
+| Fulltext verified | 8 (19%) | 18 (32%) |
 | Supported | **10** | 25 |
 | Partially supported | **17** | 15 |
 | Unsupported | **0** | 17 |

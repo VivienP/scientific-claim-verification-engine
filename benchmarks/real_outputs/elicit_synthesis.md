@@ -54,17 +54,17 @@ Two of three columns reflect the current pipeline. The PD-1 NSCLC column is prov
 The 3 diagnostic fields populate across all 3 runs and are critical for
 correctly interpreting the headline numbers.
 
-| Diagnostic | psilocybin (current) | GLP-1 MACE (provisional) | PD-1 NSCLC (provisional) |
+| Diagnostic | psilocybin (current) | GLP-1 MACE (current) | PD-1 NSCLC (provisional) |
 |---|---:|---:|---:|
 | `abstract_only_verdicts` (provisional column field) | n/a (current pipeline uses `unverifiable`) | 20 | 4 |
-| `fulltext_success_rate` | 20.9% (9/43) | 56.5% | 72.2% |
+| `fulltext_success_rate` | 18.6% (8/43) | 56.5% | 72.2% |
 | `unverifiable_count` | **9** | n/a | n/a |
 | `not_addressed_breakdown.no_source` | n/a | 0 | **7** |
 | `not_addressed_breakdown.paywall` | n/a | 1 | 1 |
 | `not_addressed_breakdown.no_passage` | n/a | 0 | 0 |
 | `not_addressed_breakdown.claim_absent` | n/a | 0 | 1 |
 
-The current pipeline replaces `abstract_only_verdicts` with `unverifiable` + `unverifiable_reason`; the GLP-1 and PD-1 provisional-column diagnostics remain valid for those archived snapshots.
+The current pipeline replaces abstract-only numeric verdicts with `unverifiable` + `unverifiable_reason`. The PD-1 provisional-column diagnostics remain valid only for that archived snapshot.
 
 ## Three findings the cross-run comparison enables
 

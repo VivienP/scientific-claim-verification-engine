@@ -5,18 +5,19 @@
 > distinct verdicts — `unsupported` (source contradicts), `not_addressed`
 > (source is silent), and `unverifiable` (pipeline could not access full
 > text) — and must not be cited as evidence of current pipeline behaviour.
-> 2 of the 6 inputs have been re-run on the current pipeline; the
-> remaining 4 are pending.
+> 3 of the 6 inputs have been re-run on the current pipeline; the
+> remaining 3 are pending.
 
 ## Current runs (2026-05-12)
 
 | tool | claims | supported | partially | unsupported | not_addressed | unverifiable | citation_found_rate | fulltext_verified | cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Elicit Report mode (psilocybin / TRD) | 43 | 10 | 17 | 0 | 7 | 9 | 100.0% | 9 | $0.75 |
+| Elicit Report mode (psilocybin / TRD) | 43 | 10 | 17 | 0 | 7 | 9 | 100.0% | 8 | $0.75 |
+| Elicit Systematic Review (GLP-1 / MACE) | 36 | 19 | 2 | 0 | 8 | 7 | 91.7% | 20 | $0.63 |
 | AnswerThis (lactate ISF PK) | 19 | 6 | 8 | 1 | 4 | 0 | 100.0% | 12 | $0.25 |
-| _(Edison TREM2, Elicit GLP-1 MACE, Elicit PD-1 NSCLC, Sakana AI Scientist — re-run pending)_ | — | — | — | — | — | — | — | — | — |
+| _(Edison TREM2, Elicit PD-1 NSCLC, Sakana AI Scientist — re-run pending)_ | — | — | — | — | — | — | — | — | — |
 
-### Two highlighted current-run effects
+### Three highlighted current-run effects
 
 **Psilocybin** — silent-failure elimination. 0 silent failures across 43
 claims · prior baseline 15/57 = 26% (numeric claims on paywalled NEJM /
@@ -42,6 +43,12 @@ to `not_addressed`. Two compounding effects:
 - The prompt's contradicts-vs-silent split means the verifier no longer
   dumps anything-it-cannot-find-in-the-abstract into `not_addressed` —
   when the fulltext contains the assertion, the verifier emits `supported`.
+
+**GLP-1 MACE** — Premium systematic-review auditability. 36 claims at
+$0.63 with 0 silent failures, 91.7% citation resolution, and 20 full-text
+verifications. The 7 `unverifiable` verdicts are all explicit
+`numeric_claim_abstract_only` cases rather than confident abstract-only
+claims.
 
 ## Archived runs (do not cite)
 

@@ -108,6 +108,13 @@ def main() -> None:
         default=None,
         help="Output directory name under reports/audits/ (default: input stem)",
     )
+    parser.add_argument(
+        "--max-output-tokens",
+        type=int,
+        default=4096,
+        help="Cap on LLM output tokens (default: 4096). Raise for dense lit reviews "
+        "to reduce truncation-driven under-extraction.",
+    )
     args = parser.parse_args()
 
     if not args.input_path.exists():
@@ -118,8 +125,11 @@ def main() -> None:
     label = args.label or _slugify(args.input_path.stem)
     out_dir = OUTPUT_ROOT / label
 
-    print(f"Extracting from {args.input_path} ({len(text)} chars)")
-    claims, step = extract_claims(text)
+    print(
+        f"Extracting from {args.input_path} ({len(text)} chars, "
+        f"max_output_tokens={args.max_output_tokens})"
+    )
+    claims, step = extract_claims(text, max_output_tokens=args.max_output_tokens)
     print(
         f"  -> {len(claims)} claims extracted "
         f"({step.tokens_in} tokens in, {step.tokens_out} out, cache_hit={step.cache_hit})"

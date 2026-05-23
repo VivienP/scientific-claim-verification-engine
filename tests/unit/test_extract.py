@@ -557,3 +557,166 @@ class TestExtractClaimsAutoScale:
 
         sdk_kwargs = mock_client.messages.stream.call_args.kwargs
         assert sdk_kwargs["max_tokens"] == 2048
+
+
+class TestOptionalFieldParsers:
+    """Pure-Python guards for the v2 structured fields."""
+
+    def test_str_or_none_normalizes_empty_and_whitespace(self) -> None:
+        from src.extract import _str_or_none
+
+        assert _str_or_none(None) is None
+        assert _str_or_none("") is None
+        assert _str_or_none("   ") is None
+        assert _str_or_none("  T-DM1 ") == "T-DM1"
+        assert _str_or_none(2012) == "2012"  # str() coercion
+
+    def test_parse_direction_accepts_only_valid_values(self) -> None:
+        from src.extract import _parse_direction
+
+        assert _parse_direction("increase") == "increase"
+        assert _parse_direction("DECREASE") == "decrease"  # case-insensitive
+        assert _parse_direction(" no_effect ") == "no_effect"
+        assert _parse_direction("unclear") == "unclear"
+        assert _parse_direction("up") is None  # invalid label
+        assert _parse_direction(None) is None
+        assert _parse_direction("") is None
+
+    def test_parse_confidence_clamps_invalid_ranges(self) -> None:
+        from src.extract import _parse_confidence
+
+        assert _parse_confidence(0.0) == 0.0
+        assert _parse_confidence(0.95) == 0.95
+        assert _parse_confidence(1.0) == 1.0
+        assert _parse_confidence(1.5) is None  # above range
+        assert _parse_confidence(-0.1) is None  # below range
+        assert _parse_confidence("0.7") == 0.7  # str-coercible
+        assert _parse_confidence("high") is None  # non-numeric
+        assert _parse_confidence(None) is None
+
+    def test_validate_source_quote_drops_paraphrased(self) -> None:
+        from src.extract import _validate_source_quote
+
+        source = "T-DM1 significantly prolonged median PFS to 9.6 versus 6.4 months."
+
+        # Verbatim quote present → returned as-is (stripped)
+        assert (
+            _validate_source_quote("T-DM1 significantly prolonged median PFS", source)
+            == "T-DM1 significantly prolonged median PFS"
+        )
+        # Whitespace-only stripped to None
+        assert _validate_source_quote("   ", source) is None
+        # Paraphrased quote (extra words not in source) → None + warning
+        assert _validate_source_quote("T-DM1 dramatically prolonged median PFS", source) is None
+        # Original was None
+        assert _validate_source_quote(None, source) is None
+
+
+class TestExtractClaimsV2Schema:
+    """End-to-end: v2 LLM responses populate the new structured fields."""
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_v2_response_populates_structured_fields(self, mock_anthropic_cls: MagicMock) -> None:
+        v2_response = (
+            '{"claims": [{'
+            '"claim_text": "T-DM1 prolonged PFS to 9.6 vs 6.4 months",'
+            '"cited_authors": ["Verma"],'
+            '"cited_year": 2012,'
+            '"citation_markers": [1],'
+            '"claim_type": "factual_numeric",'
+            '"source_quote": "T-DM1 prolonged PFS to 9.6 vs 6.4 months",'
+            '"subject": "T-DM1",'
+            '"population": "HER2-positive breast cancer patients",'
+            '"intervention": "T-DM1",'
+            '"comparator": "lapatinib plus capecitabine",'
+            '"outcome": "median PFS",'
+            '"direction": "increase",'
+            '"numeric_value": "9.6 vs 6.4 months, HR 0.65, P<0.001",'
+            '"time_horizon": null,'
+            '"extraction_confidence": 0.95'
+            "}]}"
+        )
+        _mock_stream(mock_anthropic_cls, v2_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims(
+            "Per Verma (2012) [1], T-DM1 prolonged PFS to 9.6 vs 6.4 months versus comparator."
+        )
+
+        assert len(claims) == 1
+        c = claims[0]
+        assert c.subject == "T-DM1"
+        assert c.population == "HER2-positive breast cancer patients"
+        assert c.intervention == "T-DM1"
+        assert c.comparator == "lapatinib plus capecitabine"
+        assert c.outcome == "median PFS"
+        assert c.direction == "increase"
+        assert c.numeric_value == "9.6 vs 6.4 months, HR 0.65, P<0.001"
+        assert c.time_horizon is None
+        assert c.extraction_confidence == 0.95
+        assert c.source_quote == "T-DM1 prolonged PFS to 9.6 vs 6.4 months"
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_v1_style_response_still_parses_with_none_fields(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        # v1-shaped response — no new structured fields. Must still parse,
+        # and all v2 fields must default to None.
+        v1_response = (
+            '{"claims": [{"claim_text": "X causes Y", "cited_authors": ["Smith"], '
+            '"cited_year": 2020, "claim_type": "causal"}]}'
+        )
+        _mock_stream(mock_anthropic_cls, v1_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims("Smith (2020) showed X causes Y.")
+
+        assert len(claims) == 1
+        c = claims[0]
+        assert c.claim_text == "X causes Y"
+        # All v2 fields default to None when LLM omits them.
+        assert c.source_quote is None
+        assert c.subject is None
+        assert c.direction is None
+        assert c.extraction_confidence is None
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_invalid_direction_value_falls_back_to_none(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        # LLM emits a direction outside the allowed enum. Parser must drop
+        # silently to None rather than raising or letting the bad value through.
+        bad_direction_response = (
+            '{"claims": [{"claim_text": "X causes Y", "cited_authors": ["Smith"], '
+            '"cited_year": 2020, "claim_type": "causal", "direction": "upward"}]}'
+        )
+        _mock_stream(mock_anthropic_cls, bad_direction_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims("Smith (2020) showed X causes Y.")
+        assert claims[0].direction is None
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_paraphrased_source_quote_is_dropped(self, mock_anthropic_cls: MagicMock) -> None:
+        # LLM paraphrases the quote — guard rejects so downstream anchoring
+        # can still trust `quote in input_text` as a contract.
+        paraphrased_response = (
+            '{"claims": [{"claim_text": "X causes Y", "cited_authors": ["Smith"], '
+            '"cited_year": 2020, "claim_type": "causal", '
+            '"source_quote": "X DRAMATICALLY causes Y in all cases"}]}'
+        )
+        _mock_stream(mock_anthropic_cls, paraphrased_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims("Smith (2020) showed X causes Y.")
+        assert claims[0].source_quote is None  # paraphrased → dropped
+
+
+class TestExtractClaimsV2PromptInUse:
+    """Sanity: the extractor is wired to extract_v2 by default."""
+
+    def test_loaded_system_prompt_is_v2(self) -> None:
+        from src.extract import _SYSTEM_PROMPT
+        from src.prompts import load_prompt
+
+        assert load_prompt("extract_v2") == _SYSTEM_PROMPT

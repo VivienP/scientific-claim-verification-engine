@@ -14,7 +14,7 @@ import anthropic
 import structlog
 from anthropic.types import TextBlock, Usage
 
-from src.models import Claim, ProvenanceStep
+from src.models import Claim, ClaimDirection, ProvenanceStep
 from src.prompts import load_prompt
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
@@ -22,8 +22,9 @@ logger: structlog.BoundLogger = structlog.get_logger(__name__)
 MODEL_ID = "claude-sonnet-4-6"
 _OUTPUT_FLOOR = 4096
 _OUTPUT_CEILING = 16384
+_VALID_DIRECTIONS = frozenset(("increase", "decrease", "no_effect", "unclear"))
 
-_SYSTEM_PROMPT = load_prompt("extract_v1")
+_SYSTEM_PROMPT = load_prompt("extract_v2")
 
 
 def _scale_max_output_tokens(text: str) -> int:
@@ -108,6 +109,75 @@ def _parse_cache_hit(usage: Usage) -> bool | None:
     if cache_creation > 0:
         return False
     return None
+
+
+def _str_or_none(value: object) -> str | None:
+    if value is None:
+        return None
+    s = str(value).strip()
+    return s or None
+
+
+def _parse_direction(value: object) -> ClaimDirection | None:
+    if value is None:
+        return None
+    s = str(value).strip().lower()
+    if s in _VALID_DIRECTIONS:
+        return s  # type: ignore[return-value]
+    return None
+
+
+def _parse_confidence(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        f = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    if 0.0 <= f <= 1.0:
+        return f
+    return None
+
+
+def _validate_source_quote(quote: object, source_text: str) -> str | None:
+    """Return quote only when it appears verbatim in source_text.
+
+    LLMs sometimes paraphrase the quote rather than copy it. Downstream
+    evidence anchoring relies on `quote in input_text` being a reliable
+    contract, so paraphrased quotes are dropped (logged) rather than passed
+    through. The cost of dropping a quote is loss of one anchoring hint;
+    the cost of trusting a paraphrase is downstream evidence-locator drift.
+    """
+    if quote is None:
+        return None
+    q = str(quote).strip()
+    if not q:
+        return None
+    if q in source_text:
+        return q
+    logger.warning("extract_source_quote_not_in_input", quote_preview=q[:80])
+    return None
+
+
+def _extract_optional_fields(raw: dict[str, Any], source_text: str) -> dict[str, Any]:
+    """Pull v2 structured fields from a raw LLM claim dict.
+
+    Returns a kwargs dict suitable for `Claim(**dict)` construction. v1-style
+    responses (without these fields) yield only None values, so the Claim
+    defaults take over and nothing breaks.
+    """
+    return {
+        "source_quote": _validate_source_quote(raw.get("source_quote"), source_text),
+        "subject": _str_or_none(raw.get("subject")),
+        "population": _str_or_none(raw.get("population")),
+        "intervention": _str_or_none(raw.get("intervention")),
+        "comparator": _str_or_none(raw.get("comparator")),
+        "outcome": _str_or_none(raw.get("outcome")),
+        "direction": _parse_direction(raw.get("direction")),
+        "numeric_value": _str_or_none(raw.get("numeric_value")),
+        "time_horizon": _str_or_none(raw.get("time_horizon")),
+        "extraction_confidence": _parse_confidence(raw.get("extraction_confidence")),
+    }
 
 
 _CLAIMS_ARRAY_START_RE = re.compile(r'"claims"\s*:\s*\[')
@@ -242,6 +312,7 @@ def extract_claims(
                     citation_markers=_parse_citation_markers(
                         raw.get("citation_markers"), claim_text
                     ),
+                    **_extract_optional_fields(raw, text),
                 )
             )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
@@ -285,6 +356,7 @@ def extract_claims(
                             citation_markers=_parse_citation_markers(
                                 raw.get("citation_markers"), claim_text
                             ),
+                            **_extract_optional_fields(raw, text),
                         )
                     )
                 except (ValueError, TypeError) as exc:

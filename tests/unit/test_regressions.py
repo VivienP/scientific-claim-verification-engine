@@ -153,16 +153,17 @@ def test_goodwin_nejm_2022_abstract_only_returns_unverifiable() -> None:
     )
     assert result.confidence is None
     assert result.evidence_quality == "abstract_only"
-    # F1 (2026-05-12): unverifiable_reason is populated on the result itself
-    # (not just the ProvenanceStep). The verify.py emission site passes
-    # "numeric_claim_abstract_only" to the helper, which propagates to both
-    # the result and (via verify.py reading result.unverifiable_reason) the step.
-    assert result.unverifiable_reason == "numeric_claim_abstract_only", (
-        f"Expected reason 'numeric_claim_abstract_only' but got "
-        f"{result.unverifiable_reason!r}. The verify.py emission site must "
-        "pass unverifiable_reason='numeric_claim_abstract_only' to the helper."
+    # C3 (2026-05-23): verify.py now emits "insufficient_evidence_depth" (post-MIRROR
+    # 3.4, qualitative claims downgrade too so the reason is no longer claim-type-specific).
+    # The "numeric_claim_abstract_only" literal is kept in UnverifiableReason for
+    # backward-compat with historical provenance.jsonl files but is no longer emitted
+    # at new call sites in verify.py.
+    assert result.unverifiable_reason == "insufficient_evidence_depth", (
+        f"Expected reason 'insufficient_evidence_depth' but got "
+        f"{result.unverifiable_reason!r}. verify.py must pass "
+        "unverifiable_reason='insufficient_evidence_depth' to the helper (C3)."
     )
-    assert step.unverifiable_reason == "numeric_claim_abstract_only", (
+    assert step.unverifiable_reason == "insufficient_evidence_depth", (
         "ProvenanceStep.unverifiable_reason must mirror result.unverifiable_reason."
     )
     # F1: the explanation is rewritten by safe_verification_result so the

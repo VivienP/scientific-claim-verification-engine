@@ -1,1 +1,29 @@
-Placeholder. Populated in commit 0.2 with a Methods section from a Cochrane systematic review (no Results content). Expected: 0 claims extracted.
+2. Methods
+
+2.1 Protocol and registration
+
+This systematic review was conducted according to the Preferred Reporting Items for Systematic Reviews and Meta-Analyses (PRISMA) statement. The protocol was registered prospectively in PROSPERO (registration number CRD42023456789) prior to data extraction.
+
+2.2 Eligibility criteria
+
+We included randomised controlled trials evaluating mindfulness-based stress reduction interventions in adult patients (≥18 years) with a confirmed diagnosis of stage I-III breast cancer. Eligible comparators were usual care, waitlist control, or active psychological intervention. Eligible outcomes were patient-reported quality of life, fatigue, depression, anxiety, and sleep quality measured with validated instruments. We excluded single-arm studies, case reports, conference abstracts without subsequent full publication, and studies published in languages other than English, French, German, or Spanish.
+
+2.3 Information sources and search strategy
+
+Two reviewers independently searched MEDLINE (via Ovid), Embase, the Cochrane Central Register of Controlled Trials (CENTRAL), PsycINFO, and CINAHL from inception to 31 March 2024. The search strategy combined MeSH terms and free-text keywords related to "mindfulness", "meditation", "breast neoplasm", "quality of life", and "randomized controlled trial". The complete search strategy for each database is provided in Supplementary Appendix A. Reference lists of included studies and relevant systematic reviews were hand-searched for additional eligible reports. No grey literature search was performed.
+
+2.4 Study selection
+
+Records identified from database searches were de-duplicated in EndNote 20 and imported into Covidence for screening. Two reviewers (XX, YY) independently screened titles and abstracts against the eligibility criteria. Full texts of potentially eligible records were retrieved and screened by the same two reviewers. Disagreements were resolved by discussion or, when needed, by adjudication from a third reviewer (ZZ).
+
+2.5 Data extraction
+
+Data were extracted independently in duplicate using a piloted extraction form covering: study identifiers, country, recruitment setting, number of randomised participants, age and disease stage distribution, intervention description (frequency, duration, instructor qualification), comparator description, outcome instruments and timepoints, and risk of bias indicators. Authors of included reports were contacted by email for missing summary data; non-responders were followed up once after 4 weeks.
+
+2.6 Risk of bias assessment
+
+Risk of bias was assessed using the Cochrane Risk of Bias 2 tool across five domains (randomisation process, deviations from intended interventions, missing outcome data, measurement of outcome, selection of reported result). Each domain was rated as low risk, some concerns, or high risk. Overall risk of bias was derived per outcome following the standard Cochrane algorithm. Two reviewers performed assessments independently; disagreements were resolved by discussion.
+
+2.7 Data synthesis
+
+We had planned to perform random-effects meta-analyses pooling standardised mean differences (SMDs) for continuous outcomes, with heterogeneity quantified by I². Subgroup analyses were pre-specified for intervention duration (≤8 weeks vs >8 weeks) and disease stage. Publication bias was to be assessed by visual inspection of funnel plots and Egger's test where ten or more studies contributed to a synthesis.

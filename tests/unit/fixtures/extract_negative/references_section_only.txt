@@ -1,1 +1,31 @@
-Placeholder. Populated in commit 0.2 with the bibliography section of a real SciFact dev paper (~15 numbered references with author/year/title). Expected: 0 claims extracted.
+References
+
+1. Hüppi PS, Maier SE, Peled S, Zientara GP, Barnes PD, Jolesz FA, Volpe JJ. Microstructural development of human newborn cerebral white matter assessed in vivo by diffusion tensor magnetic resonance imaging. Pediatr Res. 1998;44(4):584-90. doi:10.1203/00006450-199810000-00019
+
+2. Chen X, Eksioglu EA, Zhou J, Zhang L, Djeu J, Fortenbery N, et al. Induction of myelodysplasia by myeloid-derived suppressor cells. J Clin Invest. 2013;123(11):4595-611. doi:10.1172/JCI67580
+
+3. Shen MM, Maraia RJ. BC1 RNA, the transcript from a master gene for ID element amplification, is able to prime its own reverse transcription. Nucleic Acids Res. 1995;23(13):2441-7.
+
+4. McGee S. Simplifying likelihood ratios. J Gen Intern Med. 2002;17(8):646-9.
+
+5. Di Domizio J, Blum A, Gallagher-Gambarelli M, Molens JP, Chaperot L, Plumas J. TLR7 stimulation in human plasmacytoid dendritic cells leads to the induction of early IFN-inducible genes in the absence of type I IFN. Blood. 2009;114(9):1794-802.
+
+6. Farb MG, Bigornia S, Mott M, Tanriverdi K, Morin KM, Freedman JE, et al. Arteriolar function in visceral adipose tissue is impaired in human obesity. Arterioscler Thromb Vasc Biol. 2012;32(2):467-73.
+
+7. Lim HK, Patel D, Goldstein BR, Joffe HV, Burroughs Peña MS, Foody JM, et al. Common Carotid Intima Media Thickness and Ankle-Brachial Pressure Index Correlate with Local but Not Global Atheroma Burden: A Cross Sectional Study Using Whole Body Magnetic Resonance Angiography. PLoS One. 2014;9(6):e99190.
+
+8. Honegger J, Sarosi V, Steinhauer C, Mertens JE, Pischke S, Wedemeyer H, et al. Loss of immune escape mutations during persistent HCV infection in pregnancy enhances replication of vertically transmitted viruses. Elife. 2016;5:e16168.
+
+9. Mikkola HKA, Orkin SH. The journey of developing hematopoietic stem cells. Development. 2006;133(19):3733-44.
+
+10. Braun J, Sieper J. The sacroiliac joint in the spondyloarthropathies. Curr Opin Rheumatol. 1996;8(4):275-87.
+
+11. Paterson AH, Brubaker CL, Wendel JF. A rapid method for extraction of cotton (Gossypium spp.) genomic DNA suitable for RFLP or PCR analysis. Plant Mol Biol Rep. 1993;11(2):122-7.
+
+12. Boomsma DI, Wijmenga C, Slagboom EP, Swertz MA, Karssen LC, Abdellaoui A, et al. The Genome of the Netherlands: design, and project goals. Eur J Hum Genet. 2014;22(2):221-7.
+
+13. Hindorff LA, Sethupathy P, Junkins HA, Ramos EM, Mehta JP, Collins FS, Manolio TA. Potential etiologic and functional implications of genome-wide association loci for human diseases and traits. Proc Natl Acad Sci U S A. 2009;106(23):9362-7.
+
+14. Goldstein DB. Common genetic variation and human traits. N Engl J Med. 2009;360(17):1696-8.
+
+15. The 1000 Genomes Project Consortium. A map of human genome variation from population-scale sequencing. Nature. 2010;467(7319):1061-73.

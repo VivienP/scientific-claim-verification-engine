@@ -1,0 +1,1 @@
+Placeholder. Populated in commit 0.2 with the bibliography section of a real SciFact dev paper (~15 numbered references with author/year/title). Expected: 0 claims extracted.

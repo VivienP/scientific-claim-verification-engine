@@ -1,0 +1,1 @@
+Placeholder. Populated in commit 0.2 with 20 section headings from real IMRAD papers, including numeric headings like "3.2 PFS at 12 months in the treatment arm". Expected: 0 claims extracted.

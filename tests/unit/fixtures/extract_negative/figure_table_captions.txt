@@ -1,0 +1,1 @@
+Placeholder. Populated in commit 0.2 with 8 figure and table captions from real published papers. Expected: 0 claims extracted.

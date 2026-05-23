@@ -1,0 +1,1 @@
+Placeholder. Populated in commit 0.2 with a Methods section from a Cochrane systematic review (no Results content). Expected: 0 claims extracted.

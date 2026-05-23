@@ -1,0 +1,1 @@
+Placeholder. Populated in commit 0.2 with Acknowledgments and Funding sections from 3 real papers. Expected: 0 claims extracted.

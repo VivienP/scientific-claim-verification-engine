@@ -1,0 +1,1 @@
+Placeholder. Populated in commit 0.2 with a single Results paragraph from a SciFact paper. Expected: exactly 2 claims extracted. Calibration fixture ensuring the negative-control suite is not just rejecting everything.

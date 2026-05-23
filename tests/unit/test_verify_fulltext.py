@@ -606,3 +606,81 @@ class TestFulltextSourceQuoteAnchor:
         call = mock_client.messages.create.call_args
         user_message: str = call.kwargs["messages"][0]["content"]
         assert "<source_quote>" not in user_message
+
+
+# ---------------------------------------------------------------------------
+# C2 integration tests: extraction_confidence gate wired through fulltext path
+# ---------------------------------------------------------------------------
+
+
+class TestExtractionConfidenceCapFulltext:
+    """Integration: Claim(extraction_confidence=0.3) routed through verify_claim_fulltext
+    emerges capped at partially_supported even when LLM returns 'supported' on
+    quoted_passage evidence. C2 routing fix."""
+
+    @patch("src.verify_fulltext.anthropic.Anthropic")
+    def test_verify_fulltext_caps_verdict_when_extraction_confidence_below_threshold(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """Integration: fulltext path routes through safe_verification_result;
+        extraction_confidence=0.3 caps a 'supported' LLM verdict to 'partially_supported'."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block(_fulltext_response(status="supported"))]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 80
+        mock_response.usage.cache_read_input_tokens = 500
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        claim = Claim(
+            claim_id="ec-low-ft",
+            claim_text="Protein folding rates increase with temperature.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_qualitative",
+            extraction_confidence=0.3,
+        )
+
+        from src.verify import verify_claim_fulltext
+
+        result, step = verify_claim_fulltext(claim, _make_source(), _make_passages(3))
+        assert result.status == "partially_supported"
+        assert result.confidence is not None
+        assert result.confidence <= 0.3
+        assert isinstance(step, ProvenanceStep)
+
+    @patch("src.verify_fulltext.anthropic.Anthropic")
+    def test_verify_fulltext_does_not_cap_when_extraction_confidence_above_threshold(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """Control: extraction_confidence=0.9 (above 0.5) does not cap the verdict.
+        LLM 'supported' on quoted_passage passes through unchanged."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block(_fulltext_response(status="supported"))]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 80
+        mock_response.usage.cache_read_input_tokens = 500
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        claim = Claim(
+            claim_id="ec-high-ft",
+            claim_text="Protein folding rates increase with temperature.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_qualitative",
+            extraction_confidence=0.9,
+        )
+
+        from src.verify import verify_claim_fulltext
+
+        result, _step = verify_claim_fulltext(claim, _make_source(), _make_passages(3))
+        # Gate 1 does not fire (0.9 >= 0.5).
+        # evidence_quality is quoted_passage (not in INSUFFICIENT set) -> Gate 2 does not fire.
+        assert result.status == "supported"
+        assert result.confidence is not None
+        assert result.confidence > 0.5

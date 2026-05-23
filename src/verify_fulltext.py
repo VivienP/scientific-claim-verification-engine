@@ -20,6 +20,7 @@ from src.models import (
     ResolvedSource,
     VerificationResult,
     VerificationStatus,
+    safe_verification_result,
 )
 from src.verify_prompts import (
     _FULLTEXT_SYSTEM_PROMPT,
@@ -194,15 +195,17 @@ def verify_claim_fulltext(
         confidence_val_ft: float | None = (
             None if raw_confidence_ft is None else float(raw_confidence_ft)
         )
-        # Direct VerificationResult construction here is permitted by
-        # .claude/rules/no-confident-verdict-without-evidence.md: the
+        # Route through safe_verification_result to apply the extraction_confidence
+        # cap (Gate 1) consistently across all verifier paths (C2).
+        # Gate 2 (evidence-depth downgrade) does NOT fire here because
         # evidence_quality is fulltext-grade ({quoted_passage,
-        # passages_searched_no_quote}) and is NOT in the helper's
-        # INSUFFICIENT set, so safe_verification_result would pass it
-        # through unchanged. Routing through the helper would be a no-op.
-        # If status=="unverifiable" the schema invariant requires
-        # confidence is None, which the parse above ensures.
-        result = VerificationResult(
+        # passages_searched_no_quote}), which is NOT in _INSUFFICIENT_EVIDENCE_SET.
+        # Gate 1 (extraction_confidence cap) fires independently of evidence depth:
+        # a low-extraction-confidence claim on fulltext evidence is still capped to
+        # partially_supported. This is the correct behaviour per spec edge case 7.5.
+        # If status=="unverifiable" the schema invariant requires confidence is None,
+        # which the parse above ensures; safe_verification_result preserves this.
+        result = safe_verification_result(
             status=status,
             explanation=str(parsed["explanation"]),
             confidence=None if status == "unverifiable" else confidence_val_ft,
@@ -213,6 +216,7 @@ def verify_claim_fulltext(
             retrieval_status="passage_found",
             evidence_quality=evidence_quality,
             retraction_status=source.retraction_status,
+            extraction_confidence=claim.extraction_confidence,
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.error(

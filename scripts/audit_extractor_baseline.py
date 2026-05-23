@@ -24,6 +24,7 @@ import json
 import sys
 from pathlib import Path
 
+import fitz  # type: ignore[import-untyped]
 import structlog
 from dotenv import load_dotenv
 
@@ -39,6 +40,13 @@ OUTPUT_ROOT = Path("reports/audits")
 
 def _slugify(name: str) -> str:
     return "".join(c if c.isalnum() or c in "-_" else "_" for c in name).strip("_").lower()
+
+
+def _load_input(path: Path) -> str:
+    if path.suffix.lower() == ".pdf":
+        with fitz.open(path) as doc:
+            return "".join(page.get_text() for page in doc)
+    return path.read_text(encoding="utf-8")
 
 
 def _write_outputs(
@@ -92,7 +100,7 @@ def main() -> None:
     parser.add_argument(
         "input_path",
         type=Path,
-        help="Path to a .txt file with scientific publication content",
+        help="Path to a .txt or .pdf file with scientific publication content",
     )
     parser.add_argument(
         "--label",
@@ -106,7 +114,7 @@ def main() -> None:
         print(f"error: input file not found: {args.input_path}", file=sys.stderr)
         sys.exit(1)
 
-    text = args.input_path.read_text(encoding="utf-8")
+    text = _load_input(args.input_path)
     label = args.label or _slugify(args.input_path.stem)
     out_dir = OUTPUT_ROOT / label
 

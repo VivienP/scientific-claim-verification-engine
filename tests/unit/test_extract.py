@@ -493,3 +493,67 @@ class TestExtractClaimsPartialRecoveryIntegration:
 
         claims, _ = extract_claims("text")
         assert claims == []
+
+
+class TestScaleMaxOutputTokens:
+    """Bounds and scaling behavior of the input-proportional output budget."""
+
+    def test_short_input_returns_floor(self) -> None:
+        from src.extract import _scale_max_output_tokens
+
+        assert _scale_max_output_tokens("Smith (2020) showed X.") == 4096
+        assert _scale_max_output_tokens("x" * 5000) == 4096
+
+    def test_threshold_input_returns_floor(self) -> None:
+        # Inputs up to ~30K chars still get the 4096 floor; scaling kicks in past that.
+        from src.extract import _scale_max_output_tokens
+
+        assert _scale_max_output_tokens("x" * 30000) == 4096
+
+    def test_large_input_scales_above_floor(self) -> None:
+        from src.extract import _scale_max_output_tokens
+
+        # 60K chars: 60000 * 4 // 30 = 8000 → above 4096 floor.
+        assert _scale_max_output_tokens("x" * 60000) == 8000
+
+    def test_pathological_input_capped_at_ceiling(self) -> None:
+        from src.extract import _scale_max_output_tokens
+
+        # 1M chars would naively scale to 133K tokens; ceiling caps at 16384.
+        assert _scale_max_output_tokens("x" * 1_000_000) == 16384
+
+    def test_calibration_against_real_pdf_sizes(self) -> None:
+        # Empirical Phase 0 data: PDF 1 (HER2 ADC) used 9873 output tokens on
+        # 78395 input chars; PDF 2 (AI drug discovery) used 4934 on 59536.
+        # The heuristic must allocate enough budget to cover both with margin.
+        from src.extract import _scale_max_output_tokens
+
+        assert _scale_max_output_tokens("x" * 78395) >= 9873
+        assert _scale_max_output_tokens("x" * 59536) >= 4934
+
+
+class TestExtractClaimsAutoScale:
+    """End-to-end: max_output_tokens=None triggers the scaler."""
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_default_passes_scaled_budget_to_sdk(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = _mock_stream(mock_anthropic_cls, '{"claims": []}')
+        from src.extract import _scale_max_output_tokens, extract_claims
+
+        long_text = "x" * 78395
+        extract_claims(long_text)
+
+        sdk_kwargs = mock_client.messages.stream.call_args.kwargs
+        assert sdk_kwargs["max_tokens"] == _scale_max_output_tokens(long_text)
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_explicit_max_output_tokens_overrides_scaler(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        mock_client = _mock_stream(mock_anthropic_cls, '{"claims": []}')
+        from src.extract import extract_claims
+
+        extract_claims("x" * 78395, max_output_tokens=2048)
+
+        sdk_kwargs = mock_client.messages.stream.call_args.kwargs
+        assert sdk_kwargs["max_tokens"] == 2048

@@ -20,8 +20,25 @@ from src.prompts import load_prompt
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 MODEL_ID = "claude-sonnet-4-6"
+_OUTPUT_FLOOR = 4096
+_OUTPUT_CEILING = 16384
 
 _SYSTEM_PROMPT = load_prompt("extract_v1")
+
+
+def _scale_max_output_tokens(text: str) -> int:
+    """Pick an output-token budget proportional to input length.
+
+    Scientific PDFs run ~3 chars per token (denser than typical prose at ~4),
+    and citation-anchored extraction on dense lit reviews emits roughly
+    25-35% of input tokens as output. The formula targets ~40% of the
+    char-derived input estimate to keep a safety margin against truncation.
+
+    Floor is 4096 (preserves prior default for short inputs); ceiling is
+    16384 (bounds cost on pathological inputs and stays within Sonnet 4.6's
+    practical output limit).
+    """
+    return min(_OUTPUT_CEILING, max(_OUTPUT_FLOOR, len(text) * 4 // 30))
 
 
 def _hash(data: str) -> str:
@@ -147,7 +164,7 @@ def extract_claims(
     *,
     model_id: str = MODEL_ID,
     api_key: str | None = None,
-    max_output_tokens: int = 4096,
+    max_output_tokens: int | None = None,
 ) -> tuple[list[Claim], ProvenanceStep]:
     """Extract verifiable scientific claims from free-form scientific text.
 
@@ -157,13 +174,17 @@ def extract_claims(
     On malformed LLM response: returns ([], provenance_step), logs structlog.error.
     ProvenanceStep.claim_id = "__extract__:{sha256(text)[:8]}".
 
-    max_output_tokens caps the LLM JSON response length. Default 4096 fits typical
-    2-page inputs. Raise (e.g. 8192) for dense systematic-review-style inputs that
-    would otherwise truncate the response.
+    max_output_tokens caps the LLM JSON response length. When None (default),
+    the budget auto-scales with input length via _scale_max_output_tokens()
+    to avoid truncation on dense lit-review inputs. Pass an explicit integer
+    to override the heuristic.
     """
     ts = time.time()
     claim_id = f"__extract__:{_hash(text)[:8]}"
     input_hash = _hash(repr(text))
+
+    if max_output_tokens is None:
+        max_output_tokens = _scale_max_output_tokens(text)
 
     effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=effective_key)

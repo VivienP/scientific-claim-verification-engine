@@ -8,7 +8,7 @@
 > 3 of the 6 inputs have been re-run on the current pipeline; the
 > remaining 3 are pending.
 
-## Current runs (2026-05-12)
+## Current runs
 
 | tool | claims | supported | partially | unsupported | not_addressed | unverifiable | citation_found_rate | fulltext_verified | cost |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|

@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import date
 from pathlib import Path
 
 TOOLS = [
@@ -24,7 +25,7 @@ TOOLS = [
 
 BASE = Path("benchmarks/real_outputs")
 ROOT = Path(__file__).parent.parent
-TODAY = "2026-05-10"
+TODAY = date.today().isoformat()
 
 
 def _load(slug: str) -> dict[str, float]:

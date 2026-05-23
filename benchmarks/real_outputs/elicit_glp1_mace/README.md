@@ -28,7 +28,7 @@ End-to-end verification of an Elicit Premium Systematic Review output (~36KB rep
 python .cache/run_benchmark.py benchmarks/real_outputs/elicit_glp1_mace
 ```
 
-## Headline numbers (2026-05-12)
+## Headline numbers
 
 The verifier distinguishes "source contradicts" (`unsupported`) from "source is silent" (`not_addressed`) and "pipeline could not access full text for a numeric claim" (`unverifiable`).
 
@@ -85,7 +85,7 @@ The archived baseline run produces 10 `unsupported` verdicts. The current pipeli
 
 This single case is the only one where the verifier had access to the cited paper's full text AND the claim was contradicted. It is the only claim in this run for which we can defensibly say "Elicit's claim conflicts with the source it cited."
 
-## Comparison to Elicit Report mode (2026-05-12)
+## Comparison to Elicit Report mode
 
 Both runs on the current pipeline:
 

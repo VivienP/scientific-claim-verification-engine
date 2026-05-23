@@ -83,7 +83,7 @@ python scripts/aar_scorecard.py reports/runs/<report_id>
 
 If citation found rate < 30% on a run, treat as a generalization regression and investigate before publishing.
 
-## Headline numbers (2026-05-08)
+## Headline numbers
 
 **Report ID**: `5ebdee2a-c5a3-406e-b6ab-5bf4e3c80134`.
 

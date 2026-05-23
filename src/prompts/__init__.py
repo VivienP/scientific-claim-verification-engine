@@ -5,8 +5,8 @@ Prompts are stored as markdown files in this directory using the convention
 ONLY the prompt body — `PROMPT_INJECTION_GUARD` is prepended at load time.
 
 Why split: the guard is a security primitive that lives in `src/prompt_guard.py`.
-The body is creative content that `@prompt-smith` iterates on. Keeping them
-separate prevents accidental guard mutation during prompt tuning.
+The body is creative prompt content that gets iterated independently.
+Keeping the two separate prevents accidental guard mutation during prompt tuning.
 
 Behaviour contract: `load_prompt(name)` returns a byte-identical string to
 the legacy `PROMPT_INJECTION_GUARD + "\\n" + BODY` Python-constant form.

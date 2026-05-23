@@ -32,7 +32,7 @@ The Research Gap Analysis format produces a structurally different output: more 
 python .cache/run_benchmark.py benchmarks/real_outputs/elicit_io_nsclc_gaps
 ```
 
-## Headline numbers — 2026-05-10
+## Headline numbers
 
 | Metric | Value | Comment |
 |---|---:|---|

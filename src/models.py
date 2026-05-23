@@ -357,10 +357,8 @@ class FetchAttempt:
 class FetchOutcome:
     """Structured result of a full-text retrieval attempt.
 
-    Replaces the old tuple[str | None, FulltextMethod] return shape.
-    ``text is None`` means the chain exhausted; the reasons in
-    ``attempts`` say WHY. ``method`` is the method that ultimately
-    succeeded, or ``"abstract_fallback"`` when no step succeeded.
+    ``text`` is None when the chain exhausted; ``attempts`` carries the failure reasons.
+    ``method`` names the method that succeeded, or ``"abstract_fallback"`` when none did.
     """
 
     text: str | None

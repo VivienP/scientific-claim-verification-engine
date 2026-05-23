@@ -30,7 +30,7 @@ Only the Report-mode export from query 1 is committed as `input.txt` (32,687 cha
 python .cache/run_benchmark.py benchmarks/real_outputs/elicit_psilocybin
 ```
 
-## Headline numbers (2026-05-12)
+## Headline numbers
 
 The verifier distinguishes "source contradicts" (`unsupported`) from "source is silent" (`not_addressed`) and "pipeline could not access full text for a numeric claim" (`unverifiable`).
 

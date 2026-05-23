@@ -1,0 +1,18 @@
+{
+  "claims": [
+    {
+      "claim_text": "Hoffman and colleagues (2012) reported a 38% reduction in fatigue scores at 12 weeks among 229 women with stage I-III breast cancer disease",
+      "cited_authors": ["Hoffman"],
+      "cited_year": 2012,
+      "citation_markers": [8],
+      "claim_type": "factual_numeric"
+    },
+    {
+      "claim_text": "A meta-analysis by Cramer et al. (2015) pooling 12 trials confirmed a moderate effect on depression symptoms (standardised mean difference -0.41, 95% CI -0.62 to -0.20) across diverse cancer populations",
+      "cited_authors": ["Cramer"],
+      "cited_year": 2015,
+      "citation_markers": [11],
+      "claim_type": "factual_numeric"
+    }
+  ]
+}

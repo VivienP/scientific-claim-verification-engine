@@ -7,6 +7,7 @@ import json
 import os
 import re
 import time
+import unicodedata
 import uuid
 from typing import Any  # Any used for json.loads() return type only
 
@@ -14,14 +15,35 @@ import anthropic
 import structlog
 from anthropic.types import TextBlock, Usage
 
-from src.models import Claim, ProvenanceStep
+from src.models import Claim, ClaimDirection, ProvenanceStep
 from src.prompts import load_prompt
 
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 MODEL_ID = "claude-sonnet-4-6"
+_OUTPUT_FLOOR = 4096
+_OUTPUT_CEILING = 32768
+_VALID_DIRECTIONS = frozenset(("increase", "decrease", "no_effect", "unclear"))
 
-_SYSTEM_PROMPT = load_prompt("extract_v1")
+_SYSTEM_PROMPT = load_prompt("extract_v2")
+
+
+def _scale_max_output_tokens(text: str) -> int:
+    """Pick an output-token budget proportional to input length.
+
+    Calibrated against v2-prompt extraction on real Elicit literature
+    reviews. The v2 prompt emits 10 structured fields per claim, so output
+    density is roughly 2.5x v1: dense lit reviews produce 300-370 output
+    tokens per claim. The 12/30 multiplier (≈0.4 of input chars) covers
+    both observed PDFs with margin:
+      - PDF 2 (59,536 chars, ~53 claims): budget ≈23,800; need ≈16,000
+      - PDF 1 (78,395 chars, ~75 claims): budget ≈31,300; need ≈27,000
+
+    Floor is 4096 (preserves prior default for short inputs); ceiling is
+    32768 (Sonnet 4.6's practical output limit, raised from 16384 after
+    Phase 2.5.1 showed PDF 1 v2 truncating at the lower cap).
+    """
+    return min(_OUTPUT_CEILING, max(_OUTPUT_FLOOR, len(text) * 12 // 30))
 
 
 def _hash(data: str) -> str:
@@ -93,6 +115,110 @@ def _parse_cache_hit(usage: Usage) -> bool | None:
     return None
 
 
+def _str_or_none(value: object) -> str | None:
+    if value is None:
+        return None
+    s = str(value).strip()
+    return s or None
+
+
+def _parse_direction(value: object) -> ClaimDirection | None:
+    if value is None:
+        return None
+    s = str(value).strip().lower()
+    if s in _VALID_DIRECTIONS:
+        return s  # type: ignore[return-value]
+    return None
+
+
+def _parse_confidence(value: object) -> float | None:
+    if value is None:
+        return None
+    try:
+        f = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    if 0.0 <= f <= 1.0:
+        return f
+    return None
+
+
+_PUNCTUATION_FOLD: dict[str, str] = {
+    chr(0x2014): "-",  # em-dash
+    chr(0x2013): "-",  # en-dash
+    chr(0x2212): "-",  # minus sign — PDFs often substitute for hyphen
+    chr(0x2018): "'",  # left single quotation mark
+    chr(0x2019): "'",  # right single quotation mark
+    chr(0x201C): '"',  # left double quotation mark
+    chr(0x201D): '"',  # right double quotation mark
+    chr(0x00A0): " ",  # no-break space
+    chr(0x2009): " ",  # thin space
+    chr(0x200B): "",  # zero-width space
+}
+
+
+def _normalize_for_quote_match(text: str) -> str:
+    """Fold Unicode variants that PDF text extraction commonly substitutes.
+
+    pymupdf extracts em-dashes, smart quotes, and other typographic Unicode
+    that the LLM may emit as their ASCII equivalents (or vice versa).
+    Naked substring match rejects character-equivalent quotes; folding both
+    sides through NFKC plus a small punctuation table makes the match
+    robust to those substitutions while still rejecting genuine paraphrases.
+    """
+    normalized = unicodedata.normalize("NFKC", text)
+    for src, dst in _PUNCTUATION_FOLD.items():
+        normalized = normalized.replace(src, dst)
+    return normalized
+
+
+def _validate_source_quote(quote: object, source_text: str) -> str | None:
+    """Return quote only when it appears in source_text (modulo Unicode quirks).
+
+    LLMs sometimes paraphrase the quote rather than copy it. Downstream
+    evidence anchoring relies on `quote in input_text` being a reliable
+    contract, so paraphrased quotes are dropped (logged) rather than passed
+    through. PDF text extraction often substitutes typographic Unicode
+    (em-dashes, smart quotes, no-break spaces) that the LLM may not
+    reproduce, so the substring check happens on a normalized form. The
+    returned string is the LLM's original wording so downstream sees what
+    the LLM actually said, not a normalized version.
+    """
+    if quote is None:
+        return None
+    q = str(quote).strip()
+    if not q:
+        return None
+    if _normalize_for_quote_match(q) in _normalize_for_quote_match(source_text):
+        return q
+    # ASCII-safe preview so a non-UTF-8 console (e.g. Windows cp1252) does
+    # not crash the whole extraction on log emit.
+    preview = q[:80].encode("ascii", errors="replace").decode("ascii")
+    logger.warning("extract_source_quote_not_in_input", quote_preview=preview)
+    return None
+
+
+def _extract_optional_fields(raw: dict[str, Any], source_text: str) -> dict[str, Any]:
+    """Pull v2 structured fields from a raw LLM claim dict.
+
+    Returns a kwargs dict suitable for `Claim(**dict)` construction. v1-style
+    responses (without these fields) yield only None values, so the Claim
+    defaults take over and nothing breaks.
+    """
+    return {
+        "source_quote": _validate_source_quote(raw.get("source_quote"), source_text),
+        "subject": _str_or_none(raw.get("subject")),
+        "population": _str_or_none(raw.get("population")),
+        "intervention": _str_or_none(raw.get("intervention")),
+        "comparator": _str_or_none(raw.get("comparator")),
+        "outcome": _str_or_none(raw.get("outcome")),
+        "direction": _parse_direction(raw.get("direction")),
+        "numeric_value": _str_or_none(raw.get("numeric_value")),
+        "time_horizon": _str_or_none(raw.get("time_horizon")),
+        "extraction_confidence": _parse_confidence(raw.get("extraction_confidence")),
+    }
+
+
 _CLAIMS_ARRAY_START_RE = re.compile(r'"claims"\s*:\s*\[')
 
 
@@ -147,7 +273,7 @@ def extract_claims(
     *,
     model_id: str = MODEL_ID,
     api_key: str | None = None,
-    max_output_tokens: int = 4096,
+    max_output_tokens: int | None = None,
 ) -> tuple[list[Claim], ProvenanceStep]:
     """Extract verifiable scientific claims from free-form scientific text.
 
@@ -157,13 +283,17 @@ def extract_claims(
     On malformed LLM response: returns ([], provenance_step), logs structlog.error.
     ProvenanceStep.claim_id = "__extract__:{sha256(text)[:8]}".
 
-    max_output_tokens caps the LLM JSON response length. Default 4096 fits typical
-    2-page inputs. Raise (e.g. 8192) for dense systematic-review-style inputs that
-    would otherwise truncate the response.
+    max_output_tokens caps the LLM JSON response length. When None (default),
+    the budget auto-scales with input length via _scale_max_output_tokens()
+    to avoid truncation on dense lit-review inputs. Pass an explicit integer
+    to override the heuristic.
     """
     ts = time.time()
     claim_id = f"__extract__:{_hash(text)[:8]}"
     input_hash = _hash(repr(text))
+
+    if max_output_tokens is None:
+        max_output_tokens = _scale_max_output_tokens(text)
 
     effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=effective_key)
@@ -221,6 +351,7 @@ def extract_claims(
                     citation_markers=_parse_citation_markers(
                         raw.get("citation_markers"), claim_text
                     ),
+                    **_extract_optional_fields(raw, text),
                 )
             )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
@@ -264,6 +395,7 @@ def extract_claims(
                             citation_markers=_parse_citation_markers(
                                 raw.get("citation_markers"), claim_text
                             ),
+                            **_extract_optional_fields(raw, text),
                         )
                     )
                 except (ValueError, TypeError) as exc:

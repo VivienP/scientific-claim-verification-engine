@@ -369,7 +369,7 @@ class TestExtractClaimsPrecision:
 
 
 class TestAttemptPartialRecovery:
-    """Direct unit tests for _attempt_partial_recovery — the truncation salvage
+    """Direct unit tests for _attempt_partial_recovery — the truncation salvage  # noqa: RUF001
     path. The recovery is only correct if it stops cleanly at the first
     un-parseable position; over-zealous recovery (e.g. fabricating a
     closing brace) would silently produce phantom claims."""
@@ -493,3 +493,301 @@ class TestExtractClaimsPartialRecoveryIntegration:
 
         claims, _ = extract_claims("text")
         assert claims == []
+
+
+class TestScaleMaxOutputTokens:
+    """Bounds and scaling behavior of the input-proportional output budget."""
+
+    def test_short_input_returns_floor(self) -> None:
+        from src.extract import _scale_max_output_tokens
+
+        assert _scale_max_output_tokens("Smith (2020) showed X.") == 4096
+        assert _scale_max_output_tokens("x" * 5000) == 4096
+
+    def test_threshold_input_returns_floor(self) -> None:
+        # Inputs up to ~10K chars still get the 4096 floor; scaling kicks in past that.
+        # (10240 chars: 10240 * 12 // 30 = 4096 — exactly at the floor.)
+        from src.extract import _scale_max_output_tokens
+
+        assert _scale_max_output_tokens("x" * 10000) == 4096
+
+    def test_large_input_scales_above_floor(self) -> None:
+        from src.extract import _scale_max_output_tokens
+
+        # 60K chars: 60000 * 12 // 30 = 24000 → well above 4096 floor.
+        assert _scale_max_output_tokens("x" * 60000) == 24000
+
+    def test_pathological_input_capped_at_ceiling(self) -> None:
+        from src.extract import _scale_max_output_tokens
+
+        # 1M chars would naively scale to 400K tokens; ceiling caps at 32768.
+        assert _scale_max_output_tokens("x" * 1_000_000) == 32768
+
+    def test_calibration_against_real_pdf_sizes(self) -> None:
+        # Empirical v2 Phase 2.5 data:
+        #   - PDF 2 (AI drug discovery, 59536 chars): autoscaled 7938 budget,
+        #     produced 31 truncated claims. Full extraction needs ~13560 tokens
+        #     (extrapolated from 256 tokens/claim x expected 53 claims).
+        #   - PDF 1 (HER2 ADC, 78395 chars): forced to 16384 cap, produced 45
+        #     truncated claims. Full extraction needs ~27300 tokens (364
+        #     tokens/claim x expected 75 claims).
+        # The new heuristic must allocate enough budget to cover both with margin.
+        from src.extract import _scale_max_output_tokens
+
+        assert _scale_max_output_tokens("x" * 78395) >= 27300  # PDF 1 v2 estimated need
+        assert _scale_max_output_tokens("x" * 59536) >= 13560  # PDF 2 v2 estimated need
+
+
+class TestExtractClaimsAutoScale:
+    """End-to-end: max_output_tokens=None triggers the scaler."""
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_default_passes_scaled_budget_to_sdk(self, mock_anthropic_cls: MagicMock) -> None:
+        mock_client = _mock_stream(mock_anthropic_cls, '{"claims": []}')
+        from src.extract import _scale_max_output_tokens, extract_claims
+
+        long_text = "x" * 78395
+        extract_claims(long_text)
+
+        sdk_kwargs = mock_client.messages.stream.call_args.kwargs
+        assert sdk_kwargs["max_tokens"] == _scale_max_output_tokens(long_text)
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_explicit_max_output_tokens_overrides_scaler(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        mock_client = _mock_stream(mock_anthropic_cls, '{"claims": []}')
+        from src.extract import extract_claims
+
+        extract_claims("x" * 78395, max_output_tokens=2048)
+
+        sdk_kwargs = mock_client.messages.stream.call_args.kwargs
+        assert sdk_kwargs["max_tokens"] == 2048
+
+
+class TestOptionalFieldParsers:
+    """Pure-Python guards for the v2 structured fields."""
+
+    def test_str_or_none_normalizes_empty_and_whitespace(self) -> None:
+        from src.extract import _str_or_none
+
+        assert _str_or_none(None) is None
+        assert _str_or_none("") is None
+        assert _str_or_none("   ") is None
+        assert _str_or_none("  T-DM1 ") == "T-DM1"
+        assert _str_or_none(2012) == "2012"  # str() coercion
+
+    def test_parse_direction_accepts_only_valid_values(self) -> None:
+        from src.extract import _parse_direction
+
+        assert _parse_direction("increase") == "increase"
+        assert _parse_direction("DECREASE") == "decrease"  # case-insensitive
+        assert _parse_direction(" no_effect ") == "no_effect"
+        assert _parse_direction("unclear") == "unclear"
+        assert _parse_direction("up") is None  # invalid label
+        assert _parse_direction(None) is None
+        assert _parse_direction("") is None
+
+    def test_parse_confidence_clamps_invalid_ranges(self) -> None:
+        from src.extract import _parse_confidence
+
+        assert _parse_confidence(0.0) == 0.0
+        assert _parse_confidence(0.95) == 0.95
+        assert _parse_confidence(1.0) == 1.0
+        assert _parse_confidence(1.5) is None  # above range
+        assert _parse_confidence(-0.1) is None  # below range
+        assert _parse_confidence("0.7") == 0.7  # str-coercible
+        assert _parse_confidence("high") is None  # non-numeric
+        assert _parse_confidence(None) is None
+
+    def test_validate_source_quote_drops_paraphrased(self) -> None:
+        from src.extract import _validate_source_quote
+
+        source = "T-DM1 significantly prolonged median PFS to 9.6 versus 6.4 months."
+
+        # Verbatim quote present → returned as-is (stripped)
+        assert (
+            _validate_source_quote("T-DM1 significantly prolonged median PFS", source)
+            == "T-DM1 significantly prolonged median PFS"
+        )
+        # Whitespace-only stripped to None
+        assert _validate_source_quote("   ", source) is None
+        # Paraphrased quote (extra words not in source) → None + warning
+        assert _validate_source_quote("T-DM1 dramatically prolonged median PFS", source) is None
+        # Original was None
+        assert _validate_source_quote(None, source) is None
+
+    def test_validate_source_quote_normalizes_unicode_dashes(self) -> None:
+        """pymupdf-extracted em-dash matches LLM-emitted plain hyphen and vice versa."""
+        from src.extract import _validate_source_quote
+
+        # Source has em-dash (PDF-extracted); LLM emits plain hyphen.
+        source_with_emdash = "Patients aged 18 — 65 received treatment."
+        assert (
+            _validate_source_quote("Patients aged 18 - 65 received treatment", source_with_emdash)
+            == "Patients aged 18 - 65 received treatment"
+        )
+        # Reverse: source has plain hyphen, LLM emits em-dash.
+        source_with_hyphen = "Patients aged 18 - 65 received treatment."
+        assert (
+            _validate_source_quote("Patients aged 18 — 65 received treatment", source_with_hyphen)
+            == "Patients aged 18 — 65 received treatment"
+        )
+        # En-dash also folds.
+        source_with_endash = "The 2020 – 2023 period."  # noqa: RUF001
+        assert (
+            _validate_source_quote("The 2020 - 2023 period", source_with_endash)
+            == "The 2020 - 2023 period"
+        )
+
+    def test_validate_source_quote_normalizes_smart_quotes(self) -> None:
+        """pymupdf-extracted smart quotes match LLM-emitted straight quotes."""
+        from src.extract import _validate_source_quote
+
+        source_smart = "The authors’ conclusion stated “no effect was observed”."  # noqa: RUF001
+        assert (
+            _validate_source_quote(
+                'The authors\' conclusion stated "no effect was observed"',
+                source_smart,
+            )
+            == 'The authors\' conclusion stated "no effect was observed"'
+        )
+
+    def test_validate_source_quote_normalizes_nbsp(self) -> None:
+        """No-break space in source matches regular space in LLM output."""
+        from src.extract import _validate_source_quote
+
+        source_with_nbsp = "Mean HR was 0.65."  #   is no-break space  # noqa: RUF001, RUF003
+        assert _validate_source_quote("Mean HR was 0.65", source_with_nbsp) == "Mean HR was 0.65"
+
+    def test_validate_source_quote_normalization_returns_original_wording(self) -> None:
+        """Match happens on normalized form; the returned string is the LLM's original."""
+        from src.extract import _validate_source_quote
+
+        source_with_emdash = "X — Y"
+        # LLM emits plain hyphen; we should return the LLM's "X - Y", NOT "X — Y"
+        # (downstream sees what the LLM actually said, not a normalized version)
+        result = _validate_source_quote("X - Y", source_with_emdash)
+        assert result == "X - Y"
+
+    def test_validate_source_quote_still_rejects_real_paraphrase_after_normalization(
+        self,
+    ) -> None:
+        """Unicode folding doesn't accidentally accept genuine paraphrases."""
+        from src.extract import _validate_source_quote
+
+        source = "X causes Y in adult patients."
+        # Genuine semantic change — must still be rejected
+        assert _validate_source_quote("X DRAMATICALLY causes Y", source) is None
+        # Word reorder — must still be rejected
+        assert _validate_source_quote("Y is caused by X", source) is None
+
+
+class TestExtractClaimsV2Schema:
+    """End-to-end: v2 LLM responses populate the new structured fields."""
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_v2_response_populates_structured_fields(self, mock_anthropic_cls: MagicMock) -> None:
+        v2_response = (
+            '{"claims": [{'
+            '"claim_text": "T-DM1 prolonged PFS to 9.6 vs 6.4 months",'
+            '"cited_authors": ["Verma"],'
+            '"cited_year": 2012,'
+            '"citation_markers": [1],'
+            '"claim_type": "factual_numeric",'
+            '"source_quote": "T-DM1 prolonged PFS to 9.6 vs 6.4 months",'
+            '"subject": "T-DM1",'
+            '"population": "HER2-positive breast cancer patients",'
+            '"intervention": "T-DM1",'
+            '"comparator": "lapatinib plus capecitabine",'
+            '"outcome": "median PFS",'
+            '"direction": "increase",'
+            '"numeric_value": "9.6 vs 6.4 months, HR 0.65, P<0.001",'
+            '"time_horizon": null,'
+            '"extraction_confidence": 0.95'
+            "}]}"
+        )
+        _mock_stream(mock_anthropic_cls, v2_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims(
+            "Per Verma (2012) [1], T-DM1 prolonged PFS to 9.6 vs 6.4 months versus comparator."
+        )
+
+        assert len(claims) == 1
+        c = claims[0]
+        assert c.subject == "T-DM1"
+        assert c.population == "HER2-positive breast cancer patients"
+        assert c.intervention == "T-DM1"
+        assert c.comparator == "lapatinib plus capecitabine"
+        assert c.outcome == "median PFS"
+        assert c.direction == "increase"
+        assert c.numeric_value == "9.6 vs 6.4 months, HR 0.65, P<0.001"
+        assert c.time_horizon is None
+        assert c.extraction_confidence == 0.95
+        assert c.source_quote == "T-DM1 prolonged PFS to 9.6 vs 6.4 months"
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_v1_style_response_still_parses_with_none_fields(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        # v1-shaped response — no new structured fields. Must still parse,
+        # and all v2 fields must default to None.
+        v1_response = (
+            '{"claims": [{"claim_text": "X causes Y", "cited_authors": ["Smith"], '
+            '"cited_year": 2020, "claim_type": "causal"}]}'
+        )
+        _mock_stream(mock_anthropic_cls, v1_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims("Smith (2020) showed X causes Y.")
+
+        assert len(claims) == 1
+        c = claims[0]
+        assert c.claim_text == "X causes Y"
+        # All v2 fields default to None when LLM omits them.
+        assert c.source_quote is None
+        assert c.subject is None
+        assert c.direction is None
+        assert c.extraction_confidence is None
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_invalid_direction_value_falls_back_to_none(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        # LLM emits a direction outside the allowed enum. Parser must drop
+        # silently to None rather than raising or letting the bad value through.
+        bad_direction_response = (
+            '{"claims": [{"claim_text": "X causes Y", "cited_authors": ["Smith"], '
+            '"cited_year": 2020, "claim_type": "causal", "direction": "upward"}]}'
+        )
+        _mock_stream(mock_anthropic_cls, bad_direction_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims("Smith (2020) showed X causes Y.")
+        assert claims[0].direction is None
+
+    @patch("src.extract.anthropic.Anthropic")
+    def test_paraphrased_source_quote_is_dropped(self, mock_anthropic_cls: MagicMock) -> None:
+        # LLM paraphrases the quote — guard rejects so downstream anchoring
+        # can still trust `quote in input_text` as a contract.
+        paraphrased_response = (
+            '{"claims": [{"claim_text": "X causes Y", "cited_authors": ["Smith"], '
+            '"cited_year": 2020, "claim_type": "causal", '
+            '"source_quote": "X DRAMATICALLY causes Y in all cases"}]}'
+        )
+        _mock_stream(mock_anthropic_cls, paraphrased_response)
+        from src.extract import extract_claims
+
+        claims, _ = extract_claims("Smith (2020) showed X causes Y.")
+        assert claims[0].source_quote is None  # paraphrased → dropped
+
+
+class TestExtractClaimsV2PromptInUse:
+    """Sanity: the extractor is wired to extract_v2 by default."""
+
+    def test_loaded_system_prompt_is_v2(self) -> None:
+        from src.extract import _SYSTEM_PROMPT
+        from src.prompts import load_prompt
+
+        assert load_prompt("extract_v2") == _SYSTEM_PROMPT

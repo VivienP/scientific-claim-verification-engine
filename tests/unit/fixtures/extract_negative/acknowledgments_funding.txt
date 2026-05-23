@@ -1,0 +1,27 @@
+Acknowledgments
+
+The authors thank the patients and their families for participating in this study. We are grateful to the clinical research coordinators at each participating site for their dedication, and to the members of the independent Data and Safety Monitoring Board (Dr. A. Martin, Dr. B. Kovacs, and Dr. C. Yamada) for their oversight. We acknowledge the central laboratory at Karolinska Institute for biomarker analyses, and the statistical analysis team at the Mayo Clinic for protocol-defined adjudication of the primary endpoint. Editorial assistance was provided by Dr. L. Rossi (BioMedAssist, Milan), funded by the trial sponsor.
+
+Funding
+
+This work was supported by the National Cancer Institute (grant R01-CA178945 to J.D.M. and K23-CA215678 to S.P.), the European Research Council under the European Union's Horizon 2020 research and innovation programme (Advanced Grant 834567 to M.C.), and an unrestricted educational grant from the Susan G. Komen Foundation. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
+
+---
+
+Acknowledgments
+
+We thank the volunteer participants in the Generation Scotland: Scottish Family Health Study and their general practitioners. We acknowledge the contribution of the Wellcome Trust Sanger Institute sequencing core and the Edinburgh Clinical Research Facility. Computational analyses were performed on the University of Edinburgh's high-performance computing cluster, Eddie.
+
+Funding
+
+Generation Scotland received core support from the Chief Scientist Office of the Scottish Government Health Directorates (CZD/16/6) and the Scottish Funding Council (HR03006). Whole-genome sequencing was funded by a Wellcome Trust strategic award (104036/Z/14/Z). H.P. is supported by a UKRI Future Leaders Fellowship (MR/V025112/1). The sponsors had no role in the design or conduct of the research.
+
+---
+
+Acknowledgments
+
+The authors gratefully acknowledge the contribution of the patients, nurses, and physicians who participated in this trial. We thank the members of the Independent Steering Committee, the Data Monitoring Committee, and the Clinical Endpoint Committee for their diligent oversight. Sanofi-Aventis provided study drug at no cost; representatives of the sponsor participated in protocol design and data review but were not involved in interpretation of the final analyses.
+
+Funding
+
+This trial was sponsored by Sanofi-Aventis. The institutional sponsor was the Brigham and Women's Hospital. R.G. reports salary support from National Heart, Lung, and Blood Institute grant K24-HL135301. The funder reviewed the manuscript prior to submission but did not have authority to delay or block publication.

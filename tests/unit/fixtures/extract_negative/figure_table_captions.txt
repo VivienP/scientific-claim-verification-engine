@@ -1,0 +1,15 @@
+Figure 1. CONSORT flow diagram showing screening, randomisation, allocation, follow-up, and analysis of the 432 patients enrolled in the trial.
+
+Figure 2. Kaplan-Meier estimates of overall survival in the intention-to-treat population, stratified by treatment arm. Tick marks indicate censored observations. Numbers at risk shown below the time axis.
+
+Figure 3. Forest plot of pooled hazard ratios for the primary endpoint across pre-specified subgroups. Boxes represent point estimates; horizontal lines represent 95% confidence intervals; box size is proportional to inverse variance weight.
+
+Figure 4. Representative immunohistochemistry images of tumour sections stained for CD8 (brown) and DAPI (blue). Scale bar = 50 μm. Magnification ×400.
+
+Table 1. Baseline demographic and clinical characteristics of randomised participants by treatment group. Continuous variables are reported as mean ± SD or median (IQR) as appropriate; categorical variables as n (%).
+
+Table 2. Primary and secondary efficacy endpoints in the intention-to-treat and per-protocol populations.
+
+Table 3. Treatment-emergent adverse events occurring in ≥5% of participants in either arm, graded according to CTCAE v5.0.
+
+Table 4. Summary of risk of bias assessment for the 14 included studies, evaluated with the Cochrane Risk of Bias 2 tool.

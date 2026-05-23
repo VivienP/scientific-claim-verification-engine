@@ -383,105 +383,19 @@ class TestVerificationResultInvariant:
         assert result.confidence == 0.9
 
     def test_helper_passes_qualitative_supported_on_abstract_through(self) -> None:
-        """3.4 (Option A MIRROR): qualitative claims on abstract-only evidence are
-        downgraded to unverifiable, same as numeric claims.  The old behaviour
-        (pass-through) was a latent bug (P1-2 incident).
+        """Decision log 2026-05-11: qualitative claims with confident verdict on abstract
+        are NOT downgraded. The abstract is sufficient for 'X reduces Y'-style verdicts.
         """
         result = safe_verification_result(
             status="supported",
             confidence=0.9,
             evidence_quality="abstract_only",
-            claim_text="psilocybin reduces depression symptoms",  # qualitative, no numeric
+            claim_text="psilocybin reduces depression symptoms",  # no numeric pattern
             explanation="abstract directly addresses the qualitative claim",
         )
-        assert result.status == "unverifiable"
-        assert result.confidence is None
-
-    def test_safe_verification_result_downgrades_qualitative_unsupported_on_abstract(
-        self,
-    ) -> None:
-        """3.4: qualitative unsupported on abstract_only → unverifiable."""
-        result = safe_verification_result(
-            status="unsupported",
-            confidence=0.75,
-            evidence_quality="abstract_only",
-            claim_text="Protein folding rates increase with temperature",
-            explanation="abstract contradicts",
-        )
-        assert result.status == "unverifiable"
-        assert result.confidence is None
-
-    def test_safe_verification_result_downgrades_qualitative_supported_on_title_only(
-        self,
-    ) -> None:
-        """3.4: qualitative supported on title_only → unverifiable."""
-        result = safe_verification_result(
-            status="supported",
-            confidence=0.8,
-            evidence_quality="title_only",
-            claim_text="psilocybin reduces depression symptoms",
-            explanation="title addresses the topic",
-        )
-        assert result.status == "unverifiable"
-        assert result.confidence is None
-
-    def test_safe_verification_result_downgrades_qualitative_supported_on_citing_context(
-        self,
-    ) -> None:
-        """3.4: qualitative supported on citing_paper_context → unverifiable."""
-        result = safe_verification_result(
-            status="supported",
-            confidence=0.8,
-            evidence_quality="citing_paper_context",
-            claim_text="treatment improves quality of life",
-            explanation="citing paper mentions it",
-        )
-        assert result.status == "unverifiable"
-        assert result.confidence is None
-
-    def test_safe_verification_result_downgrades_qualitative_supported_on_no_evidence(
-        self,
-    ) -> None:
-        """3.4: qualitative supported on no_evidence → unverifiable."""
-        result = safe_verification_result(
-            status="supported",
-            confidence=0.8,
-            evidence_quality="no_evidence",
-            claim_text="the drug is effective",
-            explanation="no source found",
-        )
-        assert result.status == "unverifiable"
-        assert result.confidence is None
-
-    def test_safe_verification_result_qualitative_not_addressed_passes_through(
-        self,
-    ) -> None:
-        """3.4: qualitative not_addressed on abstract_only passes through (gate only fires
-        on supported|unsupported)."""
-        result = safe_verification_result(
-            status="not_addressed",
-            confidence=0.9,
-            evidence_quality="abstract_only",
-            claim_text="psilocybin reduces depression symptoms",
-            explanation="abstract silent",
-        )
-        assert result.status == "not_addressed"
+        assert result.status == "supported"
         assert result.confidence == 0.9
-
-    def test_safe_verification_result_qualitative_partially_supported_passes_through(
-        self,
-    ) -> None:
-        """3.4: qualitative partially_supported on abstract_only passes through (exempt from
-        gate)."""
-        result = safe_verification_result(
-            status="partially_supported",
-            confidence=0.6,
-            evidence_quality="abstract_only",
-            claim_text="psilocybin reduces depression symptoms",
-            explanation="partial match",
-        )
-        assert result.status == "partially_supported"
-        assert result.confidence == 0.6
+        assert result.evidence_quality == "abstract_only"
 
     def test_helper_downgrades_numeric_claim_with_claim_text(self) -> None:
         """Numeric claim (20% response rate) on abstract-only evidence is downgraded."""

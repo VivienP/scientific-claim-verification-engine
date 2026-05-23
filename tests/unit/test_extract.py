@@ -369,7 +369,7 @@ class TestExtractClaimsPrecision:
 
 
 class TestAttemptPartialRecovery:
-    """Direct unit tests for _attempt_partial_recovery — the truncation salvage
+    """Direct unit tests for _attempt_partial_recovery — the truncation salvage  # noqa: RUF001
     path. The recovery is only correct if it stops cleanly at the first
     un-parseable position; over-zealous recovery (e.g. fabricating a
     closing brace) would silently produce phantom claims."""
@@ -610,6 +610,71 @@ class TestOptionalFieldParsers:
         assert _validate_source_quote("T-DM1 dramatically prolonged median PFS", source) is None
         # Original was None
         assert _validate_source_quote(None, source) is None
+
+    def test_validate_source_quote_normalizes_unicode_dashes(self) -> None:
+        """pymupdf-extracted em-dash matches LLM-emitted plain hyphen and vice versa."""
+        from src.extract import _validate_source_quote
+
+        # Source has em-dash (PDF-extracted); LLM emits plain hyphen.
+        source_with_emdash = "Patients aged 18 — 65 received treatment."
+        assert (
+            _validate_source_quote("Patients aged 18 - 65 received treatment", source_with_emdash)
+            == "Patients aged 18 - 65 received treatment"
+        )
+        # Reverse: source has plain hyphen, LLM emits em-dash.
+        source_with_hyphen = "Patients aged 18 - 65 received treatment."
+        assert (
+            _validate_source_quote("Patients aged 18 — 65 received treatment", source_with_hyphen)
+            == "Patients aged 18 — 65 received treatment"
+        )
+        # En-dash also folds.
+        source_with_endash = "The 2020 – 2023 period."  # noqa: RUF001
+        assert (
+            _validate_source_quote("The 2020 - 2023 period", source_with_endash)
+            == "The 2020 - 2023 period"
+        )
+
+    def test_validate_source_quote_normalizes_smart_quotes(self) -> None:
+        """pymupdf-extracted smart quotes match LLM-emitted straight quotes."""
+        from src.extract import _validate_source_quote
+
+        source_smart = "The authors’ conclusion stated “no effect was observed”."  # noqa: RUF001
+        assert (
+            _validate_source_quote(
+                'The authors\' conclusion stated "no effect was observed"',
+                source_smart,
+            )
+            == 'The authors\' conclusion stated "no effect was observed"'
+        )
+
+    def test_validate_source_quote_normalizes_nbsp(self) -> None:
+        """No-break space in source matches regular space in LLM output."""
+        from src.extract import _validate_source_quote
+
+        source_with_nbsp = "Mean HR was 0.65."  #   is no-break space  # noqa: RUF001, RUF003
+        assert _validate_source_quote("Mean HR was 0.65", source_with_nbsp) == "Mean HR was 0.65"
+
+    def test_validate_source_quote_normalization_returns_original_wording(self) -> None:
+        """Match happens on normalized form; the returned string is the LLM's original."""
+        from src.extract import _validate_source_quote
+
+        source_with_emdash = "X — Y"
+        # LLM emits plain hyphen; we should return the LLM's "X - Y", NOT "X — Y"
+        # (downstream sees what the LLM actually said, not a normalized version)
+        result = _validate_source_quote("X - Y", source_with_emdash)
+        assert result == "X - Y"
+
+    def test_validate_source_quote_still_rejects_real_paraphrase_after_normalization(
+        self,
+    ) -> None:
+        """Unicode folding doesn't accidentally accept genuine paraphrases."""
+        from src.extract import _validate_source_quote
+
+        source = "X causes Y in adult patients."
+        # Genuine semantic change — must still be rejected
+        assert _validate_source_quote("X DRAMATICALLY causes Y", source) is None
+        # Word reorder — must still be rejected
+        assert _validate_source_quote("Y is caused by X", source) is None
 
 
 class TestExtractClaimsV2Schema:

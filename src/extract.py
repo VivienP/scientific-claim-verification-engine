@@ -7,6 +7,7 @@ import json
 import os
 import re
 import time
+import unicodedata
 import uuid
 from typing import Any  # Any used for json.loads() return type only
 
@@ -139,23 +140,58 @@ def _parse_confidence(value: object) -> float | None:
     return None
 
 
+_PUNCTUATION_FOLD: dict[str, str] = {
+    chr(0x2014): "-",  # em-dash
+    chr(0x2013): "-",  # en-dash
+    chr(0x2212): "-",  # minus sign — PDFs often substitute for hyphen
+    chr(0x2018): "'",  # left single quotation mark
+    chr(0x2019): "'",  # right single quotation mark
+    chr(0x201C): '"',  # left double quotation mark
+    chr(0x201D): '"',  # right double quotation mark
+    chr(0x00A0): " ",  # no-break space
+    chr(0x2009): " ",  # thin space
+    chr(0x200B): "",  # zero-width space
+}
+
+
+def _normalize_for_quote_match(text: str) -> str:
+    """Fold Unicode variants that PDF text extraction commonly substitutes.
+
+    pymupdf extracts em-dashes, smart quotes, and other typographic Unicode
+    that the LLM may emit as their ASCII equivalents (or vice versa).
+    Naked substring match rejects character-equivalent quotes; folding both
+    sides through NFKC plus a small punctuation table makes the match
+    robust to those substitutions while still rejecting genuine paraphrases.
+    """
+    normalized = unicodedata.normalize("NFKC", text)
+    for src, dst in _PUNCTUATION_FOLD.items():
+        normalized = normalized.replace(src, dst)
+    return normalized
+
+
 def _validate_source_quote(quote: object, source_text: str) -> str | None:
-    """Return quote only when it appears verbatim in source_text.
+    """Return quote only when it appears in source_text (modulo Unicode quirks).
 
     LLMs sometimes paraphrase the quote rather than copy it. Downstream
     evidence anchoring relies on `quote in input_text` being a reliable
     contract, so paraphrased quotes are dropped (logged) rather than passed
-    through. The cost of dropping a quote is loss of one anchoring hint;
-    the cost of trusting a paraphrase is downstream evidence-locator drift.
+    through. PDF text extraction often substitutes typographic Unicode
+    (em-dashes, smart quotes, no-break spaces) that the LLM may not
+    reproduce, so the substring check happens on a normalized form. The
+    returned string is the LLM's original wording so downstream sees what
+    the LLM actually said, not a normalized version.
     """
     if quote is None:
         return None
     q = str(quote).strip()
     if not q:
         return None
-    if q in source_text:
+    if _normalize_for_quote_match(q) in _normalize_for_quote_match(source_text):
         return q
-    logger.warning("extract_source_quote_not_in_input", quote_preview=q[:80])
+    # ASCII-safe preview so a non-UTF-8 console (e.g. Windows cp1252) does
+    # not crash the whole extraction on log emit.
+    preview = q[:80].encode("ascii", errors="replace").decode("ascii")
+    logger.warning("extract_source_quote_not_in_input", quote_preview=preview)
     return None
 
 

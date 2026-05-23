@@ -561,3 +561,120 @@ class TestEvidenceBundleSchema:
             consistent=True,
         )
         assert result.ambiguous is False
+
+
+# ---------------------------------------------------------------------------
+# 3.3: extraction_confidence gate in safe_verification_result
+# ---------------------------------------------------------------------------
+
+
+class TestExtractionConfidenceGate:
+    """Spec §3.3 / §9 Tests C1-C6: safe_verification_result caps verdict to
+    partially_supported when extraction_confidence < 0.5, regardless of
+    evidence quality. Status not in (supported, unsupported, partially_supported)
+    is unaffected. None is a no-op (backward compat).
+    """
+
+    def test_c1_caps_supported_on_low_extraction_confidence(self) -> None:
+        """C1: supported + extraction_confidence=0.3 -> partially_supported.
+        Confidence is capped to min(llm_confidence, extraction_confidence).
+        Evidence quality is fulltext-grade to isolate the extraction gate.
+        """
+        result = safe_verification_result(
+            status="supported",
+            confidence=0.9,
+            evidence_quality="quoted_passage",
+            extraction_confidence=0.3,
+            explanation="found in passage",
+        )
+        assert result.status == "partially_supported"
+        assert result.confidence == pytest.approx(0.3)
+
+    def test_c2_caps_unsupported_on_low_extraction_confidence(self) -> None:
+        """C2: unsupported + extraction_confidence=0.4 -> partially_supported."""
+        result = safe_verification_result(
+            status="unsupported",
+            confidence=0.8,
+            evidence_quality="quoted_passage",
+            extraction_confidence=0.4,
+            explanation="no evidence",
+        )
+        assert result.status == "partially_supported"
+        assert result.confidence == pytest.approx(0.4)
+
+    def test_c3_no_cap_when_extraction_confidence_above_threshold(self) -> None:
+        """C3: extraction_confidence >= 0.5 -> no cap applied."""
+        result = safe_verification_result(
+            status="supported",
+            confidence=0.9,
+            evidence_quality="quoted_passage",
+            extraction_confidence=0.8,
+            explanation="found in passage",
+        )
+        assert result.status == "supported"
+        assert result.confidence == pytest.approx(0.9)
+
+    def test_c4_no_cap_when_extraction_confidence_none(self) -> None:
+        """C4: extraction_confidence=None -> backward-compat no-op."""
+        result = safe_verification_result(
+            status="supported",
+            confidence=0.9,
+            evidence_quality="quoted_passage",
+            extraction_confidence=None,
+            explanation="found in passage",
+        )
+        assert result.status == "supported"
+        assert result.confidence == pytest.approx(0.9)
+
+    def test_c5_extraction_cap_preempts_evidence_depth_gate(self) -> None:
+        """C5: extraction cap fires first (supported -> partially_supported).
+        Then the evidence-depth gate does NOT fire because partially_supported
+        is exempt (gate only fires on supported|unsupported).
+        Result: partially_supported, NOT unverifiable.
+        """
+        result = safe_verification_result(
+            status="supported",
+            confidence=0.9,
+            evidence_quality="abstract_only",
+            extraction_confidence=0.3,
+            explanation="abstract says so",
+        )
+        assert result.status == "partially_supported"
+        assert result.confidence == pytest.approx(0.3)
+
+    def test_c6_not_addressed_unaffected_by_low_extraction_confidence(self) -> None:
+        """C6: not_addressed is outside (supported|unsupported|partially_supported);
+        extraction gate leaves it unchanged.
+        """
+        result = safe_verification_result(
+            status="not_addressed",
+            confidence=0.9,
+            evidence_quality="abstract_only",
+            extraction_confidence=0.2,
+            explanation="source silent",
+        )
+        assert result.status == "not_addressed"
+        assert result.confidence == pytest.approx(0.9)
+
+    def test_c_exactly_at_threshold_no_cap(self) -> None:
+        """Edge case 7.4: at exactly 0.5 the gate does NOT fire (strict <)."""
+        result = safe_verification_result(
+            status="supported",
+            confidence=0.9,
+            evidence_quality="quoted_passage",
+            extraction_confidence=0.5,
+            explanation="borderline",
+        )
+        assert result.status == "supported"
+        assert result.confidence == pytest.approx(0.9)
+
+    def test_low_extraction_confidence_reason_literal_accepted(self) -> None:
+        """The new UnverifiableReason value must construct a valid unverifiable result."""
+        result = VerificationResult(
+            status="unverifiable",
+            explanation="low extraction confidence test",
+            confidence=None,
+            unverifiable_reason="low_extraction_confidence",
+            evidence_quality="abstract_only",
+        )
+        assert result.unverifiable_reason == "low_extraction_confidence"

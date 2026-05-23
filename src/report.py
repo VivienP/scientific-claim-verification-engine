@@ -324,6 +324,11 @@ def build_report(
                 "claim_type": claim.claim_type,
                 "cited_authors": claim.cited_authors,
                 "cited_year": claim.cited_year,
+                # 3.2: verbatim text from the input document that the extractor
+                # identified as the source of this claim (~10% populated).
+                # Named extracted_source_quote to avoid collision with
+                # verification.source_passages (quotes from the cited paper).
+                "extracted_source_quote": claim.source_quote,
                 "source": dataclasses.asdict(source),
                 "verification": dataclasses.asdict(result),
             }

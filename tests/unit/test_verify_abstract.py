@@ -772,11 +772,11 @@ class TestA2EmissionGate:
         assert result.confidence is None
         assert result.evidence_quality == "abstract_only"
         assert step.confidence is None
-        # F1 (2026-05-12): verify.py now passes
-        # unverifiable_reason="numeric_claim_abstract_only" to the helper,
-        # propagating to both the result and the step.
-        assert step.unverifiable_reason == "numeric_claim_abstract_only"
-        assert result.unverifiable_reason == "numeric_claim_abstract_only"
+        # C3 (2026-05-23): verify.py now passes
+        # unverifiable_reason="insufficient_evidence_depth" to the helper,
+        # consistent with all other verifiers. Propagates to both result and step.
+        assert step.unverifiable_reason == "insufficient_evidence_depth"
+        assert result.unverifiable_reason == "insufficient_evidence_depth"
 
     @patch("src.verify.anthropic.Anthropic")
     def test_verify_abstract_downgrades_confident_unsupported_to_unverifiable(
@@ -880,3 +880,253 @@ class TestA2EmissionGate:
         result, _step = verify_claim(_make_claim(), _make_source())
         assert result.status == "unverifiable"
         assert result.confidence is None
+
+
+# ---------------------------------------------------------------------------
+# 3.1: source_quote focal anchor injection in user message (abstract path)
+# ---------------------------------------------------------------------------
+
+
+class TestSourceQuoteAnchor:
+    """Spec §3.1 / §9 Test A1, A2: source_quote injected into user message
+    when non-null; omitted when None. Behaviour is unchanged from baseline
+    when source_quote is None (A2 is a negative assertion).
+    """
+
+    @staticmethod
+    def _make_claim_with_quote(source_quote: str | None) -> Claim:
+        return Claim(
+            claim_id="sq-claim-1",
+            claim_text="Response rates were 20% at 12 weeks.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_numeric",
+            source_quote=source_quote,
+        )
+
+    @staticmethod
+    def _mock_response() -> MagicMock:
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block('{"status": "supported", "explanation": "ok.", "confidence": 0.9}')
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        return mock_response
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_includes_source_quote_anchor(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """A1: when claim.source_quote is non-null, the user message must
+        contain a <source_quote>...</source_quote> block with the exact text.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_client.messages.create.return_value = self._mock_response()
+
+        from src.verify import verify_claim
+
+        quote = "The incidence of sustained response at week 12 was 20%"
+        verify_claim(
+            self._make_claim_with_quote(quote),
+            _make_source(abstract="Abstract text."),
+        )
+
+        call = mock_client.messages.create.call_args
+        user_message: str = call.kwargs["messages"][0]["content"]
+        assert f"<source_quote>{quote}</source_quote>" in user_message
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_omits_anchor_when_source_quote_none(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """A2: when claim.source_quote is None, the user message must NOT
+        contain any <source_quote> tag -- behaviour is unchanged from baseline.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_client.messages.create.return_value = self._mock_response()
+
+        from src.verify import verify_claim
+
+        verify_claim(
+            self._make_claim_with_quote(None),
+            _make_source(abstract="Abstract text."),
+        )
+
+        call = mock_client.messages.create.call_args
+        user_message: str = call.kwargs["messages"][0]["content"]
+        assert "<source_quote>" not in user_message
+
+
+# ---------------------------------------------------------------------------
+# C1 integration tests: extraction_confidence gate wired through verifier paths
+# ---------------------------------------------------------------------------
+
+
+class TestExtractionConfidenceCapVerifyAbstract:
+    """Integration: Claim(extraction_confidence=0.3) routed through verify_claim
+    emerges capped at partially_supported. C1 wiring fix."""
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_claim_caps_verdict_when_extraction_confidence_below_threshold(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """Integration test: low extraction_confidence flows from Claim through
+        verify_claim -> safe_verification_result and caps a 'supported' verdict
+        at 'partially_supported'."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "supported", "explanation": "Abstract clearly supports.", "confidence": 0.9}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        claim = Claim(
+            claim_id="ec-low-abstract",
+            claim_text="Response rates were 20% at 12 weeks.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_numeric",
+            extraction_confidence=0.3,
+        )
+        source = _make_source()
+
+        from src.verify import verify_claim
+
+        result, step = verify_claim(claim, source)
+        # Gate 1 fires: extraction_confidence=0.3 < 0.5 -> capped to partially_supported.
+        # Gate 2 (abstract_only) does NOT fire because Gate 1 already changed status
+        # to partially_supported, which is not in {supported, unsupported}.
+        assert result.status == "partially_supported"
+        assert result.confidence is not None
+        assert result.confidence <= 0.3
+        assert isinstance(step, ProvenanceStep)
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_claim_does_not_cap_when_extraction_confidence_above_threshold(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """Control: extraction_confidence=0.8 (above 0.5) does not cap the verdict.
+        The abstract_only gate (Gate 2) still fires, downgrading to unverifiable."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "supported", "explanation": "Abstract clearly supports.", "confidence": 0.9}'
+            )
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        claim = Claim(
+            claim_id="ec-high-abstract",
+            claim_text="Response rates were 20% at 12 weeks.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_numeric",
+            extraction_confidence=0.8,
+        )
+        source = _make_source()
+
+        from src.verify import verify_claim
+
+        result, _step = verify_claim(claim, source)
+        # Gate 1 does NOT fire (0.8 >= 0.5).
+        # Gate 2 fires: abstract_only + supported -> unverifiable.
+        assert result.status == "unverifiable"
+        assert result.confidence is None
+
+
+class TestExtractionConfidenceCapTitleOnly:
+    """Integration: low extraction_confidence caps verdict in verify_claim_title_only."""
+
+    @patch("src.verify_title_only.anthropic.Anthropic")
+    def test_verify_title_only_caps_verdict_when_extraction_confidence_below_threshold(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """LLM returns 'partially_supported' but extraction_confidence=0.3 caps it
+        further — confidence is capped to min(llm_conf, extraction_confidence)."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "partially_supported", "explanation": "Title matches.", "confidence": 0.7}'
+            )
+        ]
+        mock_response.usage.input_tokens = 80
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 80
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        claim = Claim(
+            claim_id="ec-low-titleonly",
+            claim_text="Protein folding rates increase with temperature.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_qualitative",
+            extraction_confidence=0.3,
+        )
+        source = _make_title_only_source()
+
+        from src.verify import verify_claim_title_only
+
+        result, step = verify_claim_title_only(claim, source)
+        assert result.status == "partially_supported"
+        assert result.confidence is not None
+        assert result.confidence <= 0.3
+        assert isinstance(step, ProvenanceStep)
+
+    @patch("src.verify_title_only.anthropic.Anthropic")
+    def test_verify_title_only_does_not_cap_when_extraction_confidence_none(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """Control: extraction_confidence=None (legacy claim) does not apply Gate 1."""
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block(
+                '{"status": "partially_supported", "explanation": "Title matches.", "confidence": 0.6}'
+            )
+        ]
+        mock_response.usage.input_tokens = 80
+        mock_response.usage.output_tokens = 30
+        mock_response.usage.cache_read_input_tokens = 80
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        claim = Claim(
+            claim_id="ec-none-titleonly",
+            claim_text="Protein folding rates increase with temperature.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_qualitative",
+            extraction_confidence=None,
+        )
+        source = _make_title_only_source()
+
+        from src.verify import verify_claim_title_only
+
+        result, _step = verify_claim_title_only(claim, source)
+        # Gate 1 does not fire (extraction_confidence is None).
+        # title_only forces partially_supported (supported capped), confidence clamped.
+        assert result.status == "partially_supported"
+        assert result.confidence is not None
+        assert result.confidence == 0.6

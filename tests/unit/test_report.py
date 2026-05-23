@@ -893,3 +893,74 @@ class TestI1FetchTelemetry:
         assert "fetch_failures_by_reason" not in summary
         # And no fetch_traces.jsonl file is written when outcomes are absent.
         assert not (run_dir / "fetch_traces.jsonl").exists()
+
+
+# ---------------------------------------------------------------------------
+# 3.2: extracted_source_quote field in per-claim report.json records
+# ---------------------------------------------------------------------------
+
+
+class TestExtractedSourceQuote:
+    """Spec §3.2 / §9 Test B1, B2: extracted_source_quote surfaced in
+    per-claim evidence records when source_quote is populated, null when absent.
+    """
+
+    @staticmethod
+    def _make_claim_with_quote(claim_id: str, source_quote: str | None) -> Claim:
+        return Claim(
+            claim_id=claim_id,
+            claim_text="X causes Y.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="causal",
+            source_quote=source_quote,
+        )
+
+    def test_report_claim_record_includes_extracted_source_quote(self, tmp_path: Path) -> None:
+        """B1: extracted_source_quote equals claim.source_quote when present."""
+        from src.report import build_report
+
+        quote = "The incidence of sustained response at week 12 was 20%"
+        claim = self._make_claim_with_quote("c-quote", quote)
+        sources = {"c-quote": _make_source()}
+        results = {"c-quote": _make_result("not_addressed")}
+        steps = [_make_step("s-q", "c-quote")]
+
+        run_dir = build_report(
+            "rpt-sq-001",
+            "Text.",
+            [claim],
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+        )
+
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["claims"][0]["extracted_source_quote"] == quote
+
+    def test_report_claim_record_null_when_source_quote_absent(self, tmp_path: Path) -> None:
+        """B2: extracted_source_quote is null in JSON when source_quote is None."""
+        from src.report import build_report
+
+        claim = self._make_claim_with_quote("c-no-quote", None)
+        sources = {"c-no-quote": _make_source()}
+        results = {"c-no-quote": _make_result("not_addressed")}
+        steps = [_make_step("s-nq", "c-no-quote")]
+
+        run_dir = build_report(
+            "rpt-sq-002",
+            "Text.",
+            [claim],
+            sources,
+            results,
+            steps,
+            output_dir=tmp_path,
+        )
+
+        with open(run_dir / "report.json") as f:
+            report = json.load(f)
+
+        assert report["claims"][0]["extracted_source_quote"] is None

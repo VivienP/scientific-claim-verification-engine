@@ -114,6 +114,7 @@ def verify_claim_title_only(
             evidence_quality="title_only",
             retraction_status=source.retraction_status,
             claim_text=claim.claim_text,
+            extraction_confidence=claim.extraction_confidence,
             # Title-only evidence is structurally insufficient for any specific claim.
             unverifiable_reason="insufficient_evidence_depth",
         )

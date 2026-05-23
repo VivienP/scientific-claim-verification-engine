@@ -162,3 +162,134 @@ class TestEmptySourceSetGuard:
         assert result.evidence_quality == "no_evidence"
         # No per-source LLM steps are emitted when there are no sources.
         assert steps == []
+
+
+# ---------------------------------------------------------------------------
+# C1 integration tests: extraction_confidence gate wired through multi-source
+# ---------------------------------------------------------------------------
+
+
+class TestExtractionConfidenceCapMultiSource:
+    """Integration: Claim(extraction_confidence=0.3) routed through
+    verify_claim_multi_source aggregation with fulltext-grade evidence emerges
+    capped at partially_supported."""
+
+    def test_verify_claim_multi_caps_verdict_when_extraction_confidence_below_threshold(
+        self,
+    ) -> None:
+        """Integration: multi-source aggregates a 'supported' verdict from fulltext
+        evidence, but extraction_confidence=0.3 caps it to partially_supported at
+        the safe_verification_result call site in verify_multi.py."""
+        from unittest.mock import patch
+
+        from src.models import ProvenanceStep
+
+        fulltext_result = VerificationResult(
+            status="supported",
+            explanation="Directly quoted from passage.",
+            confidence=0.95,
+            verification_depth="fulltext",
+            evidence_quality="quoted_passage",
+            fulltext_available=True,
+            retrieval_status="passage_found",
+        )
+
+        s1 = ResolvedSource(
+            found=True, doi="10.1/a", title="A", abstract="abs", similarity_score=1.0
+        )
+        rs_set = ResolvedSourceSet(sources=(s1,), citation_markers=(1,))
+
+        claim = Claim(
+            claim_id="ec-low-multi",
+            claim_text="Protein folding rates increase with temperature.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_qualitative",
+            extraction_confidence=0.3,
+        )
+
+        def _make_step(claim_id: str) -> ProvenanceStep:
+            return ProvenanceStep(
+                step_id="s",
+                claim_id=claim_id,
+                operation="verify",
+                input_hash="i",
+                output_hash="o",
+                model_id="m",
+                timestamp=0.0,
+                tokens_in=10,
+                tokens_out=5,
+                cache_hit=False,
+                confidence=0.95,
+            )
+
+        with patch("src.verify.verify_claim") as mock_vc:
+            mock_vc.return_value = (fulltext_result, _make_step("ec-low-multi"))
+
+            from src.verify_multi import verify_claim_multi_source
+
+            result, _steps = verify_claim_multi_source(claim, rs_set)
+
+        assert result.status == "partially_supported"
+        assert result.confidence is not None
+        assert result.confidence <= 0.3
+
+    def test_verify_claim_multi_does_not_cap_when_extraction_confidence_none(
+        self,
+    ) -> None:
+        """Control: extraction_confidence=None (legacy claim) does not apply Gate 1.
+        A fulltext 'supported' verdict passes through unchanged."""
+        from unittest.mock import patch
+
+        from src.models import ProvenanceStep
+
+        fulltext_result = VerificationResult(
+            status="supported",
+            explanation="Directly quoted from passage.",
+            confidence=0.95,
+            verification_depth="fulltext",
+            evidence_quality="quoted_passage",
+            fulltext_available=True,
+            retrieval_status="passage_found",
+        )
+
+        s1 = ResolvedSource(
+            found=True, doi="10.1/b", title="B", abstract="abs", similarity_score=1.0
+        )
+        rs_set = ResolvedSourceSet(sources=(s1,), citation_markers=(1,))
+
+        claim = Claim(
+            claim_id="ec-none-multi",
+            claim_text="Protein folding rates increase with temperature.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_qualitative",
+            extraction_confidence=None,
+        )
+
+        def _make_step(claim_id: str) -> ProvenanceStep:
+            return ProvenanceStep(
+                step_id="s",
+                claim_id=claim_id,
+                operation="verify",
+                input_hash="i",
+                output_hash="o",
+                model_id="m",
+                timestamp=0.0,
+                tokens_in=10,
+                tokens_out=5,
+                cache_hit=False,
+                confidence=0.95,
+            )
+
+        with patch("src.verify.verify_claim") as mock_vc:
+            mock_vc.return_value = (fulltext_result, _make_step("ec-none-multi"))
+
+            from src.verify_multi import verify_claim_multi_source
+
+            result, _steps = verify_claim_multi_source(claim, rs_set)
+
+        # Gate 1 does not fire (extraction_confidence is None).
+        assert result.status == "supported"
+        assert result.confidence is not None
+        assert result.confidence > 0.5

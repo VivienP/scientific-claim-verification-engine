@@ -25,6 +25,7 @@ UnverifiableReason = Literal[
     "parse_error",
     "resolution_low_confidence",
     "resolution_source_disagreement",
+    "low_extraction_confidence",  # 3.3: LLM self-reported extraction uncertainty
 ]
 
 OperationType = Literal[
@@ -418,6 +419,15 @@ _INSUFFICIENT_EVIDENCE_SET: frozenset[str] = frozenset(
     {"abstract_only", "title_only", "citing_paper_context", "no_evidence"}
 )
 
+# Threshold for the extraction-confidence cap gate (3.3). Claims with
+# extraction_confidence strictly below this value are capped to
+# partially_supported. Set conservatively at 0.5 based on Phase 1 calibration
+# (reports/audits/extraction_confidence_calibration/findings.md): the
+# empirical distribution on 36 SciFact-derived claims ranged 0.55-0.80, with
+# 0 claims below 0.5. The gate is dormant at 0.5 on these calibration inputs;
+# tighten to 0.6 or 0.7 after /eval on real pipeline data.
+_EXTRACTION_CONFIDENCE_THRESHOLD: float = 0.5
+
 # Explanation template used when the helper downgrades a confident LLM
 # verdict to unverifiable. The verdict and explanation must stay
 # consistent — emitting `unverifiable` with the original "supported"
@@ -462,6 +472,7 @@ def safe_verification_result(
     confidence: float | None,
     evidence_quality: EvidenceQuality = "abstract_only",
     claim_text: str | None = None,
+    extraction_confidence: float | None = None,  # 3.3: LLM self-reported extraction confidence
     unverifiable_reason: UnverifiableReason | None = None,
     **kwargs: Any,  # noqa: ANN401 — forwarded verbatim to VerificationResult dataclass fields
 ) -> VerificationResult:
@@ -471,30 +482,58 @@ def safe_verification_result(
     may violate the invariant. Pure callers that know their inputs satisfy the
     invariant should construct VerificationResult directly.
 
-    Downgrade rule (all must hold):
-      1. status in {"supported", "unsupported"}
-      2. evidence_quality in {abstract_only, title_only,
-                              citing_paper_context, no_evidence}
-      3. claim_text is None (legacy callers — fail safe) OR
-         _claim_has_specific_numeric(claim_text) is True
+    Gate order (deterministic, runs in this sequence):
 
-    Qualitative claims (no specific numeric content) on abstract-only evidence
-    pass through unchanged — the abstract is sufficient for 'X reduces Y'-style
-    verdicts when it directly addresses the topic.
+    Gate 1 — Extraction-confidence cap (3.3):
+      Fires when extraction_confidence is not None AND
+      extraction_confidence < _EXTRACTION_CONFIDENCE_THRESHOLD (0.5) AND
+      status in {"supported", "unsupported", "partially_supported"}.
+      Action: status -> "partially_supported" (if not already);
+              confidence -> min(original_confidence, extraction_confidence).
+      This is a cap, NOT an unverifiable downgrade. unverifiable_reason is NOT set.
+      A structlog event "extraction_confidence_cap" is emitted at the cap site.
 
-    On downgrade:
-    - `unverifiable_reason` is populated on the result (defaults to
-      ``"numeric_claim_abstract_only"`` when caller doesn't specify).
-    - `explanation` is rewritten by ``_build_unverifiable_explanation`` so the
-      verdict and the explanation stay consistent. The original LLM
-      explanation is preserved as a truncated suffix for auditability.
+    Gate 2 — Evidence-depth downgrade:
+      Fires when status in {"supported", "unsupported"} AND
+      evidence_quality in {abstract_only, title_only, citing_paper_context, no_evidence} AND
+      claim_text is None (legacy callers -- fail safe) OR
+      _claim_has_specific_numeric(claim_text) is True.
+      Action: status -> "unverifiable", confidence -> None.
+      Note: if Gate 1 already fired, status is "partially_supported" which is
+      NOT in {"supported", "unsupported"}, so Gate 2 does not fire. This is the
+      correct order -- low-extraction-confidence claims on abstract-only evidence
+      become partially_supported, not unverifiable (spec edge case 7.5).
 
     Additional rules:
-    - unverifiable + non-None confidence -> confidence forced to None
+    - unverifiable + non-None confidence -> confidence forced to None.
     - All other combinations pass through unchanged.
     """
     from src.numeric.heuristics import _claim_has_specific_numeric
 
+    # Gate 1: extraction_confidence cap (3.3).
+    # Runs before the evidence-depth gate so partially_supported exempts
+    # the claim from Gate 2 (see spec edge case 7.5).
+    if (
+        extraction_confidence is not None
+        and extraction_confidence < _EXTRACTION_CONFIDENCE_THRESHOLD
+        and status in ("supported", "unsupported", "partially_supported")
+    ):
+        capped_confidence = (
+            min(confidence, extraction_confidence)
+            if confidence is not None
+            else extraction_confidence
+        )
+        logger.info(
+            "extraction_confidence_cap",
+            original_status=status,
+            original_confidence=confidence,
+            extraction_confidence=extraction_confidence,
+            capped_confidence=capped_confidence,
+        )
+        status = "partially_supported"
+        confidence = capped_confidence
+
+    # Gate 2: evidence-depth downgrade (existing logic, unchanged).
     if (
         status in ("supported", "unsupported")
         and evidence_quality in _INSUFFICIENT_EVIDENCE_SET

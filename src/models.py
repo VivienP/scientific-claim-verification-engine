@@ -14,6 +14,7 @@ if TYPE_CHECKING:
 logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 ClaimType = Literal["factual_numeric", "factual_qualitative", "methodological", "causal"]
+ClaimDirection = Literal["increase", "decrease", "no_effect", "unclear"]
 VerificationStatus = Literal[
     "supported", "unsupported", "not_addressed", "partially_supported", "unverifiable"
 ]
@@ -197,6 +198,18 @@ class Claim:
     cited_year: int | None
     claim_type: ClaimType
     citation_markers: list[int] = field(default_factory=list)
+    # Structured assertion fields populated by extract_v2; all optional so v1
+    # responses and pre-existing fixtures continue to construct cleanly.
+    source_quote: str | None = None
+    subject: str | None = None
+    population: str | None = None
+    intervention: str | None = None
+    comparator: str | None = None
+    outcome: str | None = None
+    direction: ClaimDirection | None = None
+    numeric_value: str | None = None
+    time_horizon: str | None = None
+    extraction_confidence: float | None = None
 
 
 @dataclass(frozen=True)

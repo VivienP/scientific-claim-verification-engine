@@ -36,6 +36,49 @@ class TestClaim:
         with pytest.raises((AttributeError, TypeError)):
             claim.claim_text = "modified"  # type: ignore[misc]
 
+    def test_structured_fields_default_to_none(self) -> None:
+        """Back-compat: pre-existing Claim() call sites construct cleanly with v2 fields."""
+        claim = Claim(
+            claim_id="abc-123",
+            claim_text="X causes Y",
+            cited_authors=[],
+            cited_year=None,
+            claim_type="factual_qualitative",
+        )
+        assert claim.source_quote is None
+        assert claim.subject is None
+        assert claim.population is None
+        assert claim.intervention is None
+        assert claim.comparator is None
+        assert claim.outcome is None
+        assert claim.direction is None
+        assert claim.numeric_value is None
+        assert claim.time_horizon is None
+        assert claim.extraction_confidence is None
+
+    def test_structured_fields_round_trip(self) -> None:
+        claim = Claim(
+            claim_id="abc-123",
+            claim_text="T-DM1 prolonged PFS to 9.6 vs 6.4 months (HR 0.65)",
+            cited_authors=["Verma"],
+            cited_year=2012,
+            claim_type="factual_numeric",
+            source_quote="T-DM1 prolonged PFS to 9.6 vs 6.4 months",
+            subject="T-DM1",
+            population="HER2-positive metastatic breast cancer patients",
+            intervention="T-DM1",
+            comparator="lapatinib plus capecitabine",
+            outcome="median PFS",
+            direction="increase",
+            numeric_value="9.6 vs 6.4 months, HR 0.65, 95% CI 0.55-0.77, P<0.001",
+            time_horizon=None,
+            extraction_confidence=0.92,
+        )
+        assert claim.intervention == "T-DM1"
+        assert claim.comparator == "lapatinib plus capecitabine"
+        assert claim.direction == "increase"
+        assert claim.extraction_confidence == 0.92
+
 
 class TestResolvedSourceSet:
     """S2-P4: ResolvedSourceSet wraps multi-citation resolution results."""

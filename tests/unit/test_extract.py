@@ -505,31 +505,37 @@ class TestScaleMaxOutputTokens:
         assert _scale_max_output_tokens("x" * 5000) == 4096
 
     def test_threshold_input_returns_floor(self) -> None:
-        # Inputs up to ~30K chars still get the 4096 floor; scaling kicks in past that.
+        # Inputs up to ~10K chars still get the 4096 floor; scaling kicks in past that.
+        # (10240 chars: 10240 * 12 // 30 = 4096 — exactly at the floor.)
         from src.extract import _scale_max_output_tokens
 
-        assert _scale_max_output_tokens("x" * 30000) == 4096
+        assert _scale_max_output_tokens("x" * 10000) == 4096
 
     def test_large_input_scales_above_floor(self) -> None:
         from src.extract import _scale_max_output_tokens
 
-        # 60K chars: 60000 * 4 // 30 = 8000 → above 4096 floor.
-        assert _scale_max_output_tokens("x" * 60000) == 8000
+        # 60K chars: 60000 * 12 // 30 = 24000 → well above 4096 floor.
+        assert _scale_max_output_tokens("x" * 60000) == 24000
 
     def test_pathological_input_capped_at_ceiling(self) -> None:
         from src.extract import _scale_max_output_tokens
 
-        # 1M chars would naively scale to 133K tokens; ceiling caps at 16384.
-        assert _scale_max_output_tokens("x" * 1_000_000) == 16384
+        # 1M chars would naively scale to 400K tokens; ceiling caps at 32768.
+        assert _scale_max_output_tokens("x" * 1_000_000) == 32768
 
     def test_calibration_against_real_pdf_sizes(self) -> None:
-        # Empirical Phase 0 data: PDF 1 (HER2 ADC) used 9873 output tokens on
-        # 78395 input chars; PDF 2 (AI drug discovery) used 4934 on 59536.
-        # The heuristic must allocate enough budget to cover both with margin.
+        # Empirical v2 Phase 2.5 data:
+        #   - PDF 2 (AI drug discovery, 59536 chars): autoscaled 7938 budget,
+        #     produced 31 truncated claims. Full extraction needs ~13560 tokens
+        #     (extrapolated from 256 tokens/claim x expected 53 claims).
+        #   - PDF 1 (HER2 ADC, 78395 chars): forced to 16384 cap, produced 45
+        #     truncated claims. Full extraction needs ~27300 tokens (364
+        #     tokens/claim x expected 75 claims).
+        # The new heuristic must allocate enough budget to cover both with margin.
         from src.extract import _scale_max_output_tokens
 
-        assert _scale_max_output_tokens("x" * 78395) >= 9873
-        assert _scale_max_output_tokens("x" * 59536) >= 4934
+        assert _scale_max_output_tokens("x" * 78395) >= 27300  # PDF 1 v2 estimated need
+        assert _scale_max_output_tokens("x" * 59536) >= 13560  # PDF 2 v2 estimated need
 
 
 class TestExtractClaimsAutoScale:

@@ -22,7 +22,7 @@ logger: structlog.BoundLogger = structlog.get_logger(__name__)
 
 MODEL_ID = "claude-sonnet-4-6"
 _OUTPUT_FLOOR = 4096
-_OUTPUT_CEILING = 16384
+_OUTPUT_CEILING = 32768
 _VALID_DIRECTIONS = frozenset(("increase", "decrease", "no_effect", "unclear"))
 
 _SYSTEM_PROMPT = load_prompt("extract_v2")
@@ -31,16 +31,19 @@ _SYSTEM_PROMPT = load_prompt("extract_v2")
 def _scale_max_output_tokens(text: str) -> int:
     """Pick an output-token budget proportional to input length.
 
-    Scientific PDFs run ~3 chars per token (denser than typical prose at ~4),
-    and citation-anchored extraction on dense lit reviews emits roughly
-    25-35% of input tokens as output. The formula targets ~40% of the
-    char-derived input estimate to keep a safety margin against truncation.
+    Calibrated against v2-prompt extraction on real Elicit literature
+    reviews. The v2 prompt emits 10 structured fields per claim, so output
+    density is roughly 2.5x v1: dense lit reviews produce 300-370 output
+    tokens per claim. The 12/30 multiplier (≈0.4 of input chars) covers
+    both observed PDFs with margin:
+      - PDF 2 (59,536 chars, ~53 claims): budget ≈23,800; need ≈16,000
+      - PDF 1 (78,395 chars, ~75 claims): budget ≈31,300; need ≈27,000
 
     Floor is 4096 (preserves prior default for short inputs); ceiling is
-    16384 (bounds cost on pathological inputs and stays within Sonnet 4.6's
-    practical output limit).
+    32768 (Sonnet 4.6's practical output limit, raised from 16384 after
+    Phase 2.5.1 showed PDF 1 v2 truncating at the lower cap).
     """
-    return min(_OUTPUT_CEILING, max(_OUTPUT_FLOOR, len(text) * 4 // 30))
+    return min(_OUTPUT_CEILING, max(_OUTPUT_FLOOR, len(text) * 12 // 30))
 
 
 def _hash(data: str) -> str:

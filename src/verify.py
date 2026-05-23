@@ -213,7 +213,8 @@ def verify_claim(
             explanation=str(parsed["explanation"]),
             evidence_quality="abstract_only",
             claim_text=claim.claim_text,
-            unverifiable_reason="numeric_claim_abstract_only",
+            extraction_confidence=claim.extraction_confidence,
+            unverifiable_reason="insufficient_evidence_depth",
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.error(

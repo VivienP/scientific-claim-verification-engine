@@ -297,6 +297,7 @@ def verify_claim_multi_source(
         evidence_quality=agg_evidence,
         retraction_status=any(s.retraction_status for s in source_set),
         claim_text=claim.claim_text,
+        extraction_confidence=claim.extraction_confidence,
         # If downgraded: proximate cause is insufficient evidence depth across sources.
         unverifiable_reason="insufficient_evidence_depth",
     )

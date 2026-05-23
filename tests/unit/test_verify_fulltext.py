@@ -522,3 +522,87 @@ class TestA2EmptyPassagesFix:
         assert result.status == "unverifiable"
         assert result.confidence is None
         assert result.fulltext_available is False
+
+
+# ---------------------------------------------------------------------------
+# 3.1: source_quote focal anchor injection in user message (fulltext path)
+# ---------------------------------------------------------------------------
+
+
+class TestFulltextSourceQuoteAnchor:
+    """Spec §3.1 / §9 Test A3: source_quote injected before <passages> block
+    in the fulltext verifier user message when non-null.
+    """
+
+    @staticmethod
+    def _make_claim_with_quote(source_quote: str | None) -> Claim:
+        return Claim(
+            claim_id="ft-sq-1",
+            claim_text="Protein folding rates increase with temperature.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_qualitative",
+            source_quote=source_quote,
+        )
+
+    @staticmethod
+    def _mock_fulltext_response() -> MagicMock:
+        mock_response = MagicMock()
+        mock_response.content = [_text_block(_fulltext_response())]
+        mock_response.usage.input_tokens = 500
+        mock_response.usage.output_tokens = 80
+        mock_response.usage.cache_read_input_tokens = 500
+        mock_response.usage.cache_creation_input_tokens = 0
+        return mock_response
+
+    @patch("src.verify_fulltext.anthropic.Anthropic")
+    def test_verify_fulltext_includes_source_quote_anchor(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """A3: when claim.source_quote is non-null, the fulltext user message
+        must contain a <source_quote>...</source_quote> block before the
+        <passages> block.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_client.messages.create.return_value = self._mock_fulltext_response()
+
+        from src.verify import verify_claim_fulltext
+
+        quote = "folding rates are temperature-dependent"
+        _result, _step = verify_claim_fulltext(
+            self._make_claim_with_quote(quote),
+            _make_source(),
+            _make_passages(2),
+        )
+
+        call = mock_client.messages.create.call_args
+        user_message: str = call.kwargs["messages"][0]["content"]
+        assert f"<source_quote>{quote}</source_quote>" in user_message
+        # Anchor must appear BEFORE the passages block
+        quote_pos = user_message.index("<source_quote>")
+        passages_pos = user_message.index("<passages>")
+        assert quote_pos < passages_pos
+
+    @patch("src.verify_fulltext.anthropic.Anthropic")
+    def test_verify_fulltext_omits_anchor_when_source_quote_none(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """A3 negative: when claim.source_quote is None, no <source_quote> tag
+        appears in the fulltext user message.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_client.messages.create.return_value = self._mock_fulltext_response()
+
+        from src.verify import verify_claim_fulltext
+
+        verify_claim_fulltext(
+            self._make_claim_with_quote(None),
+            _make_source(),
+            _make_passages(2),
+        )
+
+        call = mock_client.messages.create.call_args
+        user_message: str = call.kwargs["messages"][0]["content"]
+        assert "<source_quote>" not in user_message

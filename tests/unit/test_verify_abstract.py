@@ -880,3 +880,83 @@ class TestA2EmissionGate:
         result, _step = verify_claim(_make_claim(), _make_source())
         assert result.status == "unverifiable"
         assert result.confidence is None
+
+
+# ---------------------------------------------------------------------------
+# 3.1: source_quote focal anchor injection in user message (abstract path)
+# ---------------------------------------------------------------------------
+
+
+class TestSourceQuoteAnchor:
+    """Spec §3.1 / §9 Test A1, A2: source_quote injected into user message
+    when non-null; omitted when None. Behaviour is unchanged from baseline
+    when source_quote is None (A2 is a negative assertion).
+    """
+
+    @staticmethod
+    def _make_claim_with_quote(source_quote: str | None) -> Claim:
+        return Claim(
+            claim_id="sq-claim-1",
+            claim_text="Response rates were 20% at 12 weeks.",
+            cited_authors=["Smith"],
+            cited_year=2020,
+            claim_type="factual_numeric",
+            source_quote=source_quote,
+        )
+
+    @staticmethod
+    def _mock_response() -> MagicMock:
+        mock_response = MagicMock()
+        mock_response.content = [
+            _text_block('{"status": "supported", "explanation": "ok.", "confidence": 0.9}')
+        ]
+        mock_response.usage.input_tokens = 150
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 150
+        mock_response.usage.cache_creation_input_tokens = 0
+        return mock_response
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_includes_source_quote_anchor(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """A1: when claim.source_quote is non-null, the user message must
+        contain a <source_quote>...</source_quote> block with the exact text.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_client.messages.create.return_value = self._mock_response()
+
+        from src.verify import verify_claim
+
+        quote = "The incidence of sustained response at week 12 was 20%"
+        verify_claim(
+            self._make_claim_with_quote(quote),
+            _make_source(abstract="Abstract text."),
+        )
+
+        call = mock_client.messages.create.call_args
+        user_message: str = call.kwargs["messages"][0]["content"]
+        assert f"<source_quote>{quote}</source_quote>" in user_message
+
+    @patch("src.verify.anthropic.Anthropic")
+    def test_verify_abstract_omits_anchor_when_source_quote_none(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """A2: when claim.source_quote is None, the user message must NOT
+        contain any <source_quote> tag -- behaviour is unchanged from baseline.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_client.messages.create.return_value = self._mock_response()
+
+        from src.verify import verify_claim
+
+        verify_claim(
+            self._make_claim_with_quote(None),
+            _make_source(abstract="Abstract text."),
+        )
+
+        call = mock_client.messages.create.call_args
+        user_message: str = call.kwargs["messages"][0]["content"]
+        assert "<source_quote>" not in user_message

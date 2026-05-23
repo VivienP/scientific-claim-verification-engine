@@ -119,7 +119,15 @@ def verify_claim_fulltext(
     effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=effective_key)
 
-    user_message = f"<claim>{claim.claim_text}</claim>\n" + _build_passages_block(passages)
+    # Inject source_quote focal anchor before the passages block when present.
+    # Same contract as verify.py 3.1: user message only, system prompt unchanged.
+    if claim.source_quote is not None:
+        user_message = (
+            f"<claim>{claim.claim_text}</claim>\n"
+            f"<source_quote>{claim.source_quote}</source_quote>\n" + _build_passages_block(passages)
+        )
+    else:
+        user_message = f"<claim>{claim.claim_text}</claim>\n" + _build_passages_block(passages)
 
     response = client.messages.create(
         model=model_id,

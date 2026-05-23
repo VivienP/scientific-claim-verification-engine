@@ -149,7 +149,18 @@ def verify_claim(
     effective_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
     client = anthropic.Anthropic(api_key=effective_key)
 
-    user_message = f"<claim>{claim.claim_text}</claim>\n<source>{source.abstract}</source>"
+    # Inject source_quote focal anchor when the extractor populated it (~10% of
+    # claims). Placed in the USER message (not system prompt) so the cached
+    # system prompt is unaffected. When absent the user message is unchanged
+    # from the pre-3.1 format (byte-identical behaviour for the ~90% majority).
+    if claim.source_quote is not None:
+        user_message = (
+            f"<claim>{claim.claim_text}</claim>\n"
+            f"<source_quote>{claim.source_quote}</source_quote>\n"
+            f"<source>{source.abstract}</source>"
+        )
+    else:
+        user_message = f"<claim>{claim.claim_text}</claim>\n<source>{source.abstract}</source>"
 
     response = client.messages.create(
         model=model_id,

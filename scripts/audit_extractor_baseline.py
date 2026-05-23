@@ -111,9 +111,10 @@ def main() -> None:
     parser.add_argument(
         "--max-output-tokens",
         type=int,
-        default=4096,
-        help="Cap on LLM output tokens (default: 4096). Raise for dense lit reviews "
-        "to reduce truncation-driven under-extraction.",
+        default=None,
+        help="Cap on LLM output tokens. When omitted, extract_claims() auto-scales "
+        "the budget with input length (see _scale_max_output_tokens). Pass an "
+        "explicit integer to override.",
     )
     args = parser.parse_args()
 

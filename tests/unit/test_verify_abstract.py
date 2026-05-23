@@ -80,11 +80,12 @@ class TestVerifyClaimHappyPath:
         assert isinstance(result.explanation, str)
 
     @patch("src.verify.anthropic.Anthropic")
-    def test_supported_status_qualitative_claim_passes_through(
+    def test_supported_status_qualitative_claim_downgrades(
         self, mock_anthropic_cls: MagicMock
     ) -> None:
-        """A2: Qualitative claim on abstract-only evidence is NOT downgraded.
-        Abstract is sufficient for 'X increases with Y'-style verdicts."""
+        """3.4 (Option A MIRROR): qualitative claim on abstract-only evidence is now
+        downgraded to unverifiable, same as numeric claims.  The old pass-through
+        behaviour was a latent bug (P1-2 incident class)."""
         mock_client = MagicMock()
         mock_anthropic_cls.return_value = mock_client
         mock_response = MagicMock()
@@ -102,9 +103,9 @@ class TestVerifyClaimHappyPath:
         from src.verify import verify_claim
 
         result, _step = verify_claim(_make_qualitative_claim(), _make_source())
-        # A2: qualitative claim on abstract-only -> passes through as supported
-        assert result.status == "supported"
-        assert result.confidence == 0.9
+        # 3.4: qualitative claim on abstract-only -> downgraded to unverifiable
+        assert result.status == "unverifiable"
+        assert result.confidence is None
 
     @patch("src.verify.anthropic.Anthropic")
     def test_provenance_step_populated(self, mock_anthropic_cls: MagicMock) -> None:

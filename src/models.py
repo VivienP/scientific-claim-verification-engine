@@ -493,11 +493,11 @@ def safe_verification_result(
       This is a cap, NOT an unverifiable downgrade. unverifiable_reason is NOT set.
       A structlog event "extraction_confidence_cap" is emitted at the cap site.
 
-    Gate 2 — Evidence-depth downgrade:
+    Gate 2 — Evidence-depth downgrade (3.4: claim-type-agnostic):
       Fires when status in {"supported", "unsupported"} AND
-      evidence_quality in {abstract_only, title_only, citing_paper_context, no_evidence} AND
-      claim_text is None (legacy callers -- fail safe) OR
-      _claim_has_specific_numeric(claim_text) is True.
+      evidence_quality in {abstract_only, title_only, citing_paper_context, no_evidence}.
+      Claim type discrimination removed (Option A MIRROR): ALL claim types are
+      downgraded, not just numeric ones.
       Action: status -> "unverifiable", confidence -> None.
       Note: if Gate 1 already fired, status is "partially_supported" which is
       NOT in {"supported", "unsupported"}, so Gate 2 does not fire. This is the
@@ -508,8 +508,6 @@ def safe_verification_result(
     - unverifiable + non-None confidence -> confidence forced to None.
     - All other combinations pass through unchanged.
     """
-    from src.numeric.heuristics import _claim_has_specific_numeric
-
     # Gate 1: extraction_confidence cap (3.3).
     # Runs before the evidence-depth gate so partially_supported exempts
     # the claim from Gate 2 (see spec edge case 7.5).
@@ -533,13 +531,12 @@ def safe_verification_result(
         status = "partially_supported"
         confidence = capped_confidence
 
-    # Gate 2: evidence-depth downgrade (existing logic, unchanged).
-    if (
-        status in ("supported", "unsupported")
-        and evidence_quality in _INSUFFICIENT_EVIDENCE_SET
-        and (claim_text is None or _claim_has_specific_numeric(claim_text))
-    ):
-        reason: UnverifiableReason = unverifiable_reason or "numeric_claim_abstract_only"
+    # Gate 2: evidence-depth downgrade (3.4: claim-type-agnostic).
+    # The _claim_has_specific_numeric condition has been removed (Option A MIRROR):
+    # any (supported|unsupported) verdict on insufficient evidence is downgraded,
+    # regardless of claim type. See spec §5.4 and §7.8.
+    if status in ("supported", "unsupported") and evidence_quality in _INSUFFICIENT_EVIDENCE_SET:
+        reason: UnverifiableReason = unverifiable_reason or "insufficient_evidence_depth"
         original_explanation = str(kwargs.get("explanation", ""))
         new_explanation = _build_unverifiable_explanation(
             reason=reason,

@@ -217,6 +217,8 @@ def verify_claim_fulltext(
             evidence_quality=evidence_quality,
             retraction_status=source.retraction_status,
             extraction_confidence=claim.extraction_confidence,
+            claim_text=claim.claim_text,
+            unverifiable_reason="insufficient_evidence_depth",
         )
     except (json.JSONDecodeError, KeyError, TypeError, ValueError) as exc:
         logger.error(
@@ -253,6 +255,7 @@ def verify_claim_fulltext(
         tokens_out=tokens_out,
         cache_hit=cache_hit,
         confidence=result.confidence,
+        unverifiable_reason=result.unverifiable_reason,
     )
 
     return result, step

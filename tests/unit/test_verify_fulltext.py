@@ -684,3 +684,66 @@ class TestExtractionConfidenceCapFulltext:
         assert result.status == "supported"
         assert result.confidence is not None
         assert result.confidence > 0.5
+
+
+# ---------------------------------------------------------------------------
+# W1 + W2: claim_text wired into safe_verification_result, and
+# unverifiable_reason propagated from result into ProvenanceStep
+# (forward-compat: LLM may emit status="unverifiable" directly on fulltext path)
+# ---------------------------------------------------------------------------
+
+
+class TestFulltextUnverifiableReasonPropagation:
+    """W1: safe_verification_result must receive claim_text= on the fulltext path.
+    W2: when result.status=="unverifiable", step.unverifiable_reason must equal
+    result.unverifiable_reason (audit trail consistency).
+
+    Simulates the LLM emitting status="unverifiable" directly (forward-compat
+    path, verify_fulltext.py:191 comment). The parse succeeds but the result
+    is unverifiable, so Gate 2 is bypassed and the caller-supplied reason from
+    the LLM output is preserved. The ProvenanceStep must mirror it.
+    """
+
+    @staticmethod
+    def _unverifiable_llm_response() -> str:
+        import json as _json
+
+        return _json.dumps(
+            {
+                "status": "unverifiable",
+                "explanation": "LLM could not determine relevance from passages.",
+                "confidence": None,
+                "source_passages": [],
+                "source_section": None,
+            }
+        )
+
+    @patch("src.verify_fulltext.anthropic.Anthropic")
+    def test_unverifiable_reason_propagates_from_result_to_step(
+        self, mock_anthropic_cls: MagicMock
+    ) -> None:
+        """W1+W2: when the LLM returns status='unverifiable' on the fulltext path,
+        result.unverifiable_reason must be set and step.unverifiable_reason must
+        equal result.unverifiable_reason.
+        """
+        mock_client = MagicMock()
+        mock_anthropic_cls.return_value = mock_client
+        mock_response = MagicMock()
+        mock_response.content = [_text_block(self._unverifiable_llm_response())]
+        mock_response.usage.input_tokens = 400
+        mock_response.usage.output_tokens = 40
+        mock_response.usage.cache_read_input_tokens = 400
+        mock_response.usage.cache_creation_input_tokens = 0
+        mock_client.messages.create.return_value = mock_response
+
+        from src.verify_fulltext import verify_claim_fulltext
+
+        result, step = verify_claim_fulltext(_make_claim(), _make_source(), _make_passages(2))
+
+        assert result.status == "unverifiable"
+        assert result.confidence is None
+        # W1 check: claim_text was passed so Gate 2 logic ran correctly
+        # (no AttributeError, result is well-formed).
+        # W2 check: unverifiable_reason propagated to ProvenanceStep.
+        assert result.unverifiable_reason is not None
+        assert step.unverifiable_reason == result.unverifiable_reason

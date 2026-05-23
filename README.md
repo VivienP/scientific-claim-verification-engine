@@ -58,6 +58,7 @@ The package contains `claims.csv` for human adjudication, `audit_summary.md`, `l
 # report.json — one entry per claim in claims[]
 claim_id: uuid
 claim_text: string
+extracted_source_quote: string | null  # quote from input text, distinct from source_passages
 source:
   found: bool
   doi: string | null
@@ -74,7 +75,9 @@ verification:
   numeric_check: object | null   # OR/CI or p-value/CI consistency, deterministic
   confidence: 0.0–1.0 | null     # null only when status=unverifiable; LLM self-report — UNRELIABLE
   unverifiable_reason: insufficient_evidence_depth | fulltext_unavailable
-                     | numeric_claim_abstract_only | parse_error | null
+                     | numeric_claim_abstract_only | parse_error
+                     | resolution_low_confidence | resolution_source_disagreement
+                     | low_extraction_confidence | null
 ```
 
 Full schema (nested fields, Copilot enrichment, worked example): [docs/output-schema.md](docs/output-schema.md).
@@ -85,7 +88,7 @@ Full schema (nested fields, Copilot enrichment, worked example): [docs/output-sc
 | --- | --- | --- | --- |
 | Lactate-ISF, 25 expert-annotated claims | **full pipeline** | 16/25 verdict agreement (64%) | [eval/e2e/](eval/e2e/reference_paper_v1_results.md) |
 | Valsci paper (bioinformatics), 11 external claims | resolver | 11/11 correct source (100%) | [benchmarks/real_papers/valsci_brice_2025/](benchmarks/real_papers/valsci_brice_2025/README.md) |
-| SciFact dev | verifier, oracle inputs | F1 = 0.94 | binary, [scripts/eval_scifact.py](scripts/eval_scifact.py) |
+| SciFact dev | verifier, oracle inputs | F1 = 0.92 | binary, n=50 smoke, [scripts/eval_scifact.py](scripts/eval_scifact.py) |
 | Elicit psilocybin / TRD | full pipeline | 43 claims; **0 silent failures** · prior baseline 15/57 = 26%; 10 supported / 17 partial / 0 unsupported / 7 not_addressed / 9 unverifiable; $0.75 | [benchmarks/real_outputs/elicit_psilocybin/](benchmarks/real_outputs/elicit_psilocybin/README.md) |
 | Elicit GLP-1 MACE | full pipeline | 36 claims; **0 silent failures**; 19 supported / 2 partial / 0 unsupported / 8 not_addressed / 7 unverifiable; $0.63 | [benchmarks/real_outputs/elicit_glp1_mace/](benchmarks/real_outputs/elicit_glp1_mace/README.md) |
 | AnswerThis lactate | full pipeline | 19 claims, **79% confidently classified** · prior baseline 3/25 = 12% (22/25 routed to `not_addressed`); 6 supported / 8 partial / 1 unsupported / 4 not_addressed; $0.25 | [benchmarks/real_outputs/answerthis_lactate/](benchmarks/real_outputs/answerthis_lactate/report.json) |

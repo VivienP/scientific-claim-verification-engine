@@ -3,15 +3,17 @@
 **Date:** 2026-05-23
 **Author:** @architect
 **Phase:** Phase 1 (MVP)
-**Branch:** `feat/extract-negative-controls` (merged to `main` as `587626b`)
+**Branch:** `feat/verifier-consume-structured-claim` (merged to `main` as `1f5e630`)
 **Depends on:** Phase 2 / 2.5 structured Claim fields (merged), `docs/specs/unverifiable-verdict-emission-gates.md` (Tracks A1 + A2 + A3, implemented)
-**Deliverables:** 4 commits (3.1, 3.2, 3.3, 3.4)
+**Deliverables:** 3.1, 3.2, 3.3 landed; 3.4 MIRROR was attempted, failed `/eval`, and was reverted.
 
 ---
 
+**Post-merge status note (2026-05-23):** this document is the original Phase 3 spec. Final `main` keeps 3.1 `source_quote`, 3.2 `extracted_source_quote`, and 3.3 `extraction_confidence` gate. The 3.4 MIRROR scope described below was reverted in `d71f383` after SciFact verifier-only F1 dropped from 0.92 to 0.38. The queued successor is `docs/specs/phase4-mirror-with-eval-aware-scoring.md`.
+
 ## 1. Goal
 
-Wire the verifier layer to consume the three new structured Claim fields (`source_quote`, `extraction_confidence`, `extraction_confidence` threshold gate) and extend the existing `safe_verification_result` downgrade gate to qualitative claims on insufficient evidence, closing the P1-2 incident class of silent confident false-positive verdicts.
+Wire the verifier layer to consume the structured Claim fields (`source_quote`, `extraction_confidence`, `extraction_confidence` threshold gate). The original plan also attempted to extend the existing `safe_verification_result` downgrade gate to qualitative claims on insufficient evidence; that 3.4 MIRROR scope was reverted and moved to Phase 4.
 
 ## 2. Scope
 
@@ -19,7 +21,7 @@ Wire the verifier layer to consume the three new structured Claim fields (`sourc
 - 3.1: Consume `source_quote` as a focal-text anchor in verifier user messages (when non-null); no-op when absent.
 - 3.2: Surface `extracted_source_quote` in per-claim evidence records in `report.json`.
 - 3.3: Deterministic extraction-confidence gate in `safe_verification_result` -- cap verdict to `partially_supported` when `extraction_confidence < threshold`.
-- 3.4: Remove claim-type discrimination from the insufficient-evidence downgrade gate in `safe_verification_result`, applying it to qualitative claims as well (Option A -- see Section 3.4 recommendation).
+- 3.4: Remove claim-type discrimination from the insufficient-evidence downgrade gate in `safe_verification_result`, applying it to qualitative claims as well (Option A -- see Section 3.4 recommendation). **Historical only: reverted in final `main`.**
 - New `UnverifiableReason` literal for 3.3.
 - Unit tests for all new behaviors.
 
@@ -40,7 +42,7 @@ Wire the verifier layer to consume the three new structured Claim fields (`sourc
 | `src/verify_title_only.py` | 3.3: Pass `extraction_confidence` to `safe_verification_result`. |
 | `src/verify_citing_context.py` | 3.3: Pass `extraction_confidence` to `safe_verification_result`. |
 | `src/verify_multi.py` | 3.3: Pass `extraction_confidence` to `safe_verification_result` at aggregation site. |
-| `src/models.py` | 3.3: Extend `safe_verification_result` signature with `extraction_confidence: float | None = None`; add verdict-cap logic. Add `"low_extraction_confidence"` to `UnverifiableReason`. 3.4: Remove `_claim_has_specific_numeric` gate from `safe_verification_result`. |
+| `src/models.py` | 3.3: Extend `safe_verification_result` signature with `extraction_confidence: float | None = None`; add verdict-cap logic. Add `"low_extraction_confidence"` to `UnverifiableReason`. 3.4: Remove `_claim_has_specific_numeric` gate from `safe_verification_result` (attempted, reverted). |
 | `src/report.py` | 3.2: Include `extracted_source_quote` in per-claim record. |
 | `tests/unit/test_models.py` | 3.3 + 3.4: New tests for extraction_confidence gate and qualitative-claim downgrade. |
 | `tests/unit/test_verify_abstract.py` | 3.1: Test source_quote anchor injection. 3.3: Test extraction_confidence cap. 3.4: Test qualitative claim downgrade. |
@@ -154,7 +156,7 @@ safe_verification_result(
 
 **Design decision: cap to `partially_supported`, not `unverifiable`.** Low extraction confidence means the *extractor* was uncertain about what the claim says, not that the *evidence* is insufficient. The claim may be poorly extracted but the source paper may genuinely address it. Downgrading to `unverifiable` would be epistemically wrong -- the evidence might be fine; the question is garbled. Capping to `partially_supported` with reduced confidence correctly signals "we are less sure about this verdict because the claim extraction itself was uncertain." The `unverifiable_reason` is NOT set in this case because the claim is not unverifiable -- it is hedged.
 
-**Exception:** When the evidence-depth gate (existing or extended by 3.4) ALSO fires, the more aggressive gate wins (unverifiable trumps partially_supported). Order of operations: extraction_confidence cap runs FIRST, then the evidence-depth gate runs on the (possibly capped) status. This means a low-extraction-confidence claim on abstract-only evidence still becomes `unverifiable`, not `partially_supported`.
+**Gate interaction:** The extraction-confidence cap runs first. If it changes `supported` or `unsupported` to `partially_supported`, the evidence-depth gate does not fire because it only applies to `supported`/`unsupported`. This means a low-extraction-confidence claim on abstract-only evidence becomes `partially_supported`, not `unverifiable` (edge case 7.5).
 
 **Threshold justification (0.5):** The extraction_confidence field is LLM self-reported confidence in the extraction (not calibrated). Empirical finding from Phase 2.5.4: it populates at 100% of claims. The distribution is heavily right-skewed (most claims >0.8). A threshold of 0.5 catches only clearly uncertain extractions while leaving the vast majority of claims untouched. This is conservative by design -- we can tighten to 0.6 or 0.7 after observing the distribution on more diverse inputs. The threshold is a module-level constant (`_EXTRACTION_CONFIDENCE_THRESHOLD = 0.5`) for easy adjustment.
 
@@ -183,6 +185,8 @@ The `_claim_has_specific_numeric` call and the `claim_text` conditional are remo
 See Section 3.4 Recommendation below.
 
 ### 5.4.1 Scope recommendation for 3.4 -- Option A (MIRROR)
+
+**Historical note:** this recommendation was implemented in `9712761`, rejected by `/eval`, and reverted in `d71f383`. Keep this section as the original design record; do not treat it as current `main` behavior.
 
 The three options, with operational analysis of each verifier path:
 

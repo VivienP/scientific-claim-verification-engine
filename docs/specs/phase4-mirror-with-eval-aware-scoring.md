@@ -8,13 +8,13 @@
 
 ## Problem statement
 
-Phase 3 commit 3.4 (`9712761`) attempted the MIRROR scope — remove claim-type discrimination from `safe_verification_result` so qualitative claims on insufficient evidence are also downgraded to `unverifiable`. This closes the P1-2 silent-failure incident class.
+Phase 3 commit 3.4 (`9712761`) attempted the MIRROR scope — remove claim-type discrimination from `safe_verification_result` so qualitative claims on insufficient evidence are also downgraded to `unverifiable`. The goal was to close the P1-2 silent-failure incident class.
 
-The implementation was correct. The /eval gate caught a catastrophic regression: F1 dropped 0.92 → 0.38 on SciFact dev (50 claims), with `unsupported`-class F1 falling from 0.93 to 0.00. The commit was reverted in `d71f383`.
+The implementation matched the original spec. The /eval gate caught a catastrophic regression: F1 dropped 0.92 → 0.38 on SciFact dev (50 claims), with `unsupported`-class F1 falling from 0.93 to 0.00. The commit was reverted in `d71f383`.
 
-**Root cause:** SciFact dev split is 100% abstract-only evidence, and the SciFact class schema does not include an `unverifiable` class. After MIRROR, all `supported`/`unsupported` verdicts on abstract evidence flip to `unverifiable` — which the eval pipeline counts as misses for their true class.
+**Root cause:** MIRROR used evidence depth as a proxy for evidence sufficiency. SciFact dev split is 100% abstract-only evidence, and the SciFact class schema does not include an `unverifiable` class. After MIRROR, all `supported`/`unsupported` verdicts on abstract evidence flip to `unverifiable` — including cases where the abstract explicitly supports or contradicts the claim — and the eval pipeline counts them as misses for their true class.
 
-The product is doing the right thing (honest abstention). The eval is mismeasuring it.
+The product goal is still correct: avoid confident binary verdicts when the available evidence is silent or too shallow. The failed MIRROR implementation was too broad for Phase 1 because it treated all abstract-only evidence as insufficient. Phase 4 must separate explicit abstract evidence from real abstention cases, then report both strict and abstention-aware metrics.
 
 ## What MUST land before MIRROR can be re-attempted
 

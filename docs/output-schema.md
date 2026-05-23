@@ -21,7 +21,7 @@ For the dataclass definitions (frozen, type-checked), see [src/models.py](../src
 
 ---
 
-## 1. Base claim entry (V1 mode)
+## 1. Base claim entry
 
 ```jsonc
 {
@@ -34,6 +34,8 @@ For the dataclass definitions (frozen, type-checked), see [src/models.py](../src
   "cited_authors": ["string"],          // last names; empty when only [N] markers
   "cited_year": 1234,                   // int or null
   "citation_markers": [81, 82, 83],     // numbered references, range-expanded; [] when absent
+  "extracted_source_quote": "string",   // nullable verbatim quote from the input document;
+                                        // distinct from verification.source_passages
 
   "source": {
     "found": true,                      // CrossRef/OpenAlex/PubMed match passed similarity gate
@@ -52,10 +54,12 @@ For the dataclass definitions (frozen, type-checked), see [src/models.py](../src
     "status": "supported"
             | "partially_supported"
             | "unsupported"
-            | "not_addressed",
+            | "not_addressed"
+            | "unverifiable",
 
     "explanation": "string",            // LLM-generated rationale, audited by humans
-    "confidence": 0.85,                 // LLM self-report — UNRELIABLE; use the deterministic flags below
+    "confidence": 0.85,                 // float or null; null iff status == "unverifiable";
+                                        // LLM self-report — UNRELIABLE; use the deterministic flags below
 
     "source_passages": ["string"],      // verbatim quotes the LLM cited; or BM25-selected
                                         // passages when audit-trail fallback fired (see §3)
@@ -85,7 +89,12 @@ For the dataclass definitions (frozen, type-checked), see [src/models.py](../src
                       | "no_evidence",
 
     "retraction_status": false,         // mirrors source.retraction_status
-    "numeric_check": null               // see §4
+    "numeric_check": null,              // see §4
+    "unverifiable_reason": null         // insufficient_evidence_depth, fulltext_unavailable,
+                                        // numeric_claim_abstract_only, parse_error,
+                                        // resolution_low_confidence,
+                                        // resolution_source_disagreement,
+                                        // low_extraction_confidence, or null
   }
 }
 ```
@@ -99,6 +108,7 @@ For the dataclass definitions (frozen, type-checked), see [src/models.py](../src
 | `retrieval_status` | Did the pipeline reach the source body? | Deterministic — set by `fetch_fulltext` chain |
 | `verification_depth` | Which verifier mode produced the verdict | Deterministic — set by routing logic |
 | `source_passages` | Quotes (or audit-trail BM25 chunks) | Always populated when `evidence_quality != no_evidence` |
+| `unverifiable_reason` | Why no confident verdict was emitted | Deterministic — set by policy/parse gates |
 | `confidence` | LLM-reported number 0.0–1.0 | **Unreliable** — model self-report; do not gate decisions on it |
 
 ---
@@ -117,6 +127,7 @@ The verdict by itself is not enough — pair it with `evidence_quality` to know 
 | `unsupported` × `passages_searched_no_quote` | Verifier saw passages but found none that supported the claim — the BM25 chunks are surfaced for audit |
 | `not_addressed` × `passages_searched_no_quote` | Same retrieval coverage, but the verifier abstains rather than asserting absence |
 | `not_addressed` × `no_evidence` | Pipeline could not reach the source body at all |
+| `unverifiable` × any evidence quality | The pipeline could not emit a confident verdict; inspect `unverifiable_reason` and retrieval fields |
 | anything × `citing_paper_context` | **Capped to `partially_supported`** — verdict is internal-consistency only (S3-P1) |
 
 The `passages_searched_no_quote` value distinguishes *"fulltext was retrieved and the LLM saw passages but didn't quote any"* from *"no passages were ever shown to the LLM"* (`no_evidence`). The auditor still sees what was searched in the former case, so it counts as **transparent** in the CTran metric.
@@ -277,6 +288,7 @@ A minimal real entry (excerpted from [benchmarks/real_outputs/elicit_psilocybin/
   "cited_authors": ["Carhart-Harris"],
   "cited_year": 2016,
   "citation_markers": [],
+  "extracted_source_quote": "Psilocybin produced rapid and sustained antidepressant effects in treatment-resistant depression.",
   "source": {
     "found": true,
     "doi": "10.1016/s2215-0366(16)30065-7",
@@ -295,7 +307,8 @@ A minimal real entry (excerpted from [benchmarks/real_outputs/elicit_psilocybin/
     "verification_depth": "fulltext",
     "retrieval_status": "passage_found",
     "evidence_quality": "quoted_passage",
-    "numeric_check": null
+    "numeric_check": null,
+    "unverifiable_reason": null
   }
 }
 ```
